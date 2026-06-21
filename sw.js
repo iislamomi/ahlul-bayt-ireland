@@ -1,5 +1,6 @@
 const CACHE = 'abi-v1';
-const SHELL = ['/', '/index.html', '/manifest.json'];
+const SHELL = ['/', '/index.html', '/manifest.json',
+  '/vendor/react.min.js', '/vendor/react-dom.min.js', '/vendor/babel.min.js'];
 
 self.addEventListener('install', e => {
   e.waitUntil(

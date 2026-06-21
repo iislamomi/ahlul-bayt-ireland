@@ -35,9 +35,9 @@
 </head>
 <body>
 <div id="root"></div>
-<script src="https://unpkg.com/react@18.3.1/umd/react.production.min.js"></script>
-<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
-<script src="https://unpkg.com/@babel/standalone@7.26.4/babel.min.js"></script>
+<script src="./vendor/react.min.js"></script>
+<script src="./vendor/react-dom.min.js"></script>
+<script src="./vendor/babel.min.js"></script>
 <script type="text/babel">
 const { Component } = React;
 
@@ -129,13 +129,51 @@ const NAV_ICONS = {
   more:    '<circle cx="5" cy="12" r="1.2" fill="currentColor"/><circle cx="12" cy="12" r="1.2" fill="currentColor"/><circle cx="19" cy="12" r="1.2" fill="currentColor"/>',
 };
 
+/* ── CUSTOM SELECT ── */
+class CustomSelect extends Component {
+  state = { open: false };
+  close = () => this.setState({ open: false });
+
+  componentDidMount() { document.addEventListener('click', this.close); }
+  componentWillUnmount() { document.removeEventListener('click', this.close); }
+
+  render() {
+    const { value, options, onChange, muted } = this.props;
+    const { open } = this.state;
+    return (
+      <div style={{position:'relative'}} onClick={e=>e.stopPropagation()}>
+        <div
+          onClick={()=>this.setState(s=>({open:!s.open}))}
+          style={{border:`1px solid ${open?'#1f5145':'#e6dcc8'}`,background:'#fffdf9',borderRadius:13,padding:'13px 15px',fontSize:15,color:muted?'#a89d88':'#2c2823',display:'flex',justifyContent:'space-between',alignItems:'center',cursor:'pointer',userSelect:'none'}}
+        >
+          <span>{value}</span>
+          <span style={{color:'#b3a890',fontSize:11,marginLeft:8,transform:open?'rotate(180deg)':'none',transition:'transform .15s'}}>▾</span>
+        </div>
+        {open && (
+          <div style={{position:'absolute',top:'calc(100% + 4px)',left:0,right:0,background:'#fffdf9',border:'1px solid #e6dcc8',borderRadius:13,zIndex:30,overflow:'hidden',boxShadow:'0 8px 24px rgba(0,0,0,.1)'}}>
+            {options.map(opt => (
+              <div
+                key={opt}
+                onClick={()=>{ onChange(opt); this.setState({open:false}); }}
+                style={{padding:'12px 15px',fontSize:14.5,color:opt===value?'#1f5145':'#2c2823',fontWeight:opt===value?600:400,background:opt===value?'#f3f7f4':'transparent',cursor:'pointer'}}
+              >
+                {opt}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  }
+}
+
 /* ── APP ── */
 class App extends Component {
   state = {
     screen: 'home', libTab: 'dua', nahjTab: 'sermons', prayerTab: 'today',
     dark: false, textSize: 1,
     story: null, storyProg: 0,
-    adminForm: null, adminTitle: '', adminContent: '',
+    adminForm: null, adminTitle: '', adminContent: '', adminExpiry: '24 hours', adminLink: 'None', adminCat: 'Food',
     classCat: 'All', libCat: 'All',
     now: new Date(), install: true,
     libQuery: '', classQuery: '',
@@ -912,7 +950,7 @@ class App extends Component {
         <div style={{fontSize:11,letterSpacing:1.2,textTransform:'uppercase',fontWeight:700,color:'#b1a690',marginBottom:12}}>Quick Actions</div>
         <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:11,marginBottom:24}}>
           {actions.map((a,i) => (
-            <div key={i} onClick={()=>this.setState({screen:'adminForm',adminForm:a.type,adminTitle:'',adminContent:''})} style={{display:'flex',alignItems:'center',gap:10,background:'#1f5145',borderRadius:14,padding:'14px 15px',cursor:'pointer'}}>
+            <div key={i} onClick={()=>this.setState({screen:'adminForm',adminForm:a.type,adminTitle:'',adminContent:'',adminExpiry:'24 hours',adminLink:'None',adminCat:'Food'})} style={{display:'flex',alignItems:'center',gap:10,background:'#1f5145',borderRadius:14,padding:'14px 15px',cursor:'pointer'}}>
               <span style={{width:26,height:26,borderRadius:8,background:'rgba(216,184,99,.22)',color:'#d8b863',display:'flex',alignItems:'center',justifyContent:'center',fontSize:15}}>＋</span>
               <span style={{fontSize:13.5,fontWeight:600,color:'#f3ead4'}}>{a.label}</span>
             </div>
@@ -1000,15 +1038,20 @@ class App extends Component {
             <div style={{display:'flex',gap:12,marginBottom:18}}>
               <div style={{flex:1}}>
                 <label style={{display:'block',fontSize:12.5,fontWeight:600,color:'#6f675a',marginBottom:7}}>Expires after</label>
-                <select style={{width:'100%',border:'1px solid #e6dcc8',background:'#fffdf9',borderRadius:13,padding:'13px 15px',fontSize:15,color:'#2c2823',outline:'none',appearance:'none'}}>
-                  <option>24 hours</option><option>48 hours</option><option>1 week</option>
-                </select>
+                <CustomSelect
+                  value={st.adminExpiry||'24 hours'}
+                  options={['24 hours','48 hours','1 week']}
+                  onChange={v=>this.setState({adminExpiry:v})}
+                />
               </div>
               <div style={{flex:1}}>
                 <label style={{display:'block',fontSize:12.5,fontWeight:600,color:'#6f675a',marginBottom:7}}>Link button</label>
-                <select style={{width:'100%',border:'1px solid #e6dcc8',background:'#fffdf9',borderRadius:13,padding:'13px 15px',fontSize:15,color:'#a89d88',outline:'none',appearance:'none'}}>
-                  <option>Optional</option><option>View schedule</option><option>Register</option><option>Learn more</option>
-                </select>
+                <CustomSelect
+                  value={st.adminLink||'None'}
+                  options={['None','View schedule','Register','Learn more']}
+                  onChange={v=>this.setState({adminLink:v})}
+                  muted={!st.adminLink||st.adminLink==='None'}
+                />
               </div>
             </div>
           </>}
@@ -1017,9 +1060,11 @@ class App extends Component {
             <div style={{display:'flex',gap:12,marginBottom:18}}>
               <div style={{flex:1}}>
                 <label style={{display:'block',fontSize:12.5,fontWeight:600,color:'#6f675a',marginBottom:7}}>Category</label>
-                <select style={{width:'100%',border:'1px solid #e6dcc8',background:'#fffdf9',borderRadius:13,padding:'13px 15px',fontSize:15,color:'#2c2823',outline:'none',appearance:'none'}}>
-                  <option>Food</option><option>Butcher</option><option>Travel</option><option>Education</option><option>Services</option>
-                </select>
+                <CustomSelect
+                  value={st.adminCat||'Food'}
+                  options={['Food','Butcher','Travel','Education','Services']}
+                  onChange={v=>this.setState({adminCat:v})}
+                />
               </div>
               <div style={{flex:1}}>
                 <label style={{display:'block',fontSize:12.5,fontWeight:600,color:'#6f675a',marginBottom:7}}>Location</label>
@@ -1093,8 +1138,8 @@ class App extends Component {
           <div onClick={this.closeStory} style={{width:34,height:34,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',color:'#fff',fontSize:24,lineHeight:1}}>×</div>
         </div>
 
-        <div onClick={this.prevStory} style={{position:'absolute',left:0,top:90,bottom:0,width:'35%',zIndex:3}} />
-        <div onClick={this.nextStory} style={{position:'absolute',right:0,top:90,bottom:0,width:'65%',zIndex:3}} />
+        <div onClick={this.prevStory} style={{position:'absolute',left:0,top:130,bottom:0,width:'35%',zIndex:3}} />
+        <div onClick={this.nextStory} style={{position:'absolute',right:0,top:130,bottom:0,width:'65%',zIndex:3}} />
 
         <div style={{position:'relative',zIndex:2,flex:1,display:'flex',flexDirection:'column',justifyContent:'flex-end',padding:'0 26px 40px',pointerEvents:'none'}}>
           <div style={{fontFamily:'Amiri,serif',fontSize:30,color:'rgba(255,255,255,.85)',marginBottom:14}} dir="rtl">ﷺ</div>
