@@ -1,0 +1,1271 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style data-omelette-print-defaults>
+@media print {
+  @page { margin: 0; }
+  body { padding: 0.5in; box-sizing: border-box; }
+  h1, h2, h3, h4, h5, h6 { break-after: avoid; }
+  figure, table, pre, blockquote, img, svg, tr, [class~="card" i] { break-inside: avoid; }
+  img, svg { max-width: 100%; }
+  p { orphans: 3; widows: 3; }
+}
+</style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,400;0,500;0,600;1,400&family=Hanken+Grotesk:wght@400;500;600;700&family=Amiri:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; -webkit-font-smoothing: antialiased; }
+  body { margin: 0; }
+  .abi-scroll::-webkit-scrollbar { width: 0; height: 0; }
+  .abi-scroll { scrollbar-width: none; }
+  @keyframes abiFade { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+  @keyframes abiSheet { from { transform: translateY(100%); } to { transform: none; } }
+  @keyframes abiPop { from { opacity: 0; transform: scale(.96); } to { opacity: 1; transform: none; } }
+</style>
+</helmet>
+<div style="min-height:100vh; width:100%; display:flex; align-items:center; justify-content:center; background:radial-gradient(120% 80% at 50% 0%, #efe9dd 0%, #e7e0d2 60%, #ddd4c2 100%); font-family:'Hanken Grotesk',system-ui,sans-serif; padding:40px 20px;">
+
+  <!-- DEVICE -->
+  <div style="position:relative; width:393px; height:852px; background:#161412; border-radius:54px; padding:11px; box-shadow:0 40px 90px -30px rgba(40,30,10,.55), 0 0 0 1px rgba(0,0,0,.4), inset 0 0 0 2px #2a2622;">
+    <div style="position:relative; width:100%; height:100%; background:{{ appBg }}; border-radius:44px; overflow:hidden; display:flex; flex-direction:column;">
+
+      <!-- STATUS BAR -->
+      <div style="flex:0 0 auto; height:52px; padding:18px 30px 0; display:flex; align-items:flex-start; justify-content:space-between; position:relative; z-index:5; color:{{ statusColor }};">
+        <div style="font-size:15px; font-weight:600; letter-spacing:.3px; font-variant-numeric:tabular-nums;">{{ clock }}</div>
+        <div style="position:absolute; left:50%; top:11px; transform:translateX(-50%); width:104px; height:30px; background:#161412; border-radius:18px;"></div>
+        <div style="display:flex; align-items:center; gap:6px;">
+          <svg width="18" height="12" viewBox="0 0 18 12" fill="none"><rect x="0" y="7" width="3" height="5" rx="1" fill="currentColor"/><rect x="5" y="4" width="3" height="8" rx="1" fill="currentColor"/><rect x="10" y="1.5" width="3" height="10.5" rx="1" fill="currentColor"/><rect x="15" y="0" width="3" height="12" rx="1" fill="currentColor" opacity=".35"/></svg>
+          <svg width="22" height="12" viewBox="0 0 22 12" fill="none"><rect x="1" y="1" width="18" height="10" rx="3" stroke="currentColor" stroke-opacity=".5" fill="none"/><rect x="3" y="3" width="13" height="6" rx="1.5" fill="currentColor"/><rect x="20" y="4" width="1.6" height="4" rx="1" fill="currentColor" opacity=".5"/></svg>
+        </div>
+      </div>
+
+      <!-- SCROLL CONTENT -->
+      <div class="abi-scroll" style="flex:1 1 auto; overflow-y:auto; overflow-x:hidden; position:relative;">
+
+        <!-- ============ HOME ============ -->
+        <sc-if value="{{ isHome }}" hint-placeholder-val="{{ true }}">
+        <div style="padding:8px 20px 120px;" key="{{ screen }}">
+          <div style="animation:abiFade .4s ease both;">
+            <!-- greeting header -->
+            <div style="display:flex; align-items:flex-start; justify-content:space-between; padding:6px 0 18px;">
+              <div>
+                <div style="font-size:13px; color:#9a8f7c; font-weight:500; letter-spacing:.2px;">{{ salaam }}</div>
+                <div style="font-family:'Spectral',serif; font-size:25px; font-weight:600; color:#27241f; line-height:1.15; margin-top:3px;">Ahlul Bayt Ireland</div>
+              </div>
+              <div style="width:44px; height:44px; border-radius:14px; background:linear-gradient(150deg,#23564a,#16463a); display:flex; align-items:center; justify-content:center; box-shadow:0 4px 14px -4px rgba(22,70,58,.5); flex:0 0 auto;">
+                <div style="width:20px; height:20px; border-radius:50%; box-shadow: inset -6px 0 0 0 #d8b863;"></div>
+              </div>
+            </div>
+
+            <!-- date strip -->
+            <div style="display:flex; gap:10px; margin-bottom:16px;">
+              <div style="flex:1; background:#fffdf9; border:1px solid #ece4d4; border-radius:16px; padding:13px 15px;">
+                <div style="font-size:10.5px; letter-spacing:1.2px; text-transform:uppercase; color:#b1a690; font-weight:600;">Gregorian</div>
+                <div style="font-size:14.5px; color:#2f2b25; font-weight:600; margin-top:4px;">{{ greg }}</div>
+              </div>
+              <div style="flex:1; background:#fffdf9; border:1px solid #ece4d4; border-radius:16px; padding:13px 15px;">
+                <div style="font-size:10.5px; letter-spacing:1.2px; text-transform:uppercase; color:#c2a35a; font-weight:600;">Hijri</div>
+                <div style="font-size:14.5px; color:#2f2b25; font-weight:600; margin-top:4px;">{{ hijri }}</div>
+              </div>
+            </div>
+
+            <!-- next prayer hero -->
+            <div onClick="{{ goPrayer }}" style="position:relative; overflow:hidden; background:linear-gradient(155deg,#1f5145 0%,#163b30 100%); border-radius:22px; padding:20px 22px; color:#f3ead4; box-shadow:0 18px 34px -18px rgba(22,59,48,.7); cursor:pointer; margin-bottom:20px;">
+              <div style="position:absolute; right:-30px; top:-30px; width:140px; height:140px; border-radius:50%; border:1px solid rgba(216,184,99,.22);"></div>
+              <div style="position:absolute; right:6px; bottom:-46px; width:96px; height:96px; border-radius:50%; box-shadow: inset -22px 0 0 0 rgba(216,184,99,.16);"></div>
+              <div style="position:relative;">
+                <div style="display:flex; align-items:center; gap:8px; font-size:11px; letter-spacing:1.5px; text-transform:uppercase; color:#d8b863; font-weight:600;">
+                  <span style="width:6px; height:6px; border-radius:50%; background:#d8b863; box-shadow:0 0 0 4px rgba(216,184,99,.2);"></span> Next Prayer
+                </div>
+                <div style="display:flex; align-items:flex-end; justify-content:space-between; margin-top:10px;">
+                  <div>
+                    <div style="font-family:'Spectral',serif; font-size:30px; font-weight:600; line-height:1;">{{ nextName }}</div>
+                    <div style="font-family:'Amiri',serif; font-size:19px; color:#cdbf9e; margin-top:4px;" dir="rtl">{{ nextAr }}</div>
+                  </div>
+                  <div style="text-align:right;">
+                    <div style="font-size:30px; font-weight:700; font-variant-numeric:tabular-nums; line-height:1;">{{ nextTime }}</div>
+                    <div style="font-size:12.5px; color:#bcae8d; margin-top:5px;">in {{ countdown }}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- today's times summary -->
+            <div style="background:#fffdf9; border:1px solid #ece4d4; border-radius:18px; padding:6px 4px; margin-bottom:22px;">
+              <sc-for list="{{ prayers }}" as="p" hint-placeholder-count="6">
+                <div style="display:flex; align-items:center; justify-content:space-between; padding:11px 16px; border-bottom:1px solid {{ p.divider }};">
+                  <div style="display:flex; align-items:center; gap:12px;">
+                    <span style="font-family:'Amiri',serif; font-size:17px; color:#bba35f; width:22px; text-align:center;" dir="rtl">{{ p.glyph }}</span>
+                    <span style="font-size:15px; color:{{ p.nameColor }}; font-weight:{{ p.weight }};">{{ p.name }}</span>
+                  </div>
+                  <span style="font-size:15px; color:{{ p.timeColor }}; font-weight:{{ p.weight }}; font-variant-numeric:tabular-nums;">{{ p.time }}</span>
+                </div>
+              </sc-for>
+            </div>
+
+            <!-- stories -->
+            <div style="display:flex; align-items:baseline; justify-content:space-between; margin-bottom:12px;">
+              <div style="font-family:'Spectral',serif; font-size:18px; font-weight:600; color:#2c2823;">Community Updates</div>
+              <div onClick="{{ openStory0 }}" style="font-size:12.5px; color:#1f5145; font-weight:600; cursor:pointer;">View all</div>
+            </div>
+            <div class="abi-scroll" style="display:flex; gap:14px; overflow-x:auto; padding:2px 0 6px; margin:0 -20px 24px; padding-left:20px; padding-right:20px;">
+              <sc-for list="{{ storyBubbles }}" as="s" hint-placeholder-count="4">
+                <div onClick="{{ s.open }}" style="flex:0 0 auto; width:72px; text-align:center; cursor:pointer;">
+                  <div style="width:72px; height:72px; border-radius:50%; padding:3px; background:conic-gradient(from 200deg,#d8b863,#1f5145,#6e2230,#d8b863);">
+                    <div style="width:100%; height:100%; border-radius:50%; background:{{ s.color }}; display:flex; align-items:center; justify-content:center; border:3px solid {{ appBg }};">
+                      <span style="font-family:'Spectral',serif; font-size:22px; color:#f3ead4; font-weight:600;">{{ s.initial }}</span>
+                    </div>
+                  </div>
+                  <div style="font-size:11px; color:#6f675a; margin-top:7px; line-height:1.2; font-weight:500;">{{ s.short }}</div>
+                </div>
+              </sc-for>
+            </div>
+
+            <!-- quick access -->
+            <div style="font-family:'Spectral',serif; font-size:18px; font-weight:600; color:#2c2823; margin-bottom:12px;">Explore</div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:14px;">
+              <sc-for list="{{ quickCards }}" as="q" hint-placeholder-count="5">
+                <div onClick="{{ q.go }}" style="grid-column:{{ q.span }}; background:#fffdf9; border:1px solid #ece4d4; border-radius:18px; padding:16px; cursor:pointer; display:flex; flex-direction:column; gap:10px; min-height:96px; justify-content:space-between;">
+                  <div style="width:38px; height:38px; border-radius:11px; background:{{ q.tint }}; display:flex; align-items:center; justify-content:center;">
+                    <span style="font-family:'Amiri',serif; font-size:18px; color:{{ q.ink }};" dir="rtl">{{ q.glyph }}</span>
+                  </div>
+                  <div>
+                    <div style="font-size:15px; font-weight:600; color:#2c2823;">{{ q.title }}</div>
+                    <div style="font-size:11.5px; color:#9a8f7c; margin-top:2px;">{{ q.sub }}</div>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+
+            <!-- announcement -->
+            <div style="display:flex; gap:13px; align-items:flex-start; background:linear-gradient(120deg,#faf4e6,#f6efe0); border:1px solid #ecdfc2; border-radius:18px; padding:15px 16px;">
+              <div style="flex:0 0 auto; width:34px; height:34px; border-radius:10px; background:#e8d39a; display:flex; align-items:center; justify-content:center; color:#7a5d18; font-weight:700; font-family:'Spectral',serif;">!</div>
+              <div>
+                <div style="font-size:13.5px; font-weight:600; color:#5e4d22;">Muḥarram programme begins Friday</div>
+                <div style="font-size:12px; color:#8a7846; margin-top:3px; line-height:1.4;">Nightly majālis after Maghrib. Full schedule in Updates.</div>
+              </div>
+            </div>
+
+            <!-- install banner -->
+            <sc-if value="{{ install }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex; align-items:center; gap:13px; background:#1c1a17; border-radius:18px; padding:14px 16px; margin-top:14px; animation:abiPop .4s ease both;">
+              <div style="flex:0 0 auto; width:40px; height:40px; border-radius:12px; background:linear-gradient(150deg,#23564a,#16463a); display:flex; align-items:center; justify-content:center;">
+                <div style="width:18px; height:18px; border-radius:50%; box-shadow: inset -5px 0 0 0 #d8b863;"></div>
+              </div>
+              <div style="flex:1;">
+                <div style="font-size:13.5px; font-weight:600; color:#f3ead4;">Install the app</div>
+                <div style="font-size:11.5px; color:#a59c8a; margin-top:1px;">Add to your home screen for offline access.</div>
+              </div>
+              <div onClick="{{ dismissInstall }}" style="font-size:12.5px; color:#1f5145; font-weight:600; background:#d8b863; padding:8px 13px; border-radius:11px; cursor:pointer;">Add</div>
+            </div>
+            </sc-if>
+          </div>
+        </div>
+        </sc-if>
+
+        <!-- ============ PRAYER ============ -->
+        <sc-if value="{{ isPrayer }}" hint-placeholder-val="{{ false }}">
+        <div style="padding:8px 20px 120px;" key="prayer">
+          <div style="animation:abiFade .4s ease both;">
+            <div style="padding:8px 0 16px;">
+              <div style="font-size:13px; color:#9a8f7c; font-weight:500;">{{ greg }}</div>
+              <div style="font-family:'Spectral',serif; font-size:26px; font-weight:600; color:#27241f; margin-top:2px;">Prayer Times</div>
+            </div>
+
+            <!-- tabs -->
+            <div style="display:flex; gap:6px; background:#efe7d7; border-radius:14px; padding:4px; margin-bottom:18px;">
+              <div onClick="{{ setTabToday }}" style="flex:1; text-align:center; padding:9px; border-radius:10px; font-size:13.5px; font-weight:600; cursor:pointer; background:{{ tabTodayBg }}; color:{{ tabTodayInk }}; box-shadow:{{ tabTodayShadow }};">Today</div>
+              <div onClick="{{ setTabMonth }}" style="flex:1; text-align:center; padding:9px; border-radius:10px; font-size:13.5px; font-weight:600; cursor:pointer; background:{{ tabMonthBg }}; color:{{ tabMonthInk }}; box-shadow:{{ tabMonthShadow }};">Monthly</div>
+            </div>
+
+            <sc-if value="{{ isPrayerToday }}" hint-placeholder-val="{{ true }}">
+            <!-- countdown hero -->
+            <div style="background:linear-gradient(155deg,#1f5145,#163b30); border-radius:22px; padding:22px; color:#f3ead4; text-align:center; box-shadow:0 18px 34px -18px rgba(22,59,48,.7); margin-bottom:18px; position:relative; overflow:hidden;">
+              <div style="position:absolute; left:50%; top:-40px; transform:translateX(-50%); width:200px; height:200px; border-radius:50%; border:1px solid rgba(216,184,99,.16);"></div>
+              <div style="position:relative;">
+                <div style="font-size:11px; letter-spacing:1.5px; text-transform:uppercase; color:#d8b863; font-weight:600;">{{ nextName }} begins in</div>
+                <div style="font-size:46px; font-weight:700; font-variant-numeric:tabular-nums; margin:8px 0 4px; letter-spacing:1px;">{{ countdown }}</div>
+                <div style="font-family:'Amiri',serif; font-size:20px; color:#cdbf9e;" dir="rtl">{{ nextAr }} · {{ nextTime }}</div>
+              </div>
+            </div>
+
+            <!-- list -->
+            <div style="background:#fffdf9; border:1px solid #ece4d4; border-radius:20px; overflow:hidden; margin-bottom:16px;">
+              <sc-for list="{{ prayers }}" as="p" hint-placeholder-count="6">
+                <div style="display:flex; align-items:center; justify-content:space-between; padding:16px 18px; border-bottom:1px solid {{ p.divider }}; background:{{ p.rowBg }};">
+                  <div style="display:flex; align-items:center; gap:14px;">
+                    <span style="font-family:'Amiri',serif; font-size:21px; color:{{ p.accentInk }}; width:30px; text-align:center;" dir="rtl">{{ p.glyph }}</span>
+                    <div>
+                      <div style="font-size:16.5px; color:{{ p.nameColor }}; font-weight:{{ p.weight }};">{{ p.name }}</div>
+                      <div style="font-size:11.5px; color:#a89d88; margin-top:1px;">{{ p.en }}</div>
+                    </div>
+                  </div>
+                  <span style="font-size:18px; color:{{ p.timeColor }}; font-weight:{{ p.weight }}; font-variant-numeric:tabular-nums;">{{ p.time }}</span>
+                </div>
+              </sc-for>
+            </div>
+            </sc-if>
+
+            <sc-if value="{{ isPrayerMonth }}" hint-placeholder-val="{{ false }}">
+            <div style="background:#fffdf9; border:1px solid #ece4d4; border-radius:20px; overflow:hidden; margin-bottom:16px;">
+              <div style="display:flex; padding:11px 16px; background:#f4eee0; font-size:10.5px; letter-spacing:.6px; text-transform:uppercase; color:#a2967f; font-weight:700;">
+                <div style="flex:0 0 56px;">Date</div>
+                <div style="flex:1; text-align:center;">Fajr</div>
+                <div style="flex:1; text-align:center;">Dhuhr</div>
+                <div style="flex:1; text-align:center;">Maghrib</div>
+              </div>
+              <sc-for list="{{ monthRows }}" as="m" hint-placeholder-count="8">
+                <div style="display:flex; padding:13px 16px; border-bottom:1px solid #f1ebdd; font-size:13.5px; color:#4a443a; font-variant-numeric:tabular-nums; background:{{ m.bg }};">
+                  <div style="flex:0 0 56px; font-weight:600; color:{{ m.dayInk }};">{{ m.day }}</div>
+                  <div style="flex:1; text-align:center;">{{ m.fajr }}</div>
+                  <div style="flex:1; text-align:center;">{{ m.dhuhr }}</div>
+                  <div style="flex:1; text-align:center;">{{ m.maghrib }}</div>
+                </div>
+              </sc-for>
+            </div>
+            </sc-if>
+
+            <!-- yearly PDF button -->
+            <div style="display:flex; align-items:center; gap:12px; background:#fffdf9; border:1px solid #ece4d4; border-radius:16px; padding:15px 16px; cursor:pointer; margin-bottom:14px;">
+              <div style="width:36px; height:36px; border-radius:10px; background:#f0e7d3; display:flex; align-items:center; justify-content:center; color:#9a7a2c; font-weight:700; font-size:11px;">PDF</div>
+              <div style="flex:1;">
+                <div style="font-size:14px; font-weight:600; color:#2c2823;">Yearly prayer calendar</div>
+                <div style="font-size:11.5px; color:#9a8f7c; margin-top:1px;">Download the full 1447 timetable</div>
+              </div>
+              <span style="color:#bba35f; font-size:20px;">↓</span>
+            </div>
+
+            <!-- source note -->
+            <div style="text-align:center; font-size:11.5px; color:#a89d88; line-height:1.5; padding:6px 20px;">
+              Following Ahlul-Bait Ireland prayer timing.<br>Times calculated for Dublin, Ireland.
+            </div>
+          </div>
+        </div>
+        </sc-if>
+
+        <!-- ============ LIBRARY ============ -->
+        <sc-if value="{{ isLibrary }}" hint-placeholder-val="{{ false }}">
+        <div style="padding:8px 20px 120px;" key="library">
+          <div style="animation:abiFade .4s ease both;">
+            <div style="padding:8px 0 14px;">
+              <div style="font-size:13px; color:#9a8f7c; font-weight:500;">Library</div>
+              <div style="font-family:'Spectral',serif; font-size:26px; font-weight:600; color:#27241f; margin-top:2px;">{{ libTitle }}</div>
+            </div>
+
+            <!-- library tabs -->
+            <div style="display:flex; gap:8px; margin-bottom:16px;">
+              <sc-for list="{{ libTabBtns }}" as="t" hint-placeholder-count="3">
+                <div onClick="{{ t.set }}" style="flex:1; text-align:center; padding:10px; border-radius:12px; font-size:13.5px; font-weight:600; cursor:pointer; background:{{ t.bg }}; color:{{ t.ink }}; border:1px solid #ece4d4;">{{ t.label }}</div>
+              </sc-for>
+            </div>
+
+            <!-- search -->
+            <div style="display:flex; align-items:center; gap:10px; background:#fffdf9; border:1px solid #ece4d4; border-radius:14px; padding:11px 14px; margin-bottom:14px;">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#b3a890" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg>
+              <input value="{{ query }}" onInput="{{ onSearch }}" placeholder="Search titles & translations" style="border:none; outline:none; background:transparent; font-family:'Hanken Grotesk',sans-serif; font-size:14px; color:#3f3a32; width:100%;"/>
+            </div>
+
+            <!-- category chips (dua/ziyarah) -->
+            <sc-if value="{{ hasCats }}" hint-placeholder-val="{{ true }}">
+            <div class="abi-scroll" style="display:flex; gap:8px; overflow-x:auto; margin:0 -20px 16px; padding:0 20px 2px;">
+              <sc-for list="{{ catChips }}" as="c" hint-placeholder-count="4">
+                <div style="flex:0 0 auto; padding:8px 15px; border-radius:20px; font-size:12.5px; font-weight:600; background:{{ c.bg }}; color:{{ c.ink }}; border:1px solid {{ c.bd }}; cursor:pointer;">{{ c.label }}</div>
+              </sc-for>
+            </div>
+            </sc-if>
+
+            <!-- nahj subtabs -->
+            <sc-if value="{{ isLibNahj }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex; gap:22px; border-bottom:1px solid #ece4d4; margin-bottom:16px;">
+              <sc-for list="{{ nahjTabBtns }}" as="t" hint-placeholder-count="3">
+                <div onClick="{{ t.set }}" style="padding:0 0 11px; font-size:14px; font-weight:{{ t.weight }}; color:{{ t.ink }}; cursor:pointer; border-bottom:2px solid {{ t.bar }}; margin-bottom:-1px;">{{ t.label }}</div>
+              </sc-for>
+            </div>
+            </sc-if>
+
+            <!-- dua / ziyarah cards -->
+            <sc-if value="{{ hasLibCards }}" hint-placeholder-val="{{ true }}">
+            <div style="display:flex; flex-direction:column; gap:12px;">
+              <sc-for list="{{ libCards }}" as="d" hint-placeholder-count="5">
+                <div onClick="{{ d.open }}" style="background:#fffdf9; border:1px solid #ece4d4; border-radius:18px; padding:16px 17px; cursor:pointer;">
+                  <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:9px;">
+                    <span style="font-size:10.5px; letter-spacing:.8px; text-transform:uppercase; font-weight:700; color:{{ d.accent }}; background:{{ d.tint }}; padding:4px 9px; border-radius:7px;">{{ d.cat }}</span>
+                    <span style="color:#cdbf9e; font-size:18px;">→</span>
+                  </div>
+                  <div style="font-family:'Spectral',serif; font-size:18px; font-weight:600; color:#2c2823;">{{ d.title }}</div>
+                  <div style="font-family:'Amiri',serif; font-size:19px; color:#6f675a; margin-top:7px; line-height:1.7;" dir="rtl">{{ d.ar }}</div>
+                  <div style="font-size:13px; color:#9a8f7c; margin-top:6px; line-height:1.45;">{{ d.tr }}</div>
+                </div>
+              </sc-for>
+            </div>
+            </sc-if>
+
+            <!-- nahj cards -->
+            <sc-if value="{{ hasNahjCards }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex; flex-direction:column; gap:12px;">
+              <sc-for list="{{ nahjCards }}" as="n" hint-placeholder-count="3">
+                <div onClick="{{ n.open }}" style="background:#fffdf9; border:1px solid #ece4d4; border-radius:18px; padding:16px 17px; cursor:pointer;">
+                  <div style="display:flex; align-items:baseline; justify-content:space-between;">
+                    <span style="font-size:11px; letter-spacing:.6px; text-transform:uppercase; font-weight:700; color:#2c5d52;">{{ n.ref }}</span>
+                    <span style="color:#cdbf9e; font-size:18px;">→</span>
+                  </div>
+                  <div style="font-family:'Spectral',serif; font-size:18px; font-weight:600; color:#2c2823; margin-top:5px;">{{ n.title }}</div>
+                  <div style="font-size:13.5px; color:#7a7264; margin-top:7px; line-height:1.5;">{{ n.tr }}</div>
+                  <sc-if value="{{ n.hasSum }}" hint-placeholder-val="{{ false }}">
+                  <div style="font-size:12px; color:#9a8f7c; margin-top:9px; padding-top:9px; border-top:1px solid #f1ebdd; font-style:italic;">{{ n.sum }}</div>
+                  </sc-if>
+                </div>
+              </sc-for>
+            </div>
+            </sc-if>
+          </div>
+        </div>
+        </sc-if>
+
+        <!-- ============ READING ============ -->
+        <sc-if value="{{ isReading }}" hint-placeholder-val="{{ false }}">
+        <div style="min-height:100%; background:{{ rd.bg }};" key="reading">
+          <!-- reading toolbar -->
+          <div style="position:sticky; top:0; z-index:4; background:{{ rd.barBg }}; backdrop-filter:blur(12px); border-bottom:1px solid {{ rd.border }}; padding:12px 16px; display:flex; align-items:center; justify-content:space-between;">
+            <div onClick="{{ backToLib }}" style="display:flex; align-items:center; gap:5px; cursor:pointer; color:{{ rd.accent }}; font-size:14px; font-weight:600;">
+              <span style="font-size:18px;">‹</span> Library
+            </div>
+            <div style="display:flex; align-items:center; gap:8px;">
+              <div onClick="{{ decText }}" style="width:34px; height:34px; border-radius:10px; border:1px solid {{ rd.border }}; display:flex; align-items:center; justify-content:center; color:{{ rd.text }}; font-size:13px; cursor:pointer; background:{{ rd.surf }};">A−</div>
+              <div onClick="{{ incText }}" style="width:34px; height:34px; border-radius:10px; border:1px solid {{ rd.border }}; display:flex; align-items:center; justify-content:center; color:{{ rd.text }}; font-size:17px; cursor:pointer; background:{{ rd.surf }};">A+</div>
+              <div onClick="{{ toggleDark }}" style="width:34px; height:34px; border-radius:10px; border:1px solid {{ rd.border }}; display:flex; align-items:center; justify-content:center; cursor:pointer; background:{{ rd.surf }};">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="{{ rd.accent }}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14a8 8 0 1 1-9.8-9.6A6.5 6.5 0 0 0 20 14z"/></svg>
+              </div>
+            </div>
+          </div>
+
+          <div style="padding:22px 22px 120px; animation:abiFade .35s ease both;">
+            <div style="font-size:11px; letter-spacing:1.4px; text-transform:uppercase; font-weight:700; color:{{ readAccent }};">{{ rKicker }}</div>
+            <div style="font-family:'Spectral',serif; font-size:27px; font-weight:600; color:{{ rd.text }}; margin-top:6px; line-height:1.2;">{{ rTitle }}</div>
+            <sc-if value="{{ rNote }}" hint-placeholder-val="{{ false }}">
+            <div style="font-size:13px; color:{{ rd.muted }}; margin-top:7px; font-style:italic;">{{ rNote }}</div>
+            </sc-if>
+
+            <!-- arabic block -->
+            <sc-if value="{{ rHasArabic }}" hint-placeholder-val="{{ true }}">
+            <div style="background:{{ rd.surf }}; border:1px solid {{ rd.border }}; border-radius:20px; padding:26px 22px; margin-top:22px;">
+              <div style="font-family:'Amiri',serif; font-size:{{ arSize }}; line-height:2.1; color:{{ rd.arInk }}; text-align:center;" dir="rtl">{{ rArabic }}</div>
+            </div>
+            </sc-if>
+
+            <!-- translation block -->
+            <div style="margin-top:22px;">
+              <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
+                <span style="font-size:11px; letter-spacing:1.2px; text-transform:uppercase; font-weight:700; color:{{ rd.muted }};">Translation</span>
+                <span style="flex:1; height:1px; background:{{ rd.border }};"></span>
+              </div>
+              <div style="font-family:'Spectral',serif; font-size:{{ trSize }}; line-height:1.85; color:{{ rd.text }};">{{ rBody }}</div>
+              <sc-if value="{{ rHasSum }}" hint-placeholder-val="{{ false }}">
+              <div style="background:{{ rd.surf }}; border:1px solid {{ rd.border }}; border-radius:16px; padding:15px 17px; margin-top:20px;">
+                <div style="font-size:11px; letter-spacing:1px; text-transform:uppercase; font-weight:700; color:{{ rd.muted }}; margin-bottom:6px;">Summary</div>
+                <div style="font-size:14px; line-height:1.6; color:{{ rd.text }};">{{ rSum }}</div>
+              </div>
+              </sc-if>
+            </div>
+
+            <!-- share -->
+            <div style="display:flex; gap:12px; margin-top:26px;">
+              <div style="flex:1; display:flex; align-items:center; justify-content:center; gap:8px; padding:14px; border-radius:14px; background:{{ readAccent }}; color:#fffdf9; font-size:14px; font-weight:600; cursor:pointer;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="2.6"/><circle cx="6" cy="12" r="2.6"/><circle cx="18" cy="19" r="2.6"/><path d="M8.3 10.7l7.4-4.4M8.3 13.3l7.4 4.4"/></svg>
+                Share
+              </div>
+              <div style="width:52px; display:flex; align-items:center; justify-content:center; border-radius:14px; border:1px solid {{ rd.border }}; background:{{ rd.surf }}; cursor:pointer;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="{{ rd.accent }}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4h12v16l-6-4-6 4z"/></svg>
+              </div>
+            </div>
+          </div>
+        </div>
+        </sc-if>
+
+        <!-- ============ CLASSIFIEDS ============ -->
+        <sc-if value="{{ isClassifieds }}" hint-placeholder-val="{{ false }}">
+        <div style="padding:8px 20px 120px;" key="classifieds">
+          <div style="animation:abiFade .4s ease both;">
+            <div style="padding:8px 0 14px;">
+              <div style="font-size:13px; color:#9a8f7c; font-weight:500;">Community</div>
+              <div style="font-family:'Spectral',serif; font-size:26px; font-weight:600; color:#27241f; margin-top:2px;">Classifieds</div>
+            </div>
+            <div style="display:flex; align-items:center; gap:10px; background:#fffdf9; border:1px solid #ece4d4; border-radius:14px; padding:11px 14px; margin-bottom:14px;">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#b3a890" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg>
+              <input value="{{ queryC }}" onInput="{{ onSearchC }}" placeholder="Search businesses" style="border:none; outline:none; background:transparent; font-family:'Hanken Grotesk',sans-serif; font-size:14px; color:#3f3a32; width:100%;"/>
+            </div>
+            <div class="abi-scroll" style="display:flex; gap:8px; overflow-x:auto; margin:0 -20px 16px; padding:0 20px 2px;">
+              <sc-for list="{{ classChips }}" as="c" hint-placeholder-count="6">
+                <div onClick="{{ c.set }}" style="flex:0 0 auto; padding:8px 15px; border-radius:20px; font-size:12.5px; font-weight:600; background:{{ c.bg }}; color:{{ c.ink }}; border:1px solid {{ c.bd }}; cursor:pointer;">{{ c.label }}</div>
+              </sc-for>
+            </div>
+            <sc-if value="{{ hasClass }}" hint-placeholder-val="{{ true }}">
+            <div style="display:flex; flex-direction:column; gap:12px;">
+              <sc-for list="{{ classCards }}" as="b" hint-placeholder-count="5">
+                <div style="background:#fffdf9; border:1px solid #ece4d4; border-radius:18px; padding:16px;">
+                  <div style="display:flex; gap:13px;">
+                    <div style="flex:0 0 auto; width:50px; height:50px; border-radius:14px; background:{{ b.tint }}; display:flex; align-items:center; justify-content:center; font-family:'Spectral',serif; font-size:22px; font-weight:600; color:{{ b.ink }};">{{ b.initial }}</div>
+                    <div style="flex:1; min-width:0;">
+                      <div style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
+                        <div style="font-size:16px; font-weight:600; color:#2c2823;">{{ b.name }}</div>
+                        <span style="flex:0 0 auto; font-size:10px; letter-spacing:.6px; text-transform:uppercase; font-weight:700; color:{{ b.ink }}; background:{{ b.tint }}; padding:3px 8px; border-radius:6px;">{{ b.cat }}</span>
+                      </div>
+                      <div style="font-size:13px; color:#7a7264; margin-top:4px; line-height:1.45;">{{ b.desc }}</div>
+                      <div style="display:flex; align-items:center; gap:5px; font-size:12px; color:#9a8f7c; margin-top:7px;">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s7-6.5 7-12a7 7 0 1 0-14 0c0 5.5 7 12 7 12z"/><circle cx="12" cy="9" r="2.4"/></svg>
+                        {{ b.loc }}
+                      </div>
+                    </div>
+                  </div>
+                  <div style="display:flex; gap:9px; margin-top:14px;">
+                    <div style="flex:1; display:flex; align-items:center; justify-content:center; gap:7px; padding:11px; border-radius:12px; background:#1f5145; color:#fffdf9; font-size:13px; font-weight:600; cursor:pointer;">
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15l-1.4 5 5.1-1.3A10 10 0 1 0 12 2zm0 2a8 8 0 1 1-4.2 14.8l-.4-.2-2.6.7.7-2.5-.2-.4A8 8 0 0 1 12 4z"/></svg>
+                      WhatsApp
+                    </div>
+                    <div style="flex:1; display:flex; align-items:center; justify-content:center; gap:7px; padding:11px; border-radius:12px; border:1px solid #e6dcc8; background:#fff; color:#3f3a32; font-size:13px; font-weight:600; cursor:pointer;">
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M5 4h3l2 5-2.5 1.5a11 11 0 0 0 5 5L19 13l2 5v3a16 16 0 0 1-16-16z"/></svg>
+                      Call
+                    </div>
+                    <sc-if value="{{ b.web }}" hint-placeholder-val="{{ true }}">
+                    <div style="width:46px; display:flex; align-items:center; justify-content:center; border-radius:12px; border:1px solid #e6dcc8; background:#fff; cursor:pointer;">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9a7a2c" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.5 2.5 15 0 18M12 3c-2.5 2.5-2.5 15 0 18"/></svg>
+                    </div>
+                    </sc-if>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+            </sc-if>
+            <sc-if value="{{ hasClass }}" hint-placeholder-val="{{ true }}">
+            <div style="text-align:center; font-size:11.5px; color:#a89d88; line-height:1.5; padding:18px 24px 0;">
+              Listings are shared for community information only. Ahlul Bayt Ireland does not endorse individual businesses.
+            </div>
+            </sc-if>
+            <sc-if value="{{ hasClass }}" hint-placeholder-val="{{ false }}">
+            <div style="display:none;"></div>
+            </sc-if>
+          </div>
+        </div>
+        </sc-if>
+
+        <!-- ============ MORE ============ -->
+        <sc-if value="{{ isMore }}" hint-placeholder-val="{{ false }}">
+        <div style="padding:8px 20px 120px;" key="more">
+          <div style="animation:abiFade .4s ease both;">
+            <div style="padding:8px 0 16px;">
+              <div style="font-family:'Spectral',serif; font-size:26px; font-weight:600; color:#27241f;">More</div>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:11px; margin-bottom:24px;">
+              <sc-for list="{{ moreLinks }}" as="m" hint-placeholder-count="4">
+                <div onClick="{{ m.go }}" style="display:flex; align-items:center; gap:14px; background:#fffdf9; border:1px solid #ece4d4; border-radius:16px; padding:15px 16px; cursor:pointer;">
+                  <div style="width:40px; height:40px; border-radius:12px; background:#f0e9d9; display:flex; align-items:center; justify-content:center; font-family:'Amiri',serif; font-size:19px; color:#1f5145;">{{ m.glyph }}</div>
+                  <div style="flex:1;">
+                    <div style="font-size:15px; font-weight:600; color:#2c2823;">{{ m.label }}</div>
+                    <div style="font-size:12px; color:#9a8f7c; margin-top:1px;">{{ m.sub }}</div>
+                  </div>
+                  <span style="color:#cdbf9e; font-size:20px;">›</span>
+                </div>
+              </sc-for>
+            </div>
+            <div style="font-size:11px; letter-spacing:1.2px; text-transform:uppercase; font-weight:700; color:#b1a690; margin-bottom:12px; padding-left:2px;">Reading Settings</div>
+            <div style="background:#fffdf9; border:1px solid #ece4d4; border-radius:16px; padding:6px 16px;">
+              <div style="display:flex; align-items:center; justify-content:space-between; padding:13px 0; border-bottom:1px solid #f3ecdd;">
+                <div style="font-size:14.5px; color:#3f3a32;">Dark reading mode</div>
+                <div onClick="{{ toggleDark }}" style="width:48px; height:28px; border-radius:16px; background:{{ darkToggleBg }}; position:relative; cursor:pointer; transition:background .2s;">
+                  <div style="position:absolute; top:3px; left:{{ darkKnobX }}; width:22px; height:22px; border-radius:50%; background:#fff; box-shadow:0 1px 3px rgba(0,0,0,.2); transition:left .2s;"></div>
+                </div>
+              </div>
+              <div style="display:flex; align-items:center; justify-content:space-between; padding:13px 0;">
+                <div style="font-size:14.5px; color:#3f3a32;">Scripture text size</div>
+                <div style="display:flex; align-items:center; gap:10px;">
+                  <div onClick="{{ decText }}" style="width:30px; height:30px; border-radius:9px; border:1px solid #e6dcc8; display:flex; align-items:center; justify-content:center; color:#3f3a32; font-size:13px; cursor:pointer;">A−</div>
+                  <span style="font-size:13px; color:#9a8f7c; font-variant-numeric:tabular-nums; width:38px; text-align:center;">{{ textPct }}</span>
+                  <div onClick="{{ incText }}" style="width:30px; height:30px; border-radius:9px; border:1px solid #e6dcc8; display:flex; align-items:center; justify-content:center; color:#3f3a32; font-size:16px; cursor:pointer;">A+</div>
+                </div>
+              </div>
+            </div>
+            <div style="text-align:center; font-size:11.5px; color:#b1a690; margin-top:26px; line-height:1.6;">Ahlul Bayt Ireland · V1<br>Built for the community, with care.</div>
+          </div>
+        </div>
+        </sc-if>
+
+        <!-- ============ ABOUT / INSTALL ============ -->
+        <sc-if value="{{ isAbout }}" hint-placeholder-val="{{ false }}">
+        <div style="padding:8px 20px 120px;" key="about">
+          <div style="animation:abiFade .4s ease both; text-align:center;">
+            <div onClick="{{ goMore }}" style="text-align:left; display:inline-flex; align-items:center; gap:4px; color:#1f5145; font-size:14px; font-weight:600; cursor:pointer; padding:8px 0 4px;"><span style="font-size:18px;">‹</span> More</div>
+            <div style="width:104px; height:104px; border-radius:28px; background:linear-gradient(150deg,#23564a,#143b2f); margin:24px auto 0; display:flex; align-items:center; justify-content:center; box-shadow:0 22px 40px -16px rgba(20,59,47,.6); position:relative; overflow:hidden;">
+              <div style="position:absolute; inset:0; box-shadow: inset 0 0 0 1px rgba(216,184,99,.25);"></div>
+              <div style="width:46px; height:46px; border-radius:50%; box-shadow: inset -13px 0 0 0 #d8b863;"></div>
+            </div>
+            <div style="font-family:'Spectral',serif; font-size:24px; font-weight:600; color:#27241f; margin-top:18px;">Ahlul Bayt Ireland</div>
+            <div style="font-size:13.5px; color:#9a8f7c; margin-top:5px; line-height:1.5; padding:0 24px;">A calm companion for prayer, supplication and community life.</div>
+            <div style="background:#fffdf9; border:1px solid #ece4d4; border-radius:18px; padding:20px; margin-top:24px; text-align:left;">
+              <div style="font-size:11px; letter-spacing:1.2px; text-transform:uppercase; font-weight:700; color:#b1a690; margin-bottom:12px;">Install as an app</div>
+              <div style="display:flex; flex-direction:column; gap:13px;">
+                <div style="display:flex; gap:11px; align-items:flex-start;"><span style="flex:0 0 22px; height:22px; border-radius:50%; background:#e6efe9; color:#1f5145; font-size:12px; font-weight:700; display:flex; align-items:center; justify-content:center;">1</span><span style="font-size:13.5px; color:#4a443a; line-height:1.5;">Tap the <b>Share</b> icon in your browser.</span></div>
+                <div style="display:flex; gap:11px; align-items:flex-start;"><span style="flex:0 0 22px; height:22px; border-radius:50%; background:#e6efe9; color:#1f5145; font-size:12px; font-weight:700; display:flex; align-items:center; justify-content:center;">2</span><span style="font-size:13.5px; color:#4a443a; line-height:1.5;">Choose <b>Add to Home Screen</b>.</span></div>
+                <div style="display:flex; gap:11px; align-items:flex-start;"><span style="flex:0 0 22px; height:22px; border-radius:50%; background:#e6efe9; color:#1f5145; font-size:12px; font-weight:700; display:flex; align-items:center; justify-content:center;">3</span><span style="font-size:13.5px; color:#4a443a; line-height:1.5;">Open it anytime — works offline.</span></div>
+              </div>
+            </div>
+            <div style="margin-top:18px; padding:15px; border-radius:14px; background:#1c1a17; color:#d8b863; font-size:14px; font-weight:600; cursor:pointer;">Add to Home Screen</div>
+          </div>
+        </div>
+        </sc-if>
+
+        <!-- ============ OFFLINE ============ -->
+        <sc-if value="{{ isOffline }}" hint-placeholder-val="{{ false }}">
+        <div style="min-height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:40px 30px;" key="offline">
+          <div onClick="{{ goMore }}" style="position:absolute; top:14px; left:20px; color:#1f5145; font-size:14px; font-weight:600; cursor:pointer;"><span style="font-size:18px;">‹</span> Back</div>
+          <div style="width:72px; height:72px; border-radius:22px; background:#efe7d7; display:flex; align-items:center; justify-content:center; margin-bottom:22px;">
+            <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#b3a890" stroke-width="1.6" stroke-linecap="round"><path d="M5 13a7 7 0 0 1 11-4M3 8c3-3 8-4 12-2M19 13a4 4 0 0 1 1 5"/><path d="M2 2l20 20"/></svg>
+          </div>
+          <div style="font-family:'Spectral',serif; font-size:21px; font-weight:600; color:#2c2823;">You're offline</div>
+          <div style="font-size:13.5px; color:#9a8f7c; text-align:center; margin-top:8px; line-height:1.6; max-width:240px;">Saved prayer times and your recent readings are still available. Other content will sync when you're back online.</div>
+          <div style="margin-top:22px; padding:12px 22px; border-radius:13px; border:1px solid #e6dcc8; background:#fffdf9; color:#1f5145; font-size:14px; font-weight:600; cursor:pointer;">Retry connection</div>
+        </div>
+        </sc-if>
+
+        <!-- ============ ADMIN DASHBOARD ============ -->
+        <sc-if value="{{ isAdmin }}" hint-placeholder-val="{{ false }}">
+        <div style="padding:8px 20px 120px;" key="admin">
+          <div style="animation:abiFade .4s ease both;">
+            <div onClick="{{ backToMore }}" style="display:inline-flex; align-items:center; gap:4px; color:#1f5145; font-size:14px; font-weight:600; cursor:pointer; padding:8px 0 4px;"><span style="font-size:18px;">‹</span> More</div>
+            <div style="display:flex; align-items:center; justify-content:space-between; padding:4px 0 18px;">
+              <div>
+                <div style="font-size:13px; color:#9a8f7c; font-weight:500;">Admin</div>
+                <div style="font-family:'Spectral',serif; font-size:25px; font-weight:600; color:#27241f;">Dashboard</div>
+              </div>
+              <div style="display:flex; align-items:center; gap:8px; background:#e6efe9; padding:6px 12px; border-radius:20px;">
+                <span style="width:7px; height:7px; border-radius:50%; background:#1f5145;"></span>
+                <span style="font-size:12px; font-weight:600; color:#1f5145;">Editor</span>
+              </div>
+            </div>
+
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:11px; margin-bottom:22px;">
+              <sc-for list="{{ adminStats }}" as="s" hint-placeholder-count="4">
+                <div style="background:#fffdf9; border:1px solid #ece4d4; border-radius:16px; padding:15px;">
+                  <div style="font-size:11.5px; color:#9a8f7c; font-weight:600;">{{ s.label }}</div>
+                  <div style="font-family:'Spectral',serif; font-size:30px; font-weight:600; color:{{ s.ink }}; margin-top:4px; line-height:1;">{{ s.val }}</div>
+                  <div style="font-size:11px; color:#a89d88; margin-top:5px;">{{ s.note }}</div>
+                </div>
+              </sc-for>
+            </div>
+
+            <div style="font-size:11px; letter-spacing:1.2px; text-transform:uppercase; font-weight:700; color:#b1a690; margin-bottom:12px;">Quick Actions</div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:11px; margin-bottom:24px;">
+              <sc-for list="{{ adminActions }}" as="a" hint-placeholder-count="4">
+                <div onClick="{{ a.open }}" style="display:flex; align-items:center; gap:10px; background:#1f5145; border-radius:14px; padding:14px 15px; cursor:pointer;">
+                  <span style="width:26px; height:26px; border-radius:8px; background:rgba(216,184,99,.22); color:#d8b863; display:flex; align-items:center; justify-content:center; font-size:15px;">{{ a.glyph }}</span>
+                  <span style="font-size:13.5px; font-weight:600; color:#f3ead4;">{{ a.label }}</span>
+                </div>
+              </sc-for>
+            </div>
+
+            <div style="font-size:11px; letter-spacing:1.2px; text-transform:uppercase; font-weight:700; color:#b1a690; margin-bottom:12px;">Expiring Stories</div>
+            <div style="display:flex; flex-direction:column; gap:10px; margin-bottom:24px;">
+              <sc-for list="{{ adminExpiring }}" as="e" hint-placeholder-count="2">
+                <div style="background:#fffdf9; border:1px solid #ece4d4; border-radius:14px; padding:14px 15px;">
+                  <div style="display:flex; align-items:center; justify-content:space-between;">
+                    <span style="font-size:14px; font-weight:600; color:#2c2823;">{{ e.title }}</span>
+                    <span style="font-size:12px; font-weight:600; color:#9a7a2c;">{{ e.left }}</span>
+                  </div>
+                  <div style="height:5px; border-radius:4px; background:#efe7d7; margin-top:9px; overflow:hidden;">
+                    <div style="height:100%; width:{{ e.pct }}%; background:linear-gradient(90deg,#d8b863,#b8923f); border-radius:4px;"></div>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+
+            <div style="font-size:11px; letter-spacing:1.2px; text-transform:uppercase; font-weight:700; color:#b1a690; margin-bottom:12px;">Recent Activity</div>
+            <div style="background:#fffdf9; border:1px solid #ece4d4; border-radius:16px; padding:6px 16px;">
+              <sc-for list="{{ adminActivity }}" as="a" hint-placeholder-count="4">
+                <div style="display:flex; gap:12px; padding:13px 0; border-bottom:1px solid #f3ecdd;">
+                  <span style="flex:0 0 auto; width:8px; height:8px; border-radius:50%; background:{{ a.dot }}; margin-top:5px;"></span>
+                  <div>
+                    <div style="font-size:13.5px; color:#3f3a32; line-height:1.4;">{{ a.txt }}</div>
+                    <div style="font-size:11.5px; color:#a89d88; margin-top:2px;">{{ a.meta }}</div>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+        </sc-if>
+
+      </div>
+
+      <!-- BOTTOM NAV -->
+      <sc-if value="{{ showNav }}" hint-placeholder-val="{{ true }}">
+      <div style="flex:0 0 auto; background:rgba(255,253,249,.92); backdrop-filter:blur(14px); border-top:1px solid #eadfca; padding:9px 14px 26px; display:flex; justify-content:space-between;">
+        <sc-for list="{{ navItems }}" as="n" hint-placeholder-count="5">
+          <div onClick="{{ n.go }}" style="flex:1; display:flex; flex-direction:column; align-items:center; gap:4px; cursor:pointer; padding:3px 0;">
+            <div style="width:24px; height:24px; color:{{ n.color }};" dangerouslySetInnerHTML="{{ n.iconHtml }}"></div>
+            <div style="font-size:10.5px; font-weight:{{ n.weight }}; color:{{ n.color }}; letter-spacing:.2px;">{{ n.label }}</div>
+          </div>
+        </sc-for>
+      </div>
+      </sc-if>
+
+      <!-- ============ STORY VIEWER (overlay) ============ -->
+      <sc-if value="{{ storyOpen }}" hint-placeholder-val="{{ false }}">
+      <div style="position:absolute; inset:0; z-index:20; background:{{ storyColor }}; display:flex; flex-direction:column; animation:abiPop .3s ease both;">
+        <div style="position:absolute; inset:0; background:radial-gradient(120% 90% at 50% 0%, rgba(255,255,255,.1), rgba(0,0,0,.35) 100%);"></div>
+        <div style="position:absolute; right:-50px; bottom:-30px; width:220px; height:220px; border-radius:50%; border:1px solid rgba(255,255,255,.1);"></div>
+
+        <!-- progress bars -->
+        <div style="position:relative; z-index:2; display:flex; gap:5px; padding:54px 16px 0;">
+          <sc-for list="{{ storyBars }}" as="bar" hint-placeholder-count="4">
+            <div style="flex:1; height:3px; border-radius:3px; background:rgba(255,255,255,.3); overflow:hidden;">
+              <div style="height:100%; width:{{ bar.fill }}%; background:#fff; border-radius:3px;"></div>
+            </div>
+          </sc-for>
+        </div>
+
+        <!-- header -->
+        <div style="position:relative; z-index:2; display:flex; align-items:center; justify-content:space-between; padding:16px 18px 0;">
+          <div style="display:flex; align-items:center; gap:10px;">
+            <div style="width:34px; height:34px; border-radius:50%; background:rgba(255,255,255,.18); display:flex; align-items:center; justify-content:center; font-family:'Spectral',serif; color:#fff; font-weight:600;">ا</div>
+            <div>
+              <div style="font-size:13.5px; font-weight:600; color:#fff;">Ahlul Bayt Ireland</div>
+              <div style="font-size:11px; color:rgba(255,255,255,.7);">{{ storyTag }}</div>
+            </div>
+          </div>
+          <div onClick="{{ closeStory }}" style="width:34px; height:34px; display:flex; align-items:center; justify-content:center; cursor:pointer; color:#fff; font-size:24px; line-height:1;">×</div>
+        </div>
+
+        <!-- tap zones -->
+        <div onClick="{{ prevStory }}" style="position:absolute; left:0; top:90px; bottom:0; width:35%; z-index:3;"></div>
+        <div onClick="{{ nextStory }}" style="position:absolute; right:0; top:90px; bottom:0; width:65%; z-index:3;"></div>
+
+        <!-- body -->
+        <div style="position:relative; z-index:2; flex:1; display:flex; flex-direction:column; justify-content:flex-end; padding:0 26px 40px; pointer-events:none;">
+          <div style="font-family:'Amiri',serif; font-size:30px; color:rgba(255,255,255,.85); margin-bottom:14px;" dir="rtl">ﷺ</div>
+          <div style="font-family:'Spectral',serif; font-size:30px; font-weight:600; color:#fff; line-height:1.2;">{{ storyTitle }}</div>
+          <div style="font-size:14px; color:rgba(255,255,255,.85); margin-top:4px; font-weight:500;">{{ storySub }}</div>
+          <div style="font-size:15.5px; color:rgba(255,255,255,.92); margin-top:16px; line-height:1.6;">{{ storyBody }}</div>
+          <sc-if value="{{ hasLink }}" hint-placeholder-val="{{ true }}">
+          <div style="pointer-events:auto; display:inline-flex; align-self:flex-start; align-items:center; gap:8px; margin-top:22px; padding:12px 20px; border-radius:13px; background:#fff; color:#27241f; font-size:14px; font-weight:600; cursor:pointer;">
+            {{ storyLink }} <span style="font-size:16px;">→</span>
+          </div>
+          </sc-if>
+        </div>
+      </div>
+      </sc-if>
+
+      <!-- ============ ADMIN FORM (overlay) ============ -->
+      <sc-if value="{{ isAdminForm }}" hint-placeholder-val="{{ false }}">
+      <div style="position:absolute; inset:0; z-index:18; background:#f6f1e7; display:flex; flex-direction:column; animation:abiSheet .32s cubic-bezier(.2,.8,.2,1) both;">
+        <div style="flex:0 0 auto; padding:54px 20px 14px; background:#fffdf9; border-bottom:1px solid #ece4d4;">
+          <div style="display:flex; align-items:center; justify-content:space-between;">
+            <div onClick="{{ closeForm }}" style="font-size:14px; color:#8c8270; font-weight:600; cursor:pointer;">Cancel</div>
+            <div style="font-size:15px; font-weight:600; color:#27241f;">New {{ adminFormType }}</div>
+            <div style="font-size:14px; color:#1f5145; font-weight:700; cursor:pointer;">Publish</div>
+          </div>
+        </div>
+        <div class="abi-scroll" style="flex:1; overflow-y:auto; padding:20px;">
+          <!-- status badges -->
+          <div style="display:flex; gap:8px; margin-bottom:20px;">
+            <span style="font-size:11px; font-weight:700; letter-spacing:.5px; text-transform:uppercase; color:#9a7a2c; background:#f3ecd9; padding:6px 11px; border-radius:8px;">Draft</span>
+            <span style="font-size:11px; font-weight:700; letter-spacing:.5px; text-transform:uppercase; color:#8c8270; background:#efe7d7; padding:6px 11px; border-radius:8px;">Not published</span>
+          </div>
+
+          <label style="display:block; font-size:12.5px; font-weight:600; color:#6f675a; margin-bottom:7px;">Title</label>
+          <input placeholder="Enter a clear title" style="width:100%; border:1px solid #e6dcc8; background:#fffdf9; border-radius:13px; padding:13px 15px; font-family:'Hanken Grotesk',sans-serif; font-size:15px; color:#2c2823; outline:none; margin-bottom:18px;"/>
+
+          <sc-if value="{{ isStoryForm }}" hint-placeholder-val="{{ true }}">
+          <label style="display:block; font-size:12.5px; font-weight:600; color:#6f675a; margin-bottom:7px;">Cover image</label>
+          <div style="border:1.5px dashed #d6cab2; border-radius:16px; padding:30px; text-align:center; background:#faf6ec; margin-bottom:18px; cursor:pointer;">
+            <div style="width:44px; height:44px; border-radius:13px; background:#efe7d7; margin:0 auto 10px; display:flex; align-items:center; justify-content:center; color:#9a7a2c; font-size:22px;">↑</div>
+            <div style="font-size:13.5px; color:#6f675a; font-weight:600;">Drag an image or tap to upload</div>
+            <div style="font-size:11.5px; color:#a89d88; margin-top:3px;">JPG or PNG · up to 5 MB</div>
+          </div>
+          <div style="display:flex; gap:12px; margin-bottom:18px;">
+            <div style="flex:1;">
+              <label style="display:block; font-size:12.5px; font-weight:600; color:#6f675a; margin-bottom:7px;">Expires after</label>
+              <div style="border:1px solid #e6dcc8; background:#fffdf9; border-radius:13px; padding:13px 15px; font-size:15px; color:#2c2823; display:flex; justify-content:space-between;">24 hours <span style="color:#b3a890;">▾</span></div>
+            </div>
+            <div style="flex:1;">
+              <label style="display:block; font-size:12.5px; font-weight:600; color:#6f675a; margin-bottom:7px;">Link button</label>
+              <div style="border:1px solid #e6dcc8; background:#fffdf9; border-radius:13px; padding:13px 15px; font-size:15px; color:#a89d88; display:flex; justify-content:space-between;">Optional <span style="color:#b3a890;">▾</span></div>
+            </div>
+          </div>
+          </sc-if>
+
+          <sc-if value="{{ isClassForm }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex; gap:12px; margin-bottom:18px;">
+            <div style="flex:1;">
+              <label style="display:block; font-size:12.5px; font-weight:600; color:#6f675a; margin-bottom:7px;">Category</label>
+              <div style="border:1px solid #e6dcc8; background:#fffdf9; border-radius:13px; padding:13px 15px; font-size:15px; color:#2c2823; display:flex; justify-content:space-between;">Food <span style="color:#b3a890;">▾</span></div>
+            </div>
+            <div style="flex:1;">
+              <label style="display:block; font-size:12.5px; font-weight:600; color:#6f675a; margin-bottom:7px;">Location</label>
+              <input placeholder="City" style="width:100%; border:1px solid #e6dcc8; background:#fffdf9; border-radius:13px; padding:13px 15px; font-size:15px; color:#2c2823; outline:none;"/>
+            </div>
+          </div>
+          </sc-if>
+
+          <label style="display:block; font-size:12.5px; font-weight:600; color:#6f675a; margin-bottom:7px;">{{ bodyLabel }}</label>
+          <textarea placeholder="Write the content here…" style="width:100%; min-height:120px; border:1px solid #e6dcc8; background:#fffdf9; border-radius:13px; padding:13px 15px; font-family:'Hanken Grotesk',sans-serif; font-size:15px; line-height:1.6; color:#2c2823; outline:none; resize:none; margin-bottom:22px;"></textarea>
+
+          <!-- preview -->
+          <div style="font-size:11px; letter-spacing:1.2px; text-transform:uppercase; font-weight:700; color:#b1a690; margin-bottom:10px;">Preview</div>
+          <div style="background:#fffdf9; border:1px solid #ece4d4; border-radius:16px; padding:16px; margin-bottom:22px;">
+            <div style="font-family:'Spectral',serif; font-size:17px; font-weight:600; color:#9a8f7c;">Your {{ adminFormType }} preview appears here</div>
+            <div style="font-size:13px; color:#b1a690; margin-top:6px; line-height:1.5;">Fill in the fields above to see a live preview before publishing.</div>
+          </div>
+
+          <!-- publish controls -->
+          <div style="display:flex; gap:11px; margin-bottom:12px;">
+            <div style="flex:1; text-align:center; padding:14px; border-radius:14px; background:#1f5145; color:#fffdf9; font-size:14.5px; font-weight:600; cursor:pointer;">Publish now</div>
+            <div style="flex:1; text-align:center; padding:14px; border-radius:14px; border:1px solid #e6dcc8; background:#fffdf9; color:#3f3a32; font-size:14.5px; font-weight:600; cursor:pointer;">Save draft</div>
+          </div>
+          <div style="text-align:center; padding:13px; font-size:13.5px; color:#9a8f7c; font-weight:600; cursor:pointer;">Archive</div>
+        </div>
+      </div>
+      </sc-if>
+
+    </div>
+  </div>
+</div>
+
+<template id="__bundler_thumbnail" data-bg-color="#163b30">
+  <svg viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg">
+    <rect width="1200" height="800" fill="#163b30"/>
+    <circle cx="600" cy="380" r="150" fill="none" stroke="#d8b863" stroke-width="14"/>
+    <circle cx="660" cy="380" r="150" fill="#163b30"/>
+    <text x="600" y="640" font-family="Georgia, serif" font-size="74" fill="#f3ead4" text-anchor="middle">Ahlul Bayt Ireland</text>
+  </svg>
+</template>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:520,&quot;height&quot;:940}}">
+class Component extends DCLogic {
+  state = {
+    screen: 'home', libTab: 'dua', nahjTab: 'sermons', prayerTab: 'today',
+    readingType: null, readingItem: null, dark: false, textSize: 1,
+    story: null, storyProg: 0, adminForm: null, classCat: 'All', duaCat: 'All',
+    now: new Date(), install: true, query: ''
+  };
+
+  prayers = [
+    { name: 'Fajr', en: 'Dawn', ar: 'الفجر', glyph: 'ﭐ', time: '03:28' },
+    { name: 'Sunrise', en: 'Shurūq', ar: 'الشروق', glyph: '✷', time: '04:57' },
+    { name: 'Dhuhr', en: 'Noon', ar: 'الظهر', glyph: 'ﭖ', time: '13:26' },
+    { name: 'Sunset', en: 'Ghurūb', ar: 'الغروب', glyph: '✸', time: '21:56' },
+    { name: 'Maghrib', en: 'Dusk', ar: 'المغرب', glyph: 'ﮊ', time: '22:16' },
+    { name: 'Midnight', en: 'Muntaṣaf', ar: 'منتصف الليل', glyph: '☾', time: '01:12' }
+  ];
+
+  stories = [
+    { title: 'Jummah Reminder', short: 'Jummah', initial: 'ج', tag: 'Today', color: '#1f5145', sub: 'Jamāʿah at 1:30 PM', body: 'Friday congregational prayer begins at 1:30 PM. Doors open at 1:00 PM — please arrive early to find a place.', link: 'View timings' },
+    { title: 'Muḥarram Programme', short: 'Muḥarram', initial: 'م', tag: '2 days', color: '#6e2230', sub: 'Nightly majālis', body: 'The annual Muḥarram programme begins this Friday. Nightly gatherings after Maghrib throughout the first ten nights.', link: 'Full schedule' },
+    { title: 'New Qurʾān Class', short: 'Class', initial: 'ق', tag: 'New', color: '#b8923f', sub: 'Saturdays, 11 AM', body: 'A new weekly tajwīd class for youth starts this Saturday at 11 AM in the main hall.', link: 'Register interest' },
+    { title: 'Community Iftar', short: 'Iftar', initial: 'إ', tag: 'Sunday', color: '#2c5d52', sub: 'Open to all', body: 'Join us for a shared community meal this Sunday evening. All families are warmly welcome.', link: '' }
+  ];
+
+  duas = [
+    { title: 'Duʿāʾ Kumayl', cat: 'Weekly', ar: 'اللّٰهُمَّ إِنِّي أَسْأَلُكَ بِرَحْمَتِكَ الَّتِي وَسِعَتْ كُلَّ شَيْءٍ', tr: 'O Allah, I ask You by Your mercy, which embraces all things.', note: 'Traditionally recited on Thursday nights.', body: 'O Allah, I ask You by Your mercy, which embraces all things; and by Your strength, through which You dominate all things, and towards which all things are humble and before which all things are lowly.' },
+    { title: 'Duʿāʾ al-Faraj', cat: 'Daily', ar: 'إِلٰهِي عَظُمَ الْبَلَاءُ وَبَرِحَ الْخَفَاءُ', tr: 'My God, the affliction has grown great and the hidden has become exposed.', note: 'A supplication for relief.', body: 'My God, the affliction has grown great and the hidden has become exposed, and hopes have folded away, and the earth has narrowed, and the sky has withheld its bounty — and You are the One we seek for help.' },
+    { title: 'Duʿāʾ al-Ṣabāḥ', cat: 'Morning', ar: 'اللّٰهُمَّ يَا مَنْ دَلَعَ لِسَانَ الصَّبَاحِ بِنُطْقِ تَبَلُّجِهِ', tr: 'O Allah, O You who unfurled the tongue of the morning with the utterance of its dawning.', note: 'For the morning hours.', body: 'O Allah, O You who unfurled the tongue of the morning with the utterance of its dawning, and sent forth the gusts of night into the gloom of its darkening.' },
+    { title: 'Munājāt al-Shaʿbāniyya', cat: 'Monthly', ar: 'إِلٰهِي هَبْ لِي كَمَالَ الِانْقِطَاعِ إِلَيْكَ', tr: 'My God, grant me complete devotion to You.', note: 'The whispered prayer of Shaʿbān.', body: 'My God, grant me complete devotion to You, and illumine the eyes of our hearts with the light of their looking towards You, until they tear through the veils of light and reach the source of grandeur.' },
+    { title: 'Tasbīḥ al-Zahrāʾ', cat: 'Daily', ar: 'اللّٰهُ أَكْبَر • سُبْحَانَ اللّٰهِ • الْحَمْدُ لِلّٰهِ', tr: 'Allah is the Greatest · Glory be to Allah · All praise is for Allah.', note: 'Recited after each obligatory prayer.', body: 'Allah is the Greatest (34 times) · Glory be to Allah (33 times) · All praise is for Allah (33 times).' }
+  ];
+
+  ziyarat = [
+    { title: 'Ziyārat ʿĀshūrāʾ', cat: 'Imam Ḥusayn', ar: 'السَّلَامُ عَلَيْكَ يَا أَبَا عَبْدِ اللّٰهِ', tr: 'Peace be upon you, O Abā ʿAbdillāh.', note: 'The renowned salutation of mourning.', body: 'Peace be upon you, O Abā ʿAbdillāh, and upon those souls who gathered at your courtyard. Upon you, from me, be the peace of Allah for as long as I remain and as long as there are night and day.' },
+    { title: 'Ziyārat Wārith', cat: 'Imam Ḥusayn', ar: 'السَّلَامُ عَلَيْكَ يَا وَارِثَ آدَمَ صَفْوَةِ اللّٰهِ', tr: 'Peace be upon you, O inheritor of Ādam, the chosen of Allah.', note: '', body: 'Peace be upon you, O inheritor of Ādam, the chosen of Allah. Peace be upon you, O inheritor of Nūḥ, the prophet of Allah.' },
+    { title: 'Ziyārat Amīnullāh', cat: 'General', ar: 'السَّلَامُ عَلَيْكَ يَا أَمِينَ اللّٰهِ فِي أَرْضِهِ', tr: 'Peace be upon you, O trustee of Allah on His earth.', note: '', body: 'Peace be upon you, O trustee of Allah on His earth, and His proof over His servants. O Allah, make my soul tranquil through Your decree, content with Your apportionment.' },
+    { title: 'Ziyārat al-Jāmiʿa', cat: 'The Aʾimmah', ar: 'السَّلَامُ عَلَيْكُمْ يَا أَهْلَ بَيْتِ النُّبُوَّةِ', tr: 'Peace be upon you, O People of the House of Prophethood.', note: 'A comprehensive salutation to the Imams.', body: 'Peace be upon you, O People of the House of Prophethood, the place of the message, the descending-place of the angels, and the source of revelation.' }
+  ];
+
+  nahj = {
+    sermons: [
+      { ref: 'Sermon 1', title: 'On the Creation', sum: 'On the origin of creation and the praise of God.', ar: 'الْحَمْدُ لِلّٰهِ الَّذِي لَا يَبْلُغُ مِدْحَتَهُ الْقَائِلُونَ', tr: 'Praise is due to Allah whose worth cannot be described by speakers, whose bounties cannot be counted by those who reckon, and whose claim to obedience cannot be satisfied by those who attempt to do so.' },
+      { ref: 'Sermon 3', title: 'Al-Shiqshiqiyya', sum: 'On the matter of succession and leadership.', ar: '', tr: 'Beware! By Allah, so-and-so dressed himself with the caliphate, and he knew well that my position in relation to it was the same as the position of the axis in relation to the hand-mill.' },
+      { ref: 'Sermon 193', title: 'On the God-fearing', sum: 'A vivid description of the qualities of the righteous.', ar: '', tr: 'So the God-fearing in it are people of distinction. Their speech is to the point, their dress is moderate, and their gait is humble.' }
+    ],
+    letters: [
+      { ref: 'Letter 31', title: 'To Imam al-Ḥasan', sum: 'Fatherly counsel on life, character and the passage of time.', ar: '', tr: 'From a father who is fast approaching his end, who has admitted the hardships of the times, who is on his way out of this world — to his son who craves for what cannot be achieved.' },
+      { ref: 'Letter 53', title: 'To Mālik al-Ashtar', sum: 'A charter of just and merciful governance.', ar: '', tr: 'Let the dearest of your treasuries be the treasury of righteous action. Habituate your heart to mercy for the subjects and to affection and kindness for them.' }
+    ],
+    sayings: [
+      { ref: 'Saying 1', title: 'On Civil Strife', sum: '', ar: '', tr: 'During civil disturbance be like an adolescent camel who has neither a back strong enough for riding nor udders for milking.' },
+      { ref: 'Saying 147', title: 'On Knowledge', sum: '', ar: '', tr: 'Knowledge is better than wealth. Knowledge guards you, while you have to guard wealth. Wealth decreases by spending, while knowledge multiplies by it.' }
+    ]
+  };
+
+  classifieds = [
+    { name: 'Al-Noor Halal Grocery', cat: 'Food', desc: 'Fresh produce, halal essentials & imported goods.', loc: 'Blanchardstown, Dublin 15', web: true, ink: '#1f5145', tint: '#e6efe9' },
+    { name: 'Dublin Halal Meats', cat: 'Butcher', desc: 'Zabīḥa halal meat, fresh daily. Bulk orders welcome.', loc: 'Clondalkin, Dublin 22', web: false, ink: '#6e2230', tint: '#f3e6e8' },
+    { name: 'Karbala Travel', cat: 'Travel', desc: 'Ziyārat & Ḥajj packages, flights and visas.', loc: 'City Centre, Dublin 1', web: true, ink: '#9a7a2c', tint: '#f3ecd9' },
+    { name: 'Zahrā Tutoring', cat: 'Education', desc: 'Maths & English tuition, primary to Leaving Cert.', loc: 'Cork', web: false, ink: '#2c5d52', tint: '#e6efe9' },
+    { name: 'Crescent Accounting', cat: 'Services', desc: 'Bookkeeping, tax returns & small-business advice.', loc: 'Limerick', web: true, ink: '#3a4a78', tint: '#e8ebf4' }
+  ];
+
+  navDefs = [
+    { key: 'home', label: 'Home', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11l8-6 8 6"/><path d="M6 10v9h12v-9"/></svg>' },
+    { key: 'prayer', label: 'Prayer', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M17 5a7 7 0 1 0 2 9 5.6 5.6 0 0 1-2-9z"/></svg>' },
+    { key: 'library', label: 'Library', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6c-1.6-1-4-1.4-6-1v12c2-.4 4.4 0 6 1 1.6-1 4-1.4 6-1V5c-2-.4-4.4 0-6 1z"/><path d="M12 6v13"/></svg>' },
+    { key: 'stories', label: 'Updates', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8" stroke-dasharray="3 2.4"/><circle cx="12" cy="12" r="3.2"/></svg>' },
+    { key: 'more', label: 'More', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="5" cy="12" r="1.2" fill="currentColor"/><circle cx="12" cy="12" r="1.2" fill="currentColor"/><circle cx="19" cy="12" r="1.2" fill="currentColor"/></svg>' }
+  ];
+
+  componentDidMount() {
+    this.clockTimer = setInterval(() => this.setState({ now: new Date() }), 1000);
+  }
+  componentWillUnmount() {
+    clearInterval(this.clockTimer); clearInterval(this.storyTimer);
+  }
+
+  go = (s) => this.setState({ screen: s, story: null });
+  openReading = (type, item) => this.setState({ screen: 'reading', readingType: type, readingItem: item });
+
+  openStory = (i) => {
+    clearInterval(this.storyTimer);
+    this.setState({ story: i, storyProg: 0 });
+    this.storyTimer = setInterval(() => {
+      this.setState(st => {
+        if (st.story === null) return {};
+        const np = st.storyProg + 1.6;
+        if (np >= 100) {
+          if (st.story < this.stories.length - 1) return { story: st.story + 1, storyProg: 0 };
+          clearInterval(this.storyTimer); return { story: null, storyProg: 0 };
+        }
+        return { storyProg: np };
+      });
+    }, 60);
+  };
+  closeStory = () => { clearInterval(this.storyTimer); this.setState({ story: null, storyProg: 0 }); };
+  prevStory = () => { if (this.state.story > 0) this.openStory(this.state.story - 1); };
+  nextStory = () => { if (this.state.story < this.stories.length - 1) this.openStory(this.state.story + 1); else this.closeStory(); };
+
+  toMin(t) { const [h, m] = t.split(':').map(Number); return h * 60 + m; }
+
+  computeNext() {
+    const now = this.state.now;
+    const mins = now.getHours() * 60 + now.getMinutes() + now.getSeconds() / 60;
+    const order = this.prayers.filter(p => ['Fajr', 'Dhuhr', 'Maghrib', 'Midnight'].includes(p.name));
+    let next = order.find(p => this.toMin(p.time) > mins);
+    let addDay = false;
+    if (!next) { next = order[0]; addDay = true; }
+    let diff = this.toMin(next.time) - mins + (addDay ? 1440 : 0);
+    const h = Math.floor(diff / 60), m = Math.floor(diff % 60), s = Math.floor((diff * 60) % 60);
+    const cd = h > 0 ? `${h}h ${String(m).padStart(2, '0')}m` : `${m}m ${String(s).padStart(2, '0')}s`;
+    return { next, cd };
+  }
+
+  renderVals() {
+    const st = this.state;
+    const dark = st.dark;
+    const { next, cd } = this.computeNext();
+    const nowMins = st.now.getHours() * 60 + st.now.getMinutes();
+    const greg = st.now.toLocaleDateString('en-IE', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+    const clock = st.now.toLocaleTimeString('en-IE', { hour: '2-digit', minute: '2-digit', hour12: false });
+    const hour = st.now.getHours();
+    const salaam = (hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening') + ' · السلام عليكم';
+
+    const prayers = this.prayers.map((p, i) => {
+      const isNext = p.name === next.name;
+      const last = i === this.prayers.length - 1;
+      return {
+        ...p, divider: last ? 'transparent' : '#f3ecdd',
+        nameColor: isNext ? '#1f5145' : '#3f3a32', timeColor: isNext ? '#1f5145' : '#3f3a32',
+        weight: isNext ? 700 : 500, accentInk: isNext ? '#1f5145' : '#c2a86a',
+        rowBg: isNext ? 'linear-gradient(90deg,#f3f7f4,#fffdf9)' : 'transparent'
+      };
+    });
+
+    const storyBubbles = this.stories.map((s, i) => ({ ...s, open: () => this.openStory(i) }));
+
+    const quickCards = [
+      { title: 'Prayer Times', sub: "Today's salāh", glyph: 'ﭖ', tint: '#e6efe9', ink: '#1f5145', span: 'span 1', go: () => this.go('prayer') },
+      { title: 'Duʿāʾ', sub: 'Supplications', glyph: 'ﺀ', tint: '#f3ecd9', ink: '#9a7a2c', span: 'span 1', go: () => this.setState({ screen: 'library', libTab: 'dua' }) },
+      { title: 'Ziyārah', sub: 'Salutations', glyph: 'ﺯ', tint: '#f3e6e8', ink: '#6e2230', span: 'span 1', go: () => this.setState({ screen: 'library', libTab: 'ziyarah' }) },
+      { title: 'Nahj al-Balāgha', sub: 'Sermons · Letters · Sayings', glyph: 'ﻥ', tint: '#e6efe9', ink: '#2c5d52', span: 'span 1', go: () => this.setState({ screen: 'library', libTab: 'nahj' }) },
+      { title: 'Classifieds', sub: 'Community businesses', glyph: 'ﺱ', tint: '#f3ecd9', ink: '#9a7a2c', span: 'span 2', go: () => this.go('classifieds') }
+    ];
+
+    // month preview rows
+    const monthRows = Array.from({ length: 8 }, (_, i) => {
+      const d = i + 18;
+      const today = i === 0;
+      return {
+        day: `${d} Jun`, fajr: ['03:28', '03:29', '03:29', '03:30', '03:31', '03:32', '03:33', '03:34'][i],
+        dhuhr: '13:26', maghrib: ['22:16', '22:16', '22:17', '22:17', '22:17', '22:18', '22:18', '22:18'][i],
+        bg: today ? '#f3f7f4' : 'transparent', dayInk: today ? '#1f5145' : '#4a443a'
+      };
+    });
+
+    const navItems = this.navDefs.map(n => {
+      const active = (n.key === st.screen) || (n.key === 'library' && st.screen === 'reading') || (n.key === 'stories' && st.story !== null);
+      return { ...n, iconHtml: { __html: n.icon }, color: active ? '#1f5145' : '#b3a890', weight: active ? 700 : 500, go: () => n.key === 'stories' ? this.openStory(0) : this.go(n.key) };
+    });
+
+    const tab = (key) => st.prayerTab === key;
+
+    // ----- LIBRARY -----
+    const libMeta = {
+      dua: { title: 'Duʿāʾ', sub: 'Supplications', list: this.duas, accent: '#9a7a2c', tint: '#f3ecd9' },
+      ziyarah: { title: 'Ziyārah', sub: 'Salutations', list: this.ziyarat, accent: '#6e2230', tint: '#f3e6e8' },
+      nahj: { title: 'Nahj al-Balāgha', sub: 'Peak of Eloquence', list: [], accent: '#2c5d52', tint: '#e6efe9' }
+    };
+    const lm = libMeta[st.libTab];
+    const libTabBtns = [['dua', 'Duʿāʾ'], ['ziyarah', 'Ziyārah'], ['nahj', 'Nahj']].map(([k, label]) => ({
+      label, set: () => this.setState({ libTab: k, query: '' }),
+      ink: st.libTab === k ? '#fffdf9' : '#6f675a', bg: st.libTab === k ? lm.accent : 'transparent'
+    }));
+    const q = st.query.trim().toLowerCase();
+    let libCards = [];
+    if (st.libTab === 'dua' || st.libTab === 'ziyarah') {
+      libCards = lm.list.map(it => ({ ...it, accent: lm.accent, tint: lm.tint, open: () => this.openReading(st.libTab, it) }))
+        .filter(it => !q || it.title.toLowerCase().includes(q) || it.tr.toLowerCase().includes(q));
+    }
+    const nahjTabBtns = [['sermons', 'Sermons'], ['letters', 'Letters'], ['sayings', 'Sayings']].map(([k, label]) => ({
+      label, set: () => this.setState({ nahjTab: k }),
+      ink: st.nahjTab === k ? '#2c5d52' : '#8c8270', weight: st.nahjTab === k ? 700 : 500,
+      bar: st.nahjTab === k ? '#2c5d52' : 'transparent'
+    }));
+    let nahjCards = [];
+    if (st.libTab === 'nahj') {
+      nahjCards = this.nahj[st.nahjTab].map(it => ({ ...it, hasSum: !!it.sum, open: () => this.openReading('nahj', it) }))
+        .filter(it => !q || it.title.toLowerCase().includes(q) || it.tr.toLowerCase().includes(q));
+    }
+    const duaCats = st.libTab === 'dua' ? ['All', 'Daily', 'Weekly', 'Morning', 'Monthly'] : st.libTab === 'ziyarah' ? ['All', 'Imam Ḥusayn', 'The Aʾimmah', 'General'] : [];
+    const catChips = duaCats.map(c => ({ label: c, ink: '#6f675a', bg: '#fffdf9', bd: '#e6dcc8' }));
+
+    // ----- READING -----
+    const r = st.readingItem || {};
+    const rtype = st.readingType;
+    const rd = dark
+      ? { bg: '#16191a', surf: '#1e2324', text: '#ece6d8', muted: '#8e9490', border: '#2c3234', barBg: 'rgba(22,25,26,.9)', accent: '#d8b863', arInk: '#e9e1cd' }
+      : { bg: '#f6f1e7', surf: '#fffdf9', text: '#2c2823', muted: '#9a8f7c', border: '#ece4d4', barBg: 'rgba(246,241,231,.92)', accent: '#1f5145', arInk: '#2c2823' };
+    const arSize = Math.round(30 * st.textSize);
+    const trSize = Math.round(17 * st.textSize);
+    const readAccent = rtype === 'ziyarah' ? '#6e2230' : rtype === 'nahj' ? '#2c5d52' : '#9a7a2c';
+
+    // ----- STORY VIEWER -----
+    const storyOpen = st.story !== null;
+    const cur = storyOpen ? this.stories[st.story] : {};
+    const storyBars = this.stories.map((s, i) => ({
+      fill: i < st.story ? 100 : i === st.story ? st.storyProg : 0
+    }));
+    const hasLink = !!cur.link;
+
+    // ----- CLASSIFIEDS -----
+    const classCats = ['All', 'Food', 'Butcher', 'Travel', 'Education', 'Services'];
+    const classChips = classCats.map(c => ({
+      label: c, active: st.classCat === c,
+      ink: st.classCat === c ? '#fffdf9' : '#6f675a',
+      bg: st.classCat === c ? '#1f5145' : '#fffdf9',
+      bd: st.classCat === c ? '#1f5145' : '#e6dcc8',
+      set: () => this.setState({ classCat: c })
+    }));
+    const cq = st.query.trim().toLowerCase();
+    const classCards = this.classifieds
+      .filter(c => st.classCat === 'All' || c.cat === st.classCat)
+      .filter(c => !cq || c.name.toLowerCase().includes(cq) || c.desc.toLowerCase().includes(cq))
+      .map(c => ({ ...c, initial: c.name[0] }));
+
+    // ----- MORE -----
+    const moreLinks = [
+      { label: 'Classifieds', sub: 'Community business listings', glyph: 'ﺱ', go: () => this.go('classifieds') },
+      { label: 'Admin Dashboard', sub: 'Manage content (staff)', glyph: '⚙', go: () => this.go('admin') },
+      { label: 'About & Install', sub: 'Add Ahlul Bayt Ireland to home screen', glyph: '↧', go: () => this.go('about') },
+      { label: 'Offline Mode', sub: 'Preview the offline fallback', glyph: '⊘', go: () => this.go('offline') }
+    ];
+
+    // ----- ADMIN -----
+    const adminStats = [
+      { label: 'Active Stories', val: '3', note: '1 expiring soon', ink: '#1f5145', tint: '#e6efe9' },
+      { label: 'Classifieds', val: '5', note: 'All approved', ink: '#9a7a2c', tint: '#f3ecd9' },
+      { label: 'Duʿāʾ', val: '24', note: 'Published', ink: '#6e2230', tint: '#f3e6e8' },
+      { label: 'Prayer Cal.', val: '✓', note: '1447 imported', ink: '#2c5d52', tint: '#e6efe9' }
+    ];
+    const adminActions = [
+      { label: 'Add Story', type: 'Story', glyph: '＋' },
+      { label: 'New Duʿāʾ', type: 'Duʿāʾ', glyph: '＋' },
+      { label: 'Add Listing', type: 'Classified', glyph: '＋' },
+      { label: 'Prayer Times', type: 'Prayer Time', glyph: '✎' }
+    ].map(a => ({ ...a, open: () => this.setState({ screen: 'adminForm', adminForm: a.type }) }));
+    const adminActivity = [
+      { txt: 'Jummah Reminder story published', meta: 'Today · 09:14', dot: '#1f5145' },
+      { txt: 'Karbala Travel listing approved', meta: 'Yesterday · 17:30', dot: '#9a7a2c' },
+      { txt: 'Duʿāʾ al-Faraj updated', meta: 'Yesterday · 11:02', dot: '#6e2230' },
+      { txt: '1447 prayer calendar imported', meta: '2 days ago', dot: '#2c5d52' }
+    ];
+    const adminExpiring = [
+      { title: 'Jummah Reminder', left: 'Expires in 6h', pct: 75 },
+      { title: 'Community Iftar', left: 'Expires in 19h', pct: 22 }
+    ];
+    const af = st.adminForm || 'Story';
+    const isStoryForm = af === 'Story';
+    const isClassForm = af === 'Classified';
+
+    return {
+      screen: st.screen, appBg: '#f6f1e7', statusColor: dark && st.screen === 'reading' ? '#cfd3d0' : '#46413a',
+      isHome: st.screen === 'home', isPrayer: st.screen === 'prayer',
+      isLibrary: st.screen === 'library', isReading: st.screen === 'reading',
+      isLibDua: st.libTab === 'dua', isLibZiyarah: st.libTab === 'ziyarah', isLibNahj: st.libTab === 'nahj',
+      libTitle: lm.title, libSub: lm.sub, libAccent: lm.accent, libTabBtns, catChips, hasCats: duaCats.length > 0,
+      libCards, hasLibCards: libCards.length > 0, nahjTabBtns, nahjCards, hasNahjCards: nahjCards.length > 0,
+      query: st.query, onSearch: (e) => this.setState({ query: e.target.value }),
+      backToLib: () => this.setState({ screen: 'library' }),
+      // reading
+      rTitle: r.title, rArabic: r.ar, rBody: r.body, rNote: r.note, rRef: r.ref, rSum: r.sum, rHasSum: !!r.sum, rHasArabic: !!r.ar,
+      rKicker: rtype === 'dua' ? 'Supplication' : rtype === 'ziyarah' ? 'Salutation' : (r.ref || 'Nahj al-Balāgha'),
+      readAccent, rd, arSize: arSize + 'px', trSize: trSize + 'px',
+      dark, toggleDark: () => this.setState({ dark: !st.dark }),
+      darkToggleBg: st.dark ? '#1f5145' : '#d8d0bf', darkKnobX: st.dark ? '23px' : '3px',
+      incText: () => this.setState({ textSize: Math.min(1.5, st.textSize + 0.12) }),
+      decText: () => this.setState({ textSize: Math.max(0.85, st.textSize - 0.12) }),
+      textPct: Math.round(st.textSize * 100) + '%',
+      isPrayerToday: tab('today'), isPrayerMonth: tab('month'),
+      showNav: st.screen !== 'reading' && st.story === null && st.screen !== 'adminForm',
+      // screens
+      isClassifieds: st.screen === 'classifieds', isMore: st.screen === 'more',
+      isAbout: st.screen === 'about', isOffline: st.screen === 'offline',
+      isAdmin: st.screen === 'admin', isAdminForm: st.screen === 'adminForm',
+      // story
+      storyOpen, storyTitle: cur.title, storyBody: cur.body, storySub: cur.sub, storyTag: cur.tag,
+      storyColor: cur.color, storyLink: cur.link, hasLink, storyBars,
+      closeStory: this.closeStory, prevStory: this.prevStory, nextStory: this.nextStory,
+      // classifieds
+      classChips, classCards, hasClass: classCards.length > 0,
+      onSearchC: (e) => this.setState({ query: e.target.value }), queryC: st.query,
+      // more
+      moreLinks,
+      goAbout: () => this.go('about'), goMore: () => this.go('more'),
+      // admin
+      adminStats, adminActions, adminActivity, adminExpiring,
+      backToMore: () => this.go('more'), goAdmin: () => this.go('admin'),
+      // admin form
+      adminFormType: af, isStoryForm, isClassForm,
+      bodyLabel: isStoryForm ? 'Story text' : isClassForm ? 'Business description' : 'Content',
+      closeForm: () => this.go('admin'),
+      newStory: () => this.setState({ screen: 'adminForm', adminForm: 'Story' }),
+      clock, greg, salaam,
+      hijri: '12 Dhū al-Ḥijja 1447', install: st.install,
+      nextName: next.name, nextAr: next.ar, nextTime: next.time, countdown: cd,
+      prayers, storyBubbles, quickCards, monthRows, navItems,
+      goPrayer: () => this.go('prayer'),
+      openStory0: () => this.openStory(0),
+      dismissInstall: () => this.setState({ install: false }),
+      setTabToday: () => this.setState({ prayerTab: 'today' }),
+      setTabMonth: () => this.setState({ prayerTab: 'month' }),
+      tabTodayBg: tab('today') ? '#fffdf9' : 'transparent', tabTodayInk: tab('today') ? '#1f5145' : '#8c8270', tabTodayShadow: tab('today') ? '0 2px 6px rgba(40,30,10,.08)' : 'none',
+      tabMonthBg: tab('month') ? '#fffdf9' : 'transparent', tabMonthInk: tab('month') ? '#1f5145' : '#8c8270', tabMonthShadow: tab('month') ? '0 2px 6px rgba(40,30,10,.08)' : 'none'
+    };
+  }
+}
+</script>
+<script>
+(async () => {
+  if (!document.title || !document.title.trim()) document.title = "Ahlul Bayt Ireland";
+  // Prepend so page-supplied @page / break rules (deck-stage's margin:0,
+  // author CSS) keep source-order precedence over the baseline.
+  const baseCss = document.createElement('style');
+  baseCss.textContent = "@media print {\n  @page { margin: 0.5cm; }\n  figure, table { break-inside: avoid; }\n  *, *::before, *::after {\n    print-color-adjust: exact; -webkit-print-color-adjust: exact;\n    backdrop-filter: none !important; -webkit-backdrop-filter: none !important;\n    animation-delay: -99s !important; animation-duration: .001s !important;\n    animation-iteration-count: 1 !important; animation-fill-mode: both !important;\n    animation-play-state: running !important; transition-duration: 0s !important;\n  }\n}";
+  document.head.prepend(baseCss);
+  if (document.readyState === 'loading') {
+    await new Promise((r) => document.addEventListener('DOMContentLoaded', r, { once: true }));
+  }
+  let ds = document.querySelector('deck-stage');
+  // whenDefined never resolves when nothing registers the element, so only
+  // await it when a <deck-stage> tag exists (and race a timeout regardless).
+  if (ds && !customElements.get('deck-stage')) {
+    try {
+      await Promise.race([
+        customElements.whenDefined('deck-stage'),
+        new Promise((r) => setTimeout(r, 3000)),
+      ]);
+    } catch (e) {}
+    ds = document.querySelector('deck-stage');
+  }
+  // dc-runtime assigns window.DCLogic at init and mounts into #dc-root on
+  // DOMContentLoaded; settle on that subtree so React has rendered before
+  // print(). Non-DC pages fall through to weighing body.
+  const isDc = !ds && 'DCLogic' in window;
+  const settleRoot = ds || (isDc ? document.getElementById('dc-root') : null) || document.body;
+  if (settleRoot) {
+    // Weigh only content children — skip script/style/template so inline
+    // Babel/CSS doesn't register as stable "content" before the framework
+    // has mounted anything.
+    const MEDIA = 'img,svg,canvas,video,picture,iframe,embed,object';
+    const weigh = () => {
+      let text = 0, media = 0;
+      for (const c of settleRoot.children) {
+        const t = c.tagName;
+        if (t === 'SCRIPT' || t === 'STYLE' || t === 'TEMPLATE') continue;
+        text += (c.textContent || '').trim().length;
+        media += c.querySelectorAll(MEDIA).length + (c.matches(MEDIA) ? 1 : 0);
+      }
+      return text + media * 100;
+    };
+    // "Non-zero and stable" alone is not sufficient to mean rendered: generic
+    // body can carry a static shell while async main content is pending, and
+    // #dc-root can carry the root DC's static text while child refs are still
+    // .sc-placeholder boxes. Gate generic on readyState 'complete', and never
+    // accept stability while a dc-runtime placeholder is present.
+    const isGeneric = settleRoot === document.body;
+    const deadline = Date.now() + 15000;
+    let last = -1, stable = 0;
+    while (Date.now() < deadline) {
+      const n = weigh();
+      const ready =
+        (!isGeneric || document.readyState === 'complete') &&
+        !settleRoot.querySelector('.sc-placeholder');
+      if (n > 0 && n === last && ready) { if (++stable >= 2) break; } else { stable = 0; }
+      last = n;
+      await new Promise((r) => setTimeout(r, 250));
+    }
+  }
+  // Reveal content gated on scroll or visibility before printing. Lazy <img>,
+  // IntersectionObserver fade-ins, and collapsed <details> don't render while
+  // off-screen, so a long page would print with them blank or closed. Open
+  // every <details>, force native-lazy images eager, and scroll the document
+  // through its full height to trip lazy-load + IO; then wait (bounded) for the
+  // newly-triggered images. Inert for deck-stage (slides aren't scroll-gated).
+  try {
+    for (const d of document.querySelectorAll('details')) d.open = true;
+    for (const img of document.querySelectorAll('img[loading="lazy"]'))
+      img.loading = 'eager';
+    const scroller = document.scrollingElement || document.documentElement;
+    const full = Math.max(scroller.scrollHeight, document.body.scrollHeight);
+    const step = window.innerHeight || 800;
+    for (let y = 0; y <= full; y += step) {
+      window.scrollTo(0, y);
+      await new Promise((r) => requestAnimationFrame(r));
+    }
+    window.scrollTo(0, 0);
+    await Promise.race([
+      Promise.all(
+        [...document.images].map((img) =>
+          img.complete
+            ? null
+            : new Promise((res) => {
+                img.addEventListener('load', res, { once: true });
+                img.addEventListener('error', res, { once: true });
+              })
+        )
+      ),
+      new Promise((r) => setTimeout(r, 4000)),
+    ]);
+  } catch (e) {}
+  try { await document.fonts.ready; } catch (e) {}
+  // Jump every animation to its end state so print() never captures a slide
+  // mid-entrance. Ordering matters: the 0s-transition style must be live
+  // BEFORE data-deck-active is set so attribute-keyed transitions don't
+  // start a (now-0s) run from the pre-active base.
+  const st = document.createElement('style');
+  st.textContent = '*,*::before,*::after{animation-delay:-99s !important;animation-duration:.001s !important;animation-iteration-count:1 !important;animation-fill-mode:both !important;animation-play-state:running !important;transition-duration:0s !important}';
+  document.head.appendChild(st);
+  for (const d of document.querySelectorAll('deck-stage')) {
+    for (const c of d.children) {
+      const t = c.tagName;
+      if (t === 'SCRIPT' || t === 'STYLE' || t === 'TEMPLATE') continue;
+      c.setAttribute('data-deck-active', '');
+    }
+  }
+  // Re-append deck-stage's @page last so no author @page can add a margin and
+  // spill each full-bleed slide onto two sheets. Backstop for old copies.
+  if (ds) {
+    let pg = document.getElementById('deck-stage-print-page');
+    if (!pg) {
+      pg = document.createElement('style');
+      pg.textContent = '@page{size:' + (+ds.getAttribute('width') || 1920) +
+        'px ' + (+ds.getAttribute('height') || 1080) + 'px;margin:0}';
+    }
+    document.body.appendChild(pg);
+  }
+  try {
+    const sweep = () => {
+      for (const a of document.getAnimations()) {
+        try { a.finish(); } catch (e) {
+          try { a.currentTime = (a.effect && a.effect.getComputedTiming().duration) || 0; a.pause(); } catch (e2) {}
+        }
+      }
+    };
+    sweep();
+    await new Promise((r) => requestAnimationFrame(r));
+    sweep();
+    await new Promise((r) => requestAnimationFrame(r));
+  } catch (e) {}
+  // Relax break-inside on oversized elements. An element taller than a
+  // printable page can't honor break-inside: avoid — browsers either overflow
+  // it or push it whole to the next page, leaving a blank gap, then break it
+  // anyway at an arbitrary point. After the final layout (content revealed,
+  // animations jumped), find elements taller than a page that still compute
+  // break-inside: avoid and reset them to auto, so the browser breaks them at
+  // their children's boundaries instead (children keep their own avoid). PAGE_PX
+  // is a conservative portrait estimate at 96 CSS px/in — Letter/A4 usable
+  // height minus our 0.5in margins — so only clearly-oversized elements are
+  // touched and under-page elements still stay whole. Skipped for decks, whose
+  // slides are sized to the page.
+  try {
+    if (!document.querySelector('deck-stage')) {
+      const PAGE_PX = 1024;
+      // Our print defaults add a body padding inset only when we also zero the
+      // @page margin; computed style can't tell us (it reports screen media),
+      // so read the injected rule directly.
+      const defaults = document.querySelector('style[data-omelette-print-defaults]');
+      const pageInset = /body\s*\{[^}]*padding/.test(defaults ? defaults.textContent || '' : '');
+      const SEL = 'section,article,figure,table,pre,blockquote,[class~="card" i],[class~="page" i],[class~="sheet" i]';
+      for (const el of document.body.querySelectorAll(SEL)) {
+        if (el instanceof HTMLElement && el.offsetHeight > PAGE_PX) {
+          el.setAttribute('data-om-oversized', '');
+          // Fake-paged docs simulate sheets with over-tall break-after:page
+          // boxes; honoring the break spills half-blank pages and ends a
+          // colored box mid-sheet. Flow them, and (only when we own the page
+          // inset) drop the redundant padding/background via the rule below.
+          const cs = getComputedStyle(el);
+          if (cs.breakAfter === 'page' || cs.pageBreakAfter === 'always') {
+            el.setAttribute('data-om-fakepage', '');
+          }
+        }
+      }
+      const ost = document.createElement('style');
+      ost.textContent = '@media print{' +
+        '[data-om-oversized]{break-inside:auto !important;page-break-inside:auto !important}' +
+        '[data-om-fakepage]{break-after:auto !important;page-break-after:auto !important}' +
+        (pageInset ? '[data-om-fakepage]{padding:0 !important;background:none !important}' : '') +
+        '}';
+      document.head.appendChild(ost);
+    }
+  } catch (e) {}
+  // macOS Preview renders Skia-PDF Luminosity soft-masks as opaque grey boxes;
+  // swap the CSS that triggers them for Preview-safe forms.
+  try {
+    for (const el of document.body.querySelectorAll('*')) {
+      const cs = getComputedStyle(el);
+
+      if (cs.boxShadow !== 'none' && cs.filter === 'none') {
+        const outs = [], kept = [];
+        for (const s of cs.boxShadow.split(/,(?![^(]*[)])/)) {
+          const t = s.trim();
+          const m = t.match(/^(rgba?[(][^)]+[)]) (-?[0-9.]+px) (-?[0-9.]+px) ([0-9.]+px) -?[0-9.]+px$/);
+          if (m && parseFloat(m[4]) > 0) outs.push('drop-shadow(' + m[2] + ' ' + m[3] + ' ' + m[4] + ' ' + m[1] + ')');
+          else kept.push(t);
+        }
+        if (outs.length) {
+          el.style.setProperty('filter', outs.join(' '), 'important');
+          el.style.setProperty('box-shadow', kept.join(', ') || 'none', 'important');
+        }
+      }
+
+      const mask = cs.maskImage && cs.maskImage !== 'none' ? cs.maskImage : cs.webkitMaskImage;
+      if (mask && mask !== 'none' && cs.filter === 'none') el.style.setProperty('filter', 'opacity(1)', 'important');
+    }
+  } catch (e) {}
+  setTimeout(() => { try { window.print(); } catch (e) {} }, 200);
+})();
+</script>
+</body>
+</html>
