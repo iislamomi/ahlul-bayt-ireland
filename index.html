@@ -9,6 +9,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Ahlul Bayt Ireland">
   <meta name="description" content="A calm companion for prayer, supplication and community life.">
+  <link rel="manifest" href="./manifest.json">
   <title>Ahlul Bayt Ireland</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -24,10 +25,12 @@
     @keyframes fu { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:none; } }
     @keyframes su { from { transform:translateY(100%); } to { transform:none; } }
     @keyframes po { from { opacity:0; transform:scale(.96); } to { opacity:1; transform:scale(1); } }
+    @keyframes toast-in { from { opacity:0; transform:translateY(-14px) scale(.95); } to { opacity:1; transform:none; } }
     .afu { animation: fu .4s ease both; }
     .apo { animation: po .3s ease both; }
     .asu { animation: su .32s cubic-bezier(.2,.8,.2,1) both; }
-    input, textarea { font-family: 'Hanken Grotesk', system-ui, sans-serif; }
+    input, textarea, select { font-family: 'Hanken Grotesk', system-ui, sans-serif; }
+    a { text-decoration: none; color: inherit; display: contents; }
   </style>
 </head>
 <body>
@@ -38,14 +41,37 @@
 <script type="text/babel">
 const { Component } = React;
 
+/* ── HIJRI DATE ── */
+function toHijri(date) {
+  const y = date.getFullYear(), m = date.getMonth()+1, d = date.getDate();
+  let yy = y, mm = m;
+  if (mm <= 2) { yy--; mm += 12; }
+  const A = Math.floor(yy/100);
+  const B = 2 - A + Math.floor(A/4);
+  const jd = Math.floor(Math.floor(365.25*(yy+4716)) + Math.floor(30.6001*(mm+1)) + d + B - 1524.5 + 0.5);
+  let l = jd - 1948440 + 10632;
+  const n = Math.floor((l-1)/10631);
+  l = l - 10631*n + 354;
+  const j = Math.floor((10985-l)/5316)*Math.floor((50*l)/17719)
+          + Math.floor(l/5670)*Math.floor((43*l)/15238);
+  l = l - Math.floor((30-j)/15)*Math.floor((17719*j)/50)
+        - Math.floor(j/16)*Math.floor((15238*j)/43) + 29;
+  const hm = Math.floor((24*l)/709);
+  const hd = l - Math.floor((709*hm)/24);
+  const hy = 30*n + j - 30;
+  const M = ['Muḥarram','Ṣafar','Rabīʿ al-Awwal','Rabīʿ al-Thānī','Jumādā al-Ūlā','Jumādā al-Ākhira',
+             'Rajab','Shaʿbān','Ramaḍān','Shawwāl','Dhū al-Qaʿda','Dhū al-Ḥijja'];
+  return `${hd} ${M[hm-1]} ${hy}`;
+}
+
 /* ── DATA ── */
 const PRAYERS = [
-  { name:'Fajr',    en:'Dawn',          ar:'الفجر',           glyph:'ﭐ', time:'03:28' },
-  { name:'Sunrise', en:'Shurūq',        ar:'الشروق',          glyph:'✷', time:'04:57' },
-  { name:'Dhuhr',   en:'Noon',          ar:'الظهر',           glyph:'ﭖ', time:'13:26' },
-  { name:'Sunset',  en:'Ghurūb',        ar:'الغروب',          glyph:'✸', time:'21:56' },
-  { name:'Maghrib', en:'Dusk',          ar:'المغرب',          glyph:'ﮊ', time:'22:16' },
-  { name:'Midnight',en:'Muntaṣaf',      ar:'منتصف الليل',     glyph:'☾', time:'01:12' },
+  { name:'Fajr',    en:'Dawn',       ar:'الفجر',        glyph:'ﭐ', time:'03:28' },
+  { name:'Sunrise', en:'Shurūq',     ar:'الشروق',       glyph:'✷', time:'04:57' },
+  { name:'Dhuhr',   en:'Noon',       ar:'الظهر',        glyph:'ﭖ', time:'13:26' },
+  { name:'Sunset',  en:'Ghurūb',     ar:'الغروب',       glyph:'✸', time:'21:56' },
+  { name:'Maghrib', en:'Dusk',       ar:'المغرب',       glyph:'ﮊ', time:'22:16' },
+  { name:'Midnight',en:'Muntaṣaf',   ar:'منتصف الليل',  glyph:'☾', time:'01:12' },
 ];
 
 const STORIES = [
@@ -72,13 +98,13 @@ const ZIYARAT = [
 
 const NAHJ = {
   sermons: [
-    { ref:'Sermon 1',   title:'On the Creation',    sum:'On the origin of creation and the praise of God.',               ar:'الْحَمْدُ لِلّٰهِ الَّذِي لَا يَبْلُغُ مِدْحَتَهُ الْقَائِلُونَ', tr:'Praise is due to Allah whose worth cannot be described by speakers, whose bounties cannot be counted by those who reckon, and whose claim to obedience cannot be satisfied by those who attempt to do so.' },
-    { ref:'Sermon 3',   title:'Al-Shiqshiqiyya',    sum:'On the matter of succession and leadership.',                    ar:'', tr:'Beware! By Allah, so-and-so dressed himself with the caliphate, and he knew well that my position in relation to it was the same as the position of the axis in relation to the hand-mill.' },
-    { ref:'Sermon 193', title:'On the God-fearing', sum:'A vivid description of the qualities of the righteous.',        ar:'', tr:'So the God-fearing in it are people of distinction. Their speech is to the point, their dress is moderate, and their gait is humble.' },
+    { ref:'Sermon 1',   title:'On the Creation',    sum:'On the origin of creation and the praise of God.', ar:'الْحَمْدُ لِلّٰهِ الَّذِي لَا يَبْلُغُ مِدْحَتَهُ الْقَائِلُونَ', tr:'Praise is due to Allah whose worth cannot be described by speakers, whose bounties cannot be counted by those who reckon, and whose claim to obedience cannot be satisfied by those who attempt to do so.' },
+    { ref:'Sermon 3',   title:'Al-Shiqshiqiyya',    sum:'On the matter of succession and leadership.',       ar:'', tr:'Beware! By Allah, so-and-so dressed himself with the caliphate, and he knew well that my position in relation to it was the same as the position of the axis in relation to the hand-mill.' },
+    { ref:'Sermon 193', title:'On the God-fearing', sum:'A vivid description of the qualities of the righteous.', ar:'', tr:'So the God-fearing in it are people of distinction. Their speech is to the point, their dress is moderate, and their gait is humble.' },
   ],
   letters: [
-    { ref:'Letter 31', title:'To Imam al-Ḥasan',  sum:'Fatherly counsel on life, character and the passage of time.', ar:'', tr:'From a father who is fast approaching his end, who has admitted the hardships of the times, who is on his way out of this world — to his son who craves for what cannot be achieved.' },
-    { ref:'Letter 53', title:'To Mālik al-Ashtar', sum:'A charter of just and merciful governance.',                   ar:'', tr:'Let the dearest of your treasuries be the treasury of righteous action. Habituate your heart to mercy for the subjects and to affection and kindness for them.' },
+    { ref:'Letter 31', title:'To Imam al-Ḥasan',   sum:'Fatherly counsel on life, character and the passage of time.', ar:'', tr:'From a father who is fast approaching his end, who has admitted the hardships of the times, who is on his way out of this world — to his son who craves for what cannot be achieved.' },
+    { ref:'Letter 53', title:'To Mālik al-Ashtar',  sum:'A charter of just and merciful governance.',       ar:'', tr:'Let the dearest of your treasuries be the treasury of righteous action. Habituate your heart to mercy for the subjects and to affection and kindness for them.' },
   ],
   sayings: [
     { ref:'Saying 1',   title:'On Civil Strife', sum:'', ar:'', tr:'During civil disturbance be like an adolescent camel who has neither a back strong enough for riding nor udders for milking.' },
@@ -87,16 +113,14 @@ const NAHJ = {
 };
 
 const CLASSIFIEDS = [
-  { name:'Al-Noor Halal Grocery', cat:'Food',      desc:'Fresh produce, halal essentials & imported goods.',         loc:'Blanchardstown, Dublin 15', web:true,  ink:'#1f5145', tint:'#e6efe9' },
-  { name:'Dublin Halal Meats',    cat:'Butcher',   desc:'Zabīḥa halal meat, fresh daily. Bulk orders welcome.',      loc:'Clondalkin, Dublin 22',    web:false, ink:'#6e2230', tint:'#f3e6e8' },
-  { name:'Karbala Travel',        cat:'Travel',    desc:'Ziyārat & Ḥajj packages, flights and visas.',              loc:'City Centre, Dublin 1',    web:true,  ink:'#9a7a2c', tint:'#f3ecd9' },
-  { name:'Zahrā Tutoring',        cat:'Education', desc:'Maths & English tuition, primary to Leaving Cert.',        loc:'Cork',                     web:false, ink:'#2c5d52', tint:'#e6efe9' },
-  { name:'Crescent Accounting',   cat:'Services',  desc:'Bookkeeping, tax returns & small-business advice.',        loc:'Limerick',                 web:true,  ink:'#3a4a78', tint:'#e8ebf4' },
+  { name:'Al-Noor Halal Grocery', cat:'Food',      desc:'Fresh produce, halal essentials & imported goods.',       loc:'Blanchardstown, Dublin 15', web:'https://example.com', phone:'+353 1 234 5678', wa:'35312345678', ink:'#1f5145', tint:'#e6efe9' },
+  { name:'Dublin Halal Meats',    cat:'Butcher',   desc:'Zabīḥa halal meat, fresh daily. Bulk orders welcome.',    loc:'Clondalkin, Dublin 22',    phone:'+353 1 567 8901', wa:'35315678901', ink:'#6e2230', tint:'#f3e6e8' },
+  { name:'Karbala Travel',        cat:'Travel',    desc:'Ziyārat & Ḥajj packages, flights and visas.',            loc:'City Centre, Dublin 1',    web:'https://example.com', phone:'+353 1 890 1234', wa:'35318901234', ink:'#9a7a2c', tint:'#f3ecd9' },
+  { name:'Zahrā Tutoring',        cat:'Education', desc:'Maths & English tuition, primary to Leaving Cert.',      loc:'Cork',                     phone:'+353 21 234 5678', wa:'353212345678', ink:'#2c5d52', tint:'#e6efe9' },
+  { name:'Crescent Accounting',   cat:'Services',  desc:'Bookkeeping, tax returns & small-business advice.',      loc:'Limerick',                 web:'https://example.com', phone:'+353 61 234 5678', wa:'353612345678', ink:'#3a4a78', tint:'#e8ebf4' },
 ];
 
 /* ── ICONS ── */
-const Icon = ({ d }) => <svg style={{width:'100%',height:'100%'}} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" dangerouslySetInnerHTML={{__html: d}} />;
-
 const NAV_ICONS = {
   home:    '<path d="M4 11l8-6 8 6"/><path d="M6 10v9h12v-9"/>',
   prayer:  '<path d="M17 5a7 7 0 1 0 2 9 5.6 5.6 0 0 1-2-9z"/>',
@@ -105,27 +129,91 @@ const NAV_ICONS = {
   more:    '<circle cx="5" cy="12" r="1.2" fill="currentColor"/><circle cx="12" cy="12" r="1.2" fill="currentColor"/><circle cx="19" cy="12" r="1.2" fill="currentColor"/>',
 };
 
-/* ── MAIN APP ── */
+/* ── APP ── */
 class App extends Component {
   state = {
     screen: 'home', libTab: 'dua', nahjTab: 'sermons', prayerTab: 'today',
     dark: false, textSize: 1,
     story: null, storyProg: 0,
-    adminForm: null, classCat: 'All',
-    now: new Date(), install: true, query: '',
+    adminForm: null, adminTitle: '', adminContent: '',
+    classCat: 'All', libCat: 'All',
+    now: new Date(), install: true,
+    libQuery: '', classQuery: '',
     readingType: null, readingItem: null,
+    toast: null, bookmarks: [],
   };
 
   componentDidMount() {
     this.clockTimer = setInterval(() => this.setState({ now: new Date() }), 1000);
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('./sw.js').catch(() => {});
+    }
+    window.addEventListener('beforeinstallprompt', e => {
+      e.preventDefault();
+      this.deferredPrompt = e;
+    });
+    window.addEventListener('appinstalled', () => {
+      this.setState({ install: false });
+      this.deferredPrompt = null;
+    });
   }
+
   componentWillUnmount() {
     clearInterval(this.clockTimer);
     clearInterval(this.storyTimer);
   }
 
   go = s => this.setState({ screen: s, story: null });
-  openReading = (type, item) => this.setState({ screen:'reading', readingType:type, readingItem:item });
+  openReading = (type, item) => this.setState({ screen: 'reading', readingType: type, readingItem: item });
+
+  showToast = msg => {
+    this.setState({ toast: msg });
+    clearTimeout(this.toastTimer);
+    this.toastTimer = setTimeout(() => this.setState({ toast: null }), 2600);
+  };
+
+  handleInstall = () => {
+    if (this.deferredPrompt) {
+      this.deferredPrompt.prompt();
+      this.deferredPrompt.userChoice.then(() => {
+        this.deferredPrompt = null;
+        this.setState({ install: false });
+      });
+    } else {
+      this.go('about');
+    }
+  };
+
+  handleShare = () => {
+    const r = this.state.readingItem || {};
+    const text = r.body || r.tr || '';
+    if (navigator.share) {
+      navigator.share({ title: r.title, text, url: window.location.href }).catch(() => {});
+    } else if (navigator.clipboard) {
+      navigator.clipboard.writeText(text).then(() => this.showToast('Copied to clipboard'));
+    } else {
+      this.showToast('Share not available on this device');
+    }
+  };
+
+  handleBookmark = () => {
+    const r = this.state.readingItem;
+    if (!r) return;
+    const bm = this.state.bookmarks;
+    const exists = bm.some(b => b.title === r.title);
+    if (exists) {
+      this.setState({ bookmarks: bm.filter(b => b.title !== r.title) });
+      this.showToast('Bookmark removed');
+    } else {
+      this.setState({ bookmarks: [...bm, r] });
+      this.showToast('Bookmarked');
+    }
+  };
+
+  handlePDF = () => {
+    this.showToast('Opening prayer calendar…');
+    setTimeout(() => window.open('https://ahlulbaytireland.com/prayer-calendar.pdf', '_blank'), 300);
+  };
 
   openStory = i => {
     clearInterval(this.storyTimer);
@@ -157,25 +245,23 @@ class App extends Component {
     let next = order.find(p => this.toMin(p.time) > mins);
     let addDay = false;
     if (!next) { next = order[0]; addDay = true; }
-    let diff = this.toMin(next.time) - mins + (addDay ? 1440 : 0);
+    const diff = this.toMin(next.time) - mins + (addDay ? 1440 : 0);
     const h = Math.floor(diff/60), m = Math.floor(diff%60), s = Math.floor((diff*60)%60);
     const cd = h > 0 ? `${h}h ${String(m).padStart(2,'0')}m` : `${m}m ${String(s).padStart(2,'0')}s`;
     return { next, cd };
   }
 
   /* ── HOME ── */
-  renderHome(st, next, cd, greg, salaam) {
-    const nowMins = st.now.getHours()*60 + st.now.getMinutes();
-    const prayers = PRAYERS.map((p,i) => {
-      const isNext = p.name === next.name;
-      return { ...p, isNext, last: i===PRAYERS.length-1 };
-    });
+  renderHome(st, next, cd, greg, hijri, salaam) {
+    const prayers = PRAYERS.map((p,i) => ({
+      ...p, isNext: p.name===next.name, last: i===PRAYERS.length-1
+    }));
     const quickCards = [
-      { title:'Prayer Times',     sub:"Today's salāh",           glyph:'ﭖ', tint:'#e6efe9', ink:'#1f5145', span:'1', go:()=>this.go('prayer') },
-      { title:'Duʿāʾ',           sub:'Supplications',            glyph:'ﺀ', tint:'#f3ecd9', ink:'#9a7a2c', span:'1', go:()=>this.setState({screen:'library',libTab:'dua'}) },
-      { title:'Ziyārah',          sub:'Salutations',              glyph:'ﺯ', tint:'#f3e6e8', ink:'#6e2230', span:'1', go:()=>this.setState({screen:'library',libTab:'ziyarah'}) },
-      { title:'Nahj al-Balāgha', sub:'Sermons · Letters · Sayings',glyph:'ﻥ', tint:'#e6efe9', ink:'#2c5d52', span:'1', go:()=>this.setState({screen:'library',libTab:'nahj'}) },
-      { title:'Classifieds',      sub:'Community businesses',     glyph:'ﺱ', tint:'#f3ecd9', ink:'#9a7a2c', span:'2', go:()=>this.go('classifieds') },
+      { title:'Prayer Times',      sub:"Today's salāh",            glyph:'ﭖ', tint:'#e6efe9', ink:'#1f5145', span:'1', go:()=>this.go('prayer') },
+      { title:'Duʿāʾ',            sub:'Supplications',             glyph:'ﺀ', tint:'#f3ecd9', ink:'#9a7a2c', span:'1', go:()=>this.setState({screen:'library',libTab:'dua',libCat:'All'}) },
+      { title:'Ziyārah',           sub:'Salutations',               glyph:'ﺯ', tint:'#f3e6e8', ink:'#6e2230', span:'1', go:()=>this.setState({screen:'library',libTab:'ziyarah',libCat:'All'}) },
+      { title:'Nahj al-Balāgha',  sub:'Sermons · Letters · Sayings',glyph:'ﻥ', tint:'#e6efe9', ink:'#2c5d52', span:'1', go:()=>this.setState({screen:'library',libTab:'nahj',libCat:'All'}) },
+      { title:'Classifieds',       sub:'Community businesses',      glyph:'ﺱ', tint:'#f3ecd9', ink:'#9a7a2c', span:'2', go:()=>this.go('classifieds') },
     ];
     return (
       <div style={{padding:'8px 20px 100px'}} className="afu">
@@ -198,7 +284,7 @@ class App extends Component {
           </div>
           <div style={{flex:1,background:'#fffdf9',border:'1px solid #ece4d4',borderRadius:16,padding:'13px 15px'}}>
             <div style={{fontSize:10.5,letterSpacing:1.2,textTransform:'uppercase',color:'#c2a35a',fontWeight:600}}>Hijri</div>
-            <div style={{fontSize:14.5,color:'#2f2b25',fontWeight:600,marginTop:4}}>12 Dhū al-Ḥijja 1447</div>
+            <div style={{fontSize:14.5,color:'#2f2b25',fontWeight:600,marginTop:4}}>{hijri}</div>
           </div>
         </div>
 
@@ -225,7 +311,7 @@ class App extends Component {
 
         {/* Today's times summary */}
         <div style={{background:'#fffdf9',border:'1px solid #ece4d4',borderRadius:18,padding:'6px 4px',marginBottom:22}}>
-          {prayers.map((p,i) => (
+          {prayers.map((p) => (
             <div key={p.name} style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'11px 16px',borderBottom:p.last?'none':'1px solid #f3ecdd'}}>
               <div style={{display:'flex',alignItems:'center',gap:12}}>
                 <span style={{fontFamily:'Amiri,serif',fontSize:17,color:'#bba35f',width:22,textAlign:'center'}} dir="rtl">{p.glyph}</span>
@@ -236,7 +322,7 @@ class App extends Component {
           ))}
         </div>
 
-        {/* Stories */}
+        {/* Stories row */}
         <div style={{display:'flex',alignItems:'baseline',justifyContent:'space-between',marginBottom:12}}>
           <div style={{fontFamily:'Spectral,serif',fontSize:18,fontWeight:600,color:'#2c2823'}}>Community Updates</div>
           <div onClick={()=>this.openStory(0)} style={{fontSize:12.5,color:'#1f5145',fontWeight:600,cursor:'pointer'}}>View all</div>
@@ -289,7 +375,7 @@ class App extends Component {
               <div style={{fontSize:13.5,fontWeight:600,color:'#f3ead4'}}>Install the app</div>
               <div style={{fontSize:11.5,color:'#a59c8a',marginTop:1}}>Add to your home screen for offline access.</div>
             </div>
-            <div onClick={()=>this.setState({install:false})} style={{fontSize:12.5,color:'#1f5145',fontWeight:600,background:'#d8b863',padding:'8px 13px',borderRadius:11,cursor:'pointer'}}>Add</div>
+            <div onClick={this.handleInstall} style={{fontSize:12.5,color:'#1f5145',fontWeight:600,background:'#d8b863',padding:'8px 13px',borderRadius:11,cursor:'pointer'}}>Add</div>
           </div>
         )}
       </div>
@@ -323,14 +409,12 @@ class App extends Component {
           <div style={{fontFamily:'Spectral,serif',fontSize:26,fontWeight:600,color:'#27241f',marginTop:2}}>Prayer Times</div>
         </div>
 
-        {/* Tabs */}
         <div style={{display:'flex',gap:6,background:'#efe7d7',borderRadius:14,padding:4,marginBottom:18}}>
           <div onClick={()=>this.setState({prayerTab:'today'})} style={tabStyle(tab==='today')}>Today</div>
           <div onClick={()=>this.setState({prayerTab:'month'})} style={tabStyle(tab==='month')}>Monthly</div>
         </div>
 
         {tab==='today' && <>
-          {/* Countdown hero */}
           <div style={{background:'linear-gradient(155deg,#1f5145,#163b30)',borderRadius:22,padding:22,color:'#f3ead4',textAlign:'center',boxShadow:'0 18px 34px -18px rgba(22,59,48,.7)',marginBottom:18,position:'relative',overflow:'hidden'}}>
             <div style={{position:'absolute',left:'50%',top:-40,transform:'translateX(-50%)',width:200,height:200,borderRadius:'50%',border:'1px solid rgba(216,184,99,.16)'}} />
             <div style={{position:'relative'}}>
@@ -339,8 +423,6 @@ class App extends Component {
               <div style={{fontFamily:'Amiri,serif',fontSize:20,color:'#cdbf9e'}} dir="rtl">{next.ar} · {next.time}</div>
             </div>
           </div>
-
-          {/* Prayer list */}
           <div style={{background:'#fffdf9',border:'1px solid #ece4d4',borderRadius:20,overflow:'hidden',marginBottom:16}}>
             {prayers.map(p => (
               <div key={p.name} style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'16px 18px',borderBottom:p.last?'none':'1px solid #f1ebdd',background:p.isNext?'linear-gradient(90deg,#f3f7f4,#fffdf9)':'transparent'}}>
@@ -376,8 +458,7 @@ class App extends Component {
           </div>
         )}
 
-        {/* PDF button */}
-        <div style={{display:'flex',alignItems:'center',gap:12,background:'#fffdf9',border:'1px solid #ece4d4',borderRadius:16,padding:'15px 16px',cursor:'pointer',marginBottom:14}}>
+        <div onClick={this.handlePDF} style={{display:'flex',alignItems:'center',gap:12,background:'#fffdf9',border:'1px solid #ece4d4',borderRadius:16,padding:'15px 16px',cursor:'pointer',marginBottom:14}}>
           <div style={{width:36,height:36,borderRadius:10,background:'#f0e7d3',display:'flex',alignItems:'center',justifyContent:'center',color:'#9a7a2c',fontWeight:700,fontSize:11}}>PDF</div>
           <div style={{flex:1}}>
             <div style={{fontSize:14,fontWeight:600,color:'#2c2823'}}>Yearly prayer calendar</div>
@@ -385,8 +466,6 @@ class App extends Component {
           </div>
           <span style={{color:'#bba35f',fontSize:20}}>↓</span>
         </div>
-
-        {/* Source note */}
         <div style={{textAlign:'center',fontSize:11.5,color:'#a89d88',lineHeight:1.5,padding:'6px 20px'}}>
           Following Ahlul-Bait Ireland prayer timing.<br/>Times calculated for Dublin, Ireland.
         </div>
@@ -396,26 +475,42 @@ class App extends Component {
 
   /* ── LIBRARY ── */
   renderLibrary(st) {
-    const q = st.query.trim().toLowerCase();
+    const q = st.libQuery.trim().toLowerCase();
     const libMeta = {
       dua:     { title:"Duʿāʾ",         accent:'#9a7a2c', tint:'#f3ecd9', list:DUAS,    cats:['All','Daily','Weekly','Morning','Monthly'] },
       ziyarah: { title:'Ziyārah',        accent:'#6e2230', tint:'#f3e6e8', list:ZIYARAT, cats:['All','Imam Ḥusayn',"The Aʾimmah",'General'] },
       nahj:    { title:'Nahj al-Balāgha',accent:'#2c5d52', tint:'#e6efe9', list:[],      cats:[] },
     };
     const lm = libMeta[st.libTab];
-    const tabStyle = (k) => ({
+    const tabStyle = k => ({
       flex:1, textAlign:'center', padding:10, borderRadius:12, fontSize:13.5, fontWeight:600,
       cursor:'pointer', border:'1px solid #ece4d4',
       background: st.libTab===k ? lm.accent : 'transparent',
       color: st.libTab===k ? '#fffdf9' : '#6f675a',
     });
+    const chipStyle = c => {
+      const active = st.libCat===c;
+      return {
+        flexShrink:0, padding:'8px 15px', borderRadius:20, fontSize:12.5, fontWeight:600,
+        cursor:'pointer', transition:'all .15s',
+        background: active ? lm.accent : '#fffdf9',
+        color: active ? '#fffdf9' : '#6f675a',
+        border: `1px solid ${active ? lm.accent : '#e6dcc8'}`,
+      };
+    };
     let libCards = [];
     if (st.libTab==='dua' || st.libTab==='ziyarah') {
-      libCards = lm.list.filter(it => !q || it.title.toLowerCase().includes(q) || it.tr.toLowerCase().includes(q));
+      libCards = lm.list.filter(it => {
+        const catOk = st.libCat==='All' || it.cat===st.libCat;
+        const qOk = !q || it.title.toLowerCase().includes(q) || it.tr.toLowerCase().includes(q);
+        return catOk && qOk;
+      });
     }
     let nahjCards = [];
     if (st.libTab==='nahj') {
-      nahjCards = NAHJ[st.nahjTab].filter(it => !q || it.title.toLowerCase().includes(q) || it.tr.toLowerCase().includes(q));
+      nahjCards = NAHJ[st.nahjTab].filter(it =>
+        !q || it.title.toLowerCase().includes(q) || it.tr.toLowerCase().includes(q)
+      );
     }
     const nahjTabStyle = k => ({
       padding:'0 0 11px', fontSize:14, cursor:'pointer', marginBottom:-1,
@@ -430,29 +525,26 @@ class App extends Component {
           <div style={{fontFamily:'Spectral,serif',fontSize:26,fontWeight:600,color:'#27241f',marginTop:2}}>{lm.title}</div>
         </div>
 
-        {/* Library tabs */}
         <div style={{display:'flex',gap:8,marginBottom:16}}>
           {[['dua',"Duʿāʾ"],['ziyarah','Ziyārah'],['nahj','Nahj']].map(([k,label]) => (
-            <div key={k} onClick={()=>this.setState({libTab:k,query:''})} style={tabStyle(k)}>{label}</div>
+            <div key={k} onClick={()=>this.setState({libTab:k,libQuery:'',libCat:'All'})} style={tabStyle(k)}>{label}</div>
           ))}
         </div>
 
-        {/* Search */}
         <div style={{display:'flex',alignItems:'center',gap:10,background:'#fffdf9',border:'1px solid #ece4d4',borderRadius:14,padding:'11px 14px',marginBottom:14}}>
           <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#b3a890" strokeWidth="2" strokeLinecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg>
-          <input value={st.query} onChange={e=>this.setState({query:e.target.value})} placeholder="Search titles & translations" style={{border:'none',outline:'none',background:'transparent',fontSize:14,color:'#3f3a32',width:'100%'}} />
+          <input value={st.libQuery} onChange={e=>this.setState({libQuery:e.target.value})} placeholder="Search titles & translations" style={{border:'none',outline:'none',background:'transparent',fontSize:14,color:'#3f3a32',width:'100%'}} />
+          {st.libQuery && <div onClick={()=>this.setState({libQuery:''})} style={{color:'#b3a890',cursor:'pointer',fontSize:18,lineHeight:1}}>×</div>}
         </div>
 
-        {/* Category chips (dua/ziyarah) */}
         {lm.cats.length > 0 && (
           <div className="s" style={{display:'flex',gap:8,overflowX:'auto',margin:'0 -20px 16px',padding:'0 20px 2px'}}>
             {lm.cats.map(c => (
-              <div key={c} style={{flexShrink:0,padding:'8px 15px',borderRadius:20,fontSize:12.5,fontWeight:600,background:'#fffdf9',color:'#6f675a',border:'1px solid #e6dcc8',cursor:'pointer'}}>{c}</div>
+              <div key={c} onClick={()=>this.setState({libCat:c})} style={chipStyle(c)}>{c}</div>
             ))}
           </div>
         )}
 
-        {/* Nahj subtabs */}
         {st.libTab==='nahj' && (
           <div style={{display:'flex',gap:22,borderBottom:'1px solid #ece4d4',marginBottom:16}}>
             {[['sermons','Sermons'],['letters','Letters'],['sayings','Sayings']].map(([k,label]) => (
@@ -461,7 +553,6 @@ class App extends Component {
           </div>
         )}
 
-        {/* Dua / Ziyarah cards */}
         {libCards.length > 0 && (
           <div style={{display:'flex',flexDirection:'column',gap:12}}>
             {libCards.map((d,i) => (
@@ -478,7 +569,6 @@ class App extends Component {
           </div>
         )}
 
-        {/* Nahj cards */}
         {nahjCards.length > 0 && (
           <div style={{display:'flex',flexDirection:'column',gap:12}}>
             {nahjCards.map((n,i) => (
@@ -495,8 +585,10 @@ class App extends Component {
           </div>
         )}
 
-        {libCards.length===0 && nahjCards.length===0 && q && (
-          <div style={{textAlign:'center',padding:'40px 20px',color:'#9a8f7c',fontSize:14}}>No results for "{st.query}"</div>
+        {libCards.length===0 && nahjCards.length===0 && (q || st.libCat!=='All') && (
+          <div style={{textAlign:'center',padding:'40px 20px',color:'#9a8f7c',fontSize:14}}>
+            {q ? `No results for "${st.libQuery}"` : `No items in "${st.libCat}"`}
+          </div>
         )}
       </div>
     );
@@ -514,9 +606,9 @@ class App extends Component {
     const trSize = Math.round(17 * st.textSize) + 'px';
     const readAccent = rtype==='ziyarah' ? '#6e2230' : rtype==='nahj' ? '#2c5d52' : '#9a7a2c';
     const kicker = rtype==='dua' ? 'Supplication' : rtype==='ziyarah' ? 'Salutation' : (r.ref || 'Nahj al-Balāgha');
+    const isBookmarked = st.bookmarks.some(b => b.title === r.title);
     return (
       <div style={{minHeight:'100%',background:rd.bg}}>
-        {/* Toolbar */}
         <div style={{position:'sticky',top:0,zIndex:4,background:rd.barBg,backdropFilter:'blur(12px)',borderBottom:`1px solid ${rd.border}`,padding:'12px 16px',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
           <div onClick={()=>this.setState({screen:'library'})} style={{display:'flex',alignItems:'center',gap:5,cursor:'pointer',color:rd.accent,fontSize:14,fontWeight:600}}>
             <span style={{fontSize:18}}>‹</span> Library
@@ -556,12 +648,12 @@ class App extends Component {
           </div>
 
           <div style={{display:'flex',gap:12,marginTop:26}}>
-            <div style={{flex:1,display:'flex',alignItems:'center',justifyContent:'center',gap:8,padding:14,borderRadius:14,background:readAccent,color:'#fffdf9',fontSize:14,fontWeight:600,cursor:'pointer'}}>
+            <div onClick={this.handleShare} style={{flex:1,display:'flex',alignItems:'center',justifyContent:'center',gap:8,padding:14,borderRadius:14,background:readAccent,color:'#fffdf9',fontSize:14,fontWeight:600,cursor:'pointer'}}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><circle cx="18" cy="5" r="2.6"/><circle cx="6" cy="12" r="2.6"/><circle cx="18" cy="19" r="2.6"/><path d="M8.3 10.7l7.4-4.4M8.3 13.3l7.4 4.4"/></svg>
               Share
             </div>
-            <div style={{width:52,display:'flex',alignItems:'center',justifyContent:'center',borderRadius:14,border:`1px solid ${rd.border}`,background:rd.surf,cursor:'pointer'}}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={rd.accent} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M6 4h12v16l-6-4-6 4z"/></svg>
+            <div onClick={this.handleBookmark} style={{width:52,display:'flex',alignItems:'center',justifyContent:'center',borderRadius:14,border:`1px solid ${rd.border}`,background:isBookmarked?rd.surf:rd.surf,cursor:'pointer'}}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill={isBookmarked?readAccent:'none'} stroke={readAccent} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M6 4h12v16l-6-4-6 4z"/></svg>
             </div>
           </div>
         </div>
@@ -572,10 +664,20 @@ class App extends Component {
   /* ── CLASSIFIEDS ── */
   renderClassifieds(st) {
     const cats = ['All','Food','Butcher','Travel','Education','Services'];
-    const q = st.query.trim().toLowerCase();
+    const q = st.classQuery.trim().toLowerCase();
     const cards = CLASSIFIEDS
       .filter(c => st.classCat==='All' || c.cat===st.classCat)
       .filter(c => !q || c.name.toLowerCase().includes(q) || c.desc.toLowerCase().includes(q));
+    const chipStyle = c => {
+      const active = st.classCat===c;
+      return {
+        flexShrink:0, padding:'8px 15px', borderRadius:20, fontSize:12.5, fontWeight:600,
+        cursor:'pointer', background: active?'#1f5145':'#fffdf9',
+        color: active?'#fffdf9':'#6f675a',
+        border:`1px solid ${active?'#1f5145':'#e6dcc8'}`,
+      };
+    };
+    const btnBase = { display:'flex',alignItems:'center',justifyContent:'center',gap:7,padding:11,borderRadius:12,fontSize:13,fontWeight:600,cursor:'pointer',textDecoration:'none' };
     return (
       <div style={{padding:'8px 20px 100px'}} className="afu">
         <div style={{padding:'8px 0 14px'}}>
@@ -584,11 +686,12 @@ class App extends Component {
         </div>
         <div style={{display:'flex',alignItems:'center',gap:10,background:'#fffdf9',border:'1px solid #ece4d4',borderRadius:14,padding:'11px 14px',marginBottom:14}}>
           <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#b3a890" strokeWidth="2" strokeLinecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg>
-          <input value={st.query} onChange={e=>this.setState({query:e.target.value})} placeholder="Search businesses" style={{border:'none',outline:'none',background:'transparent',fontSize:14,color:'#3f3a32',width:'100%'}} />
+          <input value={st.classQuery} onChange={e=>this.setState({classQuery:e.target.value})} placeholder="Search businesses" style={{border:'none',outline:'none',background:'transparent',fontSize:14,color:'#3f3a32',width:'100%'}} />
+          {st.classQuery && <div onClick={()=>this.setState({classQuery:''})} style={{color:'#b3a890',cursor:'pointer',fontSize:18,lineHeight:1}}>×</div>}
         </div>
         <div className="s" style={{display:'flex',gap:8,overflowX:'auto',margin:'0 -20px 16px',padding:'0 20px 2px'}}>
           {cats.map(c => (
-            <div key={c} onClick={()=>this.setState({classCat:c})} style={{flexShrink:0,padding:'8px 15px',borderRadius:20,fontSize:12.5,fontWeight:600,cursor:'pointer',background:st.classCat===c?'#1f5145':'#fffdf9',color:st.classCat===c?'#fffdf9':'#6f675a',border:`1px solid ${st.classCat===c?'#1f5145':'#e6dcc8'}`}}>{c}</div>
+            <div key={c} onClick={()=>this.setState({classCat:c})} style={chipStyle(c)}>{c}</div>
           ))}
         </div>
         <div style={{display:'flex',flexDirection:'column',gap:12}}>
@@ -609,22 +712,33 @@ class App extends Component {
                 </div>
               </div>
               <div style={{display:'flex',gap:9,marginTop:14}}>
-                <div style={{flex:1,display:'flex',alignItems:'center',justifyContent:'center',gap:7,padding:11,borderRadius:12,background:'#1f5145',color:'#fffdf9',fontSize:13,fontWeight:600,cursor:'pointer'}}>
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15l-1.4 5 5.1-1.3A10 10 0 1 0 12 2zm0 2a8 8 0 1 1-4.2 14.8l-.4-.2-2.6.7.7-2.5-.2-.4A8 8 0 0 1 12 4z"/></svg>
-                  WhatsApp
-                </div>
-                <div style={{flex:1,display:'flex',alignItems:'center',justifyContent:'center',gap:7,padding:11,borderRadius:12,border:'1px solid #e6dcc8',background:'#fff',color:'#3f3a32',fontSize:13,fontWeight:600,cursor:'pointer'}}>
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round"><path d="M5 4h3l2 5-2.5 1.5a11 11 0 0 0 5 5L19 13l2 5v3a16 16 0 0 1-16-16z"/></svg>
-                  Call
-                </div>
-                {b.web && (
-                  <div style={{width:46,display:'flex',alignItems:'center',justifyContent:'center',borderRadius:12,border:'1px solid #e6dcc8',background:'#fff',cursor:'pointer'}}>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9a7a2c" strokeWidth="1.8"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.5 2.5 15 0 18M12 3c-2.5 2.5-2.5 15 0 18"/></svg>
+                <a href={`https://wa.me/${b.wa}`} target="_blank" rel="noopener" style={{flex:1}}>
+                  <div style={{...btnBase,background:'#1f5145',color:'#fffdf9'}}>
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15l-1.4 5 5.1-1.3A10 10 0 1 0 12 2zm0 2a8 8 0 1 1-4.2 14.8l-.4-.2-2.6.7.7-2.5-.2-.4A8 8 0 0 1 12 4z"/></svg>
+                    WhatsApp
                   </div>
+                </a>
+                <a href={`tel:${b.phone}`} style={{flex:1}}>
+                  <div style={{...btnBase,border:'1px solid #e6dcc8',background:'#fff',color:'#3f3a32'}}>
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round"><path d="M5 4h3l2 5-2.5 1.5a11 11 0 0 0 5 5L19 13l2 5v3a16 16 0 0 1-16-16z"/></svg>
+                    Call
+                  </div>
+                </a>
+                {b.web && (
+                  <a href={b.web} target="_blank" rel="noopener" style={{width:46}}>
+                    <div style={{...btnBase,height:'100%',borderRadius:12,border:'1px solid #e6dcc8',background:'#fff'}}>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9a7a2c" strokeWidth="1.8"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.5 2.5 15 0 18M12 3c-2.5 2.5-2.5 15 0 18"/></svg>
+                    </div>
+                  </a>
                 )}
               </div>
             </div>
           ))}
+          {cards.length === 0 && (
+            <div style={{textAlign:'center',padding:'40px 20px',color:'#9a8f7c',fontSize:14}}>
+              {q ? `No results for "${st.classQuery}"` : `No listings in "${st.classCat}"`}
+            </div>
+          )}
         </div>
         {cards.length > 0 && (
           <div style={{textAlign:'center',fontSize:11.5,color:'#a89d88',lineHeight:1.5,padding:'18px 24px 0'}}>
@@ -638,10 +752,10 @@ class App extends Component {
   /* ── MORE ── */
   renderMore(st) {
     const links = [
-      { label:'Classifieds',       sub:'Community business listings',              glyph:'ﺱ', go:()=>this.go('classifieds') },
-      { label:'Admin Dashboard',   sub:'Manage content (staff)',                   glyph:'⚙', go:()=>this.go('admin') },
-      { label:'About & Install',   sub:'Add Ahlul Bayt Ireland to home screen',   glyph:'↧', go:()=>this.go('about') },
-      { label:'Offline Mode',      sub:'Preview the offline fallback',             glyph:'⊘', go:()=>this.go('offline') },
+      { label:'Classifieds',      sub:'Community business listings',            glyph:'ﺱ', go:()=>this.go('classifieds') },
+      { label:'Admin Dashboard',  sub:'Manage content (staff)',                 glyph:'⚙', go:()=>this.go('admin') },
+      { label:'About & Install',  sub:'Add Ahlul Bayt Ireland to home screen', glyph:'↧', go:()=>this.go('about') },
+      { label:'Offline Mode',     sub:'Preview the offline fallback',           glyph:'⊘', go:()=>this.go('offline') },
     ];
     return (
       <div style={{padding:'8px 20px 100px'}} className="afu">
@@ -677,6 +791,19 @@ class App extends Component {
             </div>
           </div>
         </div>
+        {st.bookmarks.length > 0 && (
+          <div style={{marginTop:22}}>
+            <div style={{fontSize:11,letterSpacing:1.2,textTransform:'uppercase',fontWeight:700,color:'#b1a690',marginBottom:12}}>Bookmarks</div>
+            <div style={{display:'flex',flexDirection:'column',gap:8}}>
+              {st.bookmarks.map((b,i) => (
+                <div key={i} onClick={()=>this.openReading(null, b)} style={{display:'flex',alignItems:'center',justifyContent:'space-between',background:'#fffdf9',border:'1px solid #ece4d4',borderRadius:13,padding:'13px 15px',cursor:'pointer'}}>
+                  <div style={{fontSize:14,fontWeight:600,color:'#2c2823'}}>{b.title}</div>
+                  <span style={{color:'#cdbf9e',fontSize:18}}>›</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
         <div style={{textAlign:'center',fontSize:11.5,color:'#b1a690',marginTop:26,lineHeight:1.6}}>Ahlul Bayt Ireland · V1<br/>Built for the community, with care.</div>
       </div>
     );
@@ -700,18 +827,18 @@ class App extends Component {
             <div style={{fontSize:11,letterSpacing:1.2,textTransform:'uppercase',fontWeight:700,color:'#b1a690',marginBottom:12}}>Install as an app</div>
             <div style={{display:'flex',flexDirection:'column',gap:13}}>
               {[
-                ['1','Tap the Share icon in your browser.'],
-                ['2','Choose Add to Home Screen.'],
+                ['1','Tap the <b>Share</b> icon in your browser.'],
+                ['2','Choose <b>Add to Home Screen</b>.'],
                 ['3','Open it anytime — works offline.'],
               ].map(([n,txt]) => (
                 <div key={n} style={{display:'flex',gap:11,alignItems:'flex-start'}}>
                   <span style={{flexShrink:0,width:22,height:22,borderRadius:'50%',background:'#e6efe9',color:'#1f5145',fontSize:12,fontWeight:700,display:'flex',alignItems:'center',justifyContent:'center'}}>{n}</span>
-                  <span style={{fontSize:13.5,color:'#4a443a',lineHeight:1.5}} dangerouslySetInnerHTML={{__html:txt.replace(/\b(Share|Add to Home Screen)\b/g,'<b>$1</b>')}} />
+                  <span style={{fontSize:13.5,color:'#4a443a',lineHeight:1.5}} dangerouslySetInnerHTML={{__html:txt}} />
                 </div>
               ))}
             </div>
           </div>
-          <div style={{marginTop:18,padding:15,borderRadius:14,background:'#1c1a17',color:'#d8b863',fontSize:14,fontWeight:600,cursor:'pointer'}}>Add to Home Screen</div>
+          <div onClick={this.handleInstall} style={{marginTop:18,padding:15,borderRadius:14,background:'#1c1a17',color:'#d8b863',fontSize:14,fontWeight:600,cursor:'pointer'}}>Add to Home Screen</div>
         </div>
       </div>
     );
@@ -727,7 +854,7 @@ class App extends Component {
         </div>
         <div style={{fontFamily:'Spectral,serif',fontSize:21,fontWeight:600,color:'#2c2823'}}>You're offline</div>
         <div style={{fontSize:13.5,color:'#9a8f7c',textAlign:'center',marginTop:8,lineHeight:1.6,maxWidth:240}}>Saved prayer times and your recent readings are still available. Other content will sync when you're back online.</div>
-        <div style={{marginTop:22,padding:'12px 22px',borderRadius:13,border:'1px solid #e6dcc8',background:'#fffdf9',color:'#1f5145',fontSize:14,fontWeight:600,cursor:'pointer'}}>Retry connection</div>
+        <div onClick={()=>window.location.reload()} style={{marginTop:22,padding:'12px 22px',borderRadius:13,border:'1px solid #e6dcc8',background:'#fffdf9',color:'#1f5145',fontSize:14,fontWeight:600,cursor:'pointer'}}>Retry connection</div>
       </div>
     );
   }
@@ -741,14 +868,14 @@ class App extends Component {
       { label:'Prayer Cal.',    val:'✓',  note:'1447 imported',    ink:'#2c5d52', tint:'#e6efe9' },
     ];
     const actions = [
-      { label:'Add Story',     type:'Story' },
-      { label:"New Duʿāʾ",    type:"Duʿāʾ" },
-      { label:'Add Listing',   type:'Classified' },
-      { label:'Prayer Times',  type:'Prayer Time' },
+      { label:'Add Story',    type:'Story' },
+      { label:"New Duʿāʾ",   type:"Duʿāʾ" },
+      { label:'Add Listing',  type:'Classified' },
+      { label:'Prayer Times', type:'Prayer Time' },
     ];
     const expiring = [
-      { title:'Jummah Reminder',  left:'Expires in 6h',  pct:75 },
-      { title:'Community Iftar',  left:'Expires in 19h', pct:22 },
+      { title:'Jummah Reminder', left:'Expires in 6h',  pct:75 },
+      { title:'Community Iftar', left:'Expires in 19h', pct:22 },
     ];
     const activity = [
       { txt:'Jummah Reminder story published',  meta:'Today · 09:14',    dot:'#1f5145' },
@@ -785,7 +912,7 @@ class App extends Component {
         <div style={{fontSize:11,letterSpacing:1.2,textTransform:'uppercase',fontWeight:700,color:'#b1a690',marginBottom:12}}>Quick Actions</div>
         <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:11,marginBottom:24}}>
           {actions.map((a,i) => (
-            <div key={i} onClick={()=>this.setState({screen:'adminForm',adminForm:a.type})} style={{display:'flex',alignItems:'center',gap:10,background:'#1f5145',borderRadius:14,padding:'14px 15px',cursor:'pointer'}}>
+            <div key={i} onClick={()=>this.setState({screen:'adminForm',adminForm:a.type,adminTitle:'',adminContent:''})} style={{display:'flex',alignItems:'center',gap:10,background:'#1f5145',borderRadius:14,padding:'14px 15px',cursor:'pointer'}}>
               <span style={{width:26,height:26,borderRadius:8,background:'rgba(216,184,99,.22)',color:'#d8b863',display:'flex',alignItems:'center',justifyContent:'center',fontSize:15}}>＋</span>
               <span style={{fontSize:13.5,fontWeight:600,color:'#f3ead4'}}>{a.label}</span>
             </div>
@@ -823,18 +950,30 @@ class App extends Component {
     );
   }
 
-  /* ── ADMIN FORM (overlay) ── */
+  /* ── ADMIN FORM ── */
   renderAdminForm(st) {
     const af = st.adminForm || 'Story';
     const isStory = af==='Story';
     const isClass = af==='Classified';
+    const canPublish = st.adminTitle.trim().length > 0 && st.adminContent.trim().length > 0;
+
+    const handlePublish = () => {
+      if (!canPublish) { this.showToast('Fill in title and content first'); return; }
+      this.showToast(`${af} published!`);
+      setTimeout(() => this.go('admin'), 1200);
+    };
+    const handleDraft = () => {
+      if (!st.adminTitle.trim()) { this.showToast('Enter a title to save draft'); return; }
+      this.showToast('Draft saved');
+    };
+
     return (
       <div style={{position:'absolute',inset:0,zIndex:18,background:'#f6f1e7',display:'flex',flexDirection:'column'}} className="asu">
         <div style={{flexShrink:0,padding:'54px 20px 14px',background:'#fffdf9',borderBottom:'1px solid #ece4d4'}}>
           <div style={{display:'flex',alignItems:'center',justifyContent:'space-between'}}>
             <div onClick={()=>this.go('admin')} style={{fontSize:14,color:'#8c8270',fontWeight:600,cursor:'pointer'}}>Cancel</div>
             <div style={{fontSize:15,fontWeight:600,color:'#27241f'}}>New {af}</div>
-            <div style={{fontSize:14,color:'#1f5145',fontWeight:700,cursor:'pointer'}}>Publish</div>
+            <div onClick={handlePublish} style={{fontSize:14,color:canPublish?'#1f5145':'#b3a890',fontWeight:700,cursor:'pointer'}}>Publish</div>
           </div>
         </div>
         <div className="s" style={{flex:1,overflowY:'auto',padding:20}}>
@@ -844,7 +983,12 @@ class App extends Component {
           </div>
 
           <label style={{display:'block',fontSize:12.5,fontWeight:600,color:'#6f675a',marginBottom:7}}>Title</label>
-          <input placeholder="Enter a clear title" style={{width:'100%',border:'1px solid #e6dcc8',background:'#fffdf9',borderRadius:13,padding:'13px 15px',fontSize:15,color:'#2c2823',outline:'none',marginBottom:18}} />
+          <input
+            value={st.adminTitle}
+            onChange={e=>this.setState({adminTitle:e.target.value})}
+            placeholder="Enter a clear title"
+            style={{width:'100%',border:'1px solid #e6dcc8',background:'#fffdf9',borderRadius:13,padding:'13px 15px',fontSize:15,color:'#2c2823',outline:'none',marginBottom:18}}
+          />
 
           {isStory && <>
             <label style={{display:'block',fontSize:12.5,fontWeight:600,color:'#6f675a',marginBottom:7}}>Cover image</label>
@@ -856,11 +1000,15 @@ class App extends Component {
             <div style={{display:'flex',gap:12,marginBottom:18}}>
               <div style={{flex:1}}>
                 <label style={{display:'block',fontSize:12.5,fontWeight:600,color:'#6f675a',marginBottom:7}}>Expires after</label>
-                <div style={{border:'1px solid #e6dcc8',background:'#fffdf9',borderRadius:13,padding:'13px 15px',fontSize:15,color:'#2c2823',display:'flex',justifyContent:'space-between'}}>24 hours <span style={{color:'#b3a890'}}>▾</span></div>
+                <select style={{width:'100%',border:'1px solid #e6dcc8',background:'#fffdf9',borderRadius:13,padding:'13px 15px',fontSize:15,color:'#2c2823',outline:'none',appearance:'none'}}>
+                  <option>24 hours</option><option>48 hours</option><option>1 week</option>
+                </select>
               </div>
               <div style={{flex:1}}>
                 <label style={{display:'block',fontSize:12.5,fontWeight:600,color:'#6f675a',marginBottom:7}}>Link button</label>
-                <div style={{border:'1px solid #e6dcc8',background:'#fffdf9',borderRadius:13,padding:'13px 15px',fontSize:15,color:'#a89d88',display:'flex',justifyContent:'space-between'}}>Optional <span style={{color:'#b3a890'}}>▾</span></div>
+                <select style={{width:'100%',border:'1px solid #e6dcc8',background:'#fffdf9',borderRadius:13,padding:'13px 15px',fontSize:15,color:'#a89d88',outline:'none',appearance:'none'}}>
+                  <option>Optional</option><option>View schedule</option><option>Register</option><option>Learn more</option>
+                </select>
               </div>
             </div>
           </>}
@@ -869,7 +1017,9 @@ class App extends Component {
             <div style={{display:'flex',gap:12,marginBottom:18}}>
               <div style={{flex:1}}>
                 <label style={{display:'block',fontSize:12.5,fontWeight:600,color:'#6f675a',marginBottom:7}}>Category</label>
-                <div style={{border:'1px solid #e6dcc8',background:'#fffdf9',borderRadius:13,padding:'13px 15px',fontSize:15,color:'#2c2823',display:'flex',justifyContent:'space-between'}}>Food <span style={{color:'#b3a890'}}>▾</span></div>
+                <select style={{width:'100%',border:'1px solid #e6dcc8',background:'#fffdf9',borderRadius:13,padding:'13px 15px',fontSize:15,color:'#2c2823',outline:'none',appearance:'none'}}>
+                  <option>Food</option><option>Butcher</option><option>Travel</option><option>Education</option><option>Services</option>
+                </select>
               </div>
               <div style={{flex:1}}>
                 <label style={{display:'block',fontSize:12.5,fontWeight:600,color:'#6f675a',marginBottom:7}}>Location</label>
@@ -879,25 +1029,41 @@ class App extends Component {
           )}
 
           <label style={{display:'block',fontSize:12.5,fontWeight:600,color:'#6f675a',marginBottom:7}}>{isStory?'Story text':isClass?'Business description':'Content'}</label>
-          <textarea placeholder="Write the content here…" style={{width:'100%',minHeight:120,border:'1px solid #e6dcc8',background:'#fffdf9',borderRadius:13,padding:'13px 15px',fontSize:15,lineHeight:1.6,color:'#2c2823',outline:'none',resize:'none',marginBottom:22}} />
+          <textarea
+            value={st.adminContent}
+            onChange={e=>this.setState({adminContent:e.target.value})}
+            placeholder="Write the content here…"
+            style={{width:'100%',minHeight:120,border:'1px solid #e6dcc8',background:'#fffdf9',borderRadius:13,padding:'13px 15px',fontSize:15,lineHeight:1.6,color:'#2c2823',outline:'none',resize:'none',marginBottom:22}}
+          />
 
-          <div style={{fontSize:11,letterSpacing:1.2,textTransform:'uppercase',fontWeight:700,color:'#b1a690',marginBottom:10}}>Preview</div>
-          <div style={{background:'#fffdf9',border:'1px solid #ece4d4',borderRadius:16,padding:16,marginBottom:22}}>
-            <div style={{fontFamily:'Spectral,serif',fontSize:17,fontWeight:600,color:'#9a8f7c'}}>Your {af} preview appears here</div>
-            <div style={{fontSize:13,color:'#b1a690',marginTop:6,lineHeight:1.5}}>Fill in the fields above to see a live preview before publishing.</div>
-          </div>
+          {(st.adminTitle || st.adminContent) && (
+            <div style={{marginBottom:22}}>
+              <div style={{fontSize:11,letterSpacing:1.2,textTransform:'uppercase',fontWeight:700,color:'#b1a690',marginBottom:10}}>Preview</div>
+              <div style={{background:'#fffdf9',border:'1px solid #ece4d4',borderRadius:16,padding:16}}>
+                <div style={{fontFamily:'Spectral,serif',fontSize:17,fontWeight:600,color:'#2c2823'}}>{st.adminTitle || 'Untitled'}</div>
+                {st.adminContent && <div style={{fontSize:13,color:'#7a7264',marginTop:6,lineHeight:1.5}}>{st.adminContent}</div>}
+              </div>
+            </div>
+          )}
+
+          {!st.adminTitle && !st.adminContent && (
+            <div style={{background:'#fffdf9',border:'1px solid #ece4d4',borderRadius:16,padding:16,marginBottom:22}}>
+              <div style={{fontFamily:'Spectral,serif',fontSize:17,fontWeight:600,color:'#9a8f7c'}}>Preview appears here</div>
+              <div style={{fontSize:13,color:'#b1a690',marginTop:6,lineHeight:1.5}}>Fill in the fields above to see a live preview.</div>
+            </div>
+          )}
 
           <div style={{display:'flex',gap:11,marginBottom:12}}>
-            <div style={{flex:1,textAlign:'center',padding:14,borderRadius:14,background:'#1f5145',color:'#fffdf9',fontSize:14.5,fontWeight:600,cursor:'pointer'}}>Publish now</div>
-            <div style={{flex:1,textAlign:'center',padding:14,borderRadius:14,border:'1px solid #e6dcc8',background:'#fffdf9',color:'#3f3a32',fontSize:14.5,fontWeight:600,cursor:'pointer'}}>Save draft</div>
+            <div onClick={handlePublish} style={{flex:1,textAlign:'center',padding:14,borderRadius:14,background:canPublish?'#1f5145':'#b3a890',color:'#fffdf9',fontSize:14.5,fontWeight:600,cursor:'pointer'}}>Publish now</div>
+            <div onClick={handleDraft} style={{flex:1,textAlign:'center',padding:14,borderRadius:14,border:'1px solid #e6dcc8',background:'#fffdf9',color:'#3f3a32',fontSize:14.5,fontWeight:600,cursor:'pointer'}}>Save draft</div>
           </div>
-          <div style={{textAlign:'center',padding:13,fontSize:13.5,color:'#9a8f7c',fontWeight:600,cursor:'pointer'}}>Archive</div>
+          <div onClick={()=>this.go('admin')} style={{textAlign:'center',padding:13,fontSize:13.5,color:'#9a8f7c',fontWeight:600,cursor:'pointer'}}>Cancel</div>
         </div>
       </div>
     );
   }
 
-  /* ── STORY VIEWER (overlay) ── */
+  /* ── STORY VIEWER ── */
   renderStoryViewer(st) {
     const cur = STORIES[st.story] || {};
     const bars = STORIES.map((_,i) => ({
@@ -908,7 +1074,6 @@ class App extends Component {
         <div style={{position:'absolute',inset:0,background:'radial-gradient(120% 90% at 50% 0%,rgba(255,255,255,.1),rgba(0,0,0,.35))'}} />
         <div style={{position:'absolute',right:-50,bottom:-30,width:220,height:220,borderRadius:'50%',border:'1px solid rgba(255,255,255,.1)'}} />
 
-        {/* Progress bars */}
         <div style={{position:'relative',zIndex:2,display:'flex',gap:5,padding:'54px 16px 0'}}>
           {bars.map((b,i) => (
             <div key={i} style={{flex:1,height:3,borderRadius:3,background:'rgba(255,255,255,.3)',overflow:'hidden'}}>
@@ -917,7 +1082,6 @@ class App extends Component {
           ))}
         </div>
 
-        {/* Header */}
         <div style={{position:'relative',zIndex:2,display:'flex',alignItems:'center',justifyContent:'space-between',padding:'16px 18px 0'}}>
           <div style={{display:'flex',alignItems:'center',gap:10}}>
             <div style={{width:34,height:34,borderRadius:'50%',background:'rgba(255,255,255,.18)',display:'flex',alignItems:'center',justifyContent:'center',fontFamily:'Spectral,serif',color:'#fff',fontWeight:600}}>ا</div>
@@ -929,11 +1093,9 @@ class App extends Component {
           <div onClick={this.closeStory} style={{width:34,height:34,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',color:'#fff',fontSize:24,lineHeight:1}}>×</div>
         </div>
 
-        {/* Tap zones */}
         <div onClick={this.prevStory} style={{position:'absolute',left:0,top:90,bottom:0,width:'35%',zIndex:3}} />
         <div onClick={this.nextStory} style={{position:'absolute',right:0,top:90,bottom:0,width:'65%',zIndex:3}} />
 
-        {/* Body */}
         <div style={{position:'relative',zIndex:2,flex:1,display:'flex',flexDirection:'column',justifyContent:'flex-end',padding:'0 26px 40px',pointerEvents:'none'}}>
           <div style={{fontFamily:'Amiri,serif',fontSize:30,color:'rgba(255,255,255,.85)',marginBottom:14}} dir="rtl">ﷺ</div>
           <div style={{fontFamily:'Spectral,serif',fontSize:30,fontWeight:600,color:'#fff',lineHeight:1.2}}>{cur.title}</div>
@@ -976,6 +1138,17 @@ class App extends Component {
     );
   }
 
+  /* ── TOAST ── */
+  renderToast(msg) {
+    return (
+      <div style={{position:'absolute',top:20,left:'50%',transform:'translateX(-50%)',zIndex:50,pointerEvents:'none',animation:'toast-in .25s ease both'}}>
+        <div style={{background:'#1c1a17',color:'#f3ead4',fontSize:13.5,fontWeight:600,padding:'11px 20px',borderRadius:30,boxShadow:'0 8px 24px rgba(0,0,0,.3)',whiteSpace:'nowrap'}}>
+          {msg}
+        </div>
+      </div>
+    );
+  }
+
   /* ── MAIN RENDER ── */
   render() {
     const st = this.state;
@@ -983,28 +1156,28 @@ class App extends Component {
     const now = st.now;
     const hour = now.getHours();
     const greg = now.toLocaleDateString('en-IE', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+    const hijri = toHijri(now);
     const salaam = (hour<12?'Good morning':hour<18?'Good afternoon':'Good evening') + ' · السلام عليكم';
 
     const showNav = st.screen!=='reading' && st.story===null && st.screen!=='adminForm';
-    const storyOpen = st.story !== null;
-    const { screen } = st;
 
     return (
       <div className="app">
         <div className="s" style={{flex:'1 1 auto',overflowY:'auto',overflowX:'hidden',position:'relative'}}>
-          {screen==='home'       && this.renderHome(st, next, cd, greg, salaam)}
-          {screen==='prayer'     && this.renderPrayer(st, next, cd, greg)}
-          {screen==='library'    && this.renderLibrary(st)}
-          {screen==='reading'    && this.renderReading(st)}
-          {screen==='classifieds'&& this.renderClassifieds(st)}
-          {screen==='more'       && this.renderMore(st)}
-          {screen==='about'      && this.renderAbout()}
-          {screen==='offline'    && this.renderOffline()}
-          {screen==='admin'      && this.renderAdmin()}
+          {st.screen==='home'       && this.renderHome(st, next, cd, greg, hijri, salaam)}
+          {st.screen==='prayer'     && this.renderPrayer(st, next, cd, greg)}
+          {st.screen==='library'    && this.renderLibrary(st)}
+          {st.screen==='reading'    && this.renderReading(st)}
+          {st.screen==='classifieds'&& this.renderClassifieds(st)}
+          {st.screen==='more'       && this.renderMore(st)}
+          {st.screen==='about'      && this.renderAbout()}
+          {st.screen==='offline'    && this.renderOffline()}
+          {st.screen==='admin'      && this.renderAdmin()}
         </div>
         {showNav && this.renderNav(st)}
-        {storyOpen && this.renderStoryViewer(st)}
-        {screen==='adminForm' && this.renderAdminForm(st)}
+        {st.story !== null && this.renderStoryViewer(st)}
+        {st.screen==='adminForm' && this.renderAdminForm(st)}
+        {st.toast && this.renderToast(st.toast)}
       </div>
     );
   }
