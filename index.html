@@ -31,6 +31,12 @@
     .asu { animation: su .32s cubic-bezier(.2,.8,.2,1) both; }
     input, textarea, select { font-family: 'Hanken Grotesk', system-ui, sans-serif; }
     a { text-decoration: none; color: inherit; display: contents; }
+    @keyframes notif-in { from { opacity:0; transform:translateY(-16px); } to { opacity:1; transform:none; } }
+    @media (display-mode: standalone), (display-mode: fullscreen), (display-mode: minimal-ui) {
+      .abi-statusbar { display: none !important; }
+      .app { padding-top: env(safe-area-inset-top, 0px); }
+      .abi-nav { padding-bottom: calc(14px + env(safe-area-inset-bottom, 0px)) !important; }
+    }
   </style>
 </head>
 <body>
@@ -75,10 +81,37 @@ const PRAYERS = [
 ];
 
 const STORIES = [
-  { title:'Jummah Reminder',    short:'Jummah',   initial:'ج', tag:'Today',   color:'#1f5145', sub:'Jamāʿah at 1:30 PM',   body:'Friday congregational prayer begins at 1:30 PM. Doors open at 1:00 PM — please arrive early to find a place.', link:'View timings' },
-  { title:'Muḥarram Programme', short:'Muḥarram', initial:'م', tag:'2 days',  color:'#6e2230', sub:'Nightly majālis',       body:'The annual Muḥarram programme begins this Friday. Nightly gatherings after Maghrib throughout the first ten nights.', link:'Full schedule' },
-  { title:'New Qurʾān Class',   short:'Class',    initial:'ق', tag:'New',     color:'#b8923f', sub:'Saturdays, 11 AM',     body:'A new weekly tajwīd class for youth starts this Saturday at 11 AM in the main hall.', link:'Register interest' },
-  { title:'Community Iftar',    short:'Iftar',    initial:'إ', tag:'Sunday',  color:'#2c5d52', sub:'Open to all',           body:'Join us for a shared community meal this Sunday evening. All families are warmly welcome.', link:'' },
+  { kind:'verse',    title:'Daily Verse',   short:'Verse',    initial:'ق', tag:'Verse of the day',  color:'#1f5145', img:'linear-gradient(150deg,#2a6a58,#143b2f)', ar:'إِنَّ مَعَ الْعُسْرِ يُسْرًا', sub:'Sūrat al-Sharḥ · 94:6', body:'Indeed, with hardship comes ease.', link:'Open in Qurʾān' },
+  { kind:'sermon',   title:'Daily Sermon',  short:'Sermon',   initial:'ن', tag:'Nahj al-Balāgha',   color:'#2c5d52', img:'linear-gradient(150deg,#347063,#1d4d42)', ar:'', sub:'Saying 147 · On Knowledge', body:'Knowledge is better than wealth. Knowledge guards you, while you must guard wealth. Wealth decreases by spending, while knowledge multiplies by it.', link:'Read in Library' },
+  { kind:'kids',     title:'Kids Post',     short:'Kids',     initial:'ك', tag:'For children',       color:'#b8923f', img:'linear-gradient(150deg,#d2a651,#a87a2c)', ar:'', sub:'Good manners', body:'The Prophet ﷺ said: "The best of you are those who are best to their families." Can you do one kind thing for your family today?', link:'Open Kids Corner' },
+  { kind:'quiz',     title:'Daily Quiz',    short:'Quiz',     initial:'؟', tag:'1 question',         color:'#6e2230', img:'linear-gradient(150deg,#8a3243,#5e1d29)', sub:'Tap your answer', question:'How many obligatory daily prayers are there in Islam?', options:['Three','Five','Seven'], answer:1 },
+  { kind:'classified',title:'New Listing',  short:'Business', initial:'ت', tag:'Classifieds',        color:'#3a4a78', img:'linear-gradient(150deg,#4a5d92,#2d3a64)', sub:'Karbala Travel', body:'New Arbaʿīn ziyārat packages are now open for registration. Flights, visas and accommodation included.', link:'View listing' },
+  { kind:'announce', title:'Muḥarram',      short:'Muḥarram', initial:'م', tag:'Community',          color:'#6e2230', img:'linear-gradient(150deg,#7a2433,#52171f)', sub:'Nightly majālis', body:'The annual Muḥarram programme begins Friday. Nightly gatherings after Maghrib throughout the first ten nights.', link:'Full schedule' },
+];
+
+const EVENT_DEFS = [
+  { offset:0, title:'Community Iftar',       type:'Community', color:'#1f5145', tint:'#e6efe9', desc:'Shared community meal after Maghrib in the main hall. All families warmly welcome.' },
+  { offset:2, title:'Wafāt Commemoration',   type:'Majlis',    color:'#6e2230', tint:'#f3e6e8', desc:'Evening majlis with recitation and lecture, beginning after ʿIshāʾ.' },
+  { offset:5, title:'Youth Qurʾān Class',    type:'Class',     color:'#9a7a2c', tint:'#f3ecd9', desc:'Weekly tajwīd session for youth, 11:00 AM in the learning room.' },
+  { offset:9, title:'Muḥarram Begins',       type:'Programme', color:'#2c5d52', tint:'#e6efe9', desc:'First night of the annual Muḥarram programme. Nightly majālis after Maghrib.' },
+];
+
+const KIDS_LEARN = [
+  { title:'Who are the Ahlul Bayt?',     meta:'Animated · 4 min', color:'#1f5145' },
+  { title:'The Story of Ghadīr',         meta:'Animated · 6 min', color:'#6e2230' },
+  { title:'Learning Wuḍūʾ step by step', meta:'How-to · 3 min',   color:'#9a7a2c' },
+];
+
+const KIDS_BOOKS = [
+  { title:"My First Duʿāʾ Book",   meta:'Picture book · Ages 3–6',  color:'#e6efe9', ink:'#1f5145' },
+  { title:'Stories of the Imams',  meta:'Illustrated · Ages 6–9',   color:'#f3e6e8', ink:'#6e2230' },
+  { title:'The 14 Infallibles',    meta:'Activity book · Ages 7–10', color:'#f3ecd9', ink:'#9a7a2c' },
+  { title:'Good Manners (Akhlāq)', meta:'Picture book · Ages 4–7',  color:'#e8ebf4', ink:'#3a4a78' },
+];
+
+const KIDS_QUOTES = [
+  { ar:'طَلَبُ الْعِلْمِ فَرِيضَةٌ',  tr:'Seeking knowledge is an obligation.', who:'Prophet Muḥammad ﷺ' },
+  { ar:'أَحْسِنْ إِلَى وَالِدَيْكَ', tr:'Be kind to your parents.',             who:"Imam ʿAlī ؏" },
 ];
 
 const DUAS = [
@@ -172,13 +205,14 @@ class App extends Component {
   state = {
     screen: 'home', libTab: 'dua', nahjTab: 'sermons', prayerTab: 'today',
     dark: false, textSize: 1,
-    story: null, storyProg: 0,
+    story: null, storyProg: 0, quizPick: null,
     adminForm: null, adminTitle: '', adminContent: '', adminExpiry: '24 hours', adminLink: 'None', adminCat: 'Food',
     classCat: 'All', libCat: 'All',
     now: new Date(), install: true,
     libQuery: '', classQuery: '',
     readingType: null, readingItem: null,
     toast: null, bookmarks: [],
+    calDay: null, lang: 'English', notifDismissed: false,
   };
 
   componentDidMount() {
@@ -255,13 +289,14 @@ class App extends Component {
 
   openStory = i => {
     clearInterval(this.storyTimer);
-    this.setState({ story: i, storyProg: 0 });
+    this.setState({ story: i, storyProg: 0, quizPick: null });
     this.storyTimer = setInterval(() => {
       this.setState(st => {
         if (st.story === null) return {};
+        if (STORIES[st.story] && STORIES[st.story].kind === 'quiz') return {};
         const np = st.storyProg + 1.6;
         if (np >= 100) {
-          if (st.story < STORIES.length - 1) return { story: st.story + 1, storyProg: 0 };
+          if (st.story < STORIES.length - 1) return { story: st.story + 1, storyProg: 0, quizPick: null };
           clearInterval(this.storyTimer);
           return { story: null, storyProg: 0 };
         }
@@ -269,6 +304,8 @@ class App extends Component {
       });
     }, 60);
   };
+
+  answerQuiz = idx => this.setState({ quizPick: idx });
 
   closeStory = () => { clearInterval(this.storyTimer); this.setState({ story: null, storyProg: 0 }); };
   prevStory  = () => { if (this.state.story > 0) this.openStory(this.state.story - 1); };
@@ -295,14 +332,40 @@ class App extends Component {
       ...p, isNext: p.name===next.name, last: i===PRAYERS.length-1
     }));
     const quickCards = [
-      { title:'Prayer Times',      sub:"Today's salāh",            glyph:'ﭖ', tint:'#e6efe9', ink:'#1f5145', span:'1', go:()=>this.go('prayer') },
-      { title:'Duʿāʾ',            sub:'Supplications',             glyph:'ﺀ', tint:'#f3ecd9', ink:'#9a7a2c', span:'1', go:()=>this.setState({screen:'library',libTab:'dua',libCat:'All'}) },
-      { title:'Ziyārah',           sub:'Salutations',               glyph:'ﺯ', tint:'#f3e6e8', ink:'#6e2230', span:'1', go:()=>this.setState({screen:'library',libTab:'ziyarah',libCat:'All'}) },
-      { title:'Nahj al-Balāgha',  sub:'Sermons · Letters · Sayings',glyph:'ﻥ', tint:'#e6efe9', ink:'#2c5d52', span:'1', go:()=>this.setState({screen:'library',libTab:'nahj',libCat:'All'}) },
-      { title:'Classifieds',       sub:'Community businesses',      glyph:'ﺱ', tint:'#f3ecd9', ink:'#9a7a2c', span:'2', go:()=>this.go('classifieds') },
+      { title:'Classifieds',      sub:'Community businesses',       glyph:'ﺱ', tint:'#f3ecd9', ink:'#9a7a2c', span:'2', go:()=>this.go('classifieds') },
+      { title:'Prayer Times',     sub:"Today's salāh",              glyph:'ﭖ', tint:'#e6efe9', ink:'#1f5145', span:'1', go:()=>this.go('prayer') },
+      { title:'Calendar',         sub:'Events & Hijri dates',       glyph:'ﮬ', tint:'#e8ebf4', ink:'#3a4a78', span:'1', go:()=>this.go('calendar') },
+      { title:'Duʿāʾ',           sub:'Supplications',              glyph:'ﺀ', tint:'#f3ecd9', ink:'#9a7a2c', span:'1', go:()=>this.setState({screen:'library',libTab:'dua',libCat:'All'}) },
+      { title:'Ziyārah',          sub:'Salutations',                glyph:'ﺯ', tint:'#f3e6e8', ink:'#6e2230', span:'1', go:()=>this.setState({screen:'library',libTab:'ziyarah',libCat:'All'}) },
+      { title:'Nahj al-Balāgha', sub:'Sermons · Letters · Sayings',glyph:'ﻥ', tint:'#e6efe9', ink:'#2c5d52', span:'2', go:()=>this.setState({screen:'library',libTab:'nahj',libCat:'All'}) },
+      { title:'Kids Corner',      sub:'Books · videos · quizzes',   glyph:'ﻙ', tint:'#f3ecd9', ink:'#b8923f', span:'1', go:()=>this.go('kids') },
+      { title:'Qibla Finder',     sub:'Direction to Makkah',        glyph:'ﻕ', tint:'#e6efe9', ink:'#1f5145', span:'1', go:()=>this.go('qibla') },
     ];
+
+    const now = st.now;
+    const todayD = now.getDate();
+    const calY = now.getFullYear(), calM = now.getMonth();
+    const daysInMonth = new Date(calY, calM+1, 0).getDate();
+    const eventsByDay = {};
+    EVENT_DEFS.forEach(e => { const day = Math.min(todayD + e.offset, daysInMonth); eventsByDay[day] = e; });
+    const todayEvent = eventsByDay[todayD];
+    const showNotif = !!todayEvent && !st.notifDismissed;
     return (
       <div style={{padding:'8px 20px 100px'}} className="afu">
+        {/* Event notification popup */}
+        {showNotif && (
+          <div style={{position:'absolute',top:14,left:14,right:14,zIndex:14,background:'rgba(28,26,23,.97)',backdropFilter:'blur(10px)',borderRadius:18,padding:'13px 14px',display:'flex',alignItems:'center',gap:12,boxShadow:'0 16px 32px -12px rgba(0,0,0,.5)',animation:'notif-in .45s cubic-bezier(.2,.9,.2,1) both'}}>
+            <div style={{flexShrink:0,width:40,height:40,borderRadius:12,background:todayEvent.color,display:'flex',alignItems:'center',justifyContent:'center'}}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f3ead4" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
+            </div>
+            <div onClick={()=>this.setState({screen:'calendar',calDay:null,notifDismissed:true})} style={{flex:1,cursor:'pointer',minWidth:0}}>
+              <div style={{fontSize:10,letterSpacing:1,textTransform:'uppercase',color:'#d8b863',fontWeight:700}}>Today · {todayEvent.type}</div>
+              <div style={{fontSize:14,fontWeight:600,color:'#f3ead4',marginTop:2}}>{todayEvent.title}</div>
+            </div>
+            <div onClick={()=>this.setState({notifDismissed:true})} style={{flexShrink:0,width:28,height:28,display:'flex',alignItems:'center',justifyContent:'center',color:'#a59c8a',fontSize:20,cursor:'pointer'}}>×</div>
+          </div>
+        )}
+
         {/* Header */}
         <div style={{display:'flex',alignItems:'flex-start',justifyContent:'space-between',padding:'10px 0 18px'}}>
           <div>
@@ -361,19 +424,20 @@ class App extends Component {
         </div>
 
         {/* Stories row */}
-        <div style={{display:'flex',alignItems:'baseline',justifyContent:'space-between',marginBottom:12}}>
-          <div style={{fontFamily:'Spectral,serif',fontSize:18,fontWeight:600,color:'#2c2823'}}>Community Updates</div>
-          <div onClick={()=>this.openStory(0)} style={{fontSize:12.5,color:'#1f5145',fontWeight:600,cursor:'pointer'}}>View all</div>
+        <div style={{display:'flex',alignItems:'baseline',justifyContent:'space-between',marginBottom:11}}>
+          <div style={{fontFamily:'Spectral,serif',fontSize:17,fontWeight:600,color:'#2c2823'}}>Today's Updates</div>
+          <div onClick={()=>this.openStory(0)} style={{fontSize:12,color:'#1f5145',fontWeight:600,cursor:'pointer'}}>View all</div>
         </div>
-        <div className="s" style={{display:'flex',gap:14,overflowX:'auto',margin:'0 -20px 24px',paddingLeft:20,paddingRight:20,paddingBottom:6}}>
+        <div className="s" style={{display:'flex',gap:13,overflowX:'auto',margin:'0 -20px 22px',paddingLeft:20,paddingRight:20,paddingBottom:6}}>
           {STORIES.map((s,i) => (
-            <div key={i} onClick={()=>this.openStory(i)} style={{flexShrink:0,width:72,textAlign:'center',cursor:'pointer'}}>
-              <div style={{width:72,height:72,borderRadius:'50%',padding:3,background:'conic-gradient(from 200deg,#d8b863,#1f5145,#6e2230,#d8b863)'}}>
-                <div style={{width:'100%',height:'100%',borderRadius:'50%',background:s.color,display:'flex',alignItems:'center',justifyContent:'center',border:'3px solid #f6f1e7'}}>
-                  <span style={{fontFamily:'Spectral,serif',fontSize:22,color:'#f3ead4',fontWeight:600}}>{s.initial}</span>
+            <div key={i} onClick={()=>this.openStory(i)} style={{flexShrink:0,width:70,textAlign:'center',cursor:'pointer'}}>
+              <div style={{width:70,height:70,borderRadius:'50%',padding:2.5,background:'conic-gradient(from 210deg,#d8b863,#1f5145,#6e2230,#d8b863)'}}>
+                <div style={{width:'100%',height:'100%',borderRadius:'50%',background:s.img||s.color,display:'flex',alignItems:'center',justifyContent:'center',border:'3px solid #f6f1e7',position:'relative',overflow:'hidden'}}>
+                  <div style={{position:'absolute',inset:0,background:'radial-gradient(120% 80% at 30% 22%, rgba(255,255,255,.22), transparent 62%)'}} />
+                  <span style={{fontFamily:'Amiri,serif',fontSize:27,color:'rgba(255,255,255,.95)',position:'relative'}} dir="rtl">{s.initial}</span>
                 </div>
               </div>
-              <div style={{fontSize:11,color:'#6f675a',marginTop:7,lineHeight:1.2,fontWeight:500}}>{s.short}</div>
+              <div style={{fontSize:10.5,color:'#6f675a',marginTop:6,lineHeight:1.2,fontWeight:600}}>{s.short}</div>
             </div>
           ))}
         </div>
@@ -790,11 +854,15 @@ class App extends Component {
   /* ── MORE ── */
   renderMore(st) {
     const links = [
-      { label:'Classifieds',      sub:'Community business listings',            glyph:'ﺱ', go:()=>this.go('classifieds') },
-      { label:'Admin Dashboard',  sub:'Manage content (staff)',                 glyph:'⚙', go:()=>this.go('admin') },
-      { label:'About & Install',  sub:'Add Ahlul Bayt Ireland to home screen', glyph:'↧', go:()=>this.go('about') },
-      { label:'Offline Mode',     sub:'Preview the offline fallback',           glyph:'⊘', go:()=>this.go('offline') },
+      { label:'Calendar & Events', sub:'Hijri dates and community events',       glyph:'ﮬ', go:()=>this.go('calendar') },
+      { label:'Kids Corner',       sub:'Books, videos & quizzes for children',   glyph:'ﻙ', go:()=>this.go('kids') },
+      { label:'Qibla Finder',      sub:'Find the direction to Makkah',           glyph:'ﻕ', go:()=>this.go('qibla') },
+      { label:'Classifieds',       sub:'Community business listings',            glyph:'ﺱ', go:()=>this.go('classifieds') },
+      { label:'Admin Dashboard',   sub:'Manage content (staff)',                 glyph:'⚙', go:()=>this.go('admin') },
+      { label:'About & Install',   sub:'Add Ahlul Bayt Ireland to home screen', glyph:'↧', go:()=>this.go('about') },
+      { label:'Offline Mode',      sub:'Preview the offline fallback',           glyph:'⊘', go:()=>this.go('offline') },
     ];
+    const langs = ['English','العربية','Français','Urdu'];
     return (
       <div style={{padding:'8px 20px 100px'}} className="afu">
         <div style={{padding:'8px 0 16px'}}>
@@ -812,6 +880,19 @@ class App extends Component {
             </div>
           ))}
         </div>
+
+        <div style={{fontSize:11,letterSpacing:1.2,textTransform:'uppercase',fontWeight:700,color:'#b1a690',marginBottom:12,paddingLeft:2}}>App Language</div>
+        <div style={{background:'#fffdf9',border:'1px solid #ece4d4',borderRadius:16,padding:'6px 16px',marginBottom:24}}>
+          {langs.map((l,i) => (
+            <div key={l} onClick={()=>this.setState({lang:l})} style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'13px 0',borderBottom:i<langs.length-1?'1px solid #f3ecdd':'none',cursor:'pointer'}}>
+              <div style={{fontSize:14.5,color:st.lang===l?'#1f5145':'#3f3a32',fontWeight:st.lang===l?700:400}}>{l}</div>
+              {st.lang===l && (
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1f5145" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12l5 5 9-11"/></svg>
+              )}
+            </div>
+          ))}
+        </div>
+
         <div style={{fontSize:11,letterSpacing:1.2,textTransform:'uppercase',fontWeight:700,color:'#b1a690',marginBottom:12,paddingLeft:2}}>Reading Settings</div>
         <div style={{background:'#fffdf9',border:'1px solid #ece4d4',borderRadius:16,padding:'6px 16px'}}>
           <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'13px 0',borderBottom:'1px solid #f3ecdd'}}>
@@ -906,10 +987,12 @@ class App extends Component {
       { label:'Prayer Cal.',    val:'✓',  note:'1447 imported',    ink:'#2c5d52', tint:'#e6efe9' },
     ];
     const actions = [
-      { label:'Add Story',    type:'Story' },
-      { label:"New Duʿāʾ",   type:"Duʿāʾ" },
-      { label:'Add Listing',  type:'Classified' },
-      { label:'Prayer Times', type:'Prayer Time' },
+      { label:'Add Story',    type:'Story',       glyph:'＋' },
+      { label:"New Duʿāʾ",   type:"Duʿāʾ",       glyph:'＋' },
+      { label:'Add Listing',  type:'Classified',  glyph:'＋' },
+      { label:'Add Event',    type:'Event',       glyph:'＋' },
+      { label:'Daily Quiz',   type:'Quiz',        glyph:'✎' },
+      { label:'Prayer Times', type:'Prayer Time', glyph:'✎' },
     ];
     const expiring = [
       { title:'Jummah Reminder', left:'Expires in 6h',  pct:75 },
@@ -993,6 +1076,7 @@ class App extends Component {
     const af = st.adminForm || 'Story';
     const isStory = af==='Story';
     const isClass = af==='Classified';
+    const isEvent = af==='Event';
     const canPublish = st.adminTitle.trim().length > 0 && st.adminContent.trim().length > 0;
 
     const handlePublish = () => {
@@ -1073,7 +1157,31 @@ class App extends Component {
             </div>
           )}
 
-          <label style={{display:'block',fontSize:12.5,fontWeight:600,color:'#6f675a',marginBottom:7}}>{isStory?'Story text':isClass?'Business description':'Content'}</label>
+          {isEvent && (
+            <>
+              <div style={{display:'flex',gap:12,marginBottom:18}}>
+                <div style={{flex:1}}>
+                  <label style={{display:'block',fontSize:12.5,fontWeight:600,color:'#6f675a',marginBottom:7}}>Date</label>
+                  <div style={{border:'1px solid #e6dcc8',background:'#fffdf9',borderRadius:13,padding:'13px 15px',fontSize:15,color:'#2c2823',display:'flex',justifyContent:'space-between'}}>Select <span style={{color:'#b3a890'}}>▾</span></div>
+                </div>
+                <div style={{flex:1}}>
+                  <label style={{display:'block',fontSize:12.5,fontWeight:600,color:'#6f675a',marginBottom:7}}>Type</label>
+                  <div style={{border:'1px solid #e6dcc8',background:'#fffdf9',borderRadius:13,padding:'13px 15px',fontSize:15,color:'#2c2823',display:'flex',justifyContent:'space-between'}}>Majlis <span style={{color:'#b3a890'}}>▾</span></div>
+                </div>
+              </div>
+              <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',background:'#fffdf9',border:'1px solid #e6dcc8',borderRadius:13,padding:'13px 15px',marginBottom:18}}>
+                <div>
+                  <div style={{fontSize:14,fontWeight:600,color:'#2c2823'}}>Send notification on the day</div>
+                  <div style={{fontSize:11.5,color:'#9a8f7c',marginTop:1}}>Auto-alerts the community at 9 AM</div>
+                </div>
+                <div style={{width:48,height:28,borderRadius:16,background:'#1f5145',position:'relative'}}>
+                  <div style={{position:'absolute',top:3,left:23,width:22,height:22,borderRadius:'50%',background:'#fff',boxShadow:'0 1px 3px rgba(0,0,0,.2)'}} />
+                </div>
+              </div>
+            </>
+          )}
+
+          <label style={{display:'block',fontSize:12.5,fontWeight:600,color:'#6f675a',marginBottom:7}}>{isStory?'Story text':isClass?'Business description':isEvent?'Event details':'Content'}</label>
           <textarea
             value={st.adminContent}
             onChange={e=>this.setState({adminContent:e.target.value})}
@@ -1108,12 +1216,230 @@ class App extends Component {
     );
   }
 
+  /* ── CALENDAR ── */
+  renderCalendar(st) {
+    const now = st.now;
+    const calY = now.getFullYear(), calM = now.getMonth();
+    const todayD = now.getDate();
+    const daysInMonth = new Date(calY, calM+1, 0).getDate();
+    const firstWeekday = new Date(calY, calM, 1).getDay();
+    const monthName = now.toLocaleDateString('en-IE', { month:'long', year:'numeric' });
+    const eventsByDay = {};
+    EVENT_DEFS.forEach(e => { const day = Math.min(todayD + e.offset, daysInMonth); eventsByDay[day] = e; });
+    const selDay = st.calDay || todayD;
+    const selEvent = eventsByDay[selDay];
+    const selDayGreg = new Date(calY, calM, selDay).toLocaleDateString('en-IE', { weekday:'long', day:'numeric', month:'long' });
+    const calEventList = Object.keys(eventsByDay).map(d => ({ day:+d, ...eventsByDay[d],
+      dateLabel: new Date(calY, calM, +d).toLocaleDateString('en-IE', { day:'numeric', month:'short' })
+    })).sort((a,b) => a.day - b.day);
+    const weekHead = ['S','M','T','W','T','F','S'];
+    const cells = [];
+    for (let i = 0; i < firstWeekday; i++) cells.push({ blank:true, key:'b'+i });
+    for (let d = 1; d <= daysInMonth; d++) {
+      const ev = eventsByDay[d];
+      const isToday = d === todayD;
+      const sel = selDay === d;
+      cells.push({ blank:false, key:'d'+d, day:d,
+        bg: sel ? '#1f5145' : isToday ? '#e6efe9' : 'transparent',
+        ink: sel ? '#fffdf9' : isToday ? '#1f5145' : '#3f3a32',
+        dot: ev ? ev.color : 'transparent',
+      });
+    }
+    return (
+      <div style={{padding:'8px 20px 100px'}} className="afu">
+        <div style={{padding:'8px 0 16px'}}>
+          <div style={{fontSize:13,color:'#9a8f7c',fontWeight:500}}>Community</div>
+          <div style={{fontFamily:'Spectral,serif',fontSize:26,fontWeight:600,color:'#27241f',marginTop:2}}>Calendar</div>
+        </div>
+        <div style={{display:'flex',alignItems:'flex-end',justifyContent:'space-between',marginBottom:14}}>
+          <div style={{fontFamily:'Spectral,serif',fontSize:20,fontWeight:600,color:'#2c2823'}}>{monthName}</div>
+          <div style={{display:'flex',alignItems:'center',gap:6}}>
+            <span style={{width:8,height:8,borderRadius:'50%',background:'#1f5145'}} />
+            <span style={{fontSize:11.5,color:'#9a8f7c'}}>Has event</span>
+          </div>
+        </div>
+        <div style={{display:'grid',gridTemplateColumns:'repeat(7,1fr)',marginBottom:4}}>
+          {weekHead.map((w,i) => <div key={i} style={{textAlign:'center',fontSize:11,fontWeight:700,color:'#b1a690'}}>{w}</div>)}
+        </div>
+        <div style={{display:'grid',gridTemplateColumns:'repeat(7,1fr)',gap:3,background:'#fffdf9',border:'1px solid #ece4d4',borderRadius:18,padding:8}}>
+          {cells.map(c => c.blank ? (
+            <div key={c.key} />
+          ) : (
+            <div key={c.key} onClick={()=>this.setState({calDay:c.day})} style={{aspectRatio:'1',borderRadius:11,background:c.bg,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',cursor:'pointer',position:'relative'}}>
+              <span style={{fontSize:14,fontWeight:600,color:c.ink,lineHeight:1}}>{c.day}</span>
+              <span style={{position:'absolute',bottom:5,width:5,height:5,borderRadius:'50%',background:c.dot}} />
+            </div>
+          ))}
+        </div>
+        <div style={{background:'#fffdf9',border:'1px solid #ece4d4',borderRadius:18,padding:17,marginTop:16}}>
+          <div style={{fontSize:15,fontWeight:600,color:'#2c2823'}}>{selDayGreg}</div>
+          {selEvent && (
+            <div style={{display:'flex',gap:12,alignItems:'flex-start',marginTop:14,paddingTop:14,borderTop:'1px solid #f1ebdd'}}>
+              <div style={{flexShrink:0,width:38,height:38,borderRadius:11,background:selEvent.tint,display:'flex',alignItems:'center',justifyContent:'center'}}>
+                <span style={{width:11,height:11,borderRadius:'50%',background:selEvent.color}} />
+              </div>
+              <div style={{flex:1}}>
+                <div style={{fontSize:10.5,letterSpacing:.7,textTransform:'uppercase',fontWeight:700,color:selEvent.color}}>{selEvent.type}</div>
+                <div style={{fontSize:15,fontWeight:600,color:'#2c2823',marginTop:2}}>{selEvent.title}</div>
+                <div style={{fontSize:12.5,color:'#7a7264',marginTop:4,lineHeight:1.5}}>{selEvent.desc}</div>
+              </div>
+            </div>
+          )}
+          {!selEvent && <div style={{fontSize:13,color:'#b1a690',marginTop:8}}>No events on this day.</div>}
+        </div>
+        <div style={{fontSize:11,letterSpacing:1.2,textTransform:'uppercase',fontWeight:700,color:'#b1a690',margin:'22px 0 12px'}}>Upcoming Events</div>
+        <div style={{display:'flex',flexDirection:'column',gap:10}}>
+          {calEventList.map((e,i) => (
+            <div key={i} style={{display:'flex',gap:13,alignItems:'center',background:'#fffdf9',border:'1px solid #ece4d4',borderRadius:15,padding:'13px 15px'}}>
+              <div style={{flexShrink:0,width:46,textAlign:'center',borderRight:'1px solid #f1ebdd',paddingRight:11}}>
+                <div style={{fontSize:18,fontWeight:700,color:e.color,lineHeight:1}}>{e.day}</div>
+                <div style={{fontSize:10,color:'#a89d88',marginTop:2}}>{e.dateLabel}</div>
+              </div>
+              <div style={{flex:1}}>
+                <div style={{fontSize:10,letterSpacing:.6,textTransform:'uppercase',fontWeight:700,color:e.color}}>{e.type}</div>
+                <div style={{fontSize:14.5,fontWeight:600,color:'#2c2823',marginTop:1}}>{e.title}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+        <div style={{textAlign:'center',fontSize:11.5,color:'#a89d88',lineHeight:1.5,padding:'18px 24px 0'}}>
+          Events are managed by Ahlul Bayt Ireland. You'll receive a notification on the day of each event.
+        </div>
+      </div>
+    );
+  }
+
+  /* ── KIDS CORNER ── */
+  renderKids() {
+    return (
+      <div style={{padding:'8px 20px 100px'}} className="afu">
+        <div style={{padding:'8px 0 16px'}}>
+          <div style={{fontSize:13,color:'#9a8f7c',fontWeight:500}}>For children</div>
+          <div style={{fontFamily:'Spectral,serif',fontSize:26,fontWeight:600,color:'#27241f',marginTop:2}}>Kids Corner</div>
+        </div>
+        <div style={{position:'relative',overflow:'hidden',borderRadius:20,aspectRatio:'16/10',background:'linear-gradient(150deg,#2a6a58,#143b2f)',marginBottom:10,cursor:'pointer',display:'flex',alignItems:'flex-end',padding:18}}>
+          <div style={{position:'absolute',inset:0,background:'repeating-linear-gradient(135deg,rgba(255,255,255,.05) 0 12px,transparent 12px 24px)'}} />
+          <div style={{position:'absolute',top:'50%',left:'50%',transform:'translate(-50%,-50%)',width:58,height:58,borderRadius:'50%',background:'rgba(255,253,249,.92)',display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'0 8px 20px -6px rgba(0,0,0,.4)'}}>
+            <div style={{width:0,height:0,borderLeft:'18px solid #1f5145',borderTop:'11px solid transparent',borderBottom:'11px solid transparent',marginLeft:4}} />
+          </div>
+          <div style={{position:'relative',color:'#fff'}}>
+            <div style={{fontSize:10.5,letterSpacing:1,textTransform:'uppercase',fontWeight:700,color:'#d8b863'}}>Featured · Animated</div>
+            <div style={{fontFamily:'Spectral,serif',fontSize:19,fontWeight:600,marginTop:3}}>The Story of the Two Brothers</div>
+          </div>
+        </div>
+        <div style={{fontSize:11.5,color:'#a89d88',marginBottom:22}}>Safe, ad-free Islamic videos chosen for the community.</div>
+
+        <div style={{fontFamily:'Spectral,serif',fontSize:17,fontWeight:600,color:'#2c2823',marginBottom:12}}>Learning Videos</div>
+        <div className="s" style={{display:'flex',gap:13,overflowX:'auto',margin:'0 -20px 24px',padding:'0 20px 4px'}}>
+          {KIDS_LEARN.map((v,i) => (
+            <div key={i} style={{flexShrink:0,width:170,cursor:'pointer'}}>
+              <div style={{position:'relative',aspectRatio:'16/10',borderRadius:15,overflow:'hidden',background:v.color,display:'flex',alignItems:'center',justifyContent:'center'}}>
+                <div style={{position:'absolute',inset:0,background:'repeating-linear-gradient(135deg,rgba(255,255,255,.05) 0 10px,transparent 10px 20px)'}} />
+                <div style={{width:40,height:40,borderRadius:'50%',background:'rgba(255,253,249,.92)',display:'flex',alignItems:'center',justifyContent:'center',position:'relative'}}>
+                  <div style={{width:0,height:0,borderLeft:'13px solid #1f5145',borderTop:'8px solid transparent',borderBottom:'8px solid transparent',marginLeft:3}} />
+                </div>
+              </div>
+              <div style={{fontSize:13.5,fontWeight:600,color:'#2c2823',marginTop:8,lineHeight:1.3}}>{v.title}</div>
+              <div style={{fontSize:11,color:'#9a8f7c',marginTop:2}}>{v.meta}</div>
+            </div>
+          ))}
+        </div>
+
+        <div style={{background:'linear-gradient(150deg,#1f5145,#163b30)',borderRadius:20,padding:22,color:'#f3ead4',marginBottom:24,position:'relative',overflow:'hidden'}}>
+          <div style={{position:'absolute',right:-26,top:-26,width:110,height:110,borderRadius:'50%',border:'1px solid rgba(216,184,99,.2)'}} />
+          <div style={{fontSize:10.5,letterSpacing:1.2,textTransform:'uppercase',fontWeight:700,color:'#d8b863'}}>Quote of the day</div>
+          {KIDS_QUOTES.map((q,i) => (
+            <div key={i} style={{marginTop:12}}>
+              <div style={{fontFamily:'Amiri,serif',fontSize:24,lineHeight:1.7,textAlign:'right'}} dir="rtl">{q.ar}</div>
+              <div style={{fontFamily:'Spectral,serif',fontSize:16,marginTop:8,color:'#fff'}}>"{q.tr}"</div>
+              <div style={{fontSize:12,color:'#bcae8d',marginTop:6}}>— {q.who}</div>
+            </div>
+          ))}
+        </div>
+
+        <div style={{fontFamily:'Spectral,serif',fontSize:17,fontWeight:600,color:'#2c2823',marginBottom:12}}>Picture Books</div>
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:24}}>
+          {KIDS_BOOKS.map((b,i) => (
+            <div key={i} style={{cursor:'pointer'}}>
+              <div style={{aspectRatio:'3/4',borderRadius:14,background:b.color,display:'flex',alignItems:'flex-end',padding:14,position:'relative',overflow:'hidden'}}>
+                <div style={{position:'absolute',left:0,top:0,bottom:0,width:7,background:b.ink,opacity:.55}} />
+                <div style={{fontFamily:'Spectral,serif',fontSize:15,fontWeight:600,color:b.ink,lineHeight:1.25}}>{b.title}</div>
+              </div>
+              <div style={{fontSize:11,color:'#9a8f7c',marginTop:7}}>{b.meta}</div>
+            </div>
+          ))}
+        </div>
+
+        <div onClick={()=>this.openStory(STORIES.findIndex(s=>s.kind==='quiz'))} style={{display:'flex',alignItems:'center',gap:14,background:'linear-gradient(120deg,#faf4e6,#f6efe0)',border:'1px solid #ecdfc2',borderRadius:18,padding:16,cursor:'pointer'}}>
+          <div style={{flexShrink:0,width:46,height:46,borderRadius:13,background:'#6e2230',display:'flex',alignItems:'center',justifyContent:'center',fontFamily:'Amiri,serif',fontSize:24,color:'#f3ead4'}}>؟</div>
+          <div style={{flex:1}}>
+            <div style={{fontSize:15,fontWeight:600,color:'#5e4d22'}}>Today's Kids Quiz</div>
+            <div style={{fontSize:12,color:'#8a7846',marginTop:2}}>One quick question — can you get it right?</div>
+          </div>
+          <span style={{color:'#bba35f',fontSize:20}}>→</span>
+        </div>
+      </div>
+    );
+  }
+
+  /* ── QIBLA FINDER ── */
+  renderQibla() {
+    const bearing = 119;
+    return (
+      <div style={{padding:'8px 20px 100px'}} className="afu">
+        <div style={{padding:'8px 0 8px'}}>
+          <div style={{fontSize:13,color:'#9a8f7c',fontWeight:500}}>Direction to Makkah</div>
+          <div style={{fontFamily:'Spectral,serif',fontSize:26,fontWeight:600,color:'#27241f',marginTop:2}}>Qibla Finder</div>
+        </div>
+        <div style={{display:'flex',justifyContent:'center',margin:'18px 0 6px'}}>
+          <div style={{position:'relative',width:268,height:268,borderRadius:'50%',background:'#fffdf9',border:'1px solid #ece4d4',boxShadow:'inset 0 2px 14px rgba(40,30,10,.06),0 14px 30px -16px rgba(40,30,10,.25)'}}>
+            <div style={{position:'absolute',inset:14,borderRadius:'50%',border:'1px dashed #e2d8c4'}} />
+            <div style={{position:'absolute',top:14,left:'50%',transform:'translateX(-50%)',fontSize:14,fontWeight:700,color:'#6e2230'}}>N</div>
+            <div style={{position:'absolute',bottom:14,left:'50%',transform:'translateX(-50%)',fontSize:14,fontWeight:700,color:'#9a8f7c'}}>S</div>
+            <div style={{position:'absolute',right:16,top:'50%',transform:'translateY(-50%)',fontSize:14,fontWeight:700,color:'#9a8f7c'}}>E</div>
+            <div style={{position:'absolute',left:16,top:'50%',transform:'translateY(-50%)',fontSize:14,fontWeight:700,color:'#9a8f7c'}}>W</div>
+            <div style={{position:'absolute',inset:0,transform:`rotate(${bearing}deg)`}}>
+              <div style={{position:'absolute',top:24,left:'50%',transform:'translateX(-50%)',display:'flex',flexDirection:'column',alignItems:'center'}}>
+                <div style={{width:0,height:0,borderLeft:'11px solid transparent',borderRight:'11px solid transparent',borderBottom:'26px solid #1f5145'}} />
+                <div style={{width:3,height:78,background:'linear-gradient(#1f5145,#cdbf9e)'}} />
+              </div>
+              <div style={{position:'absolute',top:30,left:'50%',transform:'translateX(-50%) translateY(-30px)',width:30,height:30,borderRadius:8,background:'#1c1a17',border:'2px solid #d8b863',display:'flex',alignItems:'center',justifyContent:'center'}}>
+                <div style={{width:14,height:9,border:'1.4px solid #d8b863',borderRadius:1}} />
+              </div>
+            </div>
+            <div style={{position:'absolute',top:'50%',left:'50%',transform:'translate(-50%,-50%)',width:18,height:18,borderRadius:'50%',background:'#1f5145',boxShadow:'0 0 0 4px #fffdf9,0 0 0 5px #ece4d4'}} />
+          </div>
+        </div>
+        <div style={{textAlign:'center',marginTop:14}}>
+          <div style={{fontFamily:'Spectral,serif',fontSize:34,fontWeight:600,color:'#1f5145'}}>{bearing}° <span style={{fontSize:18,color:'#9a7a2c'}}>SE</span></div>
+          <div style={{fontSize:13,color:'#9a8f7c',marginTop:2}}>Bearing from true North · Dublin, Ireland</div>
+        </div>
+        <div style={{display:'flex',gap:11,marginTop:20}}>
+          <div style={{flex:1,background:'#fffdf9',border:'1px solid #ece4d4',borderRadius:16,padding:15,textAlign:'center'}}>
+            <div style={{fontSize:11,letterSpacing:.6,textTransform:'uppercase',color:'#b1a690',fontWeight:700}}>Distance</div>
+            <div style={{fontSize:18,fontWeight:700,color:'#2c2823',marginTop:5}}>≈ 5,400 km</div>
+          </div>
+          <div style={{flex:1,background:'#fffdf9',border:'1px solid #ece4d4',borderRadius:16,padding:15,textAlign:'center'}}>
+            <div style={{fontSize:11,letterSpacing:.6,textTransform:'uppercase',color:'#b1a690',fontWeight:700}}>Holy site</div>
+            <div style={{fontSize:18,fontWeight:700,color:'#2c2823',marginTop:5}}>Kaʿba</div>
+          </div>
+        </div>
+        <div style={{display:'flex',gap:11,alignItems:'flex-start',background:'linear-gradient(120deg,#faf4e6,#f6efe0)',border:'1px solid #ecdfc2',borderRadius:16,padding:'14px 15px',marginTop:16}}>
+          <div style={{flexShrink:0,width:30,height:30,borderRadius:9,background:'#e8d39a',display:'flex',alignItems:'center',justifyContent:'center',color:'#7a5d18',fontWeight:700}}>i</div>
+          <div style={{fontSize:12.5,color:'#8a7846',lineHeight:1.5}}>Lay your device flat and allow compass access for a live reading. The arrow points towards the Qibla.</div>
+        </div>
+      </div>
+    );
+  }
+
   /* ── STORY VIEWER ── */
   renderStoryViewer(st) {
     const cur = STORIES[st.story] || {};
     const bars = STORIES.map((_,i) => ({
       fill: i < st.story ? 100 : i===st.story ? st.storyProg : 0
     }));
+    const isQuiz = cur.kind === 'quiz';
+    const quizAnswered = st.quizPick !== null;
     return (
       <div style={{position:'absolute',inset:0,zIndex:20,background:cur.color||'#1f5145',display:'flex',flexDirection:'column'}} className="apo">
         <div style={{position:'absolute',inset:0,background:'radial-gradient(120% 90% at 50% 0%,rgba(255,255,255,.1),rgba(0,0,0,.35))'}} />
@@ -1138,14 +1464,45 @@ class App extends Component {
           <div onClick={this.closeStory} style={{width:34,height:34,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',color:'#fff',fontSize:24,lineHeight:1}}>×</div>
         </div>
 
-        <div onClick={this.prevStory} style={{position:'absolute',left:0,top:130,bottom:0,width:'35%',zIndex:3}} />
-        <div onClick={this.nextStory} style={{position:'absolute',right:0,top:130,bottom:0,width:'65%',zIndex:3}} />
+        <div onClick={this.prevStory} style={{position:'absolute',left:0,top:90,bottom:0,width:'35%',zIndex:3}} />
+        <div onClick={this.nextStory} style={{position:'absolute',right:0,top:90,bottom:0,width:'65%',zIndex:isQuiz?0:3}} />
 
-        <div style={{position:'relative',zIndex:2,flex:1,display:'flex',flexDirection:'column',justifyContent:'flex-end',padding:'0 26px 40px',pointerEvents:'none'}}>
-          <div style={{fontFamily:'Amiri,serif',fontSize:30,color:'rgba(255,255,255,.85)',marginBottom:14}} dir="rtl">ﷺ</div>
-          <div style={{fontFamily:'Spectral,serif',fontSize:30,fontWeight:600,color:'#fff',lineHeight:1.2}}>{cur.title}</div>
-          <div style={{fontSize:14,color:'rgba(255,255,255,.85)',marginTop:4,fontWeight:500}}>{cur.sub}</div>
-          <div style={{fontSize:15.5,color:'rgba(255,255,255,.92)',marginTop:16,lineHeight:1.6}}>{cur.body}</div>
+        <div style={{position:'relative',zIndex:4,flex:1,display:'flex',flexDirection:'column',justifyContent:'flex-end',padding:'0 26px 40px',pointerEvents:'none'}}>
+          <div style={{fontSize:11,letterSpacing:1.4,textTransform:'uppercase',color:'rgba(255,255,255,.7)',fontWeight:700,marginBottom:8}}>{cur.tag}</div>
+          <div style={{fontFamily:'Spectral,serif',fontSize:29,fontWeight:600,color:'#fff',lineHeight:1.2}}>{cur.title}</div>
+          <div style={{fontSize:13.5,color:'rgba(255,255,255,.82)',marginTop:4,fontWeight:500}}>{cur.sub}</div>
+          {cur.ar && (
+            <div style={{fontFamily:'Amiri,serif',fontSize:30,color:'#fff',marginTop:18,lineHeight:1.9,textAlign:'right'}} dir="rtl">{cur.ar}</div>
+          )}
+          {cur.body && !isQuiz && (
+            <div style={{fontSize:15.5,color:'rgba(255,255,255,.94)',marginTop:14,lineHeight:1.6}}>{cur.body}</div>
+          )}
+          {isQuiz && (
+            <div style={{marginTop:18,pointerEvents:'auto'}}>
+              <div style={{fontSize:18,fontWeight:600,color:'#fff',lineHeight:1.4,marginBottom:16}}>{cur.question}</div>
+              <div style={{display:'flex',flexDirection:'column',gap:10}}>
+                {(cur.options||[]).map((opt,i) => {
+                  const picked = st.quizPick === i;
+                  const correct = i === cur.answer;
+                  const answered = quizAnswered;
+                  const bg = answered ? (correct ? 'rgba(120,220,150,.22)' : (picked ? 'rgba(255,120,120,.22)' : 'rgba(255,255,255,.1)')) : 'rgba(255,255,255,.12)';
+                  const bd = answered && correct ? '#9ee7b0' : (answered && picked ? '#ff9a9a' : 'rgba(255,255,255,.3)');
+                  const mark = answered ? (correct ? '✓' : (picked ? '✕' : '')) : '';
+                  return (
+                    <div key={i} onClick={()=>this.answerQuiz(i)} style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'14px 16px',borderRadius:14,background:bg,border:`1.5px solid ${bd}`,color:'#fff',fontSize:15,fontWeight:600,cursor:'pointer'}}>
+                      <span>{opt}</span>
+                      <span style={{fontSize:16}}>{mark}</span>
+                    </div>
+                  );
+                })}
+              </div>
+              {quizAnswered && (
+                <div style={{marginTop:14,fontSize:13.5,color:'rgba(255,255,255,.9)',fontWeight:500}}>
+                  {st.quizPick === cur.answer ? 'Correct — well done!' : 'Not quite. The answer is highlighted.'}
+                </div>
+              )}
+            </div>
+          )}
           {cur.link && (
             <div style={{pointerEvents:'auto',display:'inline-flex',alignSelf:'flex-start',alignItems:'center',gap:8,marginTop:22,padding:'12px 20px',borderRadius:13,background:'#fff',color:'#27241f',fontSize:14,fontWeight:600,cursor:'pointer'}}>
               {cur.link} <span style={{fontSize:16}}>→</span>
@@ -1166,7 +1523,7 @@ class App extends Component {
       { key:'more',    label:'More',    d:NAV_ICONS.more },
     ];
     return (
-      <div style={{flexShrink:0,background:'rgba(255,253,249,.92)',backdropFilter:'blur(14px)',borderTop:'1px solid #eadfca',padding:'9px 14px 26px',display:'flex',justifyContent:'space-between',zIndex:10}}>
+      <div className="abi-nav" style={{flexShrink:0,background:'rgba(255,253,249,.92)',backdropFilter:'blur(14px)',borderTop:'1px solid #eadfca',padding:'9px 14px 26px',display:'flex',justifyContent:'space-between',zIndex:10}}>
         {items.map(n => {
           const active = n.key===st.screen || (n.key==='library' && st.screen==='reading');
           const color = active ? '#1f5145' : '#b3a890';
@@ -1218,6 +1575,9 @@ class App extends Component {
           {st.screen==='about'      && this.renderAbout()}
           {st.screen==='offline'    && this.renderOffline()}
           {st.screen==='admin'      && this.renderAdmin()}
+          {st.screen==='calendar'   && this.renderCalendar(st)}
+          {st.screen==='kids'       && this.renderKids()}
+          {st.screen==='qibla'      && this.renderQibla()}
         </div>
         {showNav && this.renderNav(st)}
         {st.story !== null && this.renderStoryViewer(st)}
