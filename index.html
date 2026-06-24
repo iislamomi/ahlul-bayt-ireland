@@ -254,6 +254,8 @@ class App extends Component {
   };
 
   componentDidMount() {
+    const _now = new Date();
+    this._lastAlertTime = `${String(_now.getHours()).padStart(2,'0')}:${String(_now.getMinutes()).padStart(2,'0')}`;
     this.clockTimer = setInterval(() => {
       const now = new Date();
       this.setState({ now });
@@ -302,7 +304,6 @@ class App extends Component {
   };
 
   checkPrayerAlert = (now) => {
-    if (now.getSeconds() !== 0) return;
     const timeStr = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
     if (this._lastAlertTime === timeStr) return;
     const prayers = this.getActivePrayers();
@@ -485,6 +486,37 @@ class App extends Component {
           </div>
         </div>
 
+        {/* Stories row — community updates */}
+        <div style={{display:'flex',alignItems:'baseline',justifyContent:'space-between',marginBottom:11}}>
+          <div style={{fontFamily:'Spectral,serif',fontSize:17,fontWeight:600,color:'#2c2823'}}>Today's Updates</div>
+          <div onClick={()=>this.openStory(0)} style={{fontSize:12,color:'#1f5145',fontWeight:600,cursor:'pointer'}}>View all</div>
+        </div>
+        <div className="s" style={{display:'flex',gap:13,overflowX:'auto',margin:'0 -20px 14px',paddingLeft:20,paddingRight:20,paddingBottom:6}}>
+          {STORIES.map((s,i) => (
+            <div key={i} onClick={()=>this.openStory(i)} style={{flexShrink:0,width:70,textAlign:'center',cursor:'pointer'}}>
+              <div style={{width:70,height:70,borderRadius:'50%',padding:2.5,background:'conic-gradient(from 210deg,#d8b863,#1f5145,#6e2230,#d8b863)'}}>
+                <div style={{width:'100%',height:'100%',borderRadius:'50%',background:s.img||s.color,display:'flex',alignItems:'center',justifyContent:'center',border:'3px solid #f6f1e7',position:'relative',overflow:'hidden'}}>
+                  <div style={{position:'absolute',inset:0,background:'radial-gradient(120% 80% at 30% 22%, rgba(255,255,255,.22), transparent 62%)'}} />
+                  <span style={{fontFamily:'Amiri,serif',fontSize:27,color:'rgba(255,255,255,.95)',position:'relative'}} dir="rtl">{s.initial}</span>
+                </div>
+              </div>
+              <div style={{fontSize:10.5,color:'#6f675a',marginTop:6,lineHeight:1.2,fontWeight:600}}>{s.short}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* Classifieds quick link */}
+        <div onClick={()=>this.go('classifieds')} style={{display:'flex',alignItems:'center',gap:13,background:'#fffdf9',border:'1px solid #ece4d4',borderRadius:16,padding:'13px 16px',cursor:'pointer',marginBottom:18}}>
+          <div style={{width:40,height:40,borderRadius:12,background:'#f3ecd9',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+            <span style={{fontFamily:'Amiri,serif',fontSize:20,color:'#9a7a2c'}} dir="rtl">ﺱ</span>
+          </div>
+          <div style={{flex:1}}>
+            <div style={{fontSize:14.5,fontWeight:700,color:'#2c2823'}}>Classifieds</div>
+            <div style={{fontSize:12,color:'#9a8f7c',marginTop:1}}>Community businesses &amp; listings</div>
+          </div>
+          <span style={{color:'#bba35f',fontSize:18}}>›</span>
+        </div>
+
         {/* Next prayer hero */}
         <div onClick={()=>this.go('prayer')} style={{position:'relative',overflow:'hidden',background:'linear-gradient(155deg,#1f5145 0%,#163b30 100%)',borderRadius:22,padding:'20px 22px',color:'#f3ead4',boxShadow:'0 18px 34px -18px rgba(22,59,48,.7)',cursor:'pointer',marginBottom:20}}>
           <div style={{position:'absolute',right:-30,top:-30,width:140,height:140,borderRadius:'50%',border:'1px solid rgba(216,184,99,.22)'}} />
@@ -515,25 +547,6 @@ class App extends Component {
                 <span style={{fontSize:15,color:p.isNext?'#1f5145':'#3f3a32',fontWeight:p.isNext?700:500}}>{p.name}</span>
               </div>
               <span style={{fontSize:15,color:p.isNext?'#1f5145':'#3f3a32',fontWeight:p.isNext?700:500,fontVariantNumeric:'tabular-nums'}}>{p.time}</span>
-            </div>
-          ))}
-        </div>
-
-        {/* Stories row */}
-        <div style={{display:'flex',alignItems:'baseline',justifyContent:'space-between',marginBottom:11}}>
-          <div style={{fontFamily:'Spectral,serif',fontSize:17,fontWeight:600,color:'#2c2823'}}>Today's Updates</div>
-          <div onClick={()=>this.openStory(0)} style={{fontSize:12,color:'#1f5145',fontWeight:600,cursor:'pointer'}}>View all</div>
-        </div>
-        <div className="s" style={{display:'flex',gap:13,overflowX:'auto',margin:'0 -20px 22px',paddingLeft:20,paddingRight:20,paddingBottom:6}}>
-          {STORIES.map((s,i) => (
-            <div key={i} onClick={()=>this.openStory(i)} style={{flexShrink:0,width:70,textAlign:'center',cursor:'pointer'}}>
-              <div style={{width:70,height:70,borderRadius:'50%',padding:2.5,background:'conic-gradient(from 210deg,#d8b863,#1f5145,#6e2230,#d8b863)'}}>
-                <div style={{width:'100%',height:'100%',borderRadius:'50%',background:s.img||s.color,display:'flex',alignItems:'center',justifyContent:'center',border:'3px solid #f6f1e7',position:'relative',overflow:'hidden'}}>
-                  <div style={{position:'absolute',inset:0,background:'radial-gradient(120% 80% at 30% 22%, rgba(255,255,255,.22), transparent 62%)'}} />
-                  <span style={{fontFamily:'Amiri,serif',fontSize:27,color:'rgba(255,255,255,.95)',position:'relative'}} dir="rtl">{s.initial}</span>
-                </div>
-              </div>
-              <div style={{fontSize:10.5,color:'#6f675a',marginTop:6,lineHeight:1.2,fontWeight:600}}>{s.short}</div>
             </div>
           ))}
         </div>
