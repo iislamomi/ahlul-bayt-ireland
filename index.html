@@ -70,14 +70,47 @@ function toHijri(date) {
   return `${hd} ${M[hm-1]} ${hy}`;
 }
 
-/* ── DATA ── */
-const PRAYERS = [
-  { name:'Fajr',    en:'Dawn',       ar:'الفجر',        glyph:'ﭐ', time:'03:28' },
-  { name:'Sunrise', en:'Shurūq',     ar:'الشروق',       glyph:'✷', time:'04:57' },
-  { name:'Dhuhr',   en:'Noon',       ar:'الظهر',        glyph:'ﭖ', time:'13:26' },
-  { name:'Sunset',  en:'Ghurūb',     ar:'الغروب',       glyph:'✸', time:'21:56' },
-  { name:'Maghrib', en:'Dusk',       ar:'المغرب',       glyph:'ﮊ', time:'22:16' },
-  { name:'Midnight',en:'Muntaṣaf',   ar:'منتصف الليل',  glyph:'☾', time:'01:12' },
+/* ── PRAYER PRESETS ── */
+const PRAYER_PRESETS = [
+  {
+    id: 'ahlulbayt',
+    name: 'Ahlul-Bait Ireland',
+    sub: 'Official ABI timings · Jaʿfarī',
+    prayers: [
+      { name:'Fajr',    en:'Dawn',     ar:'الفجر',       glyph:'ﭐ', time:'03:28' },
+      { name:'Sunrise', en:'Shurūq',   ar:'الشروق',      glyph:'✷', time:'04:57' },
+      { name:'Dhuhr',   en:'Noon',     ar:'الظهر',       glyph:'ﭖ', time:'13:26' },
+      { name:'Sunset',  en:'Ghurūb',   ar:'الغروب',      glyph:'✸', time:'21:56' },
+      { name:'Maghrib', en:'Dusk',     ar:'المغرب',      glyph:'ﮊ', time:'22:16' },
+      { name:'Midnight',en:'Muntaṣaf', ar:'منتصف الليل', glyph:'☾', time:'01:12' },
+    ]
+  },
+  {
+    id: 'icci',
+    name: 'Islamic Centre Ireland',
+    sub: 'ICCI Dublin · Ḥanafī',
+    prayers: [
+      { name:'Fajr',    en:'Dawn',     ar:'الفجر',       glyph:'ﭐ', time:'03:15' },
+      { name:'Sunrise', en:'Shurūq',   ar:'الشروق',      glyph:'✷', time:'04:52' },
+      { name:'Dhuhr',   en:'Noon',     ar:'الظهر',       glyph:'ﭖ', time:'13:27' },
+      { name:'Sunset',  en:'Ghurūb',   ar:'الغروب',      glyph:'✸', time:'21:53' },
+      { name:'Maghrib', en:'Dusk',     ar:'المغرب',      glyph:'ﮊ', time:'22:08' },
+      { name:'Midnight',en:'Muntaṣaf', ar:'منتصف الليل', glyph:'☾', time:'01:02' },
+    ]
+  },
+  {
+    id: 'mwl',
+    name: 'Muslim World League',
+    sub: 'MWL method · Shāfiʿī',
+    prayers: [
+      { name:'Fajr',    en:'Dawn',     ar:'الفجر',       glyph:'ﭐ', time:'03:10' },
+      { name:'Sunrise', en:'Shurūq',   ar:'الشروق',      glyph:'✷', time:'04:54' },
+      { name:'Dhuhr',   en:'Noon',     ar:'الظهر',       glyph:'ﭖ', time:'13:26' },
+      { name:'Sunset',  en:'Ghurūb',   ar:'الغروب',      glyph:'✸', time:'21:57' },
+      { name:'Maghrib', en:'Dusk',     ar:'المغرب',      glyph:'ﮊ', time:'22:12' },
+      { name:'Midnight',en:'Muntaṣaf', ar:'منتصف الليل', glyph:'☾', time:'01:03' },
+    ]
+  },
 ];
 
 const STORIES = [
@@ -213,10 +246,19 @@ class App extends Component {
     readingType: null, readingItem: null,
     toast: null, bookmarks: [],
     calDay: null, lang: 'English', notifDismissed: false,
+    prayerPreset: 'ahlulbayt',
+    adhanEnabled: true,
+    notifEnabled: false,
+    adhanPlaying: false,
+    notifPermission: (typeof Notification !== 'undefined') ? Notification.permission : 'default',
   };
 
   componentDidMount() {
-    this.clockTimer = setInterval(() => this.setState({ now: new Date() }), 1000);
+    this.clockTimer = setInterval(() => {
+      const now = new Date();
+      this.setState({ now });
+      this.checkPrayerAlert(now);
+    }, 1000);
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('./sw.js').catch(() => {});
     }
@@ -233,10 +275,62 @@ class App extends Component {
   componentWillUnmount() {
     clearInterval(this.clockTimer);
     clearInterval(this.storyTimer);
+    this.stopAdhan();
   }
 
   go = s => this.setState({ screen: s, story: null });
   openReading = (type, item) => this.setState({ screen: 'reading', readingType: type, readingItem: item });
+
+  getActivePrayers = () => {
+    const preset = PRAYER_PRESETS.find(p => p.id === this.state.prayerPreset) || PRAYER_PRESETS[0];
+    return preset.prayers;
+  };
+
+  playAdhan = () => {
+    this.stopAdhan();
+    this.adhanAudio = new Audio('./adhan.mp3');
+    this.adhanAudio.onended = () => this.setState({ adhanPlaying: false });
+    this.adhanAudio.play().then(() => this.setState({ adhanPlaying: true })).catch(() => {});
+  };
+
+  stopAdhan = () => {
+    if (this.adhanAudio) {
+      this.adhanAudio.pause();
+      this.adhanAudio.currentTime = 0;
+    }
+    this.setState({ adhanPlaying: false });
+  };
+
+  checkPrayerAlert = (now) => {
+    if (now.getSeconds() !== 0) return;
+    const timeStr = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+    if (this._lastAlertTime === timeStr) return;
+    const prayers = this.getActivePrayers();
+    const match = prayers.find(p => p.time === timeStr && ['Fajr','Dhuhr','Maghrib','Midnight'].includes(p.name));
+    if (!match) return;
+    this._lastAlertTime = timeStr;
+    const { adhanEnabled, notifEnabled, notifPermission } = this.state;
+    if (adhanEnabled) this.playAdhan();
+    if (notifEnabled && notifPermission === 'granted') {
+      try {
+        new Notification(`${match.name} · Prayer Time`, {
+          body: `${match.en} prayer — ${match.time} · Dublin, Ireland`,
+          silent: true,
+        });
+      } catch(e) {}
+    }
+    this.showToast(`${match.name} — ${match.time}`);
+  };
+
+  requestNotifPermission = async () => {
+    if (!('Notification' in window)) {
+      this.showToast('Notifications not supported on this browser'); return;
+    }
+    const perm = await Notification.requestPermission();
+    this.setState({ notifPermission: perm, notifEnabled: perm === 'granted' });
+    if (perm === 'granted') this.showToast('Notifications enabled');
+    else if (perm === 'denied') this.showToast('Notifications blocked — check browser settings');
+  };
 
   showToast = msg => {
     this.setState({ toast: msg });
@@ -316,7 +410,8 @@ class App extends Component {
   computeNext() {
     const now = this.state.now;
     const mins = now.getHours()*60 + now.getMinutes() + now.getSeconds()/60;
-    const order = PRAYERS.filter(p => ['Fajr','Dhuhr','Maghrib','Midnight'].includes(p.name));
+    const prayers = this.getActivePrayers();
+    const order = prayers.filter(p => ['Fajr','Dhuhr','Maghrib','Midnight'].includes(p.name));
     let next = order.find(p => this.toMin(p.time) > mins);
     let addDay = false;
     if (!next) { next = order[0]; addDay = true; }
@@ -328,8 +423,9 @@ class App extends Component {
 
   /* ── HOME ── */
   renderHome(st, next, cd, greg, hijri, salaam) {
-    const prayers = PRAYERS.map((p,i) => ({
-      ...p, isNext: p.name===next.name, last: i===PRAYERS.length-1
+    const activePrayers = this.getActivePrayers();
+    const prayers = activePrayers.map((p,i) => ({
+      ...p, isNext: p.name===next.name, last: i===activePrayers.length-1
     }));
     const quickCards = [
       { title:'Classifieds',      sub:'Community businesses',       glyph:'ﺱ', tint:'#f3ecd9', ink:'#9a7a2c', span:'2', go:()=>this.go('classifieds') },
@@ -487,14 +583,18 @@ class App extends Component {
   /* ── PRAYER ── */
   renderPrayer(st, next, cd, greg) {
     const tab = st.prayerTab;
-    const prayers = PRAYERS.map((p,i) => ({
-      ...p, isNext: p.name===next.name, last: i===PRAYERS.length-1
+    const activePrayers = this.getActivePrayers();
+    const prayers = activePrayers.map((p,i) => ({
+      ...p, isNext: p.name===next.name, last: i===activePrayers.length-1
     }));
+    const activePreset = PRAYER_PRESETS.find(p => p.id === st.prayerPreset) || PRAYER_PRESETS[0];
+    const monthFajr    = ['03:28','03:29','03:29','03:30','03:31','03:32','03:33','03:34'];
+    const monthMaghrib = ['22:16','22:16','22:17','22:17','22:17','22:18','22:18','22:18'];
     const monthRows = Array.from({length:8},(_,i) => ({
       day:`${i+18} Jun`,
-      fajr:['03:28','03:29','03:29','03:30','03:31','03:32','03:33','03:34'][i],
+      fajr: monthFajr[i],
       dhuhr:'13:26',
-      maghrib:['22:16','22:16','22:17','22:17','22:17','22:18','22:18','22:18'][i],
+      maghrib: monthMaghrib[i],
       today: i===0,
     }));
     const tabStyle = active => ({
@@ -504,6 +604,8 @@ class App extends Component {
       color: active ? '#1f5145' : '#8c8270',
       boxShadow: active ? '0 2px 6px rgba(40,30,10,.08)' : 'none',
     });
+    const notifPerm = st.notifPermission;
+    const notifSupported = typeof Notification !== 'undefined';
     return (
       <div style={{padding:'8px 20px 100px'}} className="afu">
         <div style={{padding:'8px 0 16px'}}>
@@ -514,6 +616,7 @@ class App extends Component {
         <div style={{display:'flex',gap:6,background:'#efe7d7',borderRadius:14,padding:4,marginBottom:18}}>
           <div onClick={()=>this.setState({prayerTab:'today'})} style={tabStyle(tab==='today')}>Today</div>
           <div onClick={()=>this.setState({prayerTab:'month'})} style={tabStyle(tab==='month')}>Monthly</div>
+          <div onClick={()=>this.setState({prayerTab:'settings'})} style={tabStyle(tab==='settings')}>Settings</div>
         </div>
 
         {tab==='today' && <>
@@ -560,6 +663,81 @@ class App extends Component {
           </div>
         )}
 
+        {tab==='settings' && (<>
+          <div style={{fontSize:11,fontWeight:700,letterSpacing:.7,textTransform:'uppercase',color:'#a2967f',marginBottom:10}}>Prayer Time Source</div>
+          {PRAYER_PRESETS.map(preset => {
+            const active = st.prayerPreset === preset.id;
+            return (
+              <div key={preset.id} onClick={()=>this.setState({prayerPreset:preset.id})}
+                style={{display:'flex',alignItems:'center',gap:14,background:'#fffdf9',border:`2px solid ${active?'#1f5145':'#ece4d4'}`,borderRadius:16,padding:'14px 16px',cursor:'pointer',marginBottom:10,transition:'border-color .2s'}}>
+                <div style={{width:22,height:22,borderRadius:'50%',border:`2px solid ${active?'#1f5145':'#c8bfa8'}`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+                  {active && <div style={{width:11,height:11,borderRadius:'50%',background:'#1f5145'}} />}
+                </div>
+                <div style={{flex:1}}>
+                  <div style={{fontSize:14,fontWeight:700,color:'#2c2823'}}>{preset.name}</div>
+                  <div style={{fontSize:11.5,color:'#9a8f7c',marginTop:2}}>{preset.sub}</div>
+                </div>
+                {active && <span style={{color:'#1f5145',fontSize:18}}>✓</span>}
+              </div>
+            );
+          })}
+
+          <div style={{fontSize:11,fontWeight:700,letterSpacing:.7,textTransform:'uppercase',color:'#a2967f',margin:'18px 0 10px'}}>Prayer Alerts</div>
+          <div style={{background:'#fffdf9',border:'1px solid #ece4d4',borderRadius:18,overflow:'hidden',marginBottom:16}}>
+            {/* Adhan row */}
+            <div style={{padding:'16px',borderBottom:'1px solid #f0e8d8'}}>
+              <div style={{display:'flex',alignItems:'center',gap:12}}>
+                <div style={{width:38,height:38,borderRadius:12,background:'#f0e7d3',display:'flex',alignItems:'center',justifyContent:'center',fontSize:18,flexShrink:0}}>🔔</div>
+                <div style={{flex:1}}>
+                  <div style={{fontSize:14,fontWeight:700,color:'#2c2823'}}>Adhan (Prayer Call)</div>
+                  <div style={{fontSize:11.5,color:'#9a8f7c',marginTop:1}}>Plays audio at prayer time</div>
+                </div>
+                <div onClick={()=>this.setState(s=>({adhanEnabled:!s.adhanEnabled}))}
+                  style={{width:48,height:26,borderRadius:13,background:st.adhanEnabled?'#1f5145':'#c8bfa8',position:'relative',cursor:'pointer',transition:'background .2s',flexShrink:0}}>
+                  <div style={{position:'absolute',top:3,left:st.adhanEnabled?24:3,width:20,height:20,borderRadius:'50%',background:'#fff',transition:'left .2s',boxShadow:'0 1px 4px rgba(0,0,0,.25)'}} />
+                </div>
+              </div>
+              {st.adhanEnabled && (
+                <div style={{display:'flex',gap:8,marginTop:12}}>
+                  {!st.adhanPlaying
+                    ? <div onClick={this.playAdhan} style={{flex:1,textAlign:'center',padding:'9px',borderRadius:10,background:'#eef7f4',border:'1px solid #c4ddd7',fontSize:13,fontWeight:600,color:'#1f5145',cursor:'pointer'}}>▶ Test Adhan</div>
+                    : <div onClick={this.stopAdhan} style={{flex:1,textAlign:'center',padding:'9px',borderRadius:10,background:'#fdf0f2',border:'1px solid #dfc4ca',fontSize:13,fontWeight:600,color:'#6e2230',cursor:'pointer'}}>■ Stop</div>
+                  }
+                </div>
+              )}
+            </div>
+            {/* Notification row */}
+            <div style={{padding:'16px'}}>
+              <div style={{display:'flex',alignItems:'center',gap:12}}>
+                <div style={{width:38,height:38,borderRadius:12,background:'#f0e7d3',display:'flex',alignItems:'center',justifyContent:'center',fontSize:18,flexShrink:0}}>📲</div>
+                <div style={{flex:1}}>
+                  <div style={{fontSize:14,fontWeight:700,color:'#2c2823'}}>Prayer Notifications</div>
+                  <div style={{fontSize:11.5,color:'#9a8f7c',marginTop:1}}>On-screen alert at each salāh</div>
+                </div>
+                {notifSupported && notifPerm === 'granted'
+                  ? <div onClick={()=>this.setState(s=>({notifEnabled:!s.notifEnabled}))}
+                      style={{width:48,height:26,borderRadius:13,background:st.notifEnabled?'#1f5145':'#c8bfa8',position:'relative',cursor:'pointer',transition:'background .2s',flexShrink:0}}>
+                      <div style={{position:'absolute',top:3,left:st.notifEnabled?24:3,width:20,height:20,borderRadius:'50%',background:'#fff',transition:'left .2s',boxShadow:'0 1px 4px rgba(0,0,0,.25)'}} />
+                    </div>
+                  : <div style={{width:48,height:26,borderRadius:13,background:'#e4ddd1',position:'relative',flexShrink:0}}>
+                      <div style={{position:'absolute',top:3,left:3,width:20,height:20,borderRadius:'50%',background:'#fff',boxShadow:'0 1px 4px rgba(0,0,0,.18)'}} />
+                    </div>
+                }
+              </div>
+              {notifSupported && notifPerm !== 'granted' && (
+                <div onClick={this.requestNotifPermission}
+                  style={{marginTop:12,textAlign:'center',padding:'9px',borderRadius:10,background:'#eef7f4',border:'1px solid #c4ddd7',fontSize:13,fontWeight:600,color:'#1f5145',cursor:'pointer'}}>
+                  Allow Notifications
+                </div>
+              )}
+              {!notifSupported && (
+                <div style={{marginTop:8,fontSize:11.5,color:'#b0a492'}}>Notifications not supported on this browser.</div>
+              )}
+            </div>
+          </div>
+        </>)}
+
+        {tab !== 'settings' && <>
         <div onClick={this.handlePDF} style={{display:'flex',alignItems:'center',gap:12,background:'#fffdf9',border:'1px solid #ece4d4',borderRadius:16,padding:'15px 16px',cursor:'pointer',marginBottom:14}}>
           <div style={{width:36,height:36,borderRadius:10,background:'#f0e7d3',display:'flex',alignItems:'center',justifyContent:'center',color:'#9a7a2c',fontWeight:700,fontSize:11}}>PDF</div>
           <div style={{flex:1}}>
@@ -571,6 +749,7 @@ class App extends Component {
         <div style={{textAlign:'center',fontSize:11.5,color:'#a89d88',lineHeight:1.5,padding:'6px 20px'}}>
           Following Ahlul-Bait Ireland prayer timing.<br/>Times calculated for Dublin, Ireland.
         </div>
+        </>}
       </div>
     );
   }
