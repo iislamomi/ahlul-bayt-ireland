@@ -331,7 +331,7 @@ function lsSet(key, val) {
 /* ── APP ── */
 class App extends Component {
   state = {
-    screen: 'home', libTab: 'dua', nahjTab: 'sermons', prayerTab: 'today',
+    screen: 'home', libTab: 'dua', nahjTab: 'sermons', prayerTab: 'today', kidsTab: 'videos',
     dark: false, textSize: 1,
     story: null, storyProg: 0, quizPick: null,
     classCat: 'All', libCat: 'All',
@@ -634,8 +634,8 @@ class App extends Component {
         {/* Header */}
         <div style={{display:'flex',alignItems:'flex-start',justifyContent:'space-between',padding:'10px 0 18px'}}>
           <div>
-            <div style={{fontSize:13,color:'#9a8f7c',fontWeight:500,letterSpacing:.2}}>{salaam}</div>
-            <div style={{fontFamily:'Spectral,serif',fontSize:25,fontWeight:600,color:'#27241f',lineHeight:1.15,marginTop:3}}>Ahlul Bayt Ireland</div>
+            <div style={{fontSize:13,color:st.dark?'#8e9490':'#9a8f7c',fontWeight:500,letterSpacing:.2}}>{salaam}</div>
+            <div style={{fontFamily:'Spectral,serif',fontSize:25,fontWeight:600,color:st.dark?'#ece6d8':'#27241f',lineHeight:1.15,marginTop:3}}>Ahlul Bayt Ireland</div>
           </div>
           <div style={{width:44,height:44,borderRadius:14,background:'linear-gradient(150deg,#23564a,#16463a)',display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'0 4px 14px -4px rgba(22,70,58,.5)',flexShrink:0}}>
             <div style={{width:20,height:20,borderRadius:'50%',boxShadow:'inset -6px 0 0 0 #d8b863'}} />
@@ -798,8 +798,8 @@ class App extends Component {
     return (
       <div style={{padding:'8px 20px 100px'}} className="afu">
         <div style={{padding:'8px 0 16px'}}>
-          <div style={{fontSize:13,color:'#9a8f7c',fontWeight:500}}>{greg}</div>
-          <div style={{fontFamily:'Spectral,serif',fontSize:26,fontWeight:600,color:'#27241f',marginTop:2}}>{this.t('prayer.title')}</div>
+          <div style={{fontSize:13,color:st.dark?'#8e9490':'#9a8f7c',fontWeight:500}}>{greg}</div>
+          <div style={{fontFamily:'Spectral,serif',fontSize:26,fontWeight:600,color:st.dark?'#ece6d8':'#27241f',marginTop:2}}>{this.t('prayer.title')}</div>
         </div>
 
         <div style={{display:'flex',gap:6,background:'#efe7d7',borderRadius:14,padding:4,marginBottom:18}}>
@@ -927,14 +927,14 @@ class App extends Component {
         </>)}
 
         {tab !== 'settings' && <>
-        <div onClick={this.handlePDF} style={{display:'flex',alignItems:'center',gap:12,background:'#fffdf9',border:'1px solid #ece4d4',borderRadius:16,padding:'15px 16px',cursor:'pointer',marginBottom:14}}>
+        <a href="https://ahlulbaytireland.com/prayer-calendar.pdf" target="_blank" rel="noopener noreferrer" style={{display:'flex',alignItems:'center',gap:12,background:'#fffdf9',border:'1px solid #ece4d4',borderRadius:16,padding:'15px 16px',cursor:'pointer',marginBottom:14,textDecoration:'none'}}>
           <div style={{width:36,height:36,borderRadius:10,background:'#f0e7d3',display:'flex',alignItems:'center',justifyContent:'center',color:'#9a7a2c',fontWeight:700,fontSize:11}}>PDF</div>
           <div style={{flex:1}}>
             <div style={{fontSize:14,fontWeight:600,color:'#2c2823'}}>{this.t('prayer.pdf')}</div>
             <div style={{fontSize:11.5,color:'#9a8f7c',marginTop:1}}>{this.t('prayer.pdfSub')}</div>
           </div>
           <span style={{color:'#bba35f',fontSize:20}}>↓</span>
-        </div>
+        </a>
         <div style={{textAlign:'center',fontSize:11.5,color:'#a89d88',lineHeight:1.5,padding:'6px 20px'}}>
           {this.t('prayer.note')}
         </div>
@@ -991,8 +991,8 @@ class App extends Component {
     return (
       <div style={{padding:'8px 20px 100px'}} className="afu">
         <div style={{padding:'8px 0 14px'}}>
-          <div style={{fontSize:13,color:'#9a8f7c',fontWeight:500}}>{this.t('lib.header')}</div>
-          <div style={{fontFamily:'Spectral,serif',fontSize:26,fontWeight:600,color:'#27241f',marginTop:2}}>{lm.title}</div>
+          <div style={{fontSize:13,color:st.dark?'#8e9490':'#9a8f7c',fontWeight:500}}>{this.t('lib.header')}</div>
+          <div style={{fontFamily:'Spectral,serif',fontSize:26,fontWeight:600,color:st.dark?'#ece6d8':'#27241f',marginTop:2}}>{lm.title}</div>
         </div>
 
         <div style={{display:'flex',gap:8,marginBottom:16}}>
@@ -1006,6 +1006,15 @@ class App extends Component {
           <input value={st.libQuery} onChange={e=>this.setState({libQuery:e.target.value})} placeholder={this.t('lib.search')} style={{border:'none',outline:'none',background:'transparent',fontSize:14,color:'#3f3a32',width:'100%'}} />
           {st.libQuery && <div onClick={()=>this.setState({libQuery:''})} style={{color:'#b3a890',cursor:'pointer',fontSize:18,lineHeight:1}}>×</div>}
         </div>
+
+        {libCards.length > 0 && (
+          <div onClick={()=>this.openReading(st.libTab,libCards[0])} style={{background:lm.tint,border:`1px solid ${lm.accent}44`,borderRadius:18,padding:'16px 17px',cursor:'pointer',marginBottom:14}}>
+            <div style={{fontSize:10,letterSpacing:1,textTransform:'uppercase',fontWeight:700,color:lm.accent,marginBottom:8}}>Open · {libCards[0].cat}</div>
+            <div style={{fontFamily:'Spectral,serif',fontSize:18,fontWeight:600,color:'#2c2823'}}>{libCards[0].title}</div>
+            <div style={{fontFamily:'Amiri,serif',fontSize:17,color:'#6f675a',marginTop:6,lineHeight:1.7}} dir="rtl">{libCards[0].ar}</div>
+            <div style={{fontSize:12.5,color:'#9a8f7c',marginTop:5,lineHeight:1.4}}>{libCards[0].tr}</div>
+          </div>
+        )}
 
         {lm.cats.length > 0 && (
           <div className="s" style={{display:'flex',gap:8,overflowX:'auto',margin:'0 -20px 16px',padding:'0 20px 2px'}}>
@@ -1023,9 +1032,9 @@ class App extends Component {
           </div>
         )}
 
-        {libCards.length > 0 && (
+        {libCards.length > 1 && (
           <div style={{display:'flex',flexDirection:'column',gap:12}}>
-            {libCards.map((d,i) => (
+            {libCards.slice(1).map((d,i) => (
               <div key={i} onClick={()=>this.openReading(st.libTab,d)} style={{background:'#fffdf9',border:'1px solid #ece4d4',borderRadius:18,padding:'16px 17px',cursor:'pointer'}}>
                 <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:9}}>
                   <span style={{fontSize:10.5,letterSpacing:.8,textTransform:'uppercase',fontWeight:700,color:lm.accent,background:lm.tint,padding:'4px 9px',borderRadius:7}}>{d.cat}</span>
@@ -1235,7 +1244,7 @@ class App extends Component {
     return (
       <div style={{padding:'8px 20px 100px'}} className="afu">
         <div style={{padding:'8px 0 16px'}}>
-          <div style={{fontFamily:'Spectral,serif',fontSize:26,fontWeight:600,color:'#27241f'}}>{this.t('more.title')}</div>
+          <div style={{fontFamily:'Spectral,serif',fontSize:26,fontWeight:600,color:st.dark?'#ece6d8':'#27241f'}}>{this.t('more.title')}</div>
         </div>
         <div style={{display:'flex',flexDirection:'column',gap:11,marginBottom:24}}>
           {links.map((m,i) => (
@@ -1363,6 +1372,10 @@ class App extends Component {
             onKeyDown={e=>e.key==='Enter'&&this.handleAdminLogin()} />
           {st.adminLoginErr && <div style={{fontSize:12.5,color:'#6e2230',marginBottom:12,textAlign:'center'}}>Incorrect ID or password.</div>}
           <div onClick={this.handleAdminLogin} style={{width:'100%',textAlign:'center',padding:14,borderRadius:14,background:'#1f5145',color:'#f3ead4',fontSize:15,fontWeight:700,cursor:'pointer'}}>Sign In</div>
+          <div style={{marginTop:18,textAlign:'center',fontSize:11.5,color:'#b1a690',lineHeight:1.6}}>
+            <span style={{fontWeight:600,color:'#9a8f7c'}}>Demo credentials</span><br/>
+            ID: <code style={{background:'#f3ecd9',borderRadius:5,padding:'1px 5px',color:'#6f5c2c'}}>abiadmin</code> · Password: <code style={{background:'#f3ecd9',borderRadius:5,padding:'1px 5px',color:'#6f5c2c'}}>Admin123@</code>
+          </div>
         </div>
       </div>
     );
@@ -1876,73 +1889,90 @@ class App extends Component {
 
   /* ── KIDS CORNER ── */
   renderKids(st) {
+    const kt = st.kidsTab || 'videos';
+    const tabStyle = k => ({
+      flex:1, textAlign:'center', padding:'8px 6px', borderRadius:10, fontSize:13, fontWeight:600,
+      cursor:'pointer', background: kt===k?'#fffdf9':'transparent',
+      color: kt===k?'#1f5145':'#8c8270', transition:'background .15s',
+    });
     return (
       <div style={{padding:'8px 20px 100px'}} className="afu">
         <div style={{padding:'8px 0 16px'}}>
-          <div style={{fontSize:13,color:'#9a8f7c',fontWeight:500}}>For children</div>
-          <div style={{fontFamily:'Spectral,serif',fontSize:26,fontWeight:600,color:'#27241f',marginTop:2}}>{this.t('kids.title')}</div>
+          <div style={{fontSize:13,color:st.dark?'#8e9490':'#9a8f7c',fontWeight:500}}>For children</div>
+          <div style={{fontFamily:'Spectral,serif',fontSize:26,fontWeight:600,color:st.dark?'#ece6d8':'#27241f',marginTop:2}}>{this.t('kids.title')}</div>
         </div>
-        <div style={{position:'relative',overflow:'hidden',borderRadius:20,aspectRatio:'16/10',background:'linear-gradient(150deg,#2a6a58,#143b2f)',marginBottom:10,cursor:'pointer',display:'flex',alignItems:'flex-end',padding:18}}>
-          <div style={{position:'absolute',inset:0,background:'repeating-linear-gradient(135deg,rgba(255,255,255,.05) 0 12px,transparent 12px 24px)'}} />
-          <div style={{position:'absolute',top:'50%',left:'50%',transform:'translate(-50%,-50%)',width:58,height:58,borderRadius:'50%',background:'rgba(255,253,249,.92)',display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'0 8px 20px -6px rgba(0,0,0,.4)'}}>
-            <div style={{width:0,height:0,borderLeft:'18px solid #1f5145',borderTop:'11px solid transparent',borderBottom:'11px solid transparent',marginLeft:4}} />
-          </div>
-          <div style={{position:'relative',color:'#fff'}}>
-            <div style={{fontSize:10.5,letterSpacing:1,textTransform:'uppercase',fontWeight:700,color:'#d8b863'}}>Featured · Animated</div>
-            <div style={{fontFamily:'Spectral,serif',fontSize:19,fontWeight:600,marginTop:3}}>The Story of the Two Brothers</div>
-          </div>
-        </div>
-        <div style={{fontSize:11.5,color:'#a89d88',marginBottom:22}}>Safe, ad-free Islamic videos chosen for the community.</div>
 
-        <div style={{fontFamily:'Spectral,serif',fontSize:17,fontWeight:600,color:'#2c2823',marginBottom:12}}>{this.t('kids.videos')}</div>
-        <div className="s" style={{display:'flex',gap:13,overflowX:'auto',margin:'0 -20px 24px',padding:'0 20px 4px'}}>
-          {st.liveKidsVideos.map((v,i) => (
-            <div key={i} style={{flexShrink:0,width:170,cursor:'pointer'}}>
-              <div style={{position:'relative',aspectRatio:'16/10',borderRadius:15,overflow:'hidden',background:v.color,display:'flex',alignItems:'center',justifyContent:'center'}}>
-                <div style={{position:'absolute',inset:0,background:'repeating-linear-gradient(135deg,rgba(255,255,255,.05) 0 10px,transparent 10px 20px)'}} />
-                <div style={{width:40,height:40,borderRadius:'50%',background:'rgba(255,253,249,.92)',display:'flex',alignItems:'center',justifyContent:'center',position:'relative'}}>
-                  <div style={{width:0,height:0,borderLeft:'13px solid #1f5145',borderTop:'8px solid transparent',borderBottom:'8px solid transparent',marginLeft:3}} />
+        <div style={{display:'flex',gap:6,background:'#efe7d7',borderRadius:14,padding:4,marginBottom:18}}>
+          {[['videos',this.t('kids.videos')],['books',this.t('kids.books')],['wisdom',this.t('kids.wisdom')]].map(([k,label]) => (
+            <div key={k} onClick={()=>this.setState({kidsTab:k})} style={tabStyle(k)}>{label}</div>
+          ))}
+        </div>
+
+        {kt === 'videos' && (<>
+          <div style={{position:'relative',overflow:'hidden',borderRadius:20,aspectRatio:'16/10',background:'linear-gradient(150deg,#2a6a58,#143b2f)',marginBottom:10,cursor:'pointer',display:'flex',alignItems:'flex-end',padding:18}}>
+            <div style={{position:'absolute',inset:0,background:'repeating-linear-gradient(135deg,rgba(255,255,255,.05) 0 12px,transparent 12px 24px)'}} />
+            <div style={{position:'absolute',top:'50%',left:'50%',transform:'translate(-50%,-50%)',width:58,height:58,borderRadius:'50%',background:'rgba(255,253,249,.92)',display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'0 8px 20px -6px rgba(0,0,0,.4)'}}>
+              <div style={{width:0,height:0,borderLeft:'18px solid #1f5145',borderTop:'11px solid transparent',borderBottom:'11px solid transparent',marginLeft:4}} />
+            </div>
+            <div style={{position:'relative',color:'#fff'}}>
+              <div style={{fontSize:10.5,letterSpacing:1,textTransform:'uppercase',fontWeight:700,color:'#d8b863'}}>Featured · Animated</div>
+              <div style={{fontFamily:'Spectral,serif',fontSize:19,fontWeight:600,marginTop:3}}>The Story of the Two Brothers</div>
+            </div>
+          </div>
+          <div style={{fontSize:11.5,color:'#a89d88',marginBottom:22}}>Safe, ad-free Islamic videos chosen for the community.</div>
+          <div style={{fontFamily:'Spectral,serif',fontSize:17,fontWeight:600,color:'#2c2823',marginBottom:12}}>{this.t('kids.videos')}</div>
+          <div className="s" style={{display:'flex',gap:13,overflowX:'auto',margin:'0 -20px 24px',padding:'0 20px 4px'}}>
+            {st.liveKidsVideos.map((v,i) => (
+              <div key={i} style={{flexShrink:0,width:170,cursor:'pointer'}}>
+                <div style={{position:'relative',aspectRatio:'16/10',borderRadius:15,overflow:'hidden',background:v.color,display:'flex',alignItems:'center',justifyContent:'center'}}>
+                  <div style={{position:'absolute',inset:0,background:'repeating-linear-gradient(135deg,rgba(255,255,255,.05) 0 10px,transparent 10px 20px)'}} />
+                  <div style={{width:40,height:40,borderRadius:'50%',background:'rgba(255,253,249,.92)',display:'flex',alignItems:'center',justifyContent:'center',position:'relative'}}>
+                    <div style={{width:0,height:0,borderLeft:'13px solid #1f5145',borderTop:'8px solid transparent',borderBottom:'8px solid transparent',marginLeft:3}} />
+                  </div>
                 </div>
+                <div style={{fontSize:13.5,fontWeight:600,color:'#2c2823',marginTop:8,lineHeight:1.3}}>{v.title}</div>
+                <div style={{fontSize:11,color:'#9a8f7c',marginTop:2}}>{v.meta}</div>
               </div>
-              <div style={{fontSize:13.5,fontWeight:600,color:'#2c2823',marginTop:8,lineHeight:1.3}}>{v.title}</div>
-              <div style={{fontSize:11,color:'#9a8f7c',marginTop:2}}>{v.meta}</div>
-            </div>
-          ))}
-        </div>
-
-        <div style={{background:'linear-gradient(150deg,#1f5145,#163b30)',borderRadius:20,padding:22,color:'#f3ead4',marginBottom:24,position:'relative',overflow:'hidden'}}>
-          <div style={{position:'absolute',right:-26,top:-26,width:110,height:110,borderRadius:'50%',border:'1px solid rgba(216,184,99,.2)'}} />
-          <div style={{fontSize:10.5,letterSpacing:1.2,textTransform:'uppercase',fontWeight:700,color:'#d8b863'}}>Quote of the day</div>
-          {st.liveKidsQuotes.map((q,i) => (
-            <div key={i} style={{marginTop:12}}>
-              <div style={{fontFamily:'Amiri,serif',fontSize:24,lineHeight:1.7,textAlign:'right'}} dir="rtl">{q.ar}</div>
-              <div style={{fontFamily:'Spectral,serif',fontSize:16,marginTop:8,color:'#fff'}}>"{q.tr}"</div>
-              <div style={{fontSize:12,color:'#bcae8d',marginTop:6}}>— {q.who}</div>
-            </div>
-          ))}
-        </div>
-
-        <div style={{fontFamily:'Spectral,serif',fontSize:17,fontWeight:600,color:'#2c2823',marginBottom:12}}>{this.t('kids.books')}</div>
-        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:24}}>
-          {st.liveKidsBooks.map((b,i) => (
-            <div key={i} style={{cursor:'pointer'}}>
-              <div style={{aspectRatio:'3/4',borderRadius:14,background:b.color,display:'flex',alignItems:'flex-end',padding:14,position:'relative',overflow:'hidden'}}>
-                <div style={{position:'absolute',left:0,top:0,bottom:0,width:7,background:b.ink,opacity:.55}} />
-                <div style={{fontFamily:'Spectral,serif',fontSize:15,fontWeight:600,color:b.ink,lineHeight:1.25}}>{b.title}</div>
-              </div>
-              <div style={{fontSize:11,color:'#9a8f7c',marginTop:7}}>{b.meta}</div>
-            </div>
-          ))}
-        </div>
-
-        <div onClick={()=>this.openStory(STORIES.findIndex(s=>s.kind==='quiz'))} style={{display:'flex',alignItems:'center',gap:14,background:'linear-gradient(120deg,#faf4e6,#f6efe0)',border:'1px solid #ecdfc2',borderRadius:18,padding:16,cursor:'pointer'}}>
-          <div style={{flexShrink:0,width:46,height:46,borderRadius:13,background:'#6e2230',display:'flex',alignItems:'center',justifyContent:'center',fontFamily:'Amiri,serif',fontSize:24,color:'#f3ead4'}}>؟</div>
-          <div style={{flex:1}}>
-            <div style={{fontSize:15,fontWeight:600,color:'#5e4d22'}}>Today's Kids Quiz</div>
-            <div style={{fontSize:12,color:'#8a7846',marginTop:2}}>One quick question — can you get it right?</div>
+            ))}
           </div>
-          <span style={{color:'#bba35f',fontSize:20}}>→</span>
-        </div>
+        </>)}
+
+        {kt === 'wisdom' && (
+          <div style={{background:'linear-gradient(150deg,#1f5145,#163b30)',borderRadius:20,padding:22,color:'#f3ead4',marginBottom:24,position:'relative',overflow:'hidden'}}>
+            <div style={{position:'absolute',right:-26,top:-26,width:110,height:110,borderRadius:'50%',border:'1px solid rgba(216,184,99,.2)'}} />
+            <div style={{fontSize:10.5,letterSpacing:1.2,textTransform:'uppercase',fontWeight:700,color:'#d8b863'}}>{this.t('kids.wisdom')}</div>
+            {st.liveKidsQuotes.map((q,i) => (
+              <div key={i} style={{marginTop:12}}>
+                <div style={{fontFamily:'Amiri,serif',fontSize:24,lineHeight:1.7,textAlign:'right'}} dir="rtl">{q.ar}</div>
+                <div style={{fontFamily:'Spectral,serif',fontSize:16,marginTop:8,color:'#fff'}}>"{q.tr}"</div>
+                <div style={{fontSize:12,color:'#bcae8d',marginTop:6}}>— {q.who}</div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {kt === 'books' && (<>
+          <div style={{fontFamily:'Spectral,serif',fontSize:17,fontWeight:600,color:'#2c2823',marginBottom:12}}>{this.t('kids.books')}</div>
+          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:24}}>
+            {st.liveKidsBooks.map((b,i) => (
+              <div key={i} style={{cursor:'pointer'}}>
+                <div style={{aspectRatio:'3/4',borderRadius:14,background:b.color,display:'flex',alignItems:'flex-end',padding:14,position:'relative',overflow:'hidden'}}>
+                  <div style={{position:'absolute',left:0,top:0,bottom:0,width:7,background:b.ink,opacity:.55}} />
+                  <div style={{fontFamily:'Spectral,serif',fontSize:15,fontWeight:600,color:b.ink,lineHeight:1.25}}>{b.title}</div>
+                </div>
+                <div style={{fontSize:11,color:'#9a8f7c',marginTop:7}}>{b.meta}</div>
+              </div>
+            ))}
+          </div>
+          <div onClick={()=>this.openStory(STORIES.findIndex(s=>s.kind==='quiz'))} style={{display:'flex',alignItems:'center',gap:14,background:'linear-gradient(120deg,#faf4e6,#f6efe0)',border:'1px solid #ecdfc2',borderRadius:18,padding:16,cursor:'pointer'}}>
+            <div style={{flexShrink:0,width:46,height:46,borderRadius:13,background:'#6e2230',display:'flex',alignItems:'center',justifyContent:'center',fontFamily:'Amiri,serif',fontSize:24,color:'#f3ead4'}}>؟</div>
+            <div style={{flex:1}}>
+              <div style={{fontSize:15,fontWeight:600,color:'#5e4d22'}}>Today's Kids Quiz</div>
+              <div style={{fontSize:12,color:'#8a7846',marginTop:2}}>One quick question — can you get it right?</div>
+            </div>
+            <span style={{color:'#bba35f',fontSize:20}}>→</span>
+          </div>
+        </>)}
       </div>
     );
   }
@@ -2146,6 +2176,31 @@ class App extends Component {
     );
   }
 
+  /* ── STORIES SCREEN ── */
+  renderStories(st) {
+    return (
+      <div style={{padding:'8px 20px 100px'}} className="afu">
+        <div style={{padding:'8px 0 16px'}}>
+          <div style={{fontSize:13,color:st.dark?'#8e9490':'#9a8f7c',fontWeight:500}}>Community</div>
+          <div style={{fontFamily:'Spectral,serif',fontSize:26,fontWeight:600,color:st.dark?'#ece6d8':'#27241f',marginTop:2}}>{this.t('nav.updates')}</div>
+        </div>
+        <div style={{display:'flex',flexDirection:'column',gap:12}}>
+          {st.liveStories.map((s,i) => (
+            <div key={i} onClick={()=>this.openStory(i)} style={{display:'flex',alignItems:'center',gap:14,background:s.img,borderRadius:18,padding:'14px 16px',cursor:'pointer',overflow:'hidden',position:'relative'}}>
+              <div style={{flexShrink:0,width:46,height:46,borderRadius:13,background:'rgba(255,255,255,.18)',display:'flex',alignItems:'center',justifyContent:'center',fontFamily:'Amiri,serif',fontSize:24,color:'#fff'}}>{s.initial}</div>
+              <div style={{flex:1,minWidth:0}}>
+                <div style={{fontSize:10,letterSpacing:.9,textTransform:'uppercase',fontWeight:700,color:'rgba(255,255,255,.7)'}}>{s.tag}</div>
+                <div style={{fontSize:15,fontWeight:600,color:'#fff',marginTop:2}}>{s.title}</div>
+                <div style={{fontSize:12,color:'rgba(255,255,255,.75)',marginTop:2,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{s.sub || (s.body ? s.body.slice(0,55)+'…' : '')}</div>
+              </div>
+              <span style={{color:'rgba(255,255,255,.5)',fontSize:22,flexShrink:0}}>›</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   /* ── BOTTOM NAV ── */
   renderNav(st) {
     const items = [
@@ -2156,12 +2211,12 @@ class App extends Component {
       { key:'more',    label:this.t('nav.more'),    d:NAV_ICONS.more },
     ];
     return (
-      <div className="abi-nav" style={{flexShrink:0,background:'rgba(255,253,249,.92)',backdropFilter:'blur(14px)',borderTop:'1px solid #eadfca',padding:'6px 14px 6px',display:'flex',justifyContent:'space-between',zIndex:10}}>
+      <div className="abi-nav" style={{flexShrink:0,background:st.dark?'rgba(22,25,26,.95)':'rgba(255,253,249,.92)',backdropFilter:'blur(14px)',borderTop:`1px solid ${st.dark?'#2c3234':'#eadfca'}`,padding:'6px 14px 6px',display:'flex',justifyContent:'space-between',zIndex:10}}>
         {items.map(n => {
-          const active = n.key===st.screen || (n.key==='library' && st.screen==='reading');
-          const color = active ? '#1f5145' : '#b3a890';
+          const active = n.key===st.screen || (n.key==='library' && st.screen==='reading') || (n.key==='stories' && st.story!==null);
+          const color = active ? (st.dark?'#d8b863':'#1f5145') : (st.dark?'#526060':'#b3a890');
           return (
-            <div key={n.key} onClick={()=>n.key==='stories'?this.openStory(0):this.go(n.key)} style={{flex:1,display:'flex',flexDirection:'column',alignItems:'center',gap:3,cursor:'pointer',padding:'2px 0'}}>
+            <div key={n.key} onClick={()=>this.go(n.key)} style={{flex:1,display:'flex',flexDirection:'column',alignItems:'center',gap:3,cursor:'pointer',padding:'2px 0'}}>
               <div style={{width:24,height:24,color}}>
                 <svg style={{width:'100%',height:'100%'}} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" dangerouslySetInnerHTML={{__html:n.d}} />
               </div>
@@ -2206,8 +2261,8 @@ class App extends Component {
     const showNav = st.screen!=='reading' && st.story===null;
 
     return (
-      <div className="app" dir={isRtl?'rtl':'ltr'}>
-        <div className="s" style={{flex:'1 1 auto',overflowY:'auto',overflowX:'hidden',position:'relative'}}>
+      <div className="app" dir={isRtl?'rtl':'ltr'} style={{background:st.dark?'#16191a':'#f6f1e7'}}>
+        <div className="s" style={{flex:'1 1 auto',overflowY:'auto',overflowX:'hidden',position:'relative',background:st.dark?'#16191a':'#f6f1e7'}}>
           {st.screen==='home'       && this.renderHome(st, next, cd, greg, hijri, salaam)}
           {st.screen==='prayer'     && this.renderPrayer(st, next, cd, greg)}
           {st.screen==='library'    && this.renderLibrary(st)}
@@ -2220,10 +2275,11 @@ class App extends Component {
           {st.screen==='calendar'   && this.renderCalendar(st)}
           {st.screen==='kids'       && this.renderKids(st)}
           {st.screen==='qibla'      && this.renderQibla(st)}
+          {st.screen==='stories'    && this.renderStories(st)}
         </div>
         {showNav && (
-          <div style={{flexShrink:0,textAlign:'center',padding:'5px 16px',fontSize:10.5,color:'#b1a690',background:'#f6f1e7',borderTop:'1px solid rgba(234,223,202,.7)'}}>
-            For support please email us at <a href="mailto:info@softeire.com" style={{color:'#1f5145',fontWeight:600,textDecoration:'none'}}>info@softeire.com</a>
+          <div style={{flexShrink:0,textAlign:'center',padding:'5px 16px',fontSize:10.5,color:st.dark?'#5a6060':'#b1a690',background:st.dark?'#16191a':'#f6f1e7',borderTop:`1px solid ${st.dark?'#2c3234':'rgba(234,223,202,.7)'}`}}>
+            For support please email us at <a href="mailto:info@softeire.com" style={{color:st.dark?'#d8b863':'#1f5145',fontWeight:600,textDecoration:'none'}}>info@softeire.com</a>
           </div>
         )}
         {showNav && this.renderNav(st)}
