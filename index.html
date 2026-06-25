@@ -342,7 +342,7 @@ class App extends Component {
     calDay: null, lang: 'English', notifDismissed: false,
     prayerPreset: 'ahlulbayt',
     adhanEnabled: true,
-    notifEnabled: false,
+    notifEnabled: lsGet('notifEnabled', false),
     adhanPlaying: false,
     adhanPending: false,
     notifPermission: (typeof Notification !== 'undefined') ? Notification.permission : 'default',
@@ -456,13 +456,16 @@ class App extends Component {
     this._lastAlertTime = timeStr;
     const { adhanEnabled, notifEnabled, notifPermission } = this.state;
     if (adhanEnabled) this.playAdhan();
-    if (notifEnabled && notifPermission === 'granted') {
-      try {
-        new Notification(`${match.name} · Prayer Time`, {
-          body: `${match.en} prayer — ${match.time} · Dublin, Ireland`,
-          silent: true,
+    if (notifEnabled && (Notification.permission === 'granted')) {
+      const title = `${match.name} · Prayer Time`;
+      const opts = { body:`${match.en} prayer — ${match.time} · Dublin, Ireland`, tag:'prayer-alert', renotify:true };
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.ready.then(reg => reg.showNotification(title, opts)).catch(() => {
+          try { new Notification(title, opts); } catch(e) {}
         });
-      } catch(e) {}
+      } else {
+        try { new Notification(title, opts); } catch(e) {}
+      }
     }
     this.showToast(`${match.name} — ${match.time}`);
   };
@@ -472,7 +475,9 @@ class App extends Component {
       this.showToast('Notifications not supported on this browser'); return;
     }
     const perm = await Notification.requestPermission();
-    this.setState({ notifPermission: perm, notifEnabled: perm === 'granted' });
+    const enabled = perm === 'granted';
+    lsSet('notifEnabled', enabled);
+    this.setState({ notifPermission: perm, notifEnabled: enabled });
     if (perm === 'granted') this.showToast('Notifications enabled');
     else if (perm === 'denied') this.showToast('Notifications blocked — check browser settings');
   };
@@ -909,7 +914,7 @@ class App extends Component {
                   <div style={{fontSize:11.5,color:'#9a8f7c',marginTop:1}}>{this.t('prayer.notifSub')}</div>
                 </div>
                 {notifSupported && notifPerm === 'granted'
-                  ? <div onClick={()=>this.setState(s=>({notifEnabled:!s.notifEnabled}))}
+                  ? <div onClick={()=>this.setState(s=>{const n=!s.notifEnabled;lsSet('notifEnabled',n);return{notifEnabled:n};})}>
                       style={{width:48,height:26,borderRadius:13,background:st.notifEnabled?'#1f5145':'#c8bfa8',position:'relative',cursor:'pointer',transition:'background .2s',flexShrink:0}}>
                       <div style={{position:'absolute',top:3,left:st.notifEnabled?24:3,width:20,height:20,borderRadius:'50%',background:'#fff',transition:'left .2s',boxShadow:'0 1px 4px rgba(0,0,0,.25)'}} />
                     </div>

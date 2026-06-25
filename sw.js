@@ -1,4 +1,4 @@
-const CACHE = 'abi-v3';
+const CACHE = 'abi-v4';
 const SHELL = ['/', '/index.html', '/manifest.json',
   '/vendor/react.min.js', '/vendor/react-dom.min.js', '/vendor/babel.min.js',
   '/adhan.mp3'];
@@ -14,6 +14,16 @@ self.addEventListener('activate', e => {
     caches.keys().then(keys =>
       Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))
     ).then(() => self.clients.claim())
+  );
+});
+
+self.addEventListener('notificationclick', e => {
+  e.notification.close();
+  e.waitUntil(
+    clients.matchAll({ type:'window', includeUncontrolled:true }).then(cs => {
+      const open = cs.find(c => c.url.includes(self.location.origin) && 'focus' in c);
+      return open ? open.focus() : clients.openWindow('/');
+    })
   );
 });
 
