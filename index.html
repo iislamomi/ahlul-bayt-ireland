@@ -16,10 +16,11 @@
   <link href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,400;0,500;0,600;1,400&family=Hanken+Grotesk:wght@400;500;600;700&family=Amiri:wght@400;700&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; -webkit-font-smoothing: antialiased; }
-    html, body { height: 100%; margin: 0; background: #f6f1e7; font-family: 'Hanken Grotesk', system-ui, sans-serif; }
-    #root { height: 100%; display: flex; align-items: center; justify-content: center; background: #163b30; }
+    html { height: 100%; }
+    body { height: 100%; min-height: -webkit-fill-available; margin: 0; background: #f6f1e7; font-family: 'Hanken Grotesk', system-ui, sans-serif; }
+    #root { height: 100%; height: 100dvh; display: flex; align-items: center; justify-content: center; background: #163b30; }
     .app { position: relative; width: 100%; max-width: 430px; height: 100%; max-height: 900px; background: #f6f1e7; overflow: hidden; display: flex; flex-direction: column; }
-    @media (max-width: 430px) { .app { max-height: 100%; } #root { background: #f6f1e7; } }
+    @media (max-width: 430px) { .app { max-height: 100%; max-height: 100dvh; } #root { background: #f6f1e7; } }
     .s::-webkit-scrollbar { display: none; }
     .s { scrollbar-width: none; -ms-overflow-style: none; }
     @keyframes fu { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:none; } }
@@ -35,7 +36,7 @@
     @media (display-mode: standalone), (display-mode: fullscreen), (display-mode: minimal-ui) {
       .abi-statusbar { display: none !important; }
       .app { padding-top: env(safe-area-inset-top, 0px); }
-      .abi-nav { padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px)) !important; }
+      .abi-nav { padding-bottom: calc(6px + env(safe-area-inset-bottom, 0px)) !important; }
     }
   </style>
 </head>
@@ -1813,12 +1814,12 @@ class App extends Component {
       { key:'more',    label:'More',    d:NAV_ICONS.more },
     ];
     return (
-      <div className="abi-nav" style={{flexShrink:0,background:'rgba(255,253,249,.92)',backdropFilter:'blur(14px)',borderTop:'1px solid #eadfca',padding:'8px 14px 10px',display:'flex',justifyContent:'space-between',zIndex:10}}>
+      <div className="abi-nav" style={{flexShrink:0,background:'rgba(255,253,249,.92)',backdropFilter:'blur(14px)',borderTop:'1px solid #eadfca',padding:'6px 14px 6px',display:'flex',justifyContent:'space-between',zIndex:10}}>
         {items.map(n => {
           const active = n.key===st.screen || (n.key==='library' && st.screen==='reading');
           const color = active ? '#1f5145' : '#b3a890';
           return (
-            <div key={n.key} onClick={()=>n.key==='stories'?this.openStory(0):this.go(n.key)} style={{flex:1,display:'flex',flexDirection:'column',alignItems:'center',gap:4,cursor:'pointer',padding:'3px 0'}}>
+            <div key={n.key} onClick={()=>n.key==='stories'?this.openStory(0):this.go(n.key)} style={{flex:1,display:'flex',flexDirection:'column',alignItems:'center',gap:3,cursor:'pointer',padding:'2px 0'}}>
               <div style={{width:24,height:24,color}}>
                 <svg style={{width:'100%',height:'100%'}} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" dangerouslySetInnerHTML={{__html:n.d}} />
               </div>
