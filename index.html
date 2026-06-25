@@ -235,6 +235,91 @@ class CustomSelect extends Component {
   }
 }
 
+/* ── TRANSLATIONS ── */
+const STRINGS = {
+  'nav.home':     { English:'Home',    'العربية':'الرئيسية',  'Français':'Accueil',      Urdu:'ہوم' },
+  'nav.prayer':   { English:'Prayer',  'العربية':'الصلاة',    'Français':'Prière',       Urdu:'نماز' },
+  'nav.library':  { English:'Library', 'العربية':'المكتبة',   'Français':'Bibliothèque', Urdu:'کتب خانہ' },
+  'nav.updates':  { English:'Updates', 'العربية':'الأخبار',   'Français':'Nouvelles',    Urdu:'خبریں' },
+  'nav.more':     { English:'More',    'العربية':'المزيد',    'Français':'Plus',         Urdu:'مزید' },
+  'home.nextPrayer': { English:'Next Prayer',    'العربية':'الصلاة القادمة', 'Français':'Prochaine Prière',    Urdu:'اگلی نماز' },
+  'home.in':         { English:'in',             'العربية':'بعد',            'Français':'dans',                Urdu:'میں' },
+  'home.explore':    { English:'Explore',        'العربية':'استكشف',         'Français':'Explorer',            Urdu:'دریافت' },
+  'home.classTitle': { English:'Classifieds',    'العربية':'الإعلانات',      'Français':'Petites annonces',    Urdu:'اشتہارات' },
+  'home.classSub':   { English:'Community businesses & listings','العربية':'أعمال ومشاريع المجتمع','Français':'Annonces communautaires','Urdu':'کمیونٹی کاروبار' },
+  'home.installTitle':{ English:'Install the app','العربية':'تثبيت التطبيق','Français':'Installer l\'application','Urdu':'ایپ انسٹال کریں' },
+  'home.installSub': { English:'Add to your home screen for offline access.','العربية':'أضفه للشاشة الرئيسية للوصول دون إنترنت','Français':'Ajoutez à l\'écran d\'accueil pour un accès hors ligne','Urdu':'آف لائن رسائی کے لیے ہوم اسکرین پر شامل کریں' },
+  'home.add':        { English:'Add',            'العربية':'أضف',            'Français':'Ajouter',             Urdu:'شامل کریں' },
+  'prayer.title':    { English:'Prayer Times',   'العربية':'أوقات الصلاة',   'Français':'Horaires de Prière',  Urdu:'اوقات نماز' },
+  'prayer.today':    { English:'Today',          'العربية':'اليوم',          'Français':'Aujourd\'hui',        Urdu:'آج' },
+  'prayer.monthly':  { English:'Monthly',        'العربية':'الشهري',         'Français':'Mensuel',             Urdu:'ماہانہ' },
+  'prayer.settings': { English:'Settings',       'العربية':'الإعدادات',      'Français':'Paramètres',          Urdu:'ترتیبات' },
+  'prayer.beginsIn': { English:'begins in',      'العربية':'يبدأ خلال',      'Français':'commence dans',       Urdu:'شروع ہونے میں' },
+  'prayer.source':   { English:'Prayer Time Source','العربية':'مصدر أوقات الصلاة','Français':'Source des horaires','Urdu':'نماز کا ذریعہ' },
+  'prayer.alerts':   { English:'Prayer Alerts',  'العربية':'تنبيهات الصلاة', 'Français':'Alertes de Prière',   Urdu:'نماز کے اطلاعات' },
+  'prayer.adhan':    { English:'Adhan (Prayer Call)','العربية':'الأذان',     'Français':'Adhan (Appel à la prière)','Urdu':'اذان' },
+  'prayer.adhanSub': { English:'Plays audio at prayer time','العربية':'يشغّل الصوت وقت الصلاة','Français':'Audio à l\'heure de la prière','Urdu':'نماز کے وقت آواز' },
+  'prayer.notif':    { English:'Prayer Notifications','العربية':'إشعارات الصلاة','Français':'Notifications de prière',Urdu:'نماز کی اطلاعات' },
+  'prayer.notifSub': { English:'On-screen alert at each salāh','العربية':'تنبيه على الشاشة لكل صلاة','Français':'Alerte à l\'écran à chaque prière','Urdu':'ہر نماز پر اسکرین الرٹ' },
+  'prayer.allowNotif':{ English:'Allow Notifications','العربية':'اسمح بالإشعارات','Français':'Autoriser les notifications','Urdu':'اطلاعات کی اجازت دیں' },
+  'prayer.testAdhan': { English:'▶ Test Adhan',  'العربية':'◀ اختبار الأذان','Français':'▶ Tester l\'Adhan',   Urdu:'▶ اذان ٹیسٹ' },
+  'prayer.stop':      { English:'■ Stop',        'العربية':'■ إيقاف',        'Français':'■ Arrêter',           Urdu:'■ بند کریں' },
+  'prayer.pdf':       { English:'Yearly prayer calendar','العربية':'التقويم السنوي للصلاة','Français':'Calendrier annuel de prière','Urdu':'سالانہ نماز کیلنڈر' },
+  'prayer.pdfSub':    { English:'Download the full 1447 timetable','العربية':'تنزيل جدول 1447 كاملاً','Français':'Télécharger l\'horaire 1447 complet','Urdu':'مکمل 1447 جدول ڈاؤنلوڈ کریں' },
+  'prayer.date':      { English:'Date',          'العربية':'التاريخ',        'Français':'Date',                Urdu:'تاریخ' },
+  'prayer.noNotif':   { English:'Notifications not supported on this browser.','العربية':'الإشعارات غير مدعومة','Français':'Notifications non supportées','Urdu':'اس براؤزر پر اطلاعات کا تعاون نہیں' },
+  'prayer.note':      { English:'Following Ahlul-Bait Ireland prayer timing. Times calculated for Dublin, Ireland.','العربية':'وفق أوقات أهل البيت إيرلندا. الأوقات محسوبة لدبلن، إيرلندا.','Français':'Selon les horaires Ahlul-Bait Irlande. Calculés pour Dublin, Irlande.','Urdu':'اہل البیت آئرلینڈ کے اوقات کے مطابق۔ ڈبلن، آئرلینڈ کے لیے محاسبہ۔' },
+  'lib.header':    { English:'Library',          'العربية':'المكتبة',        'Français':'Bibliothèque',        Urdu:'کتب خانہ' },
+  'lib.search':    { English:'Search titles & translations','العربية':'بحث عن العناوين والترجمات','Français':'Rechercher titres et traductions','Urdu':'عنوانات و تراجم تلاش کریں' },
+  'lib.translation':{ English:'Translation',     'العربية':'الترجمة',        'Français':'Traduction',          Urdu:'ترجمہ' },
+  'lib.summary':   { English:'Summary',          'العربية':'الملخص',         'Français':'Résumé',              Urdu:'خلاصہ' },
+  'lib.share':     { English:'Share',            'العربية':'شارك',           'Français':'Partager',            Urdu:'شیئر کریں' },
+  'lib.back':      { English:'Library',          'العربية':'المكتبة',        'Français':'Bibliothèque',        Urdu:'کتب خانہ' },
+  'lib.all':       { English:'All',              'العربية':'الكل',           'Français':'Tout',                Urdu:'سب' },
+  'class.community':{ English:'Community',       'العربية':'المجتمع',        'Français':'Communauté',          Urdu:'کمیونٹی' },
+  'class.title':   { English:'Classifieds',      'العربية':'الإعلانات',      'Français':'Petites annonces',    Urdu:'اشتہارات' },
+  'class.search':  { English:'Search businesses','العربية':'البحث عن الأعمال','Français':'Rechercher','Urdu':'کاروبار تلاش کریں' },
+  'class.whatsapp':{ English:'WhatsApp',         'العربية':'واتساب',         'Français':'WhatsApp',            Urdu:'واٹس ایپ' },
+  'class.call':    { English:'Call',             'العربية':'اتصل',           'Français':'Appeler',             Urdu:'کال کریں' },
+  'class.all':     { English:'All',              'العربية':'الكل',           'Français':'Tout',                Urdu:'سب' },
+  'class.disclaimer':{ English:'Listings are shared for community information only. Ahlul Bayt Ireland does not endorse individual businesses.','العربية':'القوائم لأغراض إعلامية فقط. لا تؤيد أهل البيت إيرلندا الأعمال الفردية.','Français':'Les annonces sont partagées à titre informatif uniquement.','Urdu':'یہ اشتہارات صرف معلوماتی مقاصد کے لیے ہیں۔ اہل البیت آئرلینڈ کسی کاروبار کی حمایت نہیں کرتا۔' },
+  'cal.community': { English:'Community',        'العربية':'المجتمع',        'Français':'Communauté',          Urdu:'کمیونٹی' },
+  'cal.title':     { English:'Calendar',         'العربية':'التقويم',        'Français':'Calendrier',          Urdu:'کیلنڈر' },
+  'cal.hasEvent':  { English:'Has event',        'العربية':'له حدث',         'Français':'A un événement',      Urdu:'تقریب ہے' },
+  'cal.noEvent':   { English:'No events today',  'العربية':'لا توجد فعاليات اليوم','Français':'Pas d\'événement aujourd\'hui','Urdu':'آج کوئی تقریب نہیں' },
+  'cal.upcoming':  { English:'Upcoming Events',  'العربية':'الفعاليات القادمة','Français':'Événements à venir','Urdu':'آنے والی تقاریب' },
+  'kids.title':    { English:'Kids Corner',      'العربية':'ركن الأطفال',    'Français':'Coin des enfants',    Urdu:'بچوں کا کونا' },
+  'kids.videos':   { English:'Videos',           'العربية':'مقاطع',          'Français':'Vidéos',              Urdu:'ویڈیوز' },
+  'kids.books':    { English:'Books',            'العربية':'كتب',            'Français':'Livres',              Urdu:'کتابیں' },
+  'kids.wisdom':   { English:'Wisdom',           'العربية':'حكمة',           'Français':'Sagesse',             Urdu:'حکمت' },
+  'kids.play':     { English:'Play',             'العربية':'تشغيل',          'Français':'Lire',                Urdu:'چلائیں' },
+  'qibla.title':   { English:'Qibla Finder',     'العربية':'حاسب القبلة',    'Français':'Trouveur de Qibla',   Urdu:'قبلہ تلاش کنندہ' },
+  'qibla.detecting':{ English:'Detecting location…','العربية':'جارٍ تحديد الموقع…','Français':'Détection de la position…','Urdu':'مقام معلوم ہو رہا ہے…' },
+  'qibla.distance':{ English:'Distance to Kaaba','العربية':'المسافة إلى الكعبة','Français':'Distance à la Kaaba',Urdu:'کعبہ کا فاصلہ' },
+  'qibla.allow':   { English:'Allow location access','العربية':'السماح بالوصول إلى الموقع','Français':'Autoriser l\'accès à la position','Urdu':'مقام تک رسائی دیں' },
+  'qibla.unsupported':{ English:'Geolocation not supported on this device','العربية':'تحديد الموقع غير مدعوم','Français':'Géolocalisation non prise en charge','Urdu':'یہ آلہ جغرافیائی تعین کی حمایت نہیں کرتا' },
+  'qibla.error':   { English:'Could not detect location. Allow access in browser settings.','العربية':'تعذّر تحديد موقعك. السماح بالوصول في إعدادات المتصفح','Français':'Position non détectée. Autorisez l\'accès dans les paramètres.','Urdu':'مقام معلوم نہ ہو سکا۔ براؤزر ترتیبات میں رسائی کی اجازت دیں' },
+  'more.title':    { English:'More',             'العربية':'المزيد',         'Français':'Plus',                Urdu:'مزید' },
+  'more.calendar': { English:'Calendar & Events','العربية':'التقويم والفعاليات','Français':'Calendrier et événements','Urdu':'کیلنڈر اور تقاریب' },
+  'more.calSub':   { English:'Hijri dates and community events','العربية':'التواريخ الهجرية والفعاليات','Français':'Dates hijri et événements communautaires','Urdu':'ہجری تاریخیں اور تقاریب' },
+  'more.kids':     { English:'Kids Corner',      'العربية':'ركن الأطفال',    'Français':'Coin des enfants',    Urdu:'بچوں کا کونا' },
+  'more.kidsSub':  { English:'Books, videos & quizzes for children','العربية':'كتب وفيديوهات واختبارات للأطفال','Français':'Livres, vidéos et quiz pour enfants','Urdu':'بچوں کے لیے کتابیں، ویڈیوز اور کوئز' },
+  'more.qibla':    { English:'Qibla Finder',     'العربية':'حاسب القبلة',    'Français':'Trouveur de Qibla',   Urdu:'قبلہ تلاش کنندہ' },
+  'more.qiblaSub': { English:'Find the direction to Makkah','العربية':'اعثر على اتجاه مكة المكرمة','Français':'Trouver la direction de La Mecque','Urdu':'مکہ کی سمت معلوم کریں' },
+  'more.classifieds':{ English:'Classifieds',    'العربية':'الإعلانات',      'Français':'Petites annonces',    Urdu:'اشتہارات' },
+  'more.classSub': { English:'Community business listings','العربية':'قوائم أعمال المجتمع','Français':'Annonces commerciales communautaires','Urdu':'کمیونٹی کاروباری فہرست' },
+  'more.admin':    { English:'Admin Dashboard',  'العربية':'لوحة الإدارة',   'Français':'Tableau de bord',     Urdu:'ایڈمن ڈیش بورڈ' },
+  'more.adminSub': { English:'Manage content (staff)','العربية':'إدارة المحتوى (للعاملين)','Français':'Gérer le contenu (équipe)','Urdu':'مواد کا انتظام (عملہ)' },
+  'more.about':    { English:'About & Install',  'العربية':'حول وتثبيت',     'Français':'À propos et installer',Urdu:'بارے میں اور انسٹال' },
+  'more.aboutSub': { English:'Add Ahlul Bayt Ireland to home screen','العربية':'أضف أهل البيت إيرلندا للشاشة الرئيسية','Français':'Ajouter à l\'écran d\'accueil',Urdu:'ہوم اسکرین پر شامل کریں' },
+  'more.offline':  { English:'Offline Mode',     'العربية':'وضع عدم الاتصال','Français':'Mode hors ligne',     Urdu:'آف لائن موڈ' },
+  'more.offlineSub':{ English:'Preview the offline fallback','العربية':'معاينة وضع عدم الاتصال','Français':'Aperçu du mode hors ligne','Urdu':'آف لائن موڈ کا جائزہ' },
+  'more.language': { English:'App Language',     'العربية':'لغة التطبيق',    'Français':'Langue de l\'application','Urdu':'ایپ کی زبان' },
+  'more.reading':  { English:'Reading Settings', 'العربية':'إعدادات القراءة','Français':'Paramètres de lecture','Urdu':'پڑھنے کی ترتیبات' },
+  'more.dark':     { English:'Dark Mode',        'العربية':'الوضع الداكن',   'Français':'Mode sombre',         Urdu:'ڈارک موڈ' },
+  'more.largeText':{ English:'Large Text',       'العربية':'نص كبير',        'Français':'Grand texte',         Urdu:'بڑا متن' },
+};
+
 /* ── CONTENT STORAGE ── */
 function lsGet(key, def) {
   try { const v = localStorage.getItem('abi_' + key); return v ? JSON.parse(v) : def; } catch(e) { return def; }
@@ -310,6 +395,13 @@ class App extends Component {
 
   go = s => this.setState({ screen: s, story: null });
   openReading = (type, item) => this.setState({ screen: 'reading', readingType: type, readingItem: item });
+
+  t = key => {
+    const lang = this.state.lang;
+    const s = STRINGS[key];
+    if (!s) return key;
+    return s[lang] !== undefined ? s[lang] : (s['English'] ?? key);
+  };
 
   getActivePrayers = () => {
     const presets = this.state.livePrayerPresets || PRAYER_PRESETS;
@@ -505,14 +597,14 @@ class App extends Component {
       ...p, isNext: p.name===next.name, last: i===activePrayers.length-1
     }));
     const quickCards = [
-      { title:'Classifieds',      sub:'Community businesses',       glyph:'ﺱ', tint:'#f3ecd9', ink:'#9a7a2c', span:'2', go:()=>this.go('classifieds') },
-      { title:'Prayer Times',     sub:"Today's salāh",              glyph:'ﭖ', tint:'#e6efe9', ink:'#1f5145', span:'1', go:()=>this.go('prayer') },
-      { title:'Calendar',         sub:'Events & Hijri dates',       glyph:'ﮬ', tint:'#e8ebf4', ink:'#3a4a78', span:'1', go:()=>this.go('calendar') },
+      { title:this.t('home.classTitle'), sub:this.t('class.community'),   glyph:'ﺱ', tint:'#f3ecd9', ink:'#9a7a2c', span:'2', go:()=>this.go('classifieds') },
+      { title:this.t('prayer.title'),    sub:"Today's salāh",             glyph:'ﭖ', tint:'#e6efe9', ink:'#1f5145', span:'1', go:()=>this.go('prayer') },
+      { title:this.t('cal.title'),       sub:'Events & Hijri dates',      glyph:'ﮬ', tint:'#e8ebf4', ink:'#3a4a78', span:'1', go:()=>this.go('calendar') },
       { title:'Duʿāʾ',           sub:'Supplications',              glyph:'ﺀ', tint:'#f3ecd9', ink:'#9a7a2c', span:'1', go:()=>this.setState({screen:'library',libTab:'dua',libCat:'All'}) },
       { title:'Ziyārah',          sub:'Salutations',                glyph:'ﺯ', tint:'#f3e6e8', ink:'#6e2230', span:'1', go:()=>this.setState({screen:'library',libTab:'ziyarah',libCat:'All'}) },
       { title:'Nahj al-Balāgha', sub:'Sermons · Letters · Sayings',glyph:'ﻥ', tint:'#e6efe9', ink:'#2c5d52', span:'2', go:()=>this.setState({screen:'library',libTab:'nahj',libCat:'All'}) },
-      { title:'Kids Corner',      sub:'Books · videos · quizzes',   glyph:'ﻙ', tint:'#f3ecd9', ink:'#b8923f', span:'1', go:()=>this.go('kids') },
-      { title:'Qibla Finder',     sub:'Direction to Makkah',        glyph:'ﻕ', tint:'#e6efe9', ink:'#1f5145', span:'1', go:()=>this.go('qibla') },
+      { title:this.t('kids.title'),      sub:'Books · videos · quizzes',  glyph:'ﻙ', tint:'#f3ecd9', ink:'#b8923f', span:'1', go:()=>this.go('kids') },
+      { title:this.t('qibla.title'),     sub:this.t('more.qiblaSub'),     glyph:'ﻕ', tint:'#e6efe9', ink:'#1f5145', span:'1', go:()=>this.go('qibla') },
     ];
 
     const now = st.now;
@@ -587,8 +679,8 @@ class App extends Component {
             <span style={{fontFamily:'Amiri,serif',fontSize:20,color:'#9a7a2c'}} dir="rtl">ﺱ</span>
           </div>
           <div style={{flex:1}}>
-            <div style={{fontSize:14.5,fontWeight:700,color:'#2c2823'}}>Classifieds</div>
-            <div style={{fontSize:12,color:'#9a8f7c',marginTop:1}}>Community businesses &amp; listings</div>
+            <div style={{fontSize:14.5,fontWeight:700,color:'#2c2823'}}>{this.t('home.classTitle')}</div>
+            <div style={{fontSize:12,color:'#9a8f7c',marginTop:1}}>{this.t('home.classSub')}</div>
           </div>
           <span style={{color:'#bba35f',fontSize:18}}>›</span>
         </div>
@@ -599,7 +691,7 @@ class App extends Component {
           <div style={{position:'absolute',right:6,bottom:-46,width:96,height:96,borderRadius:'50%',boxShadow:'inset -22px 0 0 0 rgba(216,184,99,.16)'}} />
           <div style={{position:'relative'}}>
             <div style={{display:'flex',alignItems:'center',gap:8,fontSize:11,letterSpacing:1.5,textTransform:'uppercase',color:'#d8b863',fontWeight:600}}>
-              <span style={{width:6,height:6,borderRadius:'50%',background:'#d8b863',boxShadow:'0 0 0 4px rgba(216,184,99,.2)'}} /> Next Prayer
+              <span style={{width:6,height:6,borderRadius:'50%',background:'#d8b863',boxShadow:'0 0 0 4px rgba(216,184,99,.2)'}} /> {this.t('home.nextPrayer')}
             </div>
             <div style={{display:'flex',alignItems:'flex-end',justifyContent:'space-between',marginTop:10}}>
               <div>
@@ -608,7 +700,7 @@ class App extends Component {
               </div>
               <div style={{textAlign:'right'}}>
                 <div style={{fontSize:30,fontWeight:700,fontVariantNumeric:'tabular-nums',lineHeight:1}}>{next.time}</div>
-                <div style={{fontSize:12.5,color:'#bcae8d',marginTop:5}}>in {cd}</div>
+                <div style={{fontSize:12.5,color:'#bcae8d',marginTop:5}}>{this.t('home.in')} {cd}</div>
               </div>
             </div>
           </div>
@@ -628,7 +720,7 @@ class App extends Component {
         </div>
 
         {/* Quick cards */}
-        <div style={{fontFamily:'Spectral,serif',fontSize:18,fontWeight:600,color:'#2c2823',marginBottom:12}}>Explore</div>
+        <div style={{fontFamily:'Spectral,serif',fontSize:18,fontWeight:600,color:'#2c2823',marginBottom:12}}>{this.t('home.explore')}</div>
         <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:14}}>
           {quickCards.map((q,i) => (
             <div key={i} onClick={q.go} style={{gridColumn:`span ${q.span}`,background:'#fffdf9',border:'1px solid #ece4d4',borderRadius:18,padding:16,cursor:'pointer',display:'flex',flexDirection:'column',gap:10,minHeight:96,justifyContent:'space-between'}}>
@@ -666,10 +758,10 @@ class App extends Component {
               <div style={{width:18,height:18,borderRadius:'50%',boxShadow:'inset -5px 0 0 0 #d8b863'}} />
             </div>
             <div style={{flex:1}}>
-              <div style={{fontSize:13.5,fontWeight:600,color:'#f3ead4'}}>Install the app</div>
-              <div style={{fontSize:11.5,color:'#a59c8a',marginTop:1}}>Add to your home screen for offline access.</div>
+              <div style={{fontSize:13.5,fontWeight:600,color:'#f3ead4'}}>{this.t('home.installTitle')}</div>
+              <div style={{fontSize:11.5,color:'#a59c8a',marginTop:1}}>{this.t('home.installSub')}</div>
             </div>
-            <div onClick={this.handleInstall} style={{fontSize:12.5,color:'#1f5145',fontWeight:600,background:'#d8b863',padding:'8px 13px',borderRadius:11,cursor:'pointer'}}>Add</div>
+            <div onClick={this.handleInstall} style={{fontSize:12.5,color:'#1f5145',fontWeight:600,background:'#d8b863',padding:'8px 13px',borderRadius:11,cursor:'pointer'}}>{this.t('home.add')}</div>
           </div>
         )}
       </div>
@@ -707,20 +799,20 @@ class App extends Component {
       <div style={{padding:'8px 20px 100px'}} className="afu">
         <div style={{padding:'8px 0 16px'}}>
           <div style={{fontSize:13,color:'#9a8f7c',fontWeight:500}}>{greg}</div>
-          <div style={{fontFamily:'Spectral,serif',fontSize:26,fontWeight:600,color:'#27241f',marginTop:2}}>Prayer Times</div>
+          <div style={{fontFamily:'Spectral,serif',fontSize:26,fontWeight:600,color:'#27241f',marginTop:2}}>{this.t('prayer.title')}</div>
         </div>
 
         <div style={{display:'flex',gap:6,background:'#efe7d7',borderRadius:14,padding:4,marginBottom:18}}>
-          <div onClick={()=>this.setState({prayerTab:'today'})} style={tabStyle(tab==='today')}>Today</div>
-          <div onClick={()=>this.setState({prayerTab:'month'})} style={tabStyle(tab==='month')}>Monthly</div>
-          <div onClick={()=>this.setState({prayerTab:'settings'})} style={tabStyle(tab==='settings')}>Settings</div>
+          <div onClick={()=>this.setState({prayerTab:'today'})} style={tabStyle(tab==='today')}>{this.t('prayer.today')}</div>
+          <div onClick={()=>this.setState({prayerTab:'month'})} style={tabStyle(tab==='month')}>{this.t('prayer.monthly')}</div>
+          <div onClick={()=>this.setState({prayerTab:'settings'})} style={tabStyle(tab==='settings')}>{this.t('prayer.settings')}</div>
         </div>
 
         {tab==='today' && <>
           <div style={{background:'linear-gradient(155deg,#1f5145,#163b30)',borderRadius:22,padding:22,color:'#f3ead4',textAlign:'center',boxShadow:'0 18px 34px -18px rgba(22,59,48,.7)',marginBottom:18,position:'relative',overflow:'hidden'}}>
             <div style={{position:'absolute',left:'50%',top:-40,transform:'translateX(-50%)',width:200,height:200,borderRadius:'50%',border:'1px solid rgba(216,184,99,.16)'}} />
             <div style={{position:'relative'}}>
-              <div style={{fontSize:11,letterSpacing:1.5,textTransform:'uppercase',color:'#d8b863',fontWeight:600}}>{next.name} begins in</div>
+              <div style={{fontSize:11,letterSpacing:1.5,textTransform:'uppercase',color:'#d8b863',fontWeight:600}}>{next.name} {this.t('prayer.beginsIn')}</div>
               <div style={{fontSize:46,fontWeight:700,fontVariantNumeric:'tabular-nums',margin:'8px 0 4px',letterSpacing:1}}>{cd}</div>
               <div style={{fontFamily:'Amiri,serif',fontSize:20,color:'#cdbf9e'}} dir="rtl">{next.ar} · {next.time}</div>
             </div>
@@ -744,7 +836,7 @@ class App extends Component {
         {tab==='month' && (
           <div style={{background:'#fffdf9',border:'1px solid #ece4d4',borderRadius:20,overflow:'hidden',marginBottom:16}}>
             <div style={{display:'flex',padding:'11px 16px',background:'#f4eee0',fontSize:10.5,letterSpacing:.6,textTransform:'uppercase',color:'#a2967f',fontWeight:700}}>
-              <div style={{width:56,flexShrink:0}}>Date</div>
+              <div style={{width:56,flexShrink:0}}>{this.t('prayer.date')}</div>
               <div style={{flex:1,textAlign:'center'}}>Fajr</div>
               <div style={{flex:1,textAlign:'center'}}>Dhuhr</div>
               <div style={{flex:1,textAlign:'center'}}>Maghrib</div>
@@ -761,7 +853,7 @@ class App extends Component {
         )}
 
         {tab==='settings' && (<>
-          <div style={{fontSize:11,fontWeight:700,letterSpacing:.7,textTransform:'uppercase',color:'#a2967f',marginBottom:10}}>Prayer Time Source</div>
+          <div style={{fontSize:11,fontWeight:700,letterSpacing:.7,textTransform:'uppercase',color:'#a2967f',marginBottom:10}}>{this.t('prayer.source')}</div>
           {(st.livePrayerPresets || PRAYER_PRESETS).map(preset => {
             const active = st.prayerPreset === preset.id;
             return (
@@ -779,15 +871,15 @@ class App extends Component {
             );
           })}
 
-          <div style={{fontSize:11,fontWeight:700,letterSpacing:.7,textTransform:'uppercase',color:'#a2967f',margin:'18px 0 10px'}}>Prayer Alerts</div>
+          <div style={{fontSize:11,fontWeight:700,letterSpacing:.7,textTransform:'uppercase',color:'#a2967f',margin:'18px 0 10px'}}>{this.t('prayer.alerts')}</div>
           <div style={{background:'#fffdf9',border:'1px solid #ece4d4',borderRadius:18,overflow:'hidden',marginBottom:16}}>
             {/* Adhan row */}
             <div style={{padding:'16px',borderBottom:'1px solid #f0e8d8'}}>
               <div style={{display:'flex',alignItems:'center',gap:12}}>
                 <div style={{width:38,height:38,borderRadius:12,background:'#f0e7d3',display:'flex',alignItems:'center',justifyContent:'center',fontSize:18,flexShrink:0}}>🔔</div>
                 <div style={{flex:1}}>
-                  <div style={{fontSize:14,fontWeight:700,color:'#2c2823'}}>Adhan (Prayer Call)</div>
-                  <div style={{fontSize:11.5,color:'#9a8f7c',marginTop:1}}>Plays audio at prayer time</div>
+                  <div style={{fontSize:14,fontWeight:700,color:'#2c2823'}}>{this.t('prayer.adhan')}</div>
+                  <div style={{fontSize:11.5,color:'#9a8f7c',marginTop:1}}>{this.t('prayer.adhanSub')}</div>
                 </div>
                 <div onClick={()=>this.setState(s=>({adhanEnabled:!s.adhanEnabled}))}
                   style={{width:48,height:26,borderRadius:13,background:st.adhanEnabled?'#1f5145':'#c8bfa8',position:'relative',cursor:'pointer',transition:'background .2s',flexShrink:0}}>
@@ -797,8 +889,8 @@ class App extends Component {
               {st.adhanEnabled && (
                 <div style={{display:'flex',gap:8,marginTop:12}}>
                   {!st.adhanPlaying
-                    ? <div onClick={this.playAdhan} style={{flex:1,textAlign:'center',padding:'9px',borderRadius:10,background:'#eef7f4',border:'1px solid #c4ddd7',fontSize:13,fontWeight:600,color:'#1f5145',cursor:'pointer'}}>▶ Test Adhan</div>
-                    : <div onClick={this.stopAdhan} style={{flex:1,textAlign:'center',padding:'9px',borderRadius:10,background:'#fdf0f2',border:'1px solid #dfc4ca',fontSize:13,fontWeight:600,color:'#6e2230',cursor:'pointer'}}>■ Stop</div>
+                    ? <div onClick={this.playAdhan} style={{flex:1,textAlign:'center',padding:'9px',borderRadius:10,background:'#eef7f4',border:'1px solid #c4ddd7',fontSize:13,fontWeight:600,color:'#1f5145',cursor:'pointer'}}>{this.t('prayer.testAdhan')}</div>
+                    : <div onClick={this.stopAdhan} style={{flex:1,textAlign:'center',padding:'9px',borderRadius:10,background:'#fdf0f2',border:'1px solid #dfc4ca',fontSize:13,fontWeight:600,color:'#6e2230',cursor:'pointer'}}>{this.t('prayer.stop')}</div>
                   }
                 </div>
               )}
@@ -808,8 +900,8 @@ class App extends Component {
               <div style={{display:'flex',alignItems:'center',gap:12}}>
                 <div style={{width:38,height:38,borderRadius:12,background:'#f0e7d3',display:'flex',alignItems:'center',justifyContent:'center',fontSize:18,flexShrink:0}}>📲</div>
                 <div style={{flex:1}}>
-                  <div style={{fontSize:14,fontWeight:700,color:'#2c2823'}}>Prayer Notifications</div>
-                  <div style={{fontSize:11.5,color:'#9a8f7c',marginTop:1}}>On-screen alert at each salāh</div>
+                  <div style={{fontSize:14,fontWeight:700,color:'#2c2823'}}>{this.t('prayer.notif')}</div>
+                  <div style={{fontSize:11.5,color:'#9a8f7c',marginTop:1}}>{this.t('prayer.notifSub')}</div>
                 </div>
                 {notifSupported && notifPerm === 'granted'
                   ? <div onClick={()=>this.setState(s=>({notifEnabled:!s.notifEnabled}))}
@@ -824,11 +916,11 @@ class App extends Component {
               {notifSupported && notifPerm !== 'granted' && (
                 <div onClick={this.requestNotifPermission}
                   style={{marginTop:12,textAlign:'center',padding:'9px',borderRadius:10,background:'#eef7f4',border:'1px solid #c4ddd7',fontSize:13,fontWeight:600,color:'#1f5145',cursor:'pointer'}}>
-                  Allow Notifications
+                  {this.t('prayer.allowNotif')}
                 </div>
               )}
               {!notifSupported && (
-                <div style={{marginTop:8,fontSize:11.5,color:'#b0a492'}}>Notifications not supported on this browser.</div>
+                <div style={{marginTop:8,fontSize:11.5,color:'#b0a492'}}>{this.t('prayer.noNotif')}</div>
               )}
             </div>
           </div>
@@ -838,13 +930,13 @@ class App extends Component {
         <div onClick={this.handlePDF} style={{display:'flex',alignItems:'center',gap:12,background:'#fffdf9',border:'1px solid #ece4d4',borderRadius:16,padding:'15px 16px',cursor:'pointer',marginBottom:14}}>
           <div style={{width:36,height:36,borderRadius:10,background:'#f0e7d3',display:'flex',alignItems:'center',justifyContent:'center',color:'#9a7a2c',fontWeight:700,fontSize:11}}>PDF</div>
           <div style={{flex:1}}>
-            <div style={{fontSize:14,fontWeight:600,color:'#2c2823'}}>Yearly prayer calendar</div>
-            <div style={{fontSize:11.5,color:'#9a8f7c',marginTop:1}}>Download the full 1447 timetable</div>
+            <div style={{fontSize:14,fontWeight:600,color:'#2c2823'}}>{this.t('prayer.pdf')}</div>
+            <div style={{fontSize:11.5,color:'#9a8f7c',marginTop:1}}>{this.t('prayer.pdfSub')}</div>
           </div>
           <span style={{color:'#bba35f',fontSize:20}}>↓</span>
         </div>
         <div style={{textAlign:'center',fontSize:11.5,color:'#a89d88',lineHeight:1.5,padding:'6px 20px'}}>
-          Following Ahlul-Bait Ireland prayer timing.<br/>Times calculated for Dublin, Ireland.
+          {this.t('prayer.note')}
         </div>
         </>}
       </div>
@@ -899,7 +991,7 @@ class App extends Component {
     return (
       <div style={{padding:'8px 20px 100px'}} className="afu">
         <div style={{padding:'8px 0 14px'}}>
-          <div style={{fontSize:13,color:'#9a8f7c',fontWeight:500}}>Library</div>
+          <div style={{fontSize:13,color:'#9a8f7c',fontWeight:500}}>{this.t('lib.header')}</div>
           <div style={{fontFamily:'Spectral,serif',fontSize:26,fontWeight:600,color:'#27241f',marginTop:2}}>{lm.title}</div>
         </div>
 
@@ -911,7 +1003,7 @@ class App extends Component {
 
         <div style={{display:'flex',alignItems:'center',gap:10,background:'#fffdf9',border:'1px solid #ece4d4',borderRadius:14,padding:'11px 14px',marginBottom:14}}>
           <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#b3a890" strokeWidth="2" strokeLinecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg>
-          <input value={st.libQuery} onChange={e=>this.setState({libQuery:e.target.value})} placeholder="Search titles & translations" style={{border:'none',outline:'none',background:'transparent',fontSize:14,color:'#3f3a32',width:'100%'}} />
+          <input value={st.libQuery} onChange={e=>this.setState({libQuery:e.target.value})} placeholder={this.t('lib.search')} style={{border:'none',outline:'none',background:'transparent',fontSize:14,color:'#3f3a32',width:'100%'}} />
           {st.libQuery && <div onClick={()=>this.setState({libQuery:''})} style={{color:'#b3a890',cursor:'pointer',fontSize:18,lineHeight:1}}>×</div>}
         </div>
 
@@ -989,7 +1081,7 @@ class App extends Component {
       <div style={{minHeight:'100%',background:rd.bg}}>
         <div style={{position:'sticky',top:0,zIndex:4,background:rd.barBg,backdropFilter:'blur(12px)',borderBottom:`1px solid ${rd.border}`,padding:'12px 16px',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
           <div onClick={()=>this.setState({screen:'library'})} style={{display:'flex',alignItems:'center',gap:5,cursor:'pointer',color:rd.accent,fontSize:14,fontWeight:600}}>
-            <span style={{fontSize:18}}>‹</span> Library
+            <span style={{fontSize:18}}>‹</span> {this.t('lib.back')}
           </div>
           <div style={{display:'flex',alignItems:'center',gap:8}}>
             <div onClick={()=>this.setState(s=>({textSize:Math.max(.85,s.textSize-.12)}))} style={{width:34,height:34,borderRadius:10,border:`1px solid ${rd.border}`,display:'flex',alignItems:'center',justifyContent:'center',color:rd.text,fontSize:13,cursor:'pointer',background:rd.surf}}>A−</div>
@@ -1013,13 +1105,13 @@ class App extends Component {
 
           <div style={{marginTop:22}}>
             <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:12}}>
-              <span style={{fontSize:11,letterSpacing:1.2,textTransform:'uppercase',fontWeight:700,color:rd.muted}}>Translation</span>
+              <span style={{fontSize:11,letterSpacing:1.2,textTransform:'uppercase',fontWeight:700,color:rd.muted}}>{this.t('lib.translation')}</span>
               <span style={{flex:1,height:1,background:rd.border}} />
             </div>
             <div style={{fontFamily:'Spectral,serif',fontSize:trSize,lineHeight:1.85,color:rd.text}}>{r.body}</div>
             {r.sum && (
               <div style={{background:rd.surf,border:`1px solid ${rd.border}`,borderRadius:16,padding:'15px 17px',marginTop:20}}>
-                <div style={{fontSize:11,letterSpacing:1,textTransform:'uppercase',fontWeight:700,color:rd.muted,marginBottom:6}}>Summary</div>
+                <div style={{fontSize:11,letterSpacing:1,textTransform:'uppercase',fontWeight:700,color:rd.muted,marginBottom:6}}>{this.t('lib.summary')}</div>
                 <div style={{fontSize:14,lineHeight:1.6,color:rd.text}}>{r.sum}</div>
               </div>
             )}
@@ -1028,7 +1120,7 @@ class App extends Component {
           <div style={{display:'flex',gap:12,marginTop:26}}>
             <div onClick={this.handleShare} style={{flex:1,display:'flex',alignItems:'center',justifyContent:'center',gap:8,padding:14,borderRadius:14,background:readAccent,color:'#fffdf9',fontSize:14,fontWeight:600,cursor:'pointer'}}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><circle cx="18" cy="5" r="2.6"/><circle cx="6" cy="12" r="2.6"/><circle cx="18" cy="19" r="2.6"/><path d="M8.3 10.7l7.4-4.4M8.3 13.3l7.4 4.4"/></svg>
-              Share
+              {this.t('lib.share')}
             </div>
             <div onClick={this.handleBookmark} style={{width:52,display:'flex',alignItems:'center',justifyContent:'center',borderRadius:14,border:`1px solid ${rd.border}`,background:isBookmarked?rd.surf:rd.surf,cursor:'pointer'}}>
               <svg width="18" height="18" viewBox="0 0 24 24" fill={isBookmarked?readAccent:'none'} stroke={readAccent} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M6 4h12v16l-6-4-6 4z"/></svg>
@@ -1041,10 +1133,11 @@ class App extends Component {
 
   /* ── CLASSIFIEDS ── */
   renderClassifieds(st) {
-    const cats = ['All','Food','Butcher','Travel','Education','Services'];
+    const allLabel = this.t('class.all');
+    const cats = [allLabel,'Food','Butcher','Travel','Education','Services'];
     const q = st.classQuery.trim().toLowerCase();
     const cards = st.liveClassifieds
-      .filter(c => st.classCat==='All' || c.cat===st.classCat)
+      .filter(c => st.classCat===allLabel || st.classCat==='All' || c.cat===st.classCat)
       .filter(c => !q || c.name.toLowerCase().includes(q) || c.desc.toLowerCase().includes(q));
     const chipStyle = c => {
       const active = st.classCat===c;
@@ -1059,12 +1152,12 @@ class App extends Component {
     return (
       <div style={{padding:'8px 20px 100px'}} className="afu">
         <div style={{padding:'8px 0 14px'}}>
-          <div style={{fontSize:13,color:'#9a8f7c',fontWeight:500}}>Community</div>
-          <div style={{fontFamily:'Spectral,serif',fontSize:26,fontWeight:600,color:'#27241f',marginTop:2}}>Classifieds</div>
+          <div style={{fontSize:13,color:'#9a8f7c',fontWeight:500}}>{this.t('class.community')}</div>
+          <div style={{fontFamily:'Spectral,serif',fontSize:26,fontWeight:600,color:'#27241f',marginTop:2}}>{this.t('class.title')}</div>
         </div>
         <div style={{display:'flex',alignItems:'center',gap:10,background:'#fffdf9',border:'1px solid #ece4d4',borderRadius:14,padding:'11px 14px',marginBottom:14}}>
           <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#b3a890" strokeWidth="2" strokeLinecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg>
-          <input value={st.classQuery} onChange={e=>this.setState({classQuery:e.target.value})} placeholder="Search businesses" style={{border:'none',outline:'none',background:'transparent',fontSize:14,color:'#3f3a32',width:'100%'}} />
+          <input value={st.classQuery} onChange={e=>this.setState({classQuery:e.target.value})} placeholder={this.t('class.search')} style={{border:'none',outline:'none',background:'transparent',fontSize:14,color:'#3f3a32',width:'100%'}} />
           {st.classQuery && <div onClick={()=>this.setState({classQuery:''})} style={{color:'#b3a890',cursor:'pointer',fontSize:18,lineHeight:1}}>×</div>}
         </div>
         <div className="s" style={{display:'flex',gap:8,overflowX:'auto',margin:'0 -20px 16px',padding:'0 20px 2px'}}>
@@ -1093,13 +1186,13 @@ class App extends Component {
                 <a href={`https://wa.me/${b.wa}`} target="_blank" rel="noopener" style={{flex:1}}>
                   <div style={{...btnBase,background:'#1f5145',color:'#fffdf9'}}>
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15l-1.4 5 5.1-1.3A10 10 0 1 0 12 2zm0 2a8 8 0 1 1-4.2 14.8l-.4-.2-2.6.7.7-2.5-.2-.4A8 8 0 0 1 12 4z"/></svg>
-                    WhatsApp
+                    {this.t('class.whatsapp')}
                   </div>
                 </a>
                 <a href={`tel:${b.phone}`} style={{flex:1}}>
                   <div style={{...btnBase,border:'1px solid #e6dcc8',background:'#fff',color:'#3f3a32'}}>
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round"><path d="M5 4h3l2 5-2.5 1.5a11 11 0 0 0 5 5L19 13l2 5v3a16 16 0 0 1-16-16z"/></svg>
-                    Call
+                    {this.t('class.call')}
                   </div>
                 </a>
                 {b.web && (
@@ -1120,7 +1213,7 @@ class App extends Component {
         </div>
         {cards.length > 0 && (
           <div style={{textAlign:'center',fontSize:11.5,color:'#a89d88',lineHeight:1.5,padding:'18px 24px 0'}}>
-            Listings are shared for community information only. Ahlul Bayt Ireland does not endorse individual businesses.
+            {this.t('class.disclaimer')}
           </div>
         )}
       </div>
@@ -1130,19 +1223,19 @@ class App extends Component {
   /* ── MORE ── */
   renderMore(st) {
     const links = [
-      { label:'Calendar & Events', sub:'Hijri dates and community events',       glyph:'ﮬ', go:()=>this.go('calendar') },
-      { label:'Kids Corner',       sub:'Books, videos & quizzes for children',   glyph:'ﻙ', go:()=>this.go('kids') },
-      { label:'Qibla Finder',      sub:'Find the direction to Makkah',           glyph:'ﻕ', go:()=>this.go('qibla') },
-      { label:'Classifieds',       sub:'Community business listings',            glyph:'ﺱ', go:()=>this.go('classifieds') },
-      { label:'Admin Dashboard',   sub:'Manage content (staff)',                 glyph:'⚙', go:()=>this.go('admin') },
-      { label:'About & Install',   sub:'Add Ahlul Bayt Ireland to home screen', glyph:'↧', go:()=>this.go('about') },
-      { label:'Offline Mode',      sub:'Preview the offline fallback',           glyph:'⊘', go:()=>this.go('offline') },
+      { label:this.t('more.calendar'),    sub:this.t('more.calSub'),        glyph:'ﮬ', go:()=>this.go('calendar') },
+      { label:this.t('more.kids'),        sub:this.t('more.kidsSub'),       glyph:'ﻙ', go:()=>this.go('kids') },
+      { label:this.t('more.qibla'),       sub:this.t('more.qiblaSub'),      glyph:'ﻕ', go:()=>this.go('qibla') },
+      { label:this.t('more.classifieds'), sub:this.t('more.classSub'),      glyph:'ﺱ', go:()=>this.go('classifieds') },
+      { label:this.t('more.admin'),       sub:this.t('more.adminSub'),      glyph:'⚙', go:()=>this.go('admin') },
+      { label:this.t('more.about'),       sub:this.t('more.aboutSub'),      glyph:'↧', go:()=>this.go('about') },
+      { label:this.t('more.offline'),     sub:this.t('more.offlineSub'),    glyph:'⊘', go:()=>this.go('offline') },
     ];
     const langs = ['English','العربية','Français','Urdu'];
     return (
       <div style={{padding:'8px 20px 100px'}} className="afu">
         <div style={{padding:'8px 0 16px'}}>
-          <div style={{fontFamily:'Spectral,serif',fontSize:26,fontWeight:600,color:'#27241f'}}>More</div>
+          <div style={{fontFamily:'Spectral,serif',fontSize:26,fontWeight:600,color:'#27241f'}}>{this.t('more.title')}</div>
         </div>
         <div style={{display:'flex',flexDirection:'column',gap:11,marginBottom:24}}>
           {links.map((m,i) => (
@@ -1157,7 +1250,7 @@ class App extends Component {
           ))}
         </div>
 
-        <div style={{fontSize:11,letterSpacing:1.2,textTransform:'uppercase',fontWeight:700,color:'#b1a690',marginBottom:12,paddingLeft:2}}>App Language</div>
+        <div style={{fontSize:11,letterSpacing:1.2,textTransform:'uppercase',fontWeight:700,color:'#b1a690',marginBottom:12,paddingLeft:2}}>{this.t('more.language')}</div>
         <div style={{background:'#fffdf9',border:'1px solid #ece4d4',borderRadius:16,padding:'6px 16px',marginBottom:24}}>
           {langs.map((l,i) => (
             <div key={l} onClick={()=>this.setState({lang:l})} style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'13px 0',borderBottom:i<langs.length-1?'1px solid #f3ecdd':'none',cursor:'pointer'}}>
@@ -1169,16 +1262,16 @@ class App extends Component {
           ))}
         </div>
 
-        <div style={{fontSize:11,letterSpacing:1.2,textTransform:'uppercase',fontWeight:700,color:'#b1a690',marginBottom:12,paddingLeft:2}}>Reading Settings</div>
+        <div style={{fontSize:11,letterSpacing:1.2,textTransform:'uppercase',fontWeight:700,color:'#b1a690',marginBottom:12,paddingLeft:2}}>{this.t('more.reading')}</div>
         <div style={{background:'#fffdf9',border:'1px solid #ece4d4',borderRadius:16,padding:'6px 16px'}}>
           <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'13px 0',borderBottom:'1px solid #f3ecdd'}}>
-            <div style={{fontSize:14.5,color:'#3f3a32'}}>Dark reading mode</div>
+            <div style={{fontSize:14.5,color:'#3f3a32'}}>{this.t('more.dark')}</div>
             <div onClick={()=>this.setState(s=>({dark:!s.dark}))} style={{width:48,height:28,borderRadius:16,background:st.dark?'#1f5145':'#d8d0bf',position:'relative',cursor:'pointer',transition:'background .2s'}}>
               <div style={{position:'absolute',top:3,left:st.dark?23:3,width:22,height:22,borderRadius:'50%',background:'#fff',boxShadow:'0 1px 3px rgba(0,0,0,.2)',transition:'left .2s'}} />
             </div>
           </div>
           <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'13px 0'}}>
-            <div style={{fontSize:14.5,color:'#3f3a32'}}>Scripture text size</div>
+            <div style={{fontSize:14.5,color:'#3f3a32'}}>{this.t('more.largeText')}</div>
             <div style={{display:'flex',alignItems:'center',gap:10}}>
               <div onClick={()=>this.setState(s=>({textSize:Math.max(.85,s.textSize-.12)}))} style={{width:30,height:30,borderRadius:9,border:'1px solid #e6dcc8',display:'flex',alignItems:'center',justifyContent:'center',color:'#3f3a32',fontSize:13,cursor:'pointer'}}>A−</div>
               <span style={{fontSize:13,color:'#9a8f7c',fontVariantNumeric:'tabular-nums',width:38,textAlign:'center'}}>{Math.round(st.textSize*100)}%</span>
@@ -1720,14 +1813,14 @@ class App extends Component {
     return (
       <div style={{padding:'8px 20px 100px'}} className="afu">
         <div style={{padding:'8px 0 16px'}}>
-          <div style={{fontSize:13,color:'#9a8f7c',fontWeight:500}}>Community</div>
-          <div style={{fontFamily:'Spectral,serif',fontSize:26,fontWeight:600,color:'#27241f',marginTop:2}}>Calendar</div>
+          <div style={{fontSize:13,color:'#9a8f7c',fontWeight:500}}>{this.t('cal.community')}</div>
+          <div style={{fontFamily:'Spectral,serif',fontSize:26,fontWeight:600,color:'#27241f',marginTop:2}}>{this.t('cal.title')}</div>
         </div>
         <div style={{display:'flex',alignItems:'flex-end',justifyContent:'space-between',marginBottom:14}}>
           <div style={{fontFamily:'Spectral,serif',fontSize:20,fontWeight:600,color:'#2c2823'}}>{monthName}</div>
           <div style={{display:'flex',alignItems:'center',gap:6}}>
             <span style={{width:8,height:8,borderRadius:'50%',background:'#1f5145'}} />
-            <span style={{fontSize:11.5,color:'#9a8f7c'}}>Has event</span>
+            <span style={{fontSize:11.5,color:'#9a8f7c'}}>{this.t('cal.hasEvent')}</span>
           </div>
         </div>
         <div style={{display:'grid',gridTemplateColumns:'repeat(7,1fr)',marginBottom:4}}>
@@ -1757,9 +1850,9 @@ class App extends Component {
               </div>
             </div>
           )}
-          {!selEvent && <div style={{fontSize:13,color:'#b1a690',marginTop:8}}>No events on this day.</div>}
+          {!selEvent && <div style={{fontSize:13,color:'#b1a690',marginTop:8}}>{this.t('cal.noEvent')}</div>}
         </div>
-        <div style={{fontSize:11,letterSpacing:1.2,textTransform:'uppercase',fontWeight:700,color:'#b1a690',margin:'22px 0 12px'}}>Upcoming Events</div>
+        <div style={{fontSize:11,letterSpacing:1.2,textTransform:'uppercase',fontWeight:700,color:'#b1a690',margin:'22px 0 12px'}}>{this.t('cal.upcoming')}</div>
         <div style={{display:'flex',flexDirection:'column',gap:10}}>
           {calEventList.map((e,i) => (
             <div key={i} style={{display:'flex',gap:13,alignItems:'center',background:'#fffdf9',border:'1px solid #ece4d4',borderRadius:15,padding:'13px 15px'}}>
@@ -1782,12 +1875,12 @@ class App extends Component {
   }
 
   /* ── KIDS CORNER ── */
-  renderKids() {
+  renderKids(st) {
     return (
       <div style={{padding:'8px 20px 100px'}} className="afu">
         <div style={{padding:'8px 0 16px'}}>
           <div style={{fontSize:13,color:'#9a8f7c',fontWeight:500}}>For children</div>
-          <div style={{fontFamily:'Spectral,serif',fontSize:26,fontWeight:600,color:'#27241f',marginTop:2}}>Kids Corner</div>
+          <div style={{fontFamily:'Spectral,serif',fontSize:26,fontWeight:600,color:'#27241f',marginTop:2}}>{this.t('kids.title')}</div>
         </div>
         <div style={{position:'relative',overflow:'hidden',borderRadius:20,aspectRatio:'16/10',background:'linear-gradient(150deg,#2a6a58,#143b2f)',marginBottom:10,cursor:'pointer',display:'flex',alignItems:'flex-end',padding:18}}>
           <div style={{position:'absolute',inset:0,background:'repeating-linear-gradient(135deg,rgba(255,255,255,.05) 0 12px,transparent 12px 24px)'}} />
@@ -1801,7 +1894,7 @@ class App extends Component {
         </div>
         <div style={{fontSize:11.5,color:'#a89d88',marginBottom:22}}>Safe, ad-free Islamic videos chosen for the community.</div>
 
-        <div style={{fontFamily:'Spectral,serif',fontSize:17,fontWeight:600,color:'#2c2823',marginBottom:12}}>Learning Videos</div>
+        <div style={{fontFamily:'Spectral,serif',fontSize:17,fontWeight:600,color:'#2c2823',marginBottom:12}}>{this.t('kids.videos')}</div>
         <div className="s" style={{display:'flex',gap:13,overflowX:'auto',margin:'0 -20px 24px',padding:'0 20px 4px'}}>
           {st.liveKidsVideos.map((v,i) => (
             <div key={i} style={{flexShrink:0,width:170,cursor:'pointer'}}>
@@ -1829,7 +1922,7 @@ class App extends Component {
           ))}
         </div>
 
-        <div style={{fontFamily:'Spectral,serif',fontSize:17,fontWeight:600,color:'#2c2823',marginBottom:12}}>Picture Books</div>
+        <div style={{fontFamily:'Spectral,serif',fontSize:17,fontWeight:600,color:'#2c2823',marginBottom:12}}>{this.t('kids.books')}</div>
         <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:24}}>
           {st.liveKidsBooks.map((b,i) => (
             <div key={i} style={{cursor:'pointer'}}>
@@ -1894,8 +1987,8 @@ class App extends Component {
     return (
       <div style={{padding:'8px 20px 100px'}} className="afu">
         <div style={{padding:'8px 0 14px'}}>
-          <div style={{fontSize:13,color:'#9a8f7c',fontWeight:500}}>Direction to Makkah</div>
-          <div style={{fontFamily:'Spectral,serif',fontSize:26,fontWeight:600,color:'#27241f',marginTop:2}}>Qibla Finder</div>
+          <div style={{fontSize:13,color:'#9a8f7c',fontWeight:500}}>{this.t('more.qiblaSub')}</div>
+          <div style={{fontFamily:'Spectral,serif',fontSize:26,fontWeight:600,color:'#27241f',marginTop:2}}>{this.t('qibla.title')}</div>
         </div>
 
         {/* Compass */}
@@ -1921,34 +2014,34 @@ class App extends Component {
         {/* Status / CTA */}
         {qiblaStatus === 'idle' && (
           <div onClick={this.locateQibla} style={{textAlign:'center',padding:'14px',borderRadius:16,background:'#1f5145',color:'#f3ead4',fontSize:15,fontWeight:700,cursor:'pointer',marginBottom:16,boxShadow:'0 8px 18px -8px rgba(22,59,48,.5)'}}>
-            Find My Qibla Direction
+            {this.t('qibla.allow')}
           </div>
         )}
         {qiblaStatus === 'loading' && (
           <div style={{textAlign:'center',padding:'14px',borderRadius:16,background:'#f0e8d6',color:'#9a7a2c',fontSize:14,fontWeight:600,marginBottom:16}}>
-            Locating…
+            {this.t('qibla.detecting')}
           </div>
         )}
         {qiblaStatus === 'denied' && (
           <div style={{marginBottom:16}}>
             <div style={{textAlign:'center',padding:'12px',borderRadius:14,background:'#fdf0f2',border:'1px solid #dfc4ca',color:'#6e2230',fontSize:13,fontWeight:600,marginBottom:8}}>
-              Location access denied
+              {this.t('qibla.error')}
             </div>
             <div onClick={this.locateQibla} style={{textAlign:'center',padding:'11px',borderRadius:14,background:'#eef7f4',border:'1px solid #c4ddd7',color:'#1f5145',fontSize:13,fontWeight:600,cursor:'pointer'}}>
-              Try Again
+              {this.t('qibla.allow')}
             </div>
           </div>
         )}
         {qiblaStatus === 'unsupported' && (
           <div style={{textAlign:'center',padding:'12px',borderRadius:14,background:'#f4ede0',color:'#9a7a2c',fontSize:13,marginBottom:16}}>
-            Geolocation is not supported on this device.
+            {this.t('qibla.unsupported')}
           </div>
         )}
 
         {/* Stats row */}
         <div style={{display:'flex',gap:11,marginBottom:16}}>
           <div style={{flex:1,background:'#fffdf9',border:'1px solid #ece4d4',borderRadius:16,padding:15,textAlign:'center'}}>
-            <div style={{fontSize:11,letterSpacing:.6,textTransform:'uppercase',color:'#b1a690',fontWeight:700}}>Distance</div>
+            <div style={{fontSize:11,letterSpacing:.6,textTransform:'uppercase',color:'#b1a690',fontWeight:700}}>{this.t('qibla.distance')}</div>
             <div style={{fontSize:18,fontWeight:700,color:'#2c2823',marginTop:5}}>{distKm !== null ? `≈ ${distKm.toLocaleString()} km` : '—'}</div>
           </div>
           <div style={{flex:1,background:'#fffdf9',border:'1px solid #ece4d4',borderRadius:16,padding:15,textAlign:'center'}}>
@@ -1959,7 +2052,7 @@ class App extends Component {
 
         {bearing !== null && (
           <div onClick={this.locateQibla} style={{textAlign:'center',padding:'10px',borderRadius:13,background:'#eef7f4',border:'1px solid #c4ddd7',color:'#1f5145',fontSize:13,fontWeight:600,cursor:'pointer',marginBottom:14}}>
-            Recalculate
+            {this.t('qibla.allow')}
           </div>
         )}
 
@@ -2056,11 +2149,11 @@ class App extends Component {
   /* ── BOTTOM NAV ── */
   renderNav(st) {
     const items = [
-      { key:'home',    label:'Home',    d:NAV_ICONS.home },
-      { key:'prayer',  label:'Prayer',  d:NAV_ICONS.prayer },
-      { key:'library', label:'Library', d:NAV_ICONS.library },
-      { key:'stories', label:'Updates', d:NAV_ICONS.stories },
-      { key:'more',    label:'More',    d:NAV_ICONS.more },
+      { key:'home',    label:this.t('nav.home'),    d:NAV_ICONS.home },
+      { key:'prayer',  label:this.t('nav.prayer'),  d:NAV_ICONS.prayer },
+      { key:'library', label:this.t('nav.library'), d:NAV_ICONS.library },
+      { key:'stories', label:this.t('nav.updates'), d:NAV_ICONS.stories },
+      { key:'more',    label:this.t('nav.more'),    d:NAV_ICONS.more },
     ];
     return (
       <div className="abi-nav" style={{flexShrink:0,background:'rgba(255,253,249,.92)',backdropFilter:'blur(14px)',borderTop:'1px solid #eadfca',padding:'6px 14px 6px',display:'flex',justifyContent:'space-between',zIndex:10}}>
@@ -2097,14 +2190,23 @@ class App extends Component {
     const { next, cd } = this.computeNext();
     const now = st.now;
     const hour = now.getHours();
+    const lang = st.lang;
+    const isRtl = lang === 'العربية' || lang === 'Urdu';
     const greg = now.toLocaleDateString('en-IE', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
     const hijri = toHijri(now);
-    const salaam = (hour<12?'Good morning':hour<18?'Good afternoon':'Good evening') + ' · السلام عليكم';
+    const greetWord = lang === 'العربية'
+      ? (hour<12?'صباح الخير':hour<18?'مساء الخير':'طاب مساؤك')
+      : lang === 'Français'
+      ? (hour<12?'Bonjour':hour<18?'Bon après-midi':'Bonsoir')
+      : lang === 'Urdu'
+      ? (hour<12?'صبح بخیر':hour<18?'خوش آمدید':'شب بخیر')
+      : (hour<12?'Good morning':hour<18?'Good afternoon':'Good evening');
+    const salaam = greetWord + ' · السلام عليكم';
 
     const showNav = st.screen!=='reading' && st.story===null;
 
     return (
-      <div className="app">
+      <div className="app" dir={isRtl?'rtl':'ltr'}>
         <div className="s" style={{flex:'1 1 auto',overflowY:'auto',overflowX:'hidden',position:'relative'}}>
           {st.screen==='home'       && this.renderHome(st, next, cd, greg, hijri, salaam)}
           {st.screen==='prayer'     && this.renderPrayer(st, next, cd, greg)}
@@ -2116,7 +2218,7 @@ class App extends Component {
           {st.screen==='offline'    && this.renderOffline()}
           {st.screen==='admin'      && this.renderAdmin(st)}
           {st.screen==='calendar'   && this.renderCalendar(st)}
-          {st.screen==='kids'       && this.renderKids()}
+          {st.screen==='kids'       && this.renderKids(st)}
           {st.screen==='qibla'      && this.renderQibla(st)}
         </div>
         {showNav && (
