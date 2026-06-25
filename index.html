@@ -344,6 +344,7 @@ class App extends Component {
     adhanEnabled: true,
     notifEnabled: false,
     adhanPlaying: false,
+    adhanPending: false,
     notifPermission: (typeof Notification !== 'undefined') ? Notification.permission : 'default',
     qiblaStatus: 'idle', qiblaBearing: null, qiblaLat: null, qiblaLng: null,
     /* ── ADMIN ── */
@@ -367,8 +368,7 @@ class App extends Component {
   };
 
   componentDidMount() {
-    const _now = new Date();
-    this._lastAlertTime = `${String(_now.getHours()).padStart(2,'0')}:${String(_now.getMinutes()).padStart(2,'0')}`;
+    this._lastAlertTime = '';
     this.clockTimer = setInterval(() => {
       const now = new Date();
       this.setState({ now });
@@ -430,8 +430,13 @@ class App extends Component {
   playAdhan = () => {
     this.stopAdhan();
     this.adhanAudio = new Audio('./adhan.mp3');
-    this.adhanAudio.onended = () => this.setState({ adhanPlaying: false });
-    this.adhanAudio.play().then(() => this.setState({ adhanPlaying: true })).catch(() => {});
+    this.adhanAudio.onended = () => this.setState({ adhanPlaying: false, adhanPending: false });
+    this.adhanAudio.play()
+      .then(() => this.setState({ adhanPlaying: true, adhanPending: false }))
+      .catch(() => {
+        // Browser blocked autoplay — show tap-to-play banner
+        this.setState({ adhanPending: true });
+      });
   };
 
   stopAdhan = () => {
@@ -439,7 +444,7 @@ class App extends Component {
       this.adhanAudio.pause();
       this.adhanAudio.currentTime = 0;
     }
-    this.setState({ adhanPlaying: false });
+    this.setState({ adhanPlaying: false, adhanPending: false });
   };
 
   checkPrayerAlert = (now) => {
@@ -2280,6 +2285,17 @@ class App extends Component {
         {showNav && (
           <div style={{flexShrink:0,textAlign:'center',padding:'5px 16px',fontSize:10.5,color:st.dark?'#5a6060':'#b1a690',background:st.dark?'#16191a':'#f6f1e7',borderTop:`1px solid ${st.dark?'#2c3234':'rgba(234,223,202,.7)'}`}}>
             For support please email us at <a href="mailto:info@softeire.com" style={{color:st.dark?'#d8b863':'#1f5145',fontWeight:600,textDecoration:'none'}}>info@softeire.com</a>
+          </div>
+        )}
+        {st.adhanPending && (
+          <div onClick={this.playAdhan} style={{position:'absolute',bottom:showNav?120:20,left:16,right:16,zIndex:30,background:'linear-gradient(135deg,#1f5145,#163b30)',borderRadius:18,padding:'14px 18px',display:'flex',alignItems:'center',gap:14,cursor:'pointer',boxShadow:'0 8px 28px -8px rgba(22,70,58,.55)',animation:'notif-in .35s cubic-bezier(.2,.9,.2,1) both'}}>
+            <div style={{width:44,height:44,borderRadius:13,background:'rgba(255,255,255,.12)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,fontSize:22}}>🕌</div>
+            <div style={{flex:1}}>
+              <div style={{fontSize:10,letterSpacing:1.1,textTransform:'uppercase',fontWeight:700,color:'#d8b863'}}>Prayer Time</div>
+              <div style={{fontSize:15,fontWeight:600,color:'#fff',marginTop:2}}>Tap to play Adhan</div>
+              <div style={{fontSize:11.5,color:'rgba(255,255,255,.65)',marginTop:1}}>Browser requires a tap to allow audio</div>
+            </div>
+            <div onClick={e=>{e.stopPropagation();this.stopAdhan();}} style={{width:30,height:30,display:'flex',alignItems:'center',justifyContent:'center',color:'rgba(255,255,255,.5)',fontSize:20,cursor:'pointer'}}>×</div>
           </div>
         )}
         {showNav && this.renderNav(st)}
