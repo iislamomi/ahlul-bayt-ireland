@@ -235,13 +235,20 @@ class CustomSelect extends Component {
   }
 }
 
+/* ── CONTENT STORAGE ── */
+function lsGet(key, def) {
+  try { const v = localStorage.getItem('abi_' + key); return v ? JSON.parse(v) : def; } catch(e) { return def; }
+}
+function lsSet(key, val) {
+  try { localStorage.setItem('abi_' + key, JSON.stringify(val)); } catch(e) {}
+}
+
 /* ── APP ── */
 class App extends Component {
   state = {
     screen: 'home', libTab: 'dua', nahjTab: 'sermons', prayerTab: 'today',
     dark: false, textSize: 1,
     story: null, storyProg: 0, quizPick: null,
-    adminForm: null, adminTitle: '', adminContent: '', adminExpiry: '24 hours', adminLink: 'None', adminCat: 'Food',
     classCat: 'All', libCat: 'All',
     now: new Date(), install: true,
     libQuery: '', classQuery: '',
@@ -254,6 +261,24 @@ class App extends Component {
     adhanPlaying: false,
     notifPermission: (typeof Notification !== 'undefined') ? Notification.permission : 'default',
     qiblaStatus: 'idle', qiblaBearing: null, qiblaLat: null, qiblaLng: null,
+    /* ── ADMIN ── */
+    adminLoggedIn: false,
+    adminInputId: '',
+    adminInputPw: '',
+    adminLoginErr: false,
+    adminSection: 'stories',
+    adminEditIdx: null,
+    adminEditDraft: {},
+    /* ── LIVE CONTENT ── */
+    liveStories: lsGet('stories', STORIES),
+    liveClassifieds: lsGet('classifieds', CLASSIFIEDS),
+    liveEvents: lsGet('events', EVENT_DEFS),
+    liveAnnouncement: lsGet('announcement', {title:'Muḥarram programme begins Friday', body:'Nightly majālis after Maghrib. Full schedule in Updates.'}),
+    livePinned: lsGet('pinned', {on:false, text:'', color:'#6e2230'}),
+    liveKidsVideos: lsGet('kidsVideos', KIDS_LEARN),
+    liveKidsBooks: lsGet('kidsBooks', KIDS_BOOKS),
+    liveKidsQuotes: lsGet('kidsQuotes', KIDS_QUOTES),
+    livePrayerPresets: lsGet('prayerPresets', PRAYER_PRESETS),
   };
 
   componentDidMount() {
@@ -287,9 +312,28 @@ class App extends Component {
   openReading = (type, item) => this.setState({ screen: 'reading', readingType: type, readingItem: item });
 
   getActivePrayers = () => {
-    const preset = PRAYER_PRESETS.find(p => p.id === this.state.prayerPreset) || PRAYER_PRESETS[0];
+    const presets = this.state.livePrayerPresets || PRAYER_PRESETS;
+    const preset = presets.find(p => p.id === this.state.prayerPreset) || presets[0];
     return preset.prayers;
   };
+
+  saveContent = (key, stateKey, data) => {
+    lsSet(key, data);
+    this.setState({ [stateKey]: data });
+  };
+
+  handleAdminLogin = () => {
+    const { adminInputId, adminInputPw } = this.state;
+    if (adminInputId === 'abiadmin' && adminInputPw === 'Admin123@') {
+      this.setState({ adminLoggedIn: true, adminLoginErr: false, adminInputPw: '' });
+    } else {
+      this.setState({ adminLoginErr: true });
+    }
+  };
+
+  startEdit = (idx, draft) => this.setState({ adminEditIdx: idx, adminEditDraft: { ...draft } });
+  cancelEdit = () => this.setState({ adminEditIdx: null, adminEditDraft: {} });
+  setDraft = patch => this.setState(s => ({ adminEditDraft: { ...s.adminEditDraft, ...patch } }));
 
   playAdhan = () => {
     this.stopAdhan();
@@ -476,7 +520,7 @@ class App extends Component {
     const calY = now.getFullYear(), calM = now.getMonth();
     const daysInMonth = new Date(calY, calM+1, 0).getDate();
     const eventsByDay = {};
-    EVENT_DEFS.forEach(e => { const day = Math.min(todayD + e.offset, daysInMonth); eventsByDay[day] = e; });
+    st.liveEvents.forEach(e => { const day = Math.min(todayD + e.offset, daysInMonth); eventsByDay[day] = e; });
     const todayEvent = eventsByDay[todayD];
     const showNotif = !!todayEvent && !st.notifDismissed;
     return (
@@ -524,7 +568,7 @@ class App extends Component {
           <div onClick={()=>this.openStory(0)} style={{fontSize:12,color:'#1f5145',fontWeight:600,cursor:'pointer'}}>View all</div>
         </div>
         <div className="s" style={{display:'flex',gap:13,overflowX:'auto',margin:'0 -20px 14px',paddingLeft:20,paddingRight:20,paddingBottom:6}}>
-          {STORIES.map((s,i) => (
+          {st.liveStories.map((s,i) => (
             <div key={i} onClick={()=>this.openStory(i)} style={{flexShrink:0,width:70,textAlign:'center',cursor:'pointer'}}>
               <div style={{width:70,height:70,borderRadius:'50%',padding:2.5,background:'conic-gradient(from 210deg,#d8b863,#1f5145,#6e2230,#d8b863)'}}>
                 <div style={{width:'100%',height:'100%',borderRadius:'50%',background:s.img||s.color,display:'flex',alignItems:'center',justifyContent:'center',border:'3px solid #f6f1e7',position:'relative',overflow:'hidden'}}>
@@ -599,12 +643,19 @@ class App extends Component {
           ))}
         </div>
 
+        {/* Pinned message */}
+        {st.livePinned.on && st.livePinned.text && (
+          <div style={{display:'flex',gap:13,alignItems:'flex-start',background:st.livePinned.color,borderRadius:18,padding:'14px 16px',marginBottom:14,boxShadow:`0 6px 18px -8px ${st.livePinned.color}99`}}>
+            <div style={{flexShrink:0,fontSize:20}}>📌</div>
+            <div style={{flex:1,fontSize:13.5,fontWeight:600,color:'#fff',lineHeight:1.4}}>{st.livePinned.text}</div>
+          </div>
+        )}
         {/* Announcement */}
         <div style={{display:'flex',gap:13,alignItems:'flex-start',background:'linear-gradient(120deg,#faf4e6,#f6efe0)',border:'1px solid #ecdfc2',borderRadius:18,padding:'15px 16px',marginBottom:14}}>
           <div style={{flexShrink:0,width:34,height:34,borderRadius:10,background:'#e8d39a',display:'flex',alignItems:'center',justifyContent:'center',color:'#7a5d18',fontWeight:700,fontFamily:'Spectral,serif'}}>!</div>
           <div>
-            <div style={{fontSize:13.5,fontWeight:600,color:'#5e4d22'}}>Muḥarram programme begins Friday</div>
-            <div style={{fontSize:12,color:'#8a7846',marginTop:3,lineHeight:1.4}}>Nightly majālis after Maghrib. Full schedule in Updates.</div>
+            <div style={{fontSize:13.5,fontWeight:600,color:'#5e4d22'}}>{st.liveAnnouncement.title}</div>
+            <div style={{fontSize:12,color:'#8a7846',marginTop:3,lineHeight:1.4}}>{st.liveAnnouncement.body}</div>
           </div>
         </div>
 
@@ -632,7 +683,8 @@ class App extends Component {
     const prayers = activePrayers.map((p,i) => ({
       ...p, isNext: p.name===next.name, last: i===activePrayers.length-1
     }));
-    const activePreset = PRAYER_PRESETS.find(p => p.id === st.prayerPreset) || PRAYER_PRESETS[0];
+    const livePresets = st.livePrayerPresets || PRAYER_PRESETS;
+    const activePreset = livePresets.find(p => p.id === st.prayerPreset) || livePresets[0];
     const monthFajr    = ['03:28','03:29','03:29','03:30','03:31','03:32','03:33','03:34'];
     const monthMaghrib = ['22:16','22:16','22:17','22:17','22:17','22:18','22:18','22:18'];
     const monthRows = Array.from({length:8},(_,i) => ({
@@ -710,7 +762,7 @@ class App extends Component {
 
         {tab==='settings' && (<>
           <div style={{fontSize:11,fontWeight:700,letterSpacing:.7,textTransform:'uppercase',color:'#a2967f',marginBottom:10}}>Prayer Time Source</div>
-          {PRAYER_PRESETS.map(preset => {
+          {(st.livePrayerPresets || PRAYER_PRESETS).map(preset => {
             const active = st.prayerPreset === preset.id;
             return (
               <div key={preset.id} onClick={()=>this.setState({prayerPreset:preset.id})}
@@ -991,7 +1043,7 @@ class App extends Component {
   renderClassifieds(st) {
     const cats = ['All','Food','Butcher','Travel','Education','Services'];
     const q = st.classQuery.trim().toLowerCase();
-    const cards = CLASSIFIEDS
+    const cards = st.liveClassifieds
       .filter(c => st.classCat==='All' || c.cat===st.classCat)
       .filter(c => !q || c.name.toLowerCase().includes(q) || c.desc.toLowerCase().includes(q));
     const chipStyle = c => {
@@ -1202,239 +1254,435 @@ class App extends Component {
     );
   }
 
-  /* ── ADMIN ── */
-  renderAdmin() {
-    const stats = [
-      { label:'Active Stories', val:'3',  note:'1 expiring soon',  ink:'#1f5145', tint:'#e6efe9' },
-      { label:'Classifieds',    val:'5',  note:'All approved',     ink:'#9a7a2c', tint:'#f3ecd9' },
-      { label:"Duʿāʾ",         val:'24', note:'Published',        ink:'#6e2230', tint:'#f3e6e8' },
-      { label:'Prayer Cal.',    val:'✓',  note:'1447 imported',    ink:'#2c5d52', tint:'#e6efe9' },
-    ];
-    const actions = [
-      { label:'Add Story',    type:'Story',       glyph:'＋' },
-      { label:"New Duʿāʾ",   type:"Duʿāʾ",       glyph:'＋' },
-      { label:'Add Listing',  type:'Classified',  glyph:'＋' },
-      { label:'Add Event',    type:'Event',       glyph:'＋' },
-      { label:'Daily Quiz',   type:'Quiz',        glyph:'✎' },
-      { label:'Prayer Times', type:'Prayer Time', glyph:'✎' },
-    ];
-    const expiring = [
-      { title:'Jummah Reminder', left:'Expires in 6h',  pct:75 },
-      { title:'Community Iftar', left:'Expires in 19h', pct:22 },
-    ];
-    const activity = [
-      { txt:'Jummah Reminder story published',  meta:'Today · 09:14',    dot:'#1f5145' },
-      { txt:'Karbala Travel listing approved',  meta:'Yesterday · 17:30', dot:'#9a7a2c' },
-      { txt:"Duʿāʾ al-Faraj updated",           meta:'Yesterday · 11:02', dot:'#6e2230' },
-      { txt:'1447 prayer calendar imported',    meta:'2 days ago',        dot:'#2c5d52' },
-    ];
+  /* ── ADMIN LOGIN ── */
+  renderAdminLogin(st) {
+    const inp = {width:'100%',border:'1px solid #e6dcc8',background:'#fffdf9',borderRadius:13,padding:'13px 15px',fontSize:15,color:'#2c2823',outline:'none',marginBottom:14,boxSizing:'border-box'};
     return (
-      <div style={{padding:'8px 20px 100px'}} className="afu">
-        <div onClick={()=>this.go('more')} style={{display:'inline-flex',alignItems:'center',gap:4,color:'#1f5145',fontSize:14,fontWeight:600,cursor:'pointer',padding:'8px 0 4px'}}>
-          <span style={{fontSize:18}}>‹</span> More
+      <div style={{padding:'0 20px',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',minHeight:'70vh'}} className="afu">
+        <div style={{width:60,height:60,borderRadius:18,background:'linear-gradient(150deg,#23564a,#16463a)',display:'flex',alignItems:'center',justifyContent:'center',marginBottom:18}}>
+          <div style={{width:26,height:26,borderRadius:'50%',boxShadow:'inset -7px 0 0 0 #d8b863'}} />
         </div>
-        <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'4px 0 18px'}}>
-          <div>
-            <div style={{fontSize:13,color:'#9a8f7c',fontWeight:500}}>Admin</div>
-            <div style={{fontFamily:'Spectral,serif',fontSize:25,fontWeight:600,color:'#27241f'}}>Dashboard</div>
-          </div>
-          <div style={{display:'flex',alignItems:'center',gap:8,background:'#e6efe9',padding:'6px 12px',borderRadius:20}}>
-            <span style={{width:7,height:7,borderRadius:'50%',background:'#1f5145'}} />
-            <span style={{fontSize:12,fontWeight:600,color:'#1f5145'}}>Editor</span>
-          </div>
-        </div>
-
-        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:11,marginBottom:22}}>
-          {stats.map((s,i) => (
-            <div key={i} style={{background:'#fffdf9',border:'1px solid #ece4d4',borderRadius:16,padding:15}}>
-              <div style={{fontSize:11.5,color:'#9a8f7c',fontWeight:600}}>{s.label}</div>
-              <div style={{fontFamily:'Spectral,serif',fontSize:30,fontWeight:600,color:s.ink,marginTop:4,lineHeight:1}}>{s.val}</div>
-              <div style={{fontSize:11,color:'#a89d88',marginTop:5}}>{s.note}</div>
-            </div>
-          ))}
-        </div>
-
-        <div style={{fontSize:11,letterSpacing:1.2,textTransform:'uppercase',fontWeight:700,color:'#b1a690',marginBottom:12}}>Quick Actions</div>
-        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:11,marginBottom:24}}>
-          {actions.map((a,i) => (
-            <div key={i} onClick={()=>this.setState({screen:'adminForm',adminForm:a.type,adminTitle:'',adminContent:'',adminExpiry:'24 hours',adminLink:'None',adminCat:'Food'})} style={{display:'flex',alignItems:'center',gap:10,background:'#1f5145',borderRadius:14,padding:'14px 15px',cursor:'pointer'}}>
-              <span style={{width:26,height:26,borderRadius:8,background:'rgba(216,184,99,.22)',color:'#d8b863',display:'flex',alignItems:'center',justifyContent:'center',fontSize:15}}>＋</span>
-              <span style={{fontSize:13.5,fontWeight:600,color:'#f3ead4'}}>{a.label}</span>
-            </div>
-          ))}
-        </div>
-
-        <div style={{fontSize:11,letterSpacing:1.2,textTransform:'uppercase',fontWeight:700,color:'#b1a690',marginBottom:12}}>Expiring Stories</div>
-        <div style={{display:'flex',flexDirection:'column',gap:10,marginBottom:24}}>
-          {expiring.map((e,i) => (
-            <div key={i} style={{background:'#fffdf9',border:'1px solid #ece4d4',borderRadius:14,padding:'14px 15px'}}>
-              <div style={{display:'flex',alignItems:'center',justifyContent:'space-between'}}>
-                <span style={{fontSize:14,fontWeight:600,color:'#2c2823'}}>{e.title}</span>
-                <span style={{fontSize:12,fontWeight:600,color:'#9a7a2c'}}>{e.left}</span>
-              </div>
-              <div style={{height:5,borderRadius:4,background:'#efe7d7',marginTop:9,overflow:'hidden'}}>
-                <div style={{height:'100%',width:`${e.pct}%`,background:'linear-gradient(90deg,#d8b863,#b8923f)',borderRadius:4}} />
-              </div>
-            </div>
-          ))}
-        </div>
-
-        <div style={{fontSize:11,letterSpacing:1.2,textTransform:'uppercase',fontWeight:700,color:'#b1a690',marginBottom:12}}>Recent Activity</div>
-        <div style={{background:'#fffdf9',border:'1px solid #ece4d4',borderRadius:16,padding:'6px 16px'}}>
-          {activity.map((a,i) => (
-            <div key={i} style={{display:'flex',gap:12,padding:'13px 0',borderBottom:i===activity.length-1?'none':'1px solid #f3ecdd'}}>
-              <span style={{flexShrink:0,width:8,height:8,borderRadius:'50%',background:a.dot,marginTop:5}} />
-              <div>
-                <div style={{fontSize:13.5,color:'#3f3a32',lineHeight:1.4}}>{a.txt}</div>
-                <div style={{fontSize:11.5,color:'#a89d88',marginTop:2}}>{a.meta}</div>
-              </div>
-            </div>
-          ))}
+        <div style={{fontFamily:'Spectral,serif',fontSize:22,fontWeight:600,color:'#27241f',marginBottom:4}}>Admin Login</div>
+        <div style={{fontSize:13,color:'#9a8f7c',marginBottom:28}}>Ahlul Bayt Ireland</div>
+        <div style={{width:'100%',maxWidth:340}}>
+          <input value={st.adminInputId} onChange={e=>this.setState({adminInputId:e.target.value,adminLoginErr:false})} placeholder="Admin ID" style={inp} />
+          <input value={st.adminInputPw} onChange={e=>this.setState({adminInputPw:e.target.value,adminLoginErr:false})} placeholder="Password" type="password" style={inp}
+            onKeyDown={e=>e.key==='Enter'&&this.handleAdminLogin()} />
+          {st.adminLoginErr && <div style={{fontSize:12.5,color:'#6e2230',marginBottom:12,textAlign:'center'}}>Incorrect ID or password.</div>}
+          <div onClick={this.handleAdminLogin} style={{width:'100%',textAlign:'center',padding:14,borderRadius:14,background:'#1f5145',color:'#f3ead4',fontSize:15,fontWeight:700,cursor:'pointer'}}>Sign In</div>
         </div>
       </div>
     );
   }
 
-  /* ── ADMIN FORM ── */
-  renderAdminForm(st) {
-    const af = st.adminForm || 'Story';
-    const isStory = af==='Story';
-    const isClass = af==='Classified';
-    const isEvent = af==='Event';
-    const canPublish = st.adminTitle.trim().length > 0 && st.adminContent.trim().length > 0;
+  /* ── ADMIN ── */
+  renderAdmin(st) {
+    if (!st.adminLoggedIn) return this.renderAdminLogin(st);
 
-    const handlePublish = () => {
-      if (!canPublish) { this.showToast('Fill in title and content first'); return; }
-      this.showToast(`${af} published!`);
-      setTimeout(() => this.go('admin'), 1200);
+    const sec = st.adminSection;
+    const editing = st.adminEditIdx !== null;
+
+    const COLORS = ['#1f5145','#2c5d52','#6e2230','#9a7a2c','#3a4a78','#b8923f'];
+    const COLOR_NAMES = {'#1f5145':'Green','#2c5d52':'Teal','#6e2230':'Maroon','#9a7a2c':'Gold','#3a4a78':'Navy','#b8923f':'Amber'};
+    const STORY_KINDS = ['verse','sermon','kids','quiz','classified','announce'];
+    const EVENT_TYPES = ['Community','Majlis','Class','Programme'];
+    const EVENT_COLORS = {'Community':'#1f5145','Majlis':'#6e2230','Class':'#9a7a2c','Programme':'#2c5d52'};
+    const EVENT_TINTS  = {'Community':'#e6efe9','Majlis':'#f3e6e8','Class':'#f3ecd9','Programme':'#e6efe9'};
+    const CAT_COLORS = {'Food':'#1f5145','Butcher':'#6e2230','Travel':'#9a7a2c','Education':'#2c5d52','Services':'#3a4a78'};
+    const CAT_TINTS  = {'Food':'#e6efe9','Butcher':'#f3e6e8','Travel':'#f3ecd9','Education':'#e6efe9','Services':'#e8ebf4'};
+
+    const tabs = [
+      {id:'stories',label:'Stories'},
+      {id:'classifieds',label:'Classifieds'},
+      {id:'events',label:'Events'},
+      {id:'prayers',label:'Prayer Times'},
+      {id:'announcement',label:'Announcement'},
+      {id:'pinned',label:'Pinned Msg'},
+      {id:'kids',label:'Kids'},
+    ];
+
+    const inp = {width:'100%',border:'1px solid #e6dcc8',background:'#fffdf9',borderRadius:11,padding:'11px 13px',fontSize:14,color:'#2c2823',outline:'none',marginBottom:11,boxSizing:'border-box'};
+    const btn = (label,onClick,style={}) => (
+      <div onClick={onClick} style={{display:'inline-flex',alignItems:'center',justifyContent:'center',padding:'9px 16px',borderRadius:11,fontSize:13,fontWeight:600,cursor:'pointer',...style}}>{label}</div>
+    );
+    const save = (key,stateKey,data,msg='Saved!') => { this.saveContent(key,stateKey,data); this.cancelEdit(); this.showToast(msg); };
+
+    /* ─ STORIES ─ */
+    const renderStoriesSection = () => {
+      if (editing) {
+        const d = st.adminEditDraft;
+        const isQuiz = d.kind === 'quiz';
+        const isNew = st.adminEditIdx === -1;
+        const saveStory = () => {
+          const stories = [...st.liveStories];
+          const item = {
+            kind: d.kind||'announce', title: d.title||'', short: d.short||'',
+            initial: d.initial||'م', tag: d.tag||'', color: d.color||'#6e2230',
+            img: `linear-gradient(150deg,${d.color||'#6e2230'}cc,${d.color||'#1c1a17'})`,
+            ar: d.ar||'', sub: d.sub||'', body: d.body||'', link: d.link||'',
+            ...(isQuiz ? {question:d.question||'',options:[d.opt0||'',d.opt1||'',d.opt2||''],answer:parseInt(d.answer||0)} : {}),
+          };
+          if (isNew) stories.unshift(item); else stories[st.adminEditIdx] = item;
+          save('stories','liveStories',stories, isNew?'Story added!':'Story updated!');
+        };
+        return (
+          <div style={{padding:'0 0 20px'}}>
+            <div style={{fontSize:13,fontWeight:700,color:'#27241f',marginBottom:14}}>{isNew?'Add Story':'Edit Story'}</div>
+            <select value={d.kind||'announce'} onChange={e=>this.setDraft({kind:e.target.value})} style={{...inp,cursor:'pointer'}}>
+              {STORY_KINDS.map(k=><option key={k} value={k}>{k.charAt(0).toUpperCase()+k.slice(1)}</option>)}
+            </select>
+            <input value={d.title||''} onChange={e=>this.setDraft({title:e.target.value})} placeholder="Title" style={inp}/>
+            <input value={d.short||''} onChange={e=>this.setDraft({short:e.target.value})} placeholder="Short label (under circle)" style={inp}/>
+            <input value={d.initial||''} onChange={e=>this.setDraft({initial:e.target.value})} placeholder="Circle letter (Arabic)" style={inp}/>
+            <input value={d.tag||''} onChange={e=>this.setDraft({tag:e.target.value})} placeholder="Tag line" style={inp}/>
+            <input value={d.sub||''} onChange={e=>this.setDraft({sub:e.target.value})} placeholder="Subtitle" style={inp}/>
+            <input value={d.ar||''} onChange={e=>this.setDraft({ar:e.target.value})} placeholder="Arabic text (optional)" style={inp} dir="rtl"/>
+            <textarea value={d.body||''} onChange={e=>this.setDraft({body:e.target.value})} placeholder="Body text" style={{...inp,minHeight:90,resize:'none'}}/>
+            <input value={d.link||''} onChange={e=>this.setDraft({link:e.target.value})} placeholder="CTA button label (optional)" style={inp}/>
+            <select value={d.color||'#6e2230'} onChange={e=>this.setDraft({color:e.target.value})} style={{...inp,cursor:'pointer'}}>
+              {COLORS.map(c=><option key={c} value={c}>{COLOR_NAMES[c]}</option>)}
+            </select>
+            {isQuiz && <>
+              <input value={d.question||''} onChange={e=>this.setDraft({question:e.target.value})} placeholder="Quiz question" style={inp}/>
+              <input value={d.opt0||''} onChange={e=>this.setDraft({opt0:e.target.value})} placeholder="Option 1" style={inp}/>
+              <input value={d.opt1||''} onChange={e=>this.setDraft({opt1:e.target.value})} placeholder="Option 2" style={inp}/>
+              <input value={d.opt2||''} onChange={e=>this.setDraft({opt2:e.target.value})} placeholder="Option 3" style={inp}/>
+              <select value={d.answer||0} onChange={e=>this.setDraft({answer:parseInt(e.target.value)})} style={{...inp,cursor:'pointer'}}>
+                <option value={0}>Correct: Option 1</option>
+                <option value={1}>Correct: Option 2</option>
+                <option value={2}>Correct: Option 3</option>
+              </select>
+            </>}
+            <div style={{display:'flex',gap:10}}>
+              {btn('Save', saveStory, {flex:1,background:'#1f5145',color:'#f3ead4'})}
+              {btn('Cancel', this.cancelEdit, {flex:1,border:'1px solid #e6dcc8',background:'#fffdf9',color:'#3f3a32'})}
+            </div>
+          </div>
+        );
+      }
+      return (
+        <div>
+          {btn('+ Add Story', ()=>this.startEdit(-1,{kind:'announce',color:'#6e2230'}), {background:'#1f5145',color:'#f3ead4',marginBottom:14,width:'100%'})}
+          {st.liveStories.map((s,i)=>(
+            <div key={i} style={{display:'flex',alignItems:'center',gap:12,background:'#fffdf9',border:'1px solid #ece4d4',borderRadius:14,padding:'12px 14px',marginBottom:8}}>
+              <div style={{width:36,height:36,borderRadius:'50%',background:s.color,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+                <span style={{fontFamily:'Amiri,serif',fontSize:18,color:'rgba(255,255,255,.9)'}}>{s.initial}</span>
+              </div>
+              <div style={{flex:1,minWidth:0}}>
+                <div style={{fontSize:13.5,fontWeight:600,color:'#2c2823',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{s.title}</div>
+                <div style={{fontSize:11,color:'#9a8f7c'}}>{s.kind} · {s.short}</div>
+              </div>
+              {btn('Edit', ()=>this.startEdit(i,{...s,opt0:s.options?.[0],opt1:s.options?.[1],opt2:s.options?.[2]}), {background:'#e6efe9',color:'#1f5145',fontSize:12,padding:'6px 12px'})}
+              {btn('✕', ()=>{const a=[...st.liveStories];a.splice(i,1);save('stories','liveStories',a,'Deleted');}, {background:'#fdf0f2',color:'#6e2230',fontSize:12,padding:'6px 10px'})}
+            </div>
+          ))}
+        </div>
+      );
     };
-    const handleDraft = () => {
-      if (!st.adminTitle.trim()) { this.showToast('Enter a title to save draft'); return; }
-      this.showToast('Draft saved');
+
+    /* ─ CLASSIFIEDS ─ */
+    const renderClassifiedsSection = () => {
+      if (editing) {
+        const d = st.adminEditDraft;
+        const isNew = st.adminEditIdx === -1;
+        const cat = d.cat || 'Services';
+        const saveItem = () => {
+          const list = [...st.liveClassifieds];
+          const item = {name:d.name||'',cat,desc:d.desc||'',loc:d.loc||'',web:d.web||'',phone:d.phone||'',wa:d.wa||'',ink:CAT_COLORS[cat],tint:CAT_TINTS[cat]};
+          if (isNew) list.unshift(item); else list[st.adminEditIdx] = item;
+          save('classifieds','liveClassifieds',list, isNew?'Listing added!':'Listing updated!');
+        };
+        return (
+          <div style={{padding:'0 0 20px'}}>
+            <div style={{fontSize:13,fontWeight:700,color:'#27241f',marginBottom:14}}>{isNew?'Add Listing':'Edit Listing'}</div>
+            <input value={d.name||''} onChange={e=>this.setDraft({name:e.target.value})} placeholder="Business name" style={inp}/>
+            <select value={d.cat||'Services'} onChange={e=>this.setDraft({cat:e.target.value})} style={{...inp,cursor:'pointer'}}>
+              {['Food','Butcher','Travel','Education','Services'].map(c=><option key={c} value={c}>{c}</option>)}
+            </select>
+            <input value={d.desc||''} onChange={e=>this.setDraft({desc:e.target.value})} placeholder="Description" style={inp}/>
+            <input value={d.loc||''} onChange={e=>this.setDraft({loc:e.target.value})} placeholder="Location" style={inp}/>
+            <input value={d.web||''} onChange={e=>this.setDraft({web:e.target.value})} placeholder="Website URL (optional)" style={inp}/>
+            <input value={d.phone||''} onChange={e=>this.setDraft({phone:e.target.value})} placeholder="Phone (e.g. +353 1 234 5678)" style={inp}/>
+            <input value={d.wa||''} onChange={e=>this.setDraft({wa:e.target.value})} placeholder="WhatsApp number (digits only)" style={inp}/>
+            <div style={{display:'flex',gap:10}}>
+              {btn('Save', saveItem, {flex:1,background:'#1f5145',color:'#f3ead4'})}
+              {btn('Cancel', this.cancelEdit, {flex:1,border:'1px solid #e6dcc8',background:'#fffdf9',color:'#3f3a32'})}
+            </div>
+          </div>
+        );
+      }
+      return (
+        <div>
+          {btn('+ Add Listing', ()=>this.startEdit(-1,{cat:'Services'}), {background:'#1f5145',color:'#f3ead4',marginBottom:14,width:'100%'})}
+          {st.liveClassifieds.map((c,i)=>(
+            <div key={i} style={{display:'flex',alignItems:'center',gap:12,background:'#fffdf9',border:'1px solid #ece4d4',borderRadius:14,padding:'12px 14px',marginBottom:8}}>
+              <div style={{width:10,height:10,borderRadius:'50%',background:c.ink,flexShrink:0}} />
+              <div style={{flex:1,minWidth:0}}>
+                <div style={{fontSize:13.5,fontWeight:600,color:'#2c2823',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{c.name}</div>
+                <div style={{fontSize:11,color:'#9a8f7c'}}>{c.cat} · {c.loc}</div>
+              </div>
+              {btn('Edit', ()=>this.startEdit(i,{...c}), {background:'#e6efe9',color:'#1f5145',fontSize:12,padding:'6px 12px'})}
+              {btn('✕', ()=>{const a=[...st.liveClassifieds];a.splice(i,1);save('classifieds','liveClassifieds',a,'Deleted');}, {background:'#fdf0f2',color:'#6e2230',fontSize:12,padding:'6px 10px'})}
+            </div>
+          ))}
+        </div>
+      );
     };
+
+    /* ─ EVENTS ─ */
+    const renderEventsSection = () => {
+      if (editing) {
+        const d = st.adminEditDraft;
+        const isNew = st.adminEditIdx === -1;
+        const type = d.type || 'Community';
+        const saveItem = () => {
+          const list = [...st.liveEvents];
+          const item = {title:d.title||'',type,color:EVENT_COLORS[type],tint:EVENT_TINTS[type],desc:d.desc||'',offset:parseInt(d.offset||0)};
+          if (isNew) list.push(item); else list[st.adminEditIdx] = item;
+          save('events','liveEvents',list, isNew?'Event added!':'Event updated!');
+        };
+        return (
+          <div style={{padding:'0 0 20px'}}>
+            <div style={{fontSize:13,fontWeight:700,color:'#27241f',marginBottom:14}}>{isNew?'Add Event':'Edit Event'}</div>
+            <input value={d.title||''} onChange={e=>this.setDraft({title:e.target.value})} placeholder="Event title" style={inp}/>
+            <select value={d.type||'Community'} onChange={e=>this.setDraft({type:e.target.value})} style={{...inp,cursor:'pointer'}}>
+              {EVENT_TYPES.map(t=><option key={t} value={t}>{t}</option>)}
+            </select>
+            <input value={d.desc||''} onChange={e=>this.setDraft({desc:e.target.value})} placeholder="Description" style={inp}/>
+            <input value={d.offset!==undefined?d.offset:''} onChange={e=>this.setDraft({offset:e.target.value})} placeholder="Days from today (0 = today)" type="number" min="0" max="30" style={inp}/>
+            <div style={{display:'flex',gap:10}}>
+              {btn('Save', saveItem, {flex:1,background:'#1f5145',color:'#f3ead4'})}
+              {btn('Cancel', this.cancelEdit, {flex:1,border:'1px solid #e6dcc8',background:'#fffdf9',color:'#3f3a32'})}
+            </div>
+          </div>
+        );
+      }
+      return (
+        <div>
+          {btn('+ Add Event', ()=>this.startEdit(-1,{type:'Community',offset:0}), {background:'#1f5145',color:'#f3ead4',marginBottom:14,width:'100%'})}
+          {st.liveEvents.map((e,i)=>(
+            <div key={i} style={{display:'flex',alignItems:'center',gap:12,background:'#fffdf9',border:'1px solid #ece4d4',borderRadius:14,padding:'12px 14px',marginBottom:8}}>
+              <div style={{width:10,height:10,borderRadius:'50%',background:e.color,flexShrink:0}} />
+              <div style={{flex:1,minWidth:0}}>
+                <div style={{fontSize:13.5,fontWeight:600,color:'#2c2823',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{e.title}</div>
+                <div style={{fontSize:11,color:'#9a8f7c'}}>{e.type} · +{e.offset} days</div>
+              </div>
+              {btn('Edit', ()=>this.startEdit(i,{...e}), {background:'#e6efe9',color:'#1f5145',fontSize:12,padding:'6px 12px'})}
+              {btn('✕', ()=>{const a=[...st.liveEvents];a.splice(i,1);save('events','liveEvents',a,'Deleted');}, {background:'#fdf0f2',color:'#6e2230',fontSize:12,padding:'6px 10px'})}
+            </div>
+          ))}
+        </div>
+      );
+    };
+
+    /* ─ PRAYER TIMES ─ */
+    const renderPrayersSection = () => {
+      const presets = st.livePrayerPresets || PRAYER_PRESETS;
+      const d = st.adminEditDraft;
+      if (editing) {
+        const presetIdx = st.adminEditIdx;
+        const preset = presets[presetIdx];
+        const savePrayer = () => {
+          const updated = presets.map((p,i) => i !== presetIdx ? p : {
+            ...p, prayers: p.prayers.map((pr,j) => ({...pr, time: d[`t${j}`] || pr.time}))
+          });
+          save('prayerPresets','livePrayerPresets',updated,'Prayer times saved!');
+        };
+        return (
+          <div style={{padding:'0 0 20px'}}>
+            <div style={{fontSize:13,fontWeight:700,color:'#27241f',marginBottom:4}}>{preset.name}</div>
+            <div style={{fontSize:11.5,color:'#9a8f7c',marginBottom:14}}>{preset.sub}</div>
+            {preset.prayers.map((p,j)=>(
+              <div key={j} style={{display:'flex',alignItems:'center',gap:12,marginBottom:10}}>
+                <div style={{width:80,fontSize:14,fontWeight:600,color:'#3f3a32'}}>{p.name}</div>
+                <input value={d[`t${j}`]!==undefined?d[`t${j}`]:p.time} onChange={e=>this.setDraft({[`t${j}`]:e.target.value})} placeholder="HH:MM" style={{flex:1,border:'1px solid #e6dcc8',background:'#fffdf9',borderRadius:10,padding:'10px 12px',fontSize:14,color:'#2c2823',outline:'none'}}/>
+              </div>
+            ))}
+            <div style={{display:'flex',gap:10,marginTop:4}}>
+              {btn('Save Times', savePrayer, {flex:1,background:'#1f5145',color:'#f3ead4'})}
+              {btn('Cancel', this.cancelEdit, {flex:1,border:'1px solid #e6dcc8',background:'#fffdf9',color:'#3f3a32'})}
+            </div>
+          </div>
+        );
+      }
+      return (
+        <div>
+          <div style={{fontSize:12,color:'#9a8f7c',marginBottom:12}}>Tap a source to edit its prayer times.</div>
+          {presets.map((p,i)=>(
+            <div key={i} onClick={()=>this.startEdit(i,{})} style={{display:'flex',alignItems:'center',gap:14,background:'#fffdf9',border:'1px solid #ece4d4',borderRadius:14,padding:'14px',marginBottom:10,cursor:'pointer'}}>
+              <div style={{flex:1}}>
+                <div style={{fontSize:14,fontWeight:700,color:'#2c2823'}}>{p.name}</div>
+                <div style={{fontSize:11.5,color:'#9a8f7c',marginTop:2}}>{p.sub}</div>
+              </div>
+              <span style={{color:'#bba35f',fontSize:18}}>›</span>
+            </div>
+          ))}
+        </div>
+      );
+    };
+
+    /* ─ ANNOUNCEMENT ─ */
+    const renderAnnouncementSection = () => {
+      const d = st.adminEditDraft;
+      if (editing) {
+        return (
+          <div style={{padding:'0 0 20px'}}>
+            <div style={{fontSize:13,fontWeight:700,color:'#27241f',marginBottom:14}}>Edit Announcement</div>
+            <input value={d.title||''} onChange={e=>this.setDraft({title:e.target.value})} placeholder="Headline" style={inp}/>
+            <textarea value={d.body||''} onChange={e=>this.setDraft({body:e.target.value})} placeholder="Body text" style={{...inp,minHeight:80,resize:'none'}}/>
+            <div style={{display:'flex',gap:10}}>
+              {btn('Save', ()=>save('announcement','liveAnnouncement',{title:d.title||'',body:d.body||''},'Announcement saved!'), {flex:1,background:'#1f5145',color:'#f3ead4'})}
+              {btn('Cancel', this.cancelEdit, {flex:1,border:'1px solid #e6dcc8',background:'#fffdf9',color:'#3f3a32'})}
+            </div>
+          </div>
+        );
+      }
+      const a = st.liveAnnouncement;
+      return (
+        <div>
+          <div style={{background:'linear-gradient(120deg,#faf4e6,#f6efe0)',border:'1px solid #ecdfc2',borderRadius:14,padding:'14px',marginBottom:14}}>
+            <div style={{fontSize:14,fontWeight:700,color:'#5e4d22'}}>{a.title}</div>
+            <div style={{fontSize:12.5,color:'#8a7846',marginTop:4,lineHeight:1.5}}>{a.body}</div>
+          </div>
+          {btn('Edit Announcement', ()=>this.startEdit(0,{title:a.title,body:a.body}), {background:'#1f5145',color:'#f3ead4',width:'100%'})}
+        </div>
+      );
+    };
+
+    /* ─ PINNED MESSAGE ─ */
+    const renderPinnedSection = () => {
+      const d = st.adminEditDraft;
+      if (editing) {
+        return (
+          <div style={{padding:'0 0 20px'}}>
+            <div style={{fontSize:13,fontWeight:700,color:'#27241f',marginBottom:14}}>Pinned Message</div>
+            <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:14}}>
+              <span style={{fontSize:14,color:'#3f3a32',fontWeight:600}}>Show on home screen</span>
+              <div onClick={()=>this.setDraft({on:!d.on})} style={{width:48,height:26,borderRadius:13,background:d.on?'#1f5145':'#c8bfa8',position:'relative',cursor:'pointer',transition:'background .2s',flexShrink:0}}>
+                <div style={{position:'absolute',top:3,left:d.on?24:3,width:20,height:20,borderRadius:'50%',background:'#fff',transition:'left .2s',boxShadow:'0 1px 4px rgba(0,0,0,.25)'}} />
+              </div>
+            </div>
+            <textarea value={d.text||''} onChange={e=>this.setDraft({text:e.target.value})} placeholder="Pinned message text" style={{...inp,minHeight:80,resize:'none'}}/>
+            <select value={d.color||'#6e2230'} onChange={e=>this.setDraft({color:e.target.value})} style={{...inp,cursor:'pointer'}}>
+              {COLORS.map(c=><option key={c} value={c}>{COLOR_NAMES[c]}</option>)}
+            </select>
+            <div style={{display:'flex',gap:10}}>
+              {btn('Save', ()=>save('pinned','livePinned',{on:!!d.on,text:d.text||'',color:d.color||'#6e2230'},'Pinned message saved!'), {flex:1,background:'#1f5145',color:'#f3ead4'})}
+              {btn('Cancel', this.cancelEdit, {flex:1,border:'1px solid #e6dcc8',background:'#fffdf9',color:'#3f3a32'})}
+            </div>
+          </div>
+        );
+      }
+      const p = st.livePinned;
+      return (
+        <div>
+          {p.on && p.text && (
+            <div style={{background:p.color,borderRadius:14,padding:'14px',marginBottom:14,color:'#fff',fontSize:14,lineHeight:1.5}}>📌 {p.text}</div>
+          )}
+          {!p.on && <div style={{fontSize:13,color:'#9a8f7c',marginBottom:14}}>No pinned message active.</div>}
+          {btn('Edit Pinned Message', ()=>this.startEdit(0,{...p}), {background:'#1f5145',color:'#f3ead4',width:'100%'})}
+        </div>
+      );
+    };
+
+    /* ─ KIDS ─ */
+    const renderKidsSection = () => {
+      const d = st.adminEditDraft;
+      const subSec = d._sub || 'videos';
+      if (editing) {
+        const isNew = st.adminEditIdx === -1;
+        if (subSec === 'videos') {
+          const save2 = ()=>{const a=[...st.liveKidsVideos];const it={title:d.title||'',meta:d.meta||'',color:d.color||'#1f5145'};if(isNew)a.push(it);else a[st.adminEditIdx]=it;save('kidsVideos','liveKidsVideos',a,isNew?'Video added!':'Updated!');};
+          return (<div style={{padding:'0 0 20px'}}>
+            <div style={{fontSize:13,fontWeight:700,color:'#27241f',marginBottom:14}}>{isNew?'Add Video':'Edit Video'}</div>
+            <input value={d.title||''} onChange={e=>this.setDraft({title:e.target.value})} placeholder="Title" style={inp}/>
+            <input value={d.meta||''} onChange={e=>this.setDraft({meta:e.target.value})} placeholder="Meta (e.g. Animated · 4 min)" style={inp}/>
+            <select value={d.color||'#1f5145'} onChange={e=>this.setDraft({color:e.target.value})} style={{...inp,cursor:'pointer'}}>
+              {COLORS.map(c=><option key={c} value={c}>{COLOR_NAMES[c]}</option>)}
+            </select>
+            <div style={{display:'flex',gap:10}}>{btn('Save',save2,{flex:1,background:'#1f5145',color:'#f3ead4'})}{btn('Cancel',this.cancelEdit,{flex:1,border:'1px solid #e6dcc8',background:'#fffdf9',color:'#3f3a32'})}</div>
+          </div>);
+        }
+        if (subSec === 'books') {
+          const save2 = ()=>{const a=[...st.liveKidsBooks];const it={title:d.title||'',meta:d.meta||'',color:d.color||'#e6efe9',ink:d.ink||'#1f5145'};if(isNew)a.push(it);else a[st.adminEditIdx]=it;save('kidsBooks','liveKidsBooks',a,isNew?'Book added!':'Updated!');};
+          return (<div style={{padding:'0 0 20px'}}>
+            <div style={{fontSize:13,fontWeight:700,color:'#27241f',marginBottom:14}}>{isNew?'Add Book':'Edit Book'}</div>
+            <input value={d.title||''} onChange={e=>this.setDraft({title:e.target.value})} placeholder="Title" style={inp}/>
+            <input value={d.meta||''} onChange={e=>this.setDraft({meta:e.target.value})} placeholder="Meta (e.g. Ages 3–6)" style={inp}/>
+            <div style={{display:'flex',gap:10}}>{btn('Save',save2,{flex:1,background:'#1f5145',color:'#f3ead4'})}{btn('Cancel',this.cancelEdit,{flex:1,border:'1px solid #e6dcc8',background:'#fffdf9',color:'#3f3a32'})}</div>
+          </div>);
+        }
+        if (subSec === 'quotes') {
+          const save2 = ()=>{const a=[...st.liveKidsQuotes];const it={ar:d.ar||'',tr:d.tr||'',who:d.who||''};if(isNew)a.push(it);else a[st.adminEditIdx]=it;save('kidsQuotes','liveKidsQuotes',a,isNew?'Quote added!':'Updated!');};
+          return (<div style={{padding:'0 0 20px'}}>
+            <div style={{fontSize:13,fontWeight:700,color:'#27241f',marginBottom:14}}>{isNew?'Add Quote':'Edit Quote'}</div>
+            <input value={d.ar||''} onChange={e=>this.setDraft({ar:e.target.value})} placeholder="Arabic text" dir="rtl" style={inp}/>
+            <input value={d.tr||''} onChange={e=>this.setDraft({tr:e.target.value})} placeholder="Transliteration" style={inp}/>
+            <input value={d.who||''} onChange={e=>this.setDraft({who:e.target.value})} placeholder="Attribution" style={inp}/>
+            <div style={{display:'flex',gap:10}}>{btn('Save',save2,{flex:1,background:'#1f5145',color:'#f3ead4'})}{btn('Cancel',this.cancelEdit,{flex:1,border:'1px solid #e6dcc8',background:'#fffdf9',color:'#3f3a32'})}</div>
+          </div>);
+        }
+      }
+      const kTabs = [{id:'videos',label:'Videos'},{id:'books',label:'Books'},{id:'quotes',label:'Quotes'}];
+      const ks = d._sub || 'videos';
+      const list = ks==='videos'?st.liveKidsVideos:ks==='books'?st.liveKidsBooks:st.liveKidsQuotes;
+      const getLabel = (it,i) => ks==='videos'?it.title:ks==='books'?it.title:it.tr;
+      return (
+        <div>
+          <div style={{display:'flex',gap:6,background:'#efe7d7',borderRadius:12,padding:4,marginBottom:14}}>
+            {kTabs.map(t=>(
+              <div key={t.id} onClick={()=>this.setState({adminEditDraft:{_sub:t.id}})} style={{flex:1,textAlign:'center',padding:'7px 6px',borderRadius:9,fontSize:13,fontWeight:600,cursor:'pointer',background:ks===t.id?'#fffdf9':'transparent',color:ks===t.id?'#1f5145':'#8c8270'}}>{t.label}</div>
+            ))}
+          </div>
+          {btn(`+ Add ${ks.slice(0,-1).charAt(0).toUpperCase()+ks.slice(0,-1).slice(1)}`, ()=>this.startEdit(-1,{_sub:ks}), {background:'#1f5145',color:'#f3ead4',marginBottom:12,width:'100%'})}
+          {list.map((it,i)=>(
+            <div key={i} style={{display:'flex',alignItems:'center',gap:12,background:'#fffdf9',border:'1px solid #ece4d4',borderRadius:14,padding:'12px 14px',marginBottom:8}}>
+              <div style={{flex:1,fontSize:13.5,fontWeight:600,color:'#2c2823',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{getLabel(it,i)}</div>
+              {btn('Edit',()=>this.startEdit(i,{...it,_sub:ks}),{background:'#e6efe9',color:'#1f5145',fontSize:12,padding:'6px 12px'})}
+              {btn('✕',()=>{const a=[...list];a.splice(i,1);const kk=ks==='videos'?'kidsVideos':ks==='books'?'kidsBooks':'kidsQuotes';const sk=ks==='videos'?'liveKidsVideos':ks==='books'?'liveKidsBooks':'liveKidsQuotes';save(kk,sk,a,'Deleted');},{background:'#fdf0f2',color:'#6e2230',fontSize:12,padding:'6px 10px'})}
+            </div>
+          ))}
+        </div>
+      );
+    };
+
+    const sectionContent = {stories:renderStoriesSection,classifieds:renderClassifiedsSection,events:renderEventsSection,prayers:renderPrayersSection,announcement:renderAnnouncementSection,pinned:renderPinnedSection,kids:renderKidsSection};
+
+    const stats = [
+      { label:'Stories', val:st.liveStories.length, ink:'#1f5145', tint:'#e6efe9' },
+      { label:'Classifieds', val:st.liveClassifieds.length, ink:'#9a7a2c', tint:'#f3ecd9' },
+      { label:'Events', val:st.liveEvents.length, ink:'#6e2230', tint:'#f3e6e8' },
+      { label:'Kids Items', val:st.liveKidsVideos.length+st.liveKidsBooks.length+st.liveKidsQuotes.length, ink:'#2c5d52', tint:'#e6efe9' },
+    ];
 
     return (
-      <div style={{position:'absolute',inset:0,zIndex:18,background:'#f6f1e7',display:'flex',flexDirection:'column'}} className="asu">
-        <div style={{flexShrink:0,padding:'54px 20px 14px',background:'#fffdf9',borderBottom:'1px solid #ece4d4'}}>
-          <div style={{display:'flex',alignItems:'center',justifyContent:'space-between'}}>
-            <div onClick={()=>this.go('admin')} style={{fontSize:14,color:'#8c8270',fontWeight:600,cursor:'pointer'}}>Cancel</div>
-            <div style={{fontSize:15,fontWeight:600,color:'#27241f'}}>New {af}</div>
-            <div onClick={handlePublish} style={{fontSize:14,color:canPublish?'#1f5145':'#b3a890',fontWeight:700,cursor:'pointer'}}>Publish</div>
+      <div style={{display:'flex',flexDirection:'column',height:'100%'}} className="afu">
+        <div style={{flexShrink:0,padding:'12px 20px 0',background:'#fffdf9',borderBottom:'1px solid #ece4d4'}}>
+          <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:10}}>
+            <div onClick={()=>this.go('more')} style={{display:'inline-flex',alignItems:'center',gap:4,color:'#1f5145',fontSize:14,fontWeight:600,cursor:'pointer'}}>
+              <span style={{fontSize:18}}>‹</span> More
+            </div>
+            <div style={{fontFamily:'Spectral,serif',fontSize:18,fontWeight:600,color:'#27241f'}}>Admin Dashboard</div>
+            <div onClick={()=>this.setState({adminLoggedIn:false})} style={{fontSize:13,fontWeight:600,color:'#6e2230',cursor:'pointer'}}>Log out</div>
+          </div>
+          <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:8,marginBottom:12}}>
+            {stats.map((s,i) => (
+              <div key={i} style={{background:s.tint,borderRadius:12,padding:'8px 6px',textAlign:'center'}}>
+                <div style={{fontFamily:'Spectral,serif',fontSize:22,fontWeight:700,color:s.ink,lineHeight:1}}>{s.val}</div>
+                <div style={{fontSize:9.5,color:s.ink,fontWeight:600,marginTop:2,opacity:.75}}>{s.label}</div>
+              </div>
+            ))}
+          </div>
+          <div className="s" style={{display:'flex',gap:6,overflowX:'auto',paddingBottom:10}}>
+            {tabs.map(t=>(
+              <div key={t.id} onClick={()=>this.setState({adminSection:t.id,adminEditIdx:null,adminEditDraft:{}})} style={{flexShrink:0,padding:'7px 14px',borderRadius:20,fontSize:13,fontWeight:600,cursor:'pointer',background:sec===t.id?'#1f5145':'#efe7d7',color:sec===t.id?'#f3ead4':'#6f675a',transition:'background .15s'}}>
+                {t.label}
+              </div>
+            ))}
           </div>
         </div>
-        <div className="s" style={{flex:1,overflowY:'auto',padding:20}}>
-          <div style={{display:'flex',gap:8,marginBottom:20}}>
-            <span style={{fontSize:11,fontWeight:700,letterSpacing:.5,textTransform:'uppercase',color:'#9a7a2c',background:'#f3ecd9',padding:'6px 11px',borderRadius:8}}>Draft</span>
-            <span style={{fontSize:11,fontWeight:700,letterSpacing:.5,textTransform:'uppercase',color:'#8c8270',background:'#efe7d7',padding:'6px 11px',borderRadius:8}}>Not published</span>
-          </div>
-
-          <label style={{display:'block',fontSize:12.5,fontWeight:600,color:'#6f675a',marginBottom:7}}>Title</label>
-          <input
-            value={st.adminTitle}
-            onChange={e=>this.setState({adminTitle:e.target.value})}
-            placeholder="Enter a clear title"
-            style={{width:'100%',border:'1px solid #e6dcc8',background:'#fffdf9',borderRadius:13,padding:'13px 15px',fontSize:15,color:'#2c2823',outline:'none',marginBottom:18}}
-          />
-
-          {isStory && <>
-            <label style={{display:'block',fontSize:12.5,fontWeight:600,color:'#6f675a',marginBottom:7}}>Cover image</label>
-            <div style={{border:'1.5px dashed #d6cab2',borderRadius:16,padding:30,textAlign:'center',background:'#faf6ec',marginBottom:18,cursor:'pointer'}}>
-              <div style={{width:44,height:44,borderRadius:13,background:'#efe7d7',margin:'0 auto 10px',display:'flex',alignItems:'center',justifyContent:'center',color:'#9a7a2c',fontSize:22}}>↑</div>
-              <div style={{fontSize:13.5,color:'#6f675a',fontWeight:600}}>Drag an image or tap to upload</div>
-              <div style={{fontSize:11.5,color:'#a89d88',marginTop:3}}>JPG or PNG · up to 5 MB</div>
-            </div>
-            <div style={{display:'flex',gap:12,marginBottom:18}}>
-              <div style={{flex:1}}>
-                <label style={{display:'block',fontSize:12.5,fontWeight:600,color:'#6f675a',marginBottom:7}}>Expires after</label>
-                <CustomSelect
-                  value={st.adminExpiry||'24 hours'}
-                  options={['24 hours','48 hours','1 week']}
-                  onChange={v=>this.setState({adminExpiry:v})}
-                />
-              </div>
-              <div style={{flex:1}}>
-                <label style={{display:'block',fontSize:12.5,fontWeight:600,color:'#6f675a',marginBottom:7}}>Link button</label>
-                <CustomSelect
-                  value={st.adminLink||'None'}
-                  options={['None','View schedule','Register','Learn more']}
-                  onChange={v=>this.setState({adminLink:v})}
-                  muted={!st.adminLink||st.adminLink==='None'}
-                />
-              </div>
-            </div>
-          </>}
-
-          {isClass && (
-            <div style={{display:'flex',gap:12,marginBottom:18}}>
-              <div style={{flex:1}}>
-                <label style={{display:'block',fontSize:12.5,fontWeight:600,color:'#6f675a',marginBottom:7}}>Category</label>
-                <CustomSelect
-                  value={st.adminCat||'Food'}
-                  options={['Food','Butcher','Travel','Education','Services']}
-                  onChange={v=>this.setState({adminCat:v})}
-                />
-              </div>
-              <div style={{flex:1}}>
-                <label style={{display:'block',fontSize:12.5,fontWeight:600,color:'#6f675a',marginBottom:7}}>Location</label>
-                <input placeholder="City" style={{width:'100%',border:'1px solid #e6dcc8',background:'#fffdf9',borderRadius:13,padding:'13px 15px',fontSize:15,color:'#2c2823',outline:'none'}} />
-              </div>
-            </div>
-          )}
-
-          {isEvent && (
-            <>
-              <div style={{display:'flex',gap:12,marginBottom:18}}>
-                <div style={{flex:1}}>
-                  <label style={{display:'block',fontSize:12.5,fontWeight:600,color:'#6f675a',marginBottom:7}}>Date</label>
-                  <div style={{border:'1px solid #e6dcc8',background:'#fffdf9',borderRadius:13,padding:'13px 15px',fontSize:15,color:'#2c2823',display:'flex',justifyContent:'space-between'}}>Select <span style={{color:'#b3a890'}}>▾</span></div>
-                </div>
-                <div style={{flex:1}}>
-                  <label style={{display:'block',fontSize:12.5,fontWeight:600,color:'#6f675a',marginBottom:7}}>Type</label>
-                  <div style={{border:'1px solid #e6dcc8',background:'#fffdf9',borderRadius:13,padding:'13px 15px',fontSize:15,color:'#2c2823',display:'flex',justifyContent:'space-between'}}>Majlis <span style={{color:'#b3a890'}}>▾</span></div>
-                </div>
-              </div>
-              <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',background:'#fffdf9',border:'1px solid #e6dcc8',borderRadius:13,padding:'13px 15px',marginBottom:18}}>
-                <div>
-                  <div style={{fontSize:14,fontWeight:600,color:'#2c2823'}}>Send notification on the day</div>
-                  <div style={{fontSize:11.5,color:'#9a8f7c',marginTop:1}}>Auto-alerts the community at 9 AM</div>
-                </div>
-                <div style={{width:48,height:28,borderRadius:16,background:'#1f5145',position:'relative'}}>
-                  <div style={{position:'absolute',top:3,left:23,width:22,height:22,borderRadius:'50%',background:'#fff',boxShadow:'0 1px 3px rgba(0,0,0,.2)'}} />
-                </div>
-              </div>
-            </>
-          )}
-
-          <label style={{display:'block',fontSize:12.5,fontWeight:600,color:'#6f675a',marginBottom:7}}>{isStory?'Story text':isClass?'Business description':isEvent?'Event details':'Content'}</label>
-          <textarea
-            value={st.adminContent}
-            onChange={e=>this.setState({adminContent:e.target.value})}
-            placeholder="Write the content here…"
-            style={{width:'100%',minHeight:120,border:'1px solid #e6dcc8',background:'#fffdf9',borderRadius:13,padding:'13px 15px',fontSize:15,lineHeight:1.6,color:'#2c2823',outline:'none',resize:'none',marginBottom:22}}
-          />
-
-          {(st.adminTitle || st.adminContent) && (
-            <div style={{marginBottom:22}}>
-              <div style={{fontSize:11,letterSpacing:1.2,textTransform:'uppercase',fontWeight:700,color:'#b1a690',marginBottom:10}}>Preview</div>
-              <div style={{background:'#fffdf9',border:'1px solid #ece4d4',borderRadius:16,padding:16}}>
-                <div style={{fontFamily:'Spectral,serif',fontSize:17,fontWeight:600,color:'#2c2823'}}>{st.adminTitle || 'Untitled'}</div>
-                {st.adminContent && <div style={{fontSize:13,color:'#7a7264',marginTop:6,lineHeight:1.5}}>{st.adminContent}</div>}
-              </div>
-            </div>
-          )}
-
-          {!st.adminTitle && !st.adminContent && (
-            <div style={{background:'#fffdf9',border:'1px solid #ece4d4',borderRadius:16,padding:16,marginBottom:22}}>
-              <div style={{fontFamily:'Spectral,serif',fontSize:17,fontWeight:600,color:'#9a8f7c'}}>Preview appears here</div>
-              <div style={{fontSize:13,color:'#b1a690',marginTop:6,lineHeight:1.5}}>Fill in the fields above to see a live preview.</div>
-            </div>
-          )}
-
-          <div style={{display:'flex',gap:11,marginBottom:12}}>
-            <div onClick={handlePublish} style={{flex:1,textAlign:'center',padding:14,borderRadius:14,background:canPublish?'#1f5145':'#b3a890',color:'#fffdf9',fontSize:14.5,fontWeight:600,cursor:'pointer'}}>Publish now</div>
-            <div onClick={handleDraft} style={{flex:1,textAlign:'center',padding:14,borderRadius:14,border:'1px solid #e6dcc8',background:'#fffdf9',color:'#3f3a32',fontSize:14.5,fontWeight:600,cursor:'pointer'}}>Save draft</div>
-          </div>
-          <div onClick={()=>this.go('admin')} style={{textAlign:'center',padding:13,fontSize:13.5,color:'#9a8f7c',fontWeight:600,cursor:'pointer'}}>Cancel</div>
+        <div className="s" style={{flex:1,overflowY:'auto',padding:'16px 20px 110px'}}>
+          {sectionContent[sec]()}
         </div>
       </div>
     );
@@ -1449,7 +1697,7 @@ class App extends Component {
     const firstWeekday = new Date(calY, calM, 1).getDay();
     const monthName = now.toLocaleDateString('en-IE', { month:'long', year:'numeric' });
     const eventsByDay = {};
-    EVENT_DEFS.forEach(e => { const day = Math.min(todayD + e.offset, daysInMonth); eventsByDay[day] = e; });
+    st.liveEvents.forEach(e => { const day = Math.min(todayD + e.offset, daysInMonth); eventsByDay[day] = e; });
     const selDay = st.calDay || todayD;
     const selEvent = eventsByDay[selDay];
     const selDayGreg = new Date(calY, calM, selDay).toLocaleDateString('en-IE', { weekday:'long', day:'numeric', month:'long' });
@@ -1555,7 +1803,7 @@ class App extends Component {
 
         <div style={{fontFamily:'Spectral,serif',fontSize:17,fontWeight:600,color:'#2c2823',marginBottom:12}}>Learning Videos</div>
         <div className="s" style={{display:'flex',gap:13,overflowX:'auto',margin:'0 -20px 24px',padding:'0 20px 4px'}}>
-          {KIDS_LEARN.map((v,i) => (
+          {st.liveKidsVideos.map((v,i) => (
             <div key={i} style={{flexShrink:0,width:170,cursor:'pointer'}}>
               <div style={{position:'relative',aspectRatio:'16/10',borderRadius:15,overflow:'hidden',background:v.color,display:'flex',alignItems:'center',justifyContent:'center'}}>
                 <div style={{position:'absolute',inset:0,background:'repeating-linear-gradient(135deg,rgba(255,255,255,.05) 0 10px,transparent 10px 20px)'}} />
@@ -1572,7 +1820,7 @@ class App extends Component {
         <div style={{background:'linear-gradient(150deg,#1f5145,#163b30)',borderRadius:20,padding:22,color:'#f3ead4',marginBottom:24,position:'relative',overflow:'hidden'}}>
           <div style={{position:'absolute',right:-26,top:-26,width:110,height:110,borderRadius:'50%',border:'1px solid rgba(216,184,99,.2)'}} />
           <div style={{fontSize:10.5,letterSpacing:1.2,textTransform:'uppercase',fontWeight:700,color:'#d8b863'}}>Quote of the day</div>
-          {KIDS_QUOTES.map((q,i) => (
+          {st.liveKidsQuotes.map((q,i) => (
             <div key={i} style={{marginTop:12}}>
               <div style={{fontFamily:'Amiri,serif',fontSize:24,lineHeight:1.7,textAlign:'right'}} dir="rtl">{q.ar}</div>
               <div style={{fontFamily:'Spectral,serif',fontSize:16,marginTop:8,color:'#fff'}}>"{q.tr}"</div>
@@ -1583,7 +1831,7 @@ class App extends Component {
 
         <div style={{fontFamily:'Spectral,serif',fontSize:17,fontWeight:600,color:'#2c2823',marginBottom:12}}>Picture Books</div>
         <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:24}}>
-          {KIDS_BOOKS.map((b,i) => (
+          {st.liveKidsBooks.map((b,i) => (
             <div key={i} style={{cursor:'pointer'}}>
               <div style={{aspectRatio:'3/4',borderRadius:14,background:b.color,display:'flex',alignItems:'flex-end',padding:14,position:'relative',overflow:'hidden'}}>
                 <div style={{position:'absolute',left:0,top:0,bottom:0,width:7,background:b.ink,opacity:.55}} />
@@ -1725,8 +1973,9 @@ class App extends Component {
 
   /* ── STORY VIEWER ── */
   renderStoryViewer(st) {
-    const cur = STORIES[st.story] || {};
-    const bars = STORIES.map((_,i) => ({
+    const stories = st.liveStories;
+    const cur = stories[st.story] || {};
+    const bars = stories.map((_,i) => ({
       fill: i < st.story ? 100 : i===st.story ? st.storyProg : 0
     }));
     const isQuiz = cur.kind === 'quiz';
@@ -1852,7 +2101,7 @@ class App extends Component {
     const hijri = toHijri(now);
     const salaam = (hour<12?'Good morning':hour<18?'Good afternoon':'Good evening') + ' · السلام عليكم';
 
-    const showNav = st.screen!=='reading' && st.story===null && st.screen!=='adminForm';
+    const showNav = st.screen!=='reading' && st.story===null;
 
     return (
       <div className="app">
@@ -1865,7 +2114,7 @@ class App extends Component {
           {st.screen==='more'       && this.renderMore(st)}
           {st.screen==='about'      && this.renderAbout()}
           {st.screen==='offline'    && this.renderOffline()}
-          {st.screen==='admin'      && this.renderAdmin()}
+          {st.screen==='admin'      && this.renderAdmin(st)}
           {st.screen==='calendar'   && this.renderCalendar(st)}
           {st.screen==='kids'       && this.renderKids()}
           {st.screen==='qibla'      && this.renderQibla(st)}
@@ -1877,7 +2126,6 @@ class App extends Component {
         )}
         {showNav && this.renderNav(st)}
         {st.story !== null && this.renderStoryViewer(st)}
-        {st.screen==='adminForm' && this.renderAdminForm(st)}
         {st.toast && this.renderToast(st.toast)}
       </div>
     );
