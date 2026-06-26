@@ -130,6 +130,26 @@ const EVENT_DEFS = [
   { offset:9, title:'Muḥarram Begins',       type:'Programme', color:'#2c5d52', tint:'#e6efe9', desc:'First night of the annual Muḥarram programme. Nightly majālis after Maghrib.' },
 ];
 
+const CAL_EVENTS_DEFAULT = [
+  { date:'2026-06-26', title:'Community Iftar',       type:'Community', color:'#1f5145', tint:'#e6efe9', desc:'Shared community meal after Maghrib in the main hall. All families warmly welcome.' },
+  { date:'2026-06-28', title:'Wafāt Commemoration',   type:'Majlis',    color:'#6e2230', tint:'#f3e6e8', desc:'Evening majlis with recitation and lecture, beginning after ʿIshāʾ.' },
+  { date:'2026-07-01', title:'Youth Qurʾān Class',    type:'Class',     color:'#9a7a2c', tint:'#f3ecd9', desc:'Weekly tajwīd session for youth, 11:00 AM in the learning room.' },
+  { date:'2026-07-05', title:'Muḥarram Begins',       type:'Programme', color:'#2c5d52', tint:'#e6efe9', desc:'First night of the annual Muḥarram programme. Nightly majālis after Maghrib.' },
+];
+
+const HEALTH_TIPS = [
+  { title:'Drink More Water',    body:'Aim for 8 glasses daily. Hydration improves focus, digestion, and energy levels.', tag:'Hydration', color:'#2c5d52', tint:'#e6efe9' },
+  { title:'Walk After Meals',    body:'A 10-minute walk after meals aids digestion and helps regulate blood sugar.', tag:'Exercise', color:'#1f5145', tint:'#e6efe9' },
+  { title:'Sleep 7–8 Hours',     body:'Quality sleep strengthens immunity, improves mood, and sharpens mental clarity.', tag:'Sleep', color:'#6e2230', tint:'#f3e6e8' },
+  { title:'Reduce Sugar Intake', body:'Choose dates, fruit, or honey as natural sweeteners over processed sugar.', tag:'Nutrition', color:'#9a7a2c', tint:'#f3ecd9' },
+];
+
+const HEALTH_VIDEOS = [
+  { title:'Benefits of Morning Exercise',  meta:'Wellness · 3 min',     color:'#1f5145' },
+  { title:'Healthy Halal Meal Planning',   meta:'Nutrition · 5 min',    color:'#6e2230' },
+  { title:'Managing Stress with Faith',    meta:'Mental Health · 4 min', color:'#2c5d52' },
+];
+
 const KIDS_LEARN = [
   { title:'Who are the Ahlul Bayt?',     meta:'Animated · 4 min', color:'#1f5145' },
   { title:'The Story of Ghadīr',         meta:'Animated · 6 min', color:'#6e2230' },
@@ -315,6 +335,8 @@ const STRINGS = {
   'more.offline':  { English:'Offline Mode',     'العربية':'وضع عدم الاتصال','Français':'Mode hors ligne',     Urdu:'آف لائن موڈ' },
   'more.offlineSub':{ English:'Preview the offline fallback','العربية':'معاينة وضع عدم الاتصال','Français':'Aperçu du mode hors ligne','Urdu':'آف لائن موڈ کا جائزہ' },
   'more.language': { English:'App Language',     'العربية':'لغة التطبيق',    'Français':'Langue de l\'application','Urdu':'ایپ کی زبان' },
+  'more.health':   { English:'Health & Wellness', 'العربية':'الصحة والعافية', 'Français':'Santé et bien-être',  Urdu:'صحت اور تندرستی' },
+  'more.healthSub':{ English:'Tips, videos & community wellness','العربية':'نصائح وفيديوهات وصحة المجتمع','Français':'Conseils, vidéos et bien-être communautaire',Urdu:'صحت کے مشورے اور ویڈیوز' },
   'more.reading':  { English:'Reading Settings', 'العربية':'إعدادات القراءة','Français':'Paramètres de lecture','Urdu':'پڑھنے کی ترتیبات' },
   'more.dark':     { English:'Dark Mode',        'العربية':'الوضع الداكن',   'Français':'Mode sombre',         Urdu:'ڈارک موڈ' },
   'more.largeText':{ English:'Large Text',       'العربية':'نص كبير',        'Français':'Grand texte',         Urdu:'بڑا متن' },
@@ -331,7 +353,7 @@ function lsSet(key, val) {
 /* ── APP ── */
 class App extends Component {
   state = {
-    screen: 'home', libTab: 'dua', nahjTab: 'sermons', prayerTab: 'today', kidsTab: 'videos',
+    screen: 'home', libTab: 'dua', nahjTab: 'sermons', prayerTab: 'today', kidsTab: 'videos', healthTab: 'videos',
     dark: false, textSize: 1,
     story: null, storyProg: 0, quizPick: null,
     classCat: 'All', libCat: 'All',
@@ -339,7 +361,8 @@ class App extends Component {
     libQuery: '', classQuery: '',
     readingType: null, readingItem: null,
     toast: null, bookmarks: [],
-    calDay: null, lang: 'English', notifDismissed: false,
+    calDay: null, calViewY: new Date().getFullYear(), calViewM: new Date().getMonth(),
+    lang: 'English', notifDismissed: false,
     prayerPreset: 'ahlulbayt',
     adhanEnabled: true,
     notifEnabled: lsGet('notifEnabled', false),
@@ -365,6 +388,9 @@ class App extends Component {
     liveKidsBooks: lsGet('kidsBooks', KIDS_BOOKS),
     liveKidsQuotes: lsGet('kidsQuotes', KIDS_QUOTES),
     livePrayerPresets: lsGet('prayerPresets', PRAYER_PRESETS),
+    liveCalEvents: lsGet('calEvents', CAL_EVENTS_DEFAULT),
+    liveHealthTips: lsGet('healthTips', HEALTH_TIPS),
+    liveHealthVideos: lsGet('healthVideos', HEALTH_VIDEOS),
   };
 
   componentDidMount() {
@@ -567,7 +593,7 @@ class App extends Component {
       this.setState(st => {
         if (st.story === null) return {};
         if (STORIES[st.story] && STORIES[st.story].kind === 'quiz') return {};
-        const np = st.storyProg + 1.6;
+        const np = st.storyProg + 0.6;
         if (np >= 100) {
           if (st.story < STORIES.length - 1) return { story: st.story + 1, storyProg: 0, quizPick: null };
           clearInterval(this.storyTimer);
@@ -620,10 +646,8 @@ class App extends Component {
     const now = st.now;
     const todayD = now.getDate();
     const calY = now.getFullYear(), calM = now.getMonth();
-    const daysInMonth = new Date(calY, calM+1, 0).getDate();
-    const eventsByDay = {};
-    st.liveEvents.forEach(e => { const day = Math.min(todayD + e.offset, daysInMonth); eventsByDay[day] = e; });
-    const todayEvent = eventsByDay[todayD];
+    const todayStr = `${calY}-${String(calM+1).padStart(2,'0')}-${String(todayD).padStart(2,'0')}`;
+    const todayEvent = (st.liveCalEvents||[]).find(e => e.date === todayStr);
     const showNotif = !!todayEvent && !st.notifDismissed;
     return (
       <div style={{padding:'8px 20px 100px'}} className="afu">
@@ -1244,6 +1268,7 @@ class App extends Component {
     const links = [
       { label:this.t('more.calendar'),    sub:this.t('more.calSub'),        glyph:'ﮬ', go:()=>this.go('calendar') },
       { label:this.t('more.kids'),        sub:this.t('more.kidsSub'),       glyph:'ﻙ', go:()=>this.go('kids') },
+      { label:this.t('more.health'),      sub:this.t('more.healthSub'),     glyph:'♡', go:()=>this.go('health') },
       { label:this.t('more.qibla'),       sub:this.t('more.qiblaSub'),      glyph:'ﻕ', go:()=>this.go('qibla') },
       { label:this.t('more.classifieds'), sub:this.t('more.classSub'),      glyph:'ﺱ', go:()=>this.go('classifieds') },
       { label:this.t('more.admin'),       sub:this.t('more.adminSub'),      glyph:'⚙', go:()=>this.go('admin') },
@@ -1382,10 +1407,7 @@ class App extends Component {
             onKeyDown={e=>e.key==='Enter'&&this.handleAdminLogin()} />
           {st.adminLoginErr && <div style={{fontSize:12.5,color:'#6e2230',marginBottom:12,textAlign:'center'}}>Incorrect ID or password.</div>}
           <div onClick={this.handleAdminLogin} style={{width:'100%',textAlign:'center',padding:14,borderRadius:14,background:'#1f5145',color:'#f3ead4',fontSize:15,fontWeight:700,cursor:'pointer'}}>Sign In</div>
-          <div style={{marginTop:18,textAlign:'center',fontSize:11.5,color:'#b1a690',lineHeight:1.6}}>
-            <span style={{fontWeight:600,color:'#9a8f7c'}}>Demo credentials</span><br/>
-            ID: <code style={{background:'#f3ecd9',borderRadius:5,padding:'1px 5px',color:'#6f5c2c'}}>abiadmin</code> · Password: <code style={{background:'#f3ecd9',borderRadius:5,padding:'1px 5px',color:'#6f5c2c'}}>Admin123@</code>
-          </div>
+          <div style={{marginTop:14,textAlign:'center',fontSize:11.5,color:'#b1a690'}}>Contact community admin for access.</div>
         </div>
       </div>
     );
@@ -1415,6 +1437,7 @@ class App extends Component {
       {id:'announcement',label:'Announcement'},
       {id:'pinned',label:'Pinned Msg'},
       {id:'kids',label:'Kids'},
+      {id:'health',label:'Health'},
     ];
 
     const inp = {width:'100%',border:'1px solid #e6dcc8',background:'#fffdf9',borderRadius:11,padding:'11px 13px',fontSize:14,color:'#2c2823',outline:'none',marginBottom:11,boxSizing:'border-box'};
@@ -1552,20 +1575,20 @@ class App extends Component {
         const isNew = st.adminEditIdx === -1;
         const type = d.type || 'Community';
         const saveItem = () => {
-          const list = [...st.liveEvents];
-          const item = {title:d.title||'',type,color:EVENT_COLORS[type],tint:EVENT_TINTS[type],desc:d.desc||'',offset:parseInt(d.offset||0)};
+          const list = [...(st.liveCalEvents||[])];
+          const item = {title:d.title||'',type,color:EVENT_COLORS[type],tint:EVENT_TINTS[type],desc:d.desc||'',date:d.date||''};
           if (isNew) list.push(item); else list[st.adminEditIdx] = item;
-          save('events','liveEvents',list, isNew?'Event added!':'Event updated!');
+          save('calEvents','liveCalEvents',list, isNew?'Event added!':'Event updated!');
         };
         return (
           <div style={{padding:'0 0 20px'}}>
-            <div style={{fontSize:13,fontWeight:700,color:'#27241f',marginBottom:14}}>{isNew?'Add Event':'Edit Event'}</div>
+            <div style={{fontSize:13,fontWeight:700,color:'#27241f',marginBottom:14}}>{isNew?'Add Calendar Event':'Edit Calendar Event'}</div>
             <input value={d.title||''} onChange={e=>this.setDraft({title:e.target.value})} placeholder="Event title" style={inp}/>
             <select value={d.type||'Community'} onChange={e=>this.setDraft({type:e.target.value})} style={{...inp,cursor:'pointer'}}>
               {EVENT_TYPES.map(t=><option key={t} value={t}>{t}</option>)}
             </select>
             <input value={d.desc||''} onChange={e=>this.setDraft({desc:e.target.value})} placeholder="Description" style={inp}/>
-            <input value={d.offset!==undefined?d.offset:''} onChange={e=>this.setDraft({offset:e.target.value})} placeholder="Days from today (0 = today)" type="number" min="0" max="30" style={inp}/>
+            <input value={d.date||''} onChange={e=>this.setDraft({date:e.target.value})} type="date" min="2024-01-01" max="2036-12-31" style={inp}/>
             <div style={{display:'flex',gap:10}}>
               {btn('Save', saveItem, {flex:1,background:'#1f5145',color:'#f3ead4'})}
               {btn('Cancel', this.cancelEdit, {flex:1,border:'1px solid #e6dcc8',background:'#fffdf9',color:'#3f3a32'})}
@@ -1575,16 +1598,16 @@ class App extends Component {
       }
       return (
         <div>
-          {btn('+ Add Event', ()=>this.startEdit(-1,{type:'Community',offset:0}), {background:'#1f5145',color:'#f3ead4',marginBottom:14,width:'100%'})}
-          {st.liveEvents.map((e,i)=>(
+          {btn('+ Add Event', ()=>this.startEdit(-1,{type:'Community',date:''}), {background:'#1f5145',color:'#f3ead4',marginBottom:14,width:'100%'})}
+          {(st.liveCalEvents||[]).map((e,i)=>(
             <div key={i} style={{display:'flex',alignItems:'center',gap:12,background:'#fffdf9',border:'1px solid #ece4d4',borderRadius:14,padding:'12px 14px',marginBottom:8}}>
               <div style={{width:10,height:10,borderRadius:'50%',background:e.color,flexShrink:0}} />
               <div style={{flex:1,minWidth:0}}>
                 <div style={{fontSize:13.5,fontWeight:600,color:'#2c2823',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{e.title}</div>
-                <div style={{fontSize:11,color:'#9a8f7c'}}>{e.type} · +{e.offset} days</div>
+                <div style={{fontSize:11,color:'#9a8f7c'}}>{e.type} · {e.date||'No date'}</div>
               </div>
               {btn('Edit', ()=>this.startEdit(i,{...e}), {background:'#e6efe9',color:'#1f5145',fontSize:12,padding:'6px 12px'})}
-              {btn('✕', ()=>{const a=[...st.liveEvents];a.splice(i,1);save('events','liveEvents',a,'Deleted');}, {background:'#fdf0f2',color:'#6e2230',fontSize:12,padding:'6px 10px'})}
+              {btn('✕', ()=>{const a=[...(st.liveCalEvents||[])];a.splice(i,1);save('calEvents','liveCalEvents',a,'Deleted');}, {background:'#fdf0f2',color:'#6e2230',fontSize:12,padding:'6px 10px'})}
             </div>
           ))}
         </div>
@@ -1762,13 +1785,69 @@ class App extends Component {
       );
     };
 
-    const sectionContent = {stories:renderStoriesSection,classifieds:renderClassifiedsSection,events:renderEventsSection,prayers:renderPrayersSection,announcement:renderAnnouncementSection,pinned:renderPinnedSection,kids:renderKidsSection};
+    /* ─ HEALTH ─ */
+    const renderHealthSection = () => {
+      const d = st.adminEditDraft;
+      const subSec = d._sub || 'tips';
+      const HEALTH_TAGS = ['Hydration','Exercise','Sleep','Nutrition','Mental Health','General'];
+      const TAG_COLORS = {'Hydration':'#2c5d52','Exercise':'#1f5145','Sleep':'#6e2230','Nutrition':'#9a7a2c','Mental Health':'#3a4a78','General':'#b8923f'};
+      const TAG_TINTS  = {'Hydration':'#e6efe9','Exercise':'#e6efe9','Sleep':'#f3e6e8','Nutrition':'#f3ecd9','Mental Health':'#e8ebf4','General':'#f3ecd9'};
+      if (editing) {
+        const isNew = st.adminEditIdx === -1;
+        if (subSec === 'videos') {
+          const save2 = ()=>{const a=[...(st.liveHealthVideos||[])];const it={title:d.title||'',meta:d.meta||'',color:d.color||'#1f5145'};if(isNew)a.push(it);else a[st.adminEditIdx]=it;save('healthVideos','liveHealthVideos',a,isNew?'Video added!':'Updated!');};
+          return (<div style={{padding:'0 0 20px'}}>
+            <div style={{fontSize:13,fontWeight:700,color:'#27241f',marginBottom:14}}>{isNew?'Add Video':'Edit Video'}</div>
+            <input value={d.title||''} onChange={e=>this.setDraft({title:e.target.value})} placeholder="Title" style={inp}/>
+            <input value={d.meta||''} onChange={e=>this.setDraft({meta:e.target.value})} placeholder="Meta (e.g. Wellness · 3 min)" style={inp}/>
+            <select value={d.color||'#1f5145'} onChange={e=>this.setDraft({color:e.target.value})} style={{...inp,cursor:'pointer'}}>
+              {COLORS.map(c=><option key={c} value={c}>{COLOR_NAMES[c]}</option>)}
+            </select>
+            <div style={{display:'flex',gap:10}}>{btn('Save',save2,{flex:1,background:'#1f5145',color:'#f3ead4'})}{btn('Cancel',this.cancelEdit,{flex:1,border:'1px solid #e6dcc8',background:'#fffdf9',color:'#3f3a32'})}</div>
+          </div>);
+        }
+        if (subSec === 'tips') {
+          const save2 = ()=>{const tag=d.tag||'General';const a=[...(st.liveHealthTips||[])];const it={title:d.title||'',body:d.body||'',tag,color:TAG_COLORS[tag]||'#2c5d52',tint:TAG_TINTS[tag]||'#e6efe9'};if(isNew)a.push(it);else a[st.adminEditIdx]=it;save('healthTips','liveHealthTips',a,isNew?'Tip added!':'Updated!');};
+          return (<div style={{padding:'0 0 20px'}}>
+            <div style={{fontSize:13,fontWeight:700,color:'#27241f',marginBottom:14}}>{isNew?'Add Health Tip':'Edit Health Tip'}</div>
+            <input value={d.title||''} onChange={e=>this.setDraft({title:e.target.value})} placeholder="Title" style={inp}/>
+            <textarea value={d.body||''} onChange={e=>this.setDraft({body:e.target.value})} placeholder="Body text" rows={3} style={{...inp,resize:'none'}}/>
+            <select value={d.tag||'General'} onChange={e=>{const t=e.target.value;this.setDraft({tag:t,color:TAG_COLORS[t]||'#2c5d52',tint:TAG_TINTS[t]||'#e6efe9'});}} style={{...inp,cursor:'pointer'}}>
+              {HEALTH_TAGS.map(t=><option key={t} value={t}>{t}</option>)}
+            </select>
+            <div style={{display:'flex',gap:10}}>{btn('Save',save2,{flex:1,background:'#1f5145',color:'#f3ead4'})}{btn('Cancel',this.cancelEdit,{flex:1,border:'1px solid #e6dcc8',background:'#fffdf9',color:'#3f3a32'})}</div>
+          </div>);
+        }
+      }
+      const hTabs = [{id:'tips',label:'Tips'},{id:'videos',label:'Videos'}];
+      const hs = d._sub || 'tips';
+      const hList = hs==='tips' ? (st.liveHealthTips||[]) : (st.liveHealthVideos||[]);
+      return (
+        <div>
+          <div style={{display:'flex',gap:6,background:'#efe7d7',borderRadius:12,padding:4,marginBottom:14}}>
+            {hTabs.map(t=>(
+              <div key={t.id} onClick={()=>this.setState({adminEditDraft:{_sub:t.id}})} style={{flex:1,textAlign:'center',padding:'7px 6px',borderRadius:9,fontSize:13,fontWeight:600,cursor:'pointer',background:hs===t.id?'#fffdf9':'transparent',color:hs===t.id?'#1f5145':'#8c8270'}}>{t.label}</div>
+            ))}
+          </div>
+          {btn(`+ Add ${hs==='tips'?'Tip':'Video'}`, ()=>this.startEdit(-1,{_sub:hs}), {background:'#1f5145',color:'#f3ead4',marginBottom:12,width:'100%'})}
+          {hList.map((it,i)=>(
+            <div key={i} style={{display:'flex',alignItems:'center',gap:12,background:'#fffdf9',border:'1px solid #ece4d4',borderRadius:14,padding:'12px 14px',marginBottom:8}}>
+              <div style={{flex:1,fontSize:13.5,fontWeight:600,color:'#2c2823',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{it.title}</div>
+              {btn('Edit',()=>this.startEdit(i,{...it,_sub:hs}),{background:'#e6efe9',color:'#1f5145',fontSize:12,padding:'6px 12px'})}
+              {btn('✕',()=>{const a=[...hList];a.splice(i,1);const kk=hs==='tips'?'healthTips':'healthVideos';const sk=hs==='tips'?'liveHealthTips':'liveHealthVideos';save(kk,sk,a,'Deleted');},{background:'#fdf0f2',color:'#6e2230',fontSize:12,padding:'6px 10px'})}
+            </div>
+          ))}
+        </div>
+      );
+    };
+
+    const sectionContent = {stories:renderStoriesSection,classifieds:renderClassifiedsSection,events:renderEventsSection,prayers:renderPrayersSection,announcement:renderAnnouncementSection,pinned:renderPinnedSection,kids:renderKidsSection,health:renderHealthSection};
 
     const stats = [
       { label:'Stories', val:st.liveStories.length, ink:'#1f5145', tint:'#e6efe9' },
       { label:'Classifieds', val:st.liveClassifieds.length, ink:'#9a7a2c', tint:'#f3ecd9' },
-      { label:'Events', val:st.liveEvents.length, ink:'#6e2230', tint:'#f3e6e8' },
-      { label:'Kids Items', val:st.liveKidsVideos.length+st.liveKidsBooks.length+st.liveKidsQuotes.length, ink:'#2c5d52', tint:'#e6efe9' },
+      { label:'Cal Events', val:(st.liveCalEvents||[]).length, ink:'#6e2230', tint:'#f3e6e8' },
+      { label:'Health', val:(st.liveHealthTips||[]).length+(st.liveHealthVideos||[]).length, ink:'#2c5d52', tint:'#e6efe9' },
     ];
 
     return (
@@ -1807,27 +1886,37 @@ class App extends Component {
   /* ── CALENDAR ── */
   renderCalendar(st) {
     const now = st.now;
-    const calY = now.getFullYear(), calM = now.getMonth();
-    const todayD = now.getDate();
+    const todayY = now.getFullYear(), todayM = now.getMonth(), todayD = now.getDate();
+    const calY = st.calViewY || todayY;
+    const calM = st.calViewM !== undefined ? st.calViewM : todayM;
+    const isCurrentMonth = calY === todayY && calM === todayM;
     const daysInMonth = new Date(calY, calM+1, 0).getDate();
     const firstWeekday = new Date(calY, calM, 1).getDay();
-    const monthName = now.toLocaleDateString('en-IE', { month:'long', year:'numeric' });
+    const monthName = new Date(calY, calM, 1).toLocaleDateString('en-IE', { month:'long', year:'numeric' });
+
     const eventsByDay = {};
-    st.liveEvents.forEach(e => { const day = Math.min(todayD + e.offset, daysInMonth); eventsByDay[day] = e; });
-    const selDay = st.calDay || todayD;
+    (st.liveCalEvents||[]).forEach(e => {
+      const [ey,em,ed] = (e.date||'').split('-').map(Number);
+      if (ey===calY && em===calM+1) eventsByDay[ed] = e;
+    });
+
+    const selDay = st.calDay || (isCurrentMonth ? todayD : 1);
     const selEvent = eventsByDay[selDay];
-    const selDayGreg = new Date(calY, calM, selDay).toLocaleDateString('en-IE', { weekday:'long', day:'numeric', month:'long' });
+    const selDayDate = new Date(calY, calM, selDay);
+    const selDayGreg = selDayDate.toLocaleDateString('en-IE', { weekday:'long', day:'numeric', month:'long' });
+    const selHijri = toHijri(selDayDate);
+
     const calEventList = Object.keys(eventsByDay).map(d => ({ day:+d, ...eventsByDay[d],
       dateLabel: new Date(calY, calM, +d).toLocaleDateString('en-IE', { day:'numeric', month:'short' })
     })).sort((a,b) => a.day - b.day);
+
     const weekHead = ['S','M','T','W','T','F','S'];
-    const selHijri = toHijri(new Date(calY, calM, selDay));
     const hijriMonthYear = toHijri(new Date(calY, calM, 15)).split(' ').slice(1).join(' ');
     const cells = [];
     for (let i = 0; i < firstWeekday; i++) cells.push({ blank:true, key:'b'+i });
     for (let d = 1; d <= daysInMonth; d++) {
       const ev = eventsByDay[d];
-      const isToday = d === todayD;
+      const isToday = isCurrentMonth && d === todayD;
       const sel = selDay === d;
       const hijriDay = toHijri(new Date(calY, calM, d)).split(' ')[0];
       cells.push({ blank:false, key:'d'+d, day:d, hijriDay,
@@ -1837,22 +1926,33 @@ class App extends Component {
         dot: ev ? ev.color : 'transparent',
       });
     }
+
+    const canPrev = !(calY <= 2024 && calM === 0);
+    const canNext = !(calY >= 2036 && calM === 11);
+    const goMonth = (dy, dm) => {
+      let y=calY+dy, m=calM+dm;
+      if (m<0){m=11;y--;} if (m>11){m=0;y++;}
+      y=Math.max(2024,Math.min(2036,y));
+      this.setState({calViewY:y,calViewM:m,calDay:null});
+    };
+
     return (
       <div style={{padding:'8px 20px 100px'}} className="afu">
         <div style={{padding:'8px 0 16px'}}>
           <div style={{fontSize:13,color:'#9a8f7c',fontWeight:500}}>{this.t('cal.community')}</div>
           <div style={{fontFamily:'Spectral,serif',fontSize:26,fontWeight:600,color:'#27241f',marginTop:2}}>{this.t('cal.title')}</div>
         </div>
-        <div style={{display:'flex',alignItems:'flex-end',justifyContent:'space-between',marginBottom:14}}>
-          <div>
-            <div style={{fontFamily:'Spectral,serif',fontSize:20,fontWeight:600,color:'#2c2823'}}>{monthName}</div>
-            <div style={{fontSize:11.5,color:'#9a7a2c',fontWeight:500,marginTop:1}}>{hijriMonthYear}</div>
+
+        {/* Month navigation */}
+        <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:14}}>
+          <div onClick={()=>canPrev&&goMonth(0,-1)} style={{width:36,height:36,borderRadius:10,background:canPrev?'#fffdf9':'#f5f0e8',border:'1px solid #ece4d4',display:'flex',alignItems:'center',justifyContent:'center',cursor:canPrev?'pointer':'default',color:canPrev?'#2c2823':'#c9bfae',fontSize:18,fontWeight:700}}>‹</div>
+          <div style={{textAlign:'center'}}>
+            <div style={{fontFamily:'Spectral,serif',fontSize:19,fontWeight:700,color:'#2c2823'}}>{monthName}</div>
+            <div style={{fontSize:11,color:'#9a7a2c',fontWeight:500,marginTop:1}}>{hijriMonthYear}</div>
           </div>
-          <div style={{display:'flex',alignItems:'center',gap:6}}>
-            <span style={{width:8,height:8,borderRadius:'50%',background:'#1f5145'}} />
-            <span style={{fontSize:11.5,color:'#9a8f7c'}}>{this.t('cal.hasEvent')}</span>
-          </div>
+          <div onClick={()=>canNext&&goMonth(0,1)} style={{width:36,height:36,borderRadius:10,background:canNext?'#fffdf9':'#f5f0e8',border:'1px solid #ece4d4',display:'flex',alignItems:'center',justifyContent:'center',cursor:canNext?'pointer':'default',color:canNext?'#2c2823':'#c9bfae',fontSize:18,fontWeight:700}}>›</div>
         </div>
+
         <div style={{display:'grid',gridTemplateColumns:'repeat(7,1fr)',marginBottom:4}}>
           {weekHead.map((w,i) => <div key={i} style={{textAlign:'center',fontSize:11,fontWeight:700,color:'#b1a690'}}>{w}</div>)}
         </div>
@@ -1867,10 +1967,11 @@ class App extends Component {
             </div>
           ))}
         </div>
+
         <div style={{background:'#fffdf9',border:'1px solid #ece4d4',borderRadius:18,padding:17,marginTop:16}}>
           <div style={{fontSize:15,fontWeight:600,color:'#2c2823'}}>{selDayGreg}</div>
           <div style={{fontSize:12.5,color:'#9a7a2c',fontWeight:500,marginTop:3}}>{selHijri} AH</div>
-          {selEvent && (
+          {selEvent ? (
             <div style={{display:'flex',gap:12,alignItems:'flex-start',marginTop:14,paddingTop:14,borderTop:'1px solid #f1ebdd'}}>
               <div style={{flexShrink:0,width:38,height:38,borderRadius:11,background:selEvent.tint,display:'flex',alignItems:'center',justifyContent:'center'}}>
                 <span style={{width:11,height:11,borderRadius:'50%',background:selEvent.color}} />
@@ -1880,27 +1981,46 @@ class App extends Component {
                 <div style={{fontSize:15,fontWeight:600,color:'#2c2823',marginTop:2}}>{selEvent.title}</div>
                 <div style={{fontSize:12.5,color:'#7a7264',marginTop:4,lineHeight:1.5}}>{selEvent.desc}</div>
               </div>
+              {st.adminLoggedIn && (
+                <div onClick={()=>this.setState({screen:'admin',adminSection:'events',adminEditIdx:null,adminEditDraft:{date:`${calY}-${String(calM+1).padStart(2,'0')}-${String(selDay).padStart(2,'0')}`,type:selEvent.type,title:selEvent.title,desc:selEvent.desc}})} style={{flexShrink:0,fontSize:11,color:'#1f5145',fontWeight:600,cursor:'pointer',padding:'4px 8px',border:'1px solid #c4ddd7',borderRadius:8,background:'#eef7f4'}}>Edit</div>
+              )}
+            </div>
+          ) : (
+            <div style={{marginTop:10,display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+              <div style={{fontSize:13,color:'#b1a690'}}>{this.t('cal.noEvent')}</div>
+              {st.adminLoggedIn && (
+                <div onClick={()=>this.setState({screen:'admin',adminSection:'events',adminEditIdx:-1,adminEditDraft:{date:`${calY}-${String(calM+1).padStart(2,'0')}-${String(selDay).padStart(2,'0')}`,type:'Community'}})} style={{fontSize:11,color:'#1f5145',fontWeight:600,cursor:'pointer',padding:'5px 10px',border:'1px solid #c4ddd7',borderRadius:8,background:'#eef7f4'}}>+ Add event</div>
+              )}
             </div>
           )}
-          {!selEvent && <div style={{fontSize:13,color:'#b1a690',marginTop:8}}>{this.t('cal.noEvent')}</div>}
         </div>
-        <div style={{fontSize:11,letterSpacing:1.2,textTransform:'uppercase',fontWeight:700,color:'#b1a690',margin:'22px 0 12px'}}>{this.t('cal.upcoming')}</div>
-        <div style={{display:'flex',flexDirection:'column',gap:10}}>
-          {calEventList.map((e,i) => (
-            <div key={i} style={{display:'flex',gap:13,alignItems:'center',background:'#fffdf9',border:'1px solid #ece4d4',borderRadius:15,padding:'13px 15px'}}>
-              <div style={{flexShrink:0,width:46,textAlign:'center',borderRight:'1px solid #f1ebdd',paddingRight:11}}>
-                <div style={{fontSize:18,fontWeight:700,color:e.color,lineHeight:1}}>{e.day}</div>
-                <div style={{fontSize:10,color:'#a89d88',marginTop:2}}>{e.dateLabel}</div>
+
+        {calEventList.length > 0 && <>
+          <div style={{fontSize:11,letterSpacing:1.2,textTransform:'uppercase',fontWeight:700,color:'#b1a690',margin:'22px 0 12px'}}>{this.t('cal.upcoming')}</div>
+          <div style={{display:'flex',flexDirection:'column',gap:10}}>
+            {calEventList.map((e,i) => (
+              <div key={i} onClick={()=>this.setState({calDay:e.day})} style={{display:'flex',gap:13,alignItems:'center',background:'#fffdf9',border:'1px solid #ece4d4',borderRadius:15,padding:'13px 15px',cursor:'pointer'}}>
+                <div style={{flexShrink:0,width:46,textAlign:'center',borderRight:'1px solid #f1ebdd',paddingRight:11}}>
+                  <div style={{fontSize:18,fontWeight:700,color:e.color,lineHeight:1}}>{e.day}</div>
+                  <div style={{fontSize:10,color:'#a89d88',marginTop:2}}>{e.dateLabel}</div>
+                </div>
+                <div style={{flex:1}}>
+                  <div style={{fontSize:10,letterSpacing:.6,textTransform:'uppercase',fontWeight:700,color:e.color}}>{e.type}</div>
+                  <div style={{fontSize:14.5,fontWeight:600,color:'#2c2823',marginTop:1}}>{e.title}</div>
+                </div>
               </div>
-              <div style={{flex:1}}>
-                <div style={{fontSize:10,letterSpacing:.6,textTransform:'uppercase',fontWeight:700,color:e.color}}>{e.type}</div>
-                <div style={{fontSize:14.5,fontWeight:600,color:'#2c2823',marginTop:1}}>{e.title}</div>
-              </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        </>}
+
+        {st.adminLoggedIn && (
+          <div onClick={()=>this.setState({screen:'admin',adminSection:'events',adminEditIdx:null,adminEditDraft:{}})} style={{display:'flex',alignItems:'center',justifyContent:'center',gap:8,marginTop:22,padding:'12px',borderRadius:14,border:'1px dashed #c4ddd7',background:'#f4fbf8',cursor:'pointer'}}>
+            <span style={{color:'#1f5145',fontSize:14,fontWeight:600}}>⚙ Manage Calendar Events</span>
+          </div>
+        )}
+
         <div style={{textAlign:'center',fontSize:11.5,color:'#a89d88',lineHeight:1.5,padding:'18px 24px 0'}}>
-          Events are managed by Ahlul Bayt Ireland. You'll receive a notification on the day of each event.
+          Events are managed by Ahlul Bayt Ireland.
         </div>
       </div>
     );
@@ -1992,6 +2112,77 @@ class App extends Component {
             <span style={{color:'#bba35f',fontSize:20}}>→</span>
           </div>
         </>)}
+      </div>
+    );
+  }
+
+  /* ── HEALTH & WELLNESS ── */
+  renderHealth(st) {
+    const ht = st.healthTab || 'videos';
+    const tabStyle = k => ({
+      flex:1, textAlign:'center', padding:'8px 6px', borderRadius:10, fontSize:13, fontWeight:600,
+      cursor:'pointer', background: ht===k?'#fffdf9':'transparent',
+      color: ht===k?'#1f5145':'#8c8270', transition:'background .15s',
+    });
+    return (
+      <div style={{padding:'8px 20px 100px'}} className="afu">
+        <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'8px 0 16px'}}>
+          <div>
+            <div style={{fontSize:13,color:st.dark?'#8e9490':'#9a8f7c',fontWeight:500}}>Community</div>
+            <div style={{fontFamily:'Spectral,serif',fontSize:26,fontWeight:600,color:st.dark?'#ece6d8':'#27241f',marginTop:2}}>{this.t('more.health')}</div>
+          </div>
+          {st.adminLoggedIn && (
+            <div onClick={()=>this.setState({screen:'admin',adminSection:'health'})} style={{fontSize:12,fontWeight:700,color:'#1f5145',cursor:'pointer',background:'#e6efe9',borderRadius:10,padding:'6px 12px'}}>Edit</div>
+          )}
+        </div>
+
+        <div style={{display:'flex',gap:6,background:'#efe7d7',borderRadius:14,padding:4,marginBottom:18}}>
+          {[['videos','Videos'],['tips','Tips']].map(([k,label]) => (
+            <div key={k} onClick={()=>this.setState({healthTab:k})} style={tabStyle(k)}>{label}</div>
+          ))}
+        </div>
+
+        {ht === 'videos' && (<>
+          <div style={{position:'relative',overflow:'hidden',borderRadius:20,aspectRatio:'16/10',background:'linear-gradient(150deg,#2a6a58,#143b2f)',marginBottom:10,cursor:'pointer',display:'flex',alignItems:'flex-end',padding:18}}>
+            <div style={{position:'absolute',inset:0,background:'repeating-linear-gradient(135deg,rgba(255,255,255,.05) 0 12px,transparent 12px 24px)'}} />
+            <div style={{position:'absolute',top:'50%',left:'50%',transform:'translate(-50%,-50%)',width:58,height:58,borderRadius:'50%',background:'rgba(255,253,249,.92)',display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'0 8px 20px -6px rgba(0,0,0,.4)'}}>
+              <div style={{width:0,height:0,borderLeft:'18px solid #1f5145',borderTop:'11px solid transparent',borderBottom:'11px solid transparent',marginLeft:4}} />
+            </div>
+            <div style={{position:'relative',color:'#fff'}}>
+              <div style={{fontSize:10.5,letterSpacing:1,textTransform:'uppercase',fontWeight:700,color:'#d8b863'}}>Featured · Wellness</div>
+              <div style={{fontFamily:'Spectral,serif',fontSize:19,fontWeight:600,marginTop:3}}>Islam & Healthy Living</div>
+            </div>
+          </div>
+          <div style={{fontSize:11.5,color:'#a89d88',marginBottom:22}}>Community health and wellness videos, handpicked for you.</div>
+          <div style={{fontFamily:'Spectral,serif',fontSize:17,fontWeight:600,color:st.dark?'#ece6d8':'#2c2823',marginBottom:12}}>Videos</div>
+          <div className="s" style={{display:'flex',gap:13,overflowX:'auto',margin:'0 -20px 24px',padding:'0 20px 4px'}}>
+            {(st.liveHealthVideos||[]).map((v,i) => (
+              <div key={i} style={{flexShrink:0,width:170,cursor:'pointer'}}>
+                <div style={{position:'relative',aspectRatio:'16/10',borderRadius:15,overflow:'hidden',background:v.color,display:'flex',alignItems:'center',justifyContent:'center'}}>
+                  <div style={{position:'absolute',inset:0,background:'repeating-linear-gradient(135deg,rgba(255,255,255,.05) 0 10px,transparent 10px 20px)'}} />
+                  <div style={{width:40,height:40,borderRadius:'50%',background:'rgba(255,253,249,.92)',display:'flex',alignItems:'center',justifyContent:'center',position:'relative'}}>
+                    <div style={{width:0,height:0,borderLeft:'13px solid #1f5145',borderTop:'8px solid transparent',borderBottom:'8px solid transparent',marginLeft:3}} />
+                  </div>
+                </div>
+                <div style={{fontSize:13.5,fontWeight:600,color:st.dark?'#ece6d8':'#2c2823',marginTop:8,lineHeight:1.3}}>{v.title}</div>
+                <div style={{fontSize:11,color:'#9a8f7c',marginTop:2}}>{v.meta}</div>
+              </div>
+            ))}
+          </div>
+        </>)}
+
+        {ht === 'tips' && (
+          <div style={{display:'flex',flexDirection:'column',gap:12,marginBottom:24}}>
+            {(st.liveHealthTips||[]).map((tip,i) => (
+              <div key={i} style={{background:tip.tint||'#e6efe9',borderRadius:18,padding:'18px 20px',position:'relative',overflow:'hidden'}}>
+                <div style={{position:'absolute',right:-14,top:-14,width:70,height:70,borderRadius:'50%',background:tip.color,opacity:.12}} />
+                <div style={{display:'inline-block',background:tip.color,color:'#fff',borderRadius:20,padding:'3px 11px',fontSize:11,fontWeight:700,marginBottom:10,letterSpacing:.5}}>{tip.tag}</div>
+                <div style={{fontFamily:'Spectral,serif',fontSize:17,fontWeight:600,color:'#27241f',marginBottom:6}}>{tip.title}</div>
+                <div style={{fontSize:13.5,color:'#5a5041',lineHeight:1.6}}>{tip.body}</div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     );
   }
@@ -2293,6 +2484,7 @@ class App extends Component {
           {st.screen==='admin'      && this.renderAdmin(st)}
           {st.screen==='calendar'   && this.renderCalendar(st)}
           {st.screen==='kids'       && this.renderKids(st)}
+          {st.screen==='health'     && this.renderHealth(st)}
           {st.screen==='qibla'      && this.renderQibla(st)}
           {st.screen==='stories'    && this.renderStories(st)}
         </div>
