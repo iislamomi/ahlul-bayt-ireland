@@ -633,14 +633,13 @@ class App extends Component {
       ...p, isNext: p.name===next.name, last: i===activePrayers.length-1
     }));
     const quickCards = [
-      { title:this.t('home.classTitle'), sub:this.t('class.community'),   glyph:'ﺱ', tint:'#f3ecd9', ink:'#9a7a2c', span:'2', go:()=>this.go('classifieds') },
-      { title:this.t('prayer.title'),    sub:"Today's salāh",             glyph:'ﭖ', tint:'#e6efe9', ink:'#1f5145', span:'1', go:()=>this.go('prayer') },
-      { title:this.t('cal.title'),       sub:'Events & Hijri dates',      glyph:'ﮬ', tint:'#e8ebf4', ink:'#3a4a78', span:'1', go:()=>this.go('calendar') },
+      { title:'Nahj al-Balāgha', sub:'Sermons · Letters · Sayings',glyph:'ﻥ', tint:'#e6efe9', ink:'#2c5d52', span:'2', go:()=>this.setState({screen:'library',libTab:'nahj',libCat:'All'}) },
       { title:'Duʿāʾ',           sub:'Supplications',              glyph:'ﺀ', tint:'#f3ecd9', ink:'#9a7a2c', span:'1', go:()=>this.setState({screen:'library',libTab:'dua',libCat:'All'}) },
       { title:'Ziyārah',          sub:'Salutations',                glyph:'ﺯ', tint:'#f3e6e8', ink:'#6e2230', span:'1', go:()=>this.setState({screen:'library',libTab:'ziyarah',libCat:'All'}) },
-      { title:'Nahj al-Balāgha', sub:'Sermons · Letters · Sayings',glyph:'ﻥ', tint:'#e6efe9', ink:'#2c5d52', span:'2', go:()=>this.setState({screen:'library',libTab:'nahj',libCat:'All'}) },
       { title:this.t('kids.title'),      sub:'Books · videos · quizzes',  glyph:'ﻙ', tint:'#f3ecd9', ink:'#b8923f', span:'1', go:()=>this.go('kids') },
+      { title:this.t('more.health'),     sub:'Tips & wellness videos',    glyph:'♡', tint:'#e6efe9', ink:'#2c5d52', span:'1', go:()=>this.go('health') },
       { title:this.t('qibla.title'),     sub:this.t('more.qiblaSub'),     glyph:'ﻕ', tint:'#e6efe9', ink:'#1f5145', span:'1', go:()=>this.go('qibla') },
+      { title:this.t('cal.title'),       sub:'Events & Hijri dates',      glyph:'ﮬ', tint:'#e8ebf4', ink:'#3a4a78', span:'1', go:()=>this.go('calendar') },
     ];
 
     const now = st.now;
