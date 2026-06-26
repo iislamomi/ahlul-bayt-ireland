@@ -1,6 +1,6 @@
-const CACHE = 'abi-v4';
+const CACHE = 'abi-v5';
 const SHELL = ['/', '/index.html', '/manifest.json',
-  '/vendor/react.min.js', '/vendor/react-dom.min.js', '/vendor/babel.min.js',
+  '/vendor/react.min.js', '/vendor/react-dom.min.js', '/app.js',
   '/adhan.mp3'];
 
 self.addEventListener('install', e => {
