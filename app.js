@@ -1252,24 +1252,35 @@ const SB_KEY_MAP = {
 
 async function sbLoadAll() {
   try {
-    const res = await fetch(SB_URL + '/rest/v1/content?select=key,value', { headers: SB_HEADS });
+    const res = await fetch(SB_URL + '/rest/v1/content?select=key,value&order=updated_at.desc', { headers: SB_HEADS });
     if (!res.ok) { console.error('[ABI] sbLoadAll failed:', res.status, await res.text()); return null; }
     const rows = await res.json();
     const map = {};
-    rows.forEach(r => { map[r.key] = r.value; });
+    // Iterate in desc order so first occurrence (latest) wins per key
+    rows.forEach(r => { if (!(r.key in map)) map[r.key] = r.value; });
     return map;
   } catch (e) { console.error('[ABI] sbLoadAll error:', e.message); return null; }
 }
 
-async function sbSave(key, value) {
+async function sbSave(contentKey, value) {
   try {
-    const res = await fetch(SB_URL + '/rest/v1/content', {
-      method: 'POST',
-      headers: { ...SB_HEADS, Prefer: 'resolution=merge-duplicates' },
-      body: JSON.stringify({ key, value, updated_at: new Date().toISOString() })
+    // PATCH the existing row first; if 0 rows matched, INSERT a new one
+    const patch = await fetch(SB_URL + '/rest/v1/content?key=eq.' + encodeURIComponent(contentKey), {
+      method: 'PATCH',
+      headers: { ...SB_HEADS, Prefer: 'return=representation' },
+      body: JSON.stringify({ value, updated_at: new Date().toISOString() })
     });
-    if (!res.ok) console.error('[ABI] sbSave failed:', key, res.status, await res.text());
-  } catch (e) { console.error('[ABI] sbSave error:', key, e.message); }
+    if (!patch.ok) { console.error('[ABI] sbSave patch failed:', contentKey, patch.status, await patch.text()); return; }
+    const patched = await patch.json();
+    if (patched.length === 0) {
+      const ins = await fetch(SB_URL + '/rest/v1/content', {
+        method: 'POST',
+        headers: { ...SB_HEADS, Prefer: 'return=minimal' },
+        body: JSON.stringify({ key: contentKey, value, updated_at: new Date().toISOString() })
+      });
+      if (!ins.ok) console.error('[ABI] sbSave insert failed:', contentKey, ins.status, await ins.text());
+    }
+  } catch (e) { console.error('[ABI] sbSave error:', contentKey, e.message); }
 }
 
 /* ── AUTH (SHA-256 hashed — never compare plaintext credentials) ── */
