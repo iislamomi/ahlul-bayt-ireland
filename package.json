@@ -1,0 +1,23 @@
+{
+  "name": "repo",
+  "version": "1.0.0",
+  "description": "This is a **handoff bundle** from Claude Design (claude.ai/design).",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://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@github.com/iislamomi/ahlul-bayt-ireland.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/iislamomi/ahlul-bayt-ireland/issues"
+  },
+  "homepage": "https://github.com/iislamomi/ahlul-bayt-ireland#readme",
+  "dependencies": {
+    "playwright": "^1.61.1"
+  }
+}
