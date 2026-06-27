@@ -642,499 +642,582 @@ const STRINGS = {
   'nav.home': {
     English: 'Home',
     'العربية': 'الرئيسية',
-    'Français': 'Accueil',
+    'हिन्दी': 'होम',
+    'فارسی': 'خانه',
     Urdu: 'ہوم'
   },
   'nav.prayer': {
     English: 'Prayer',
     'العربية': 'الصلاة',
-    'Français': 'Prière',
+    'हिन्दी': 'नमाज़',
+    'فارسی': 'نماز',
     Urdu: 'نماز'
   },
   'nav.library': {
     English: 'Library',
     'العربية': 'المكتبة',
-    'Français': 'Bibliothèque',
+    'हिन्दी': 'पुस्तकालय',
+    'فارسی': 'کتابخانه',
     Urdu: 'کتب خانہ'
   },
   'nav.updates': {
     English: 'Updates',
     'العربية': 'الأخبار',
-    'Français': 'Nouvelles',
+    'हिन्दी': 'अपडेट',
+    'فارسی': 'اخبار',
     Urdu: 'خبریں'
   },
   'nav.more': {
     English: 'More',
     'العربية': 'المزيد',
-    'Français': 'Plus',
+    'हिन्दी': 'अधिक',
+    'فارسی': 'بیشتر',
     Urdu: 'مزید'
   },
   'home.nextPrayer': {
     English: 'Next Prayer',
     'العربية': 'الصلاة القادمة',
-    'Français': 'Prochaine Prière',
+    'हिन्दी': 'अगली नमाज़',
+    'فارسی': 'نماز بعدی',
     Urdu: 'اگلی نماز'
   },
   'home.in': {
     English: 'in',
     'العربية': 'بعد',
-    'Français': 'dans',
+    'हिन्दी': 'में',
+    'فارسی': 'در',
     Urdu: 'میں'
   },
   'home.explore': {
     English: 'Explore',
     'العربية': 'استكشف',
-    'Français': 'Explorer',
+    'हिन्दी': 'अन्वेषण',
+    'فارسی': 'کاوش',
     Urdu: 'دریافت'
   },
   'home.classTitle': {
     English: 'Classifieds',
     'العربية': 'الإعلانات',
-    'Français': 'Petites annonces',
+    'हिन्दी': 'विज्ञापन',
+    'فارسی': 'آگهی‌ها',
     Urdu: 'اشتہارات'
   },
   'home.classSub': {
     English: 'Community businesses & listings',
     'العربية': 'أعمال ومشاريع المجتمع',
-    'Français': 'Annonces communautaires',
+    'हिन्दी': 'सामुदायिक व्यवसाय',
+    'فارسی': 'کسب‌وکارهای جامعه',
     'Urdu': 'کمیونٹی کاروبار'
   },
   'home.installTitle': {
     English: 'Install the app',
     'العربية': 'تثبيت التطبيق',
-    'Français': 'Installer l\'application',
+    'हिन्दी': 'ऐप इंस्टॉल करें',
+    'فارسی': 'نصب برنامه',
     'Urdu': 'ایپ انسٹال کریں'
   },
   'home.installSub': {
     English: 'Add to your home screen for offline access.',
     'العربية': 'أضفه للشاشة الرئيسية للوصول دون إنترنت',
-    'Français': 'Ajoutez à l\'écran d\'accueil pour un accès hors ligne',
+    'हिन्दी': 'ऑफलाइन एक्सेस के लिए होम स्क्रीन पर जोड़ें',
+    'فارسی': 'برای دسترسی آفلاین به صفحه اصلی اضافه کنید',
     'Urdu': 'آف لائن رسائی کے لیے ہوم اسکرین پر شامل کریں'
   },
   'home.add': {
     English: 'Add',
     'العربية': 'أضف',
-    'Français': 'Ajouter',
+    'हिन्दी': 'जोड़ें',
+    'فارسی': 'اضافه کنید',
     Urdu: 'شامل کریں'
   },
   'prayer.title': {
     English: 'Prayer Times',
     'العربية': 'أوقات الصلاة',
-    'Français': 'Horaires de Prière',
+    'हिन्दी': 'नमाज़ का समय',
+    'فارسی': 'اوقات نماز',
     Urdu: 'اوقات نماز'
   },
   'prayer.today': {
     English: 'Today',
     'العربية': 'اليوم',
-    'Français': 'Aujourd\'hui',
+    'हिन्दी': 'आज',
+    'فارسی': 'امروز',
     Urdu: 'آج'
   },
   'prayer.monthly': {
     English: 'Monthly',
     'العربية': 'الشهري',
-    'Français': 'Mensuel',
+    'हिन्दी': 'मासिक',
+    'فارسی': 'ماهانه',
     Urdu: 'ماہانہ'
   },
   'prayer.settings': {
     English: 'Settings',
     'العربية': 'الإعدادات',
-    'Français': 'Paramètres',
+    'हिन्दी': 'सेटिंग',
+    'فارسی': 'تنظیمات',
     Urdu: 'ترتیبات'
   },
   'prayer.beginsIn': {
     English: 'begins in',
     'العربية': 'يبدأ خلال',
-    'Français': 'commence dans',
+    'हिन्दी': 'में शुरू होता है',
+    'فارسی': 'شروع می‌شود در',
     Urdu: 'شروع ہونے میں'
   },
   'prayer.source': {
     English: 'Prayer Time Source',
     'العربية': 'مصدر أوقات الصلاة',
-    'Français': 'Source des horaires',
+    'हिन्दी': 'नमाज़ स्रोत',
+    'فارسی': 'منبع اوقات نماز',
     'Urdu': 'نماز کا ذریعہ'
   },
   'prayer.alerts': {
     English: 'Prayer Alerts',
     'العربية': 'تنبيهات الصلاة',
-    'Français': 'Alertes de Prière',
+    'हिन्दी': 'नमाज़ अलर्ट',
+    'فارسی': 'هشدارهای نماز',
     Urdu: 'نماز کے اطلاعات'
   },
   'prayer.adhan': {
     English: 'Adhan (Prayer Call)',
     'العربية': 'الأذان',
-    'Français': 'Adhan (Appel à la prière)',
+    'हिन्दी': 'अज़ान',
+    'فارسی': 'اذان',
     'Urdu': 'اذان'
   },
   'prayer.adhanSub': {
     English: 'Plays audio at prayer time',
     'العربية': 'يشغّل الصوت وقت الصلاة',
-    'Français': 'Audio à l\'heure de la prière',
+    'हिन्दी': 'नमाज़ के समय ऑडियो',
+    'فارسی': 'صدا در وقت نماز',
     'Urdu': 'نماز کے وقت آواز'
   },
   'prayer.notif': {
     English: 'Prayer Notifications',
     'العربية': 'إشعارات الصلاة',
-    'Français': 'Notifications de prière',
+    'हिन्दी': 'नमाज़ सूचनाएं',
+    'فارسی': 'اعلان‌های نماز',
     Urdu: 'نماز کی اطلاعات'
   },
   'prayer.notifSub': {
     English: 'On-screen alert at each salāh',
     'العربية': 'تنبيه على الشاشة لكل صلاة',
-    'Français': 'Alerte à l\'écran à chaque prière',
+    'हिन्दी': 'हर नमाज़ पर स्क्रीन अलर्ट',
+    'فارسی': 'هشدار روی صفحه برای هر نماز',
     'Urdu': 'ہر نماز پر اسکرین الرٹ'
   },
   'prayer.allowNotif': {
     English: 'Allow Notifications',
     'العربية': 'اسمح بالإشعارات',
-    'Français': 'Autoriser les notifications',
+    'हिन्दी': 'सूचनाओं की अनुमति दें',
+    'فارسی': 'مجوز اعلان‌ها',
     'Urdu': 'اطلاعات کی اجازت دیں'
   },
   'prayer.testAdhan': {
     English: '▶ Test Adhan',
     'العربية': '◀ اختبار الأذان',
-    'Français': '▶ Tester l\'Adhan',
+    'हिन्दी': '▶ अज़ान परीक्षण',
+    'فارسی': '▶ آزمایش اذان',
     Urdu: '▶ اذان ٹیسٹ'
   },
   'prayer.stop': {
     English: '■ Stop',
     'العربية': '■ إيقاف',
-    'Français': '■ Arrêter',
+    'हिन्दी': '■ रोकें',
+    'فارسی': '■ توقف',
     Urdu: '■ بند کریں'
   },
   'prayer.pdf': {
     English: 'Yearly prayer calendar',
     'العربية': 'التقويم السنوي للصلاة',
-    'Français': 'Calendrier annuel de prière',
+    'हिन्दी': 'वार्षिक नमाज़ कैलेंडर',
+    'فارسی': 'تقویم سالانه نماز',
     'Urdu': 'سالانہ نماز کیلنڈر'
   },
   'prayer.pdfSub': {
     English: 'Download the full 1447 timetable',
     'العربية': 'تنزيل جدول 1447 كاملاً',
-    'Français': 'Télécharger l\'horaire 1447 complet',
+    'हिन्दी': 'पूरी 1447 समय-सारणी डाउनलोड करें',
+    'فارسی': 'دانلود جدول کامل ۱۴۴۷',
     'Urdu': 'مکمل 1447 جدول ڈاؤنلوڈ کریں'
   },
   'prayer.date': {
     English: 'Date',
     'العربية': 'التاريخ',
-    'Français': 'Date',
+    'हिन्दी': 'तारीख',
+    'فارسی': 'تاریخ',
     Urdu: 'تاریخ'
   },
   'prayer.noNotif': {
     English: 'Notifications not supported on this browser.',
     'العربية': 'الإشعارات غير مدعومة',
-    'Français': 'Notifications non supportées',
+    'हिन्दी': 'इस ब्राउज़र पर सूचनाएं समर्थित नहीं',
+    'فارسی': 'اعلان‌ها در این مرورگر پشتیبانی نمی‌شوند',
     'Urdu': 'اس براؤزر پر اطلاعات کا تعاون نہیں'
   },
   'prayer.note': {
     English: 'Following Ahlul-Bait Ireland prayer timing. Times calculated for Dublin, Ireland.',
     'العربية': 'وفق أوقات أهل البيت إيرلندا. الأوقات محسوبة لدبلن، إيرلندا.',
-    'Français': 'Selon les horaires Ahlul-Bait Irlande. Calculés pour Dublin, Irlande.',
+    'हिन्दी': 'अहलुल-बैत आयरलैंड के नमाज़ समय के अनुसार। डबलिन के लिए गणना।',
+    'فارسی': 'بر اساس اوقات نماز اهل‌بیت ایرلند. محاسبه شده برای دوبلین.',
     'Urdu': 'اہل البیت آئرلینڈ کے اوقات کے مطابق۔ ڈبلن، آئرلینڈ کے لیے محاسبہ۔'
   },
   'lib.header': {
     English: 'Library',
     'العربية': 'المكتبة',
-    'Français': 'Bibliothèque',
+    'हिन्दी': 'पुस्तकालय',
+    'فارسی': 'کتابخانه',
     Urdu: 'کتب خانہ'
   },
   'lib.search': {
     English: 'Search titles & translations',
     'العربية': 'بحث عن العناوين والترجمات',
-    'Français': 'Rechercher titres et traductions',
+    'हिन्दी': 'शीर्षक और अनुवाद खोजें',
+    'فارسی': 'جستجوی عناوین و ترجمه‌ها',
     'Urdu': 'عنوانات و تراجم تلاش کریں'
   },
   'lib.translation': {
     English: 'Translation',
     'العربية': 'الترجمة',
-    'Français': 'Traduction',
+    'हिन्दी': 'अनुवाद',
+    'فارسی': 'ترجمه',
     Urdu: 'ترجمہ'
   },
   'lib.summary': {
     English: 'Summary',
     'العربية': 'الملخص',
-    'Français': 'Résumé',
+    'हिन्दी': 'सारांश',
+    'فارسی': 'خلاصه',
     Urdu: 'خلاصہ'
   },
   'lib.share': {
     English: 'Share',
     'العربية': 'شارك',
-    'Français': 'Partager',
+    'हिन्दी': 'शेयर करें',
+    'فارسی': 'اشتراک‌گذاری',
     Urdu: 'شیئر کریں'
   },
   'lib.back': {
     English: 'Library',
     'العربية': 'المكتبة',
-    'Français': 'Bibliothèque',
+    'हिन्दी': 'पुस्तकालय',
+    'فارسی': 'کتابخانه',
     Urdu: 'کتب خانہ'
   },
   'lib.all': {
     English: 'All',
     'العربية': 'الكل',
-    'Français': 'Tout',
+    'हिन्दी': 'सब',
+    'فارسی': 'همه',
     Urdu: 'سب'
   },
   'class.community': {
     English: 'Community',
     'العربية': 'المجتمع',
-    'Français': 'Communauté',
+    'हिन्दी': 'समुदाय',
+    'فارسی': 'جامعه',
     Urdu: 'کمیونٹی'
   },
   'class.title': {
     English: 'Classifieds',
     'العربية': 'الإعلانات',
-    'Français': 'Petites annonces',
+    'हिन्दी': 'विज्ञापन',
+    'فارسی': 'آگهی‌ها',
     Urdu: 'اشتہارات'
   },
   'class.search': {
     English: 'Search businesses',
     'العربية': 'البحث عن الأعمال',
-    'Français': 'Rechercher',
+    'हिन्दी': 'व्यवसाय खोजें',
+    'فارسی': 'جستجوی کسب‌وکارها',
     'Urdu': 'کاروبار تلاش کریں'
   },
   'class.whatsapp': {
     English: 'WhatsApp',
     'العربية': 'واتساب',
-    'Français': 'WhatsApp',
+    'हिन्दी': 'WhatsApp',
+    'فارسی': 'واتساپ',
     Urdu: 'واٹس ایپ'
   },
   'class.call': {
     English: 'Call',
     'العربية': 'اتصل',
-    'Français': 'Appeler',
+    'हिन्दी': 'कॉल करें',
+    'فارسی': 'تماس',
     Urdu: 'کال کریں'
   },
   'class.all': {
     English: 'All',
     'العربية': 'الكل',
-    'Français': 'Tout',
+    'हिन्दी': 'सब',
+    'فارسی': 'همه',
     Urdu: 'سب'
   },
   'class.disclaimer': {
     English: 'Listings are shared for community information only. Ahlul Bayt Ireland does not endorse individual businesses.',
     'العربية': 'القوائم لأغراض إعلامية فقط. لا تؤيد أهل البيت إيرلندا الأعمال الفردية.',
-    'Français': 'Les annonces sont partagées à titre informatif uniquement.',
+    'हिन्दी': 'यह सूचियाँ केवल सामुदायिक जानकारी के लिए हैं।',
+    'فارسی': 'این آگهی‌ها صرفاً برای اطلاع‌رسانی جامعه است.',
     'Urdu': 'یہ اشتہارات صرف معلوماتی مقاصد کے لیے ہیں۔ اہل البیت آئرلینڈ کسی کاروبار کی حمایت نہیں کرتا۔'
   },
   'cal.community': {
     English: 'Community',
     'العربية': 'المجتمع',
-    'Français': 'Communauté',
+    'हिन्दी': 'समुदाय',
+    'فارسی': 'جامعه',
     Urdu: 'کمیونٹی'
   },
   'cal.title': {
     English: 'Calendar',
     'العربية': 'التقويم',
-    'Français': 'Calendrier',
+    'हिन्दी': 'कैलेंडर',
+    'فارسی': 'تقویم',
     Urdu: 'کیلنڈر'
   },
   'cal.hasEvent': {
     English: 'Has event',
     'العربية': 'له حدث',
-    'Français': 'A un événement',
+    'हिन्दी': 'कार्यक्रम है',
+    'فارسی': 'رویداد دارد',
     Urdu: 'تقریب ہے'
   },
   'cal.noEvent': {
     English: 'No events today',
     'العربية': 'لا توجد فعاليات اليوم',
-    'Français': 'Pas d\'événement aujourd\'hui',
+    'हिन्दी': 'आज कोई कार्यक्रम नहीं',
+    'فارسی': 'رویدادی امروز نیست',
     'Urdu': 'آج کوئی تقریب نہیں'
   },
   'cal.upcoming': {
     English: 'Upcoming Events',
     'العربية': 'الفعاليات القادمة',
-    'Français': 'Événements à venir',
+    'हिन्दी': 'आगामी कार्यक्रम',
+    'فارسی': 'رویدادهای آینده',
     'Urdu': 'آنے والی تقاریب'
   },
   'kids.title': {
     English: 'Kids Corner',
     'العربية': 'ركن الأطفال',
-    'Français': 'Coin des enfants',
+    'हिन्दी': 'बच्चों का कोना',
+    'فارسی': 'گوشه کودکان',
     Urdu: 'بچوں کا کونا'
   },
   'kids.videos': {
     English: 'Videos',
     'العربية': 'مقاطع',
-    'Français': 'Vidéos',
+    'हिन्दी': 'वीडियो',
+    'فارسی': 'ویدیوها',
     Urdu: 'ویڈیوز'
   },
   'kids.books': {
     English: 'Books',
     'العربية': 'كتب',
-    'Français': 'Livres',
+    'हिन्दी': 'किताबें',
+    'فارسی': 'کتاب‌ها',
     Urdu: 'کتابیں'
   },
   'kids.wisdom': {
     English: 'Wisdom',
     'العربية': 'حكمة',
-    'Français': 'Sagesse',
+    'हिन्दी': 'ज्ञान',
+    'فارسی': 'حکمت',
     Urdu: 'حکمت'
   },
   'kids.play': {
     English: 'Play',
     'العربية': 'تشغيل',
-    'Français': 'Lire',
+    'हिन्दी': 'चलाएं',
+    'فارسی': 'پخش',
     Urdu: 'چلائیں'
   },
   'qibla.title': {
     English: 'Qibla Finder',
     'العربية': 'حاسب القبلة',
-    'Français': 'Trouveur de Qibla',
+    'हिन्दी': 'क़िबला खोजक',
+    'فارسی': 'یاب‌قبله',
     Urdu: 'قبلہ تلاش کنندہ'
   },
   'qibla.detecting': {
     English: 'Detecting location…',
     'العربية': 'جارٍ تحديد الموقع…',
-    'Français': 'Détection de la position…',
+    'हिन्दी': 'स्थान पहचाना जा रहा है…',
+    'فارسی': 'در حال تشخیص موقعیت…',
     'Urdu': 'مقام معلوم ہو رہا ہے…'
   },
   'qibla.distance': {
     English: 'Distance to Kaaba',
     'العربية': 'المسافة إلى الكعبة',
-    'Français': 'Distance à la Kaaba',
+    'हिन्दी': 'काबा से दूरी',
+    'فارسی': 'فاصله تا کعبه',
     Urdu: 'کعبہ کا فاصلہ'
   },
   'qibla.allow': {
     English: 'Allow location access',
     'العربية': 'السماح بالوصول إلى الموقع',
-    'Français': 'Autoriser l\'accès à la position',
+    'हिन्दी': 'स्थान की अनुमति दें',
+    'فارسی': 'دسترسی به موقعیت را مجاز کنید',
     'Urdu': 'مقام تک رسائی دیں'
   },
   'qibla.unsupported': {
     English: 'Geolocation not supported on this device',
     'العربية': 'تحديد الموقع غير مدعوم',
-    'Français': 'Géolocalisation non prise en charge',
+    'हिन्दी': 'इस डिवाइस पर जियोलोकेशन समर्थित नहीं',
+    'فارسی': 'موقعیت‌یابی در این دستگاه پشتیبانی نمی‌شود',
     'Urdu': 'یہ آلہ جغرافیائی تعین کی حمایت نہیں کرتا'
   },
   'qibla.error': {
     English: 'Could not detect location. Allow access in browser settings.',
     'العربية': 'تعذّر تحديد موقعك. السماح بالوصول في إعدادات المتصفح',
-    'Français': 'Position non détectée. Autorisez l\'accès dans les paramètres.',
+    'हिन्दी': 'स्थान पहचाना नहीं जा सका। ब्राउज़र सेटिंग में अनुमति दें।',
+    'فارسی': 'موقعیت شناسایی نشد. در تنظیمات مرورگر مجوز دهید.',
     'Urdu': 'مقام معلوم نہ ہو سکا۔ براؤزر ترتیبات میں رسائی کی اجازت دیں'
   },
   'more.title': {
     English: 'More',
     'العربية': 'المزيد',
-    'Français': 'Plus',
+    'हिन्दी': 'अधिक',
+    'فارسی': 'بیشتر',
     Urdu: 'مزید'
   },
   'more.calendar': {
     English: 'Calendar & Events',
     'العربية': 'التقويم والفعاليات',
-    'Français': 'Calendrier et événements',
+    'हिन्दी': 'कैलेंडर और कार्यक्रम',
+    'فارسی': 'تقویم و رویدادها',
     'Urdu': 'کیلنڈر اور تقاریب'
   },
   'more.calSub': {
     English: 'Hijri dates and community events',
     'العربية': 'التواريخ الهجرية والفعاليات',
-    'Français': 'Dates hijri et événements communautaires',
+    'हिन्दी': 'हिजरी तारीखें और सामुदायिक कार्यक्रम',
+    'فارسی': 'تاریخ‌های هجری و رویدادهای جامعه',
     'Urdu': 'ہجری تاریخیں اور تقاریب'
   },
   'more.kids': {
     English: 'Kids Corner',
     'العربية': 'ركن الأطفال',
-    'Français': 'Coin des enfants',
+    'हिन्दी': 'बच्चों का कोना',
+    'فارسی': 'گوشه کودکان',
     Urdu: 'بچوں کا کونا'
   },
   'more.kidsSub': {
     English: 'Books, videos & quizzes for children',
     'العربية': 'كتب وفيديوهات واختبارات للأطفال',
-    'Français': 'Livres, vidéos et quiz pour enfants',
+    'हिन्दी': 'बच्चों के लिए किताबें, वीडियो और क्विज़',
+    'فارسی': 'کتاب، ویدیو و آزمون برای کودکان',
     'Urdu': 'بچوں کے لیے کتابیں، ویڈیوز اور کوئز'
   },
   'more.qibla': {
     English: 'Qibla Finder',
     'العربية': 'حاسب القبلة',
-    'Français': 'Trouveur de Qibla',
+    'हिन्दी': 'क़िबला खोजक',
+    'فارسی': 'یاب‌قبله',
     Urdu: 'قبلہ تلاش کنندہ'
   },
   'more.qiblaSub': {
     English: 'Find the direction to Makkah',
     'العربية': 'اعثر على اتجاه مكة المكرمة',
-    'Français': 'Trouver la direction de La Mecque',
+    'हिन्दी': 'मक्का की दिशा जानें',
+    'فارسی': 'جهت مکه را بیابید',
     'Urdu': 'مکہ کی سمت معلوم کریں'
   },
   'more.classifieds': {
     English: 'Classifieds',
     'العربية': 'الإعلانات',
-    'Français': 'Petites annonces',
+    'हिन्दी': 'विज्ञापन',
+    'فارسی': 'آگهی‌ها',
     Urdu: 'اشتہارات'
   },
   'more.classSub': {
     English: 'Community business listings',
     'العربية': 'قوائم أعمال المجتمع',
-    'Français': 'Annonces commerciales communautaires',
+    'हिन्दी': 'सामुदायिक व्यवसाय सूचियाँ',
+    'فارسی': 'فهرست کسب‌وکارهای جامعه',
     'Urdu': 'کمیونٹی کاروباری فہرست'
   },
   'more.admin': {
     English: 'Admin Dashboard',
     'العربية': 'لوحة الإدارة',
-    'Français': 'Tableau de bord',
+    'हिन्दी': 'एडमिन डैशबोर्ड',
+    'فارسی': 'داشبورد مدیریت',
     Urdu: 'ایڈمن ڈیش بورڈ'
   },
   'more.adminSub': {
     English: 'Manage content (staff)',
     'العربية': 'إدارة المحتوى (للعاملين)',
-    'Français': 'Gérer le contenu (équipe)',
+    'हिन्दी': 'सामग्री प्रबंधन (स्टाफ)',
+    'فارسی': 'مدیریت محتوا (کارمندان)',
     'Urdu': 'مواد کا انتظام (عملہ)'
   },
   'more.about': {
     English: 'About & Install',
     'العربية': 'حول وتثبيت',
-    'Français': 'À propos et installer',
+    'हिन्दी': 'के बारे में और इंस्टॉल',
+    'فارسی': 'درباره و نصب',
     Urdu: 'بارے میں اور انسٹال'
   },
   'more.aboutSub': {
     English: 'Add Ahlul Bayt Ireland to home screen',
     'العربية': 'أضف أهل البيت إيرلندا للشاشة الرئيسية',
-    'Français': 'Ajouter à l\'écran d\'accueil',
+    'हिन्दी': 'होम स्क्रीन पर जोड़ें',
+    'فارسی': 'به صفحه اصلی اضافه کنید',
     Urdu: 'ہوم اسکرین پر شامل کریں'
   },
   'more.offline': {
     English: 'Offline Mode',
     'العربية': 'وضع عدم الاتصال',
-    'Français': 'Mode hors ligne',
+    'हिन्दी': 'ऑफलाइन मोड',
+    'فارسی': 'حالت آفلاین',
     Urdu: 'آف لائن موڈ'
   },
   'more.offlineSub': {
     English: 'Preview the offline fallback',
     'العربية': 'معاينة وضع عدم الاتصال',
-    'Français': 'Aperçu du mode hors ligne',
+    'हिन्दी': 'ऑफलाइन मोड का पूर्वावलोकन',
+    'فارسی': 'پیش‌نمایش حالت آفلاین',
     'Urdu': 'آف لائن موڈ کا جائزہ'
   },
   'more.language': {
     English: 'App Language',
     'العربية': 'لغة التطبيق',
-    'Français': 'Langue de l\'application',
+    'हिन्दी': 'ऐप भाषा',
+    'فارسی': 'زبان برنامه',
     'Urdu': 'ایپ کی زبان'
   },
   'more.health': {
     English: 'Health & Wellness',
     'العربية': 'الصحة والعافية',
-    'Français': 'Santé et bien-être',
+    'हिन्दी': 'स्वास्थ्य और कल्याण',
+    'فارسی': 'سلامت و بهزیستی',
     Urdu: 'صحت اور تندرستی'
   },
   'more.healthSub': {
     English: 'Tips, videos & community wellness',
     'العربية': 'نصائح وفيديوهات وصحة المجتمع',
-    'Français': 'Conseils, vidéos et bien-être communautaire',
+    'हिन्दी': 'सुझाव, वीडियो और सामुदायिक कल्याण',
+    'فارسی': 'نکات، ویدیوها و سلامت جامعه',
     Urdu: 'صحت کے مشورے اور ویڈیوز'
   },
   'more.reading': {
     English: 'Reading Settings',
     'العربية': 'إعدادات القراءة',
-    'Français': 'Paramètres de lecture',
+    'हिन्दी': 'पठन सेटिंग',
+    'فارسی': 'تنظیمات خواندن',
     'Urdu': 'پڑھنے کی ترتیبات'
   },
   'more.dark': {
     English: 'Dark Mode',
     'العربية': 'الوضع الداكن',
-    'Français': 'Mode sombre',
+    'हिन्दी': 'डार्क मोड',
+    'فارسی': 'حالت تاریک',
     Urdu: 'ڈارک موڈ'
   },
   'more.largeText': {
     English: 'Large Text',
     'العربية': 'نص كبير',
-    'Français': 'Grand texte',
+    'हिन्दी': 'बड़ा टेक्स्ट',
+    'فارسی': 'متن بزرگ',
     Urdu: 'بڑا متن'
   }
 };
@@ -3904,26 +3987,6 @@ class App extends Component {
       glyph: 'ﮬ',
       go: () => this.go('calendar')
     }, {
-      label: this.t('more.kids'),
-      sub: this.t('more.kidsSub'),
-      glyph: 'ﻙ',
-      go: () => this.go('kids')
-    }, {
-      label: this.t('more.health'),
-      sub: this.t('more.healthSub'),
-      glyph: '♡',
-      go: () => this.go('health')
-    }, {
-      label: this.t('more.qibla'),
-      sub: this.t('more.qiblaSub'),
-      glyph: 'ﻕ',
-      go: () => this.go('qibla')
-    }, {
-      label: this.t('more.classifieds'),
-      sub: this.t('more.classSub'),
-      glyph: 'ﺱ',
-      go: () => this.go('classifieds')
-    }, {
       label: this.t('more.admin'),
       sub: this.t('more.adminSub'),
       glyph: '⚙',
@@ -3939,7 +4002,7 @@ class App extends Component {
       glyph: '⊘',
       go: () => this.go('offline')
     }];
-    const langs = ['English', 'العربية', 'Français', 'Urdu'];
+    const langs = ['English', 'العربية', 'हिन्दी', 'فارسی', 'Urdu'];
     return /*#__PURE__*/React.createElement("div", {
       style: {
         padding: '8px 20px 100px'
@@ -8232,7 +8295,7 @@ class App extends Component {
     const now = st.now;
     const hour = now.getHours();
     const lang = st.lang;
-    const isRtl = lang === 'العربية' || lang === 'Urdu';
+    const isRtl = lang === 'العربية' || lang === 'Urdu' || lang === 'فارسی';
     const greg = now.toLocaleDateString('en-IE', {
       weekday: 'long',
       day: 'numeric',
@@ -8240,7 +8303,7 @@ class App extends Component {
       year: 'numeric'
     });
     const hijri = toHijri(now);
-    const greetWord = lang === 'العربية' ? hour < 12 ? 'صباح الخير' : hour < 18 ? 'مساء الخير' : 'طاب مساؤك' : lang === 'Français' ? hour < 12 ? 'Bonjour' : hour < 18 ? 'Bon après-midi' : 'Bonsoir' : lang === 'Urdu' ? hour < 12 ? 'صبح بخیر' : hour < 18 ? 'خوش آمدید' : 'شب بخیر' : hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
+    const greetWord = lang === 'العربية' ? hour < 12 ? 'صباح الخير' : hour < 18 ? 'مساء الخير' : 'طاب مساؤك' : lang === 'हिन्दी' ? hour < 12 ? 'सुप्रभात' : hour < 18 ? 'नमस्ते' : 'शुभ संध्या' : lang === 'فارسی' ? hour < 12 ? 'صبح بخیر' : hour < 18 ? 'روز بخیر' : 'شب بخیر' : lang === 'Urdu' ? hour < 12 ? 'صبح بخیر' : hour < 18 ? 'خوش آمدید' : 'شب بخیر' : hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
     const salaam = greetWord + ' · السلام عليكم';
     const showNav = st.screen !== 'reading' && st.story === null;
     return /*#__PURE__*/React.createElement("div", {
