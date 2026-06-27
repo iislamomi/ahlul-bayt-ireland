@@ -1237,6 +1237,40 @@ function lsSet(key, val) {
   } catch (e) {}
 }
 
+/* ── SUPABASE SYNC ── */
+const SB_URL = 'https://zwpimotdtuhbpwjcooiz.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp3cGltb3RkdHVoYnB3amNvb2l6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI1ODIxMTUsImV4cCI6MjA5ODE1ODExNX0.BEdbAK9_lquFL8WyWwOU_DQ1bGbwzSpO9A54kKQxZFU';
+const SB_HEADS = { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY, 'Content-Type': 'application/json' };
+
+const SB_KEY_MAP = {
+  stories: 'liveStories', classifieds: 'liveClassifieds', events: 'liveEvents',
+  announcement: 'liveAnnouncement', pinned: 'livePinned',
+  kidsVideos: 'liveKidsVideos', kidsBooks: 'liveKidsBooks', kidsQuotes: 'liveKidsQuotes',
+  prayerPresets: 'livePrayerPresets', calEvents: 'liveCalEvents',
+  healthTips: 'liveHealthTips', healthVideos: 'liveHealthVideos'
+};
+
+async function sbLoadAll() {
+  try {
+    const res = await fetch(SB_URL + '/rest/v1/content?select=key,value', { headers: SB_HEADS });
+    if (!res.ok) return null;
+    const rows = await res.json();
+    const map = {};
+    rows.forEach(r => { map[r.key] = r.value; });
+    return map;
+  } catch (e) { return null; }
+}
+
+async function sbSave(key, value) {
+  try {
+    await fetch(SB_URL + '/rest/v1/content', {
+      method: 'POST',
+      headers: { ...SB_HEADS, Prefer: 'resolution=merge-duplicates' },
+      body: JSON.stringify({ key, value, updated_at: new Date().toISOString() })
+    });
+  } catch (e) {}
+}
+
 /* ── AUTH (SHA-256 hashed — never compare plaintext credentials) ── */
 // Hashes of 'abiadmin' and 'Admin123@' — change both to rotate credentials
 const ADMIN_ID_HASH = 'f68a4e6a5d763ef960620f6c92bf18eff81080a5bc1b378b88b35caedc8d94e9';
@@ -1348,6 +1382,7 @@ class App extends Component {
     });
     _defineProperty(this, "saveContent", (key, stateKey, data) => {
       lsSet(key, data);
+      sbSave(key, data);
       this.setState({
         [stateKey]: data
       });
@@ -1644,6 +1679,17 @@ class App extends Component {
         install: false
       });
       this.deferredPrompt = null;
+    });
+    sbLoadAll().then(data => {
+      if (!data) return;
+      const update = {};
+      Object.entries(SB_KEY_MAP).forEach(([key, stateKey]) => {
+        if (data[key] !== undefined) {
+          update[stateKey] = data[key];
+          lsSet(key, data[key]);
+        }
+      });
+      if (Object.keys(update).length > 0) this.setState(update);
     });
   }
   componentWillUnmount() {
