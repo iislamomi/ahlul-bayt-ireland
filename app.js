@@ -1253,22 +1253,23 @@ const SB_KEY_MAP = {
 async function sbLoadAll() {
   try {
     const res = await fetch(SB_URL + '/rest/v1/content?select=key,value', { headers: SB_HEADS });
-    if (!res.ok) return null;
+    if (!res.ok) { console.error('[ABI] sbLoadAll failed:', res.status, await res.text()); return null; }
     const rows = await res.json();
     const map = {};
     rows.forEach(r => { map[r.key] = r.value; });
     return map;
-  } catch (e) { return null; }
+  } catch (e) { console.error('[ABI] sbLoadAll error:', e.message); return null; }
 }
 
 async function sbSave(key, value) {
   try {
-    await fetch(SB_URL + '/rest/v1/content', {
+    const res = await fetch(SB_URL + '/rest/v1/content', {
       method: 'POST',
       headers: { ...SB_HEADS, Prefer: 'resolution=merge-duplicates' },
       body: JSON.stringify({ key, value, updated_at: new Date().toISOString() })
     });
-  } catch (e) {}
+    if (!res.ok) console.error('[ABI] sbSave failed:', key, res.status, await res.text());
+  } catch (e) { console.error('[ABI] sbSave error:', key, e.message); }
 }
 
 /* ── AUTH (SHA-256 hashed — never compare plaintext credentials) ── */
