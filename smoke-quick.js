@@ -6,7 +6,7 @@ const { chromium } = require('playwright');
 
   const browser = await chromium.launch({
     executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome',
-    args: ['--no-sandbox', '--ignore-certificate-errors']
+    args: ['--no-sandbox', '--ignore-certificate-errors', '--disable-web-security']
   });
   const page = await browser.newPage();
   const jsErrors = [];
