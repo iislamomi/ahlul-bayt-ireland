@@ -8303,7 +8303,7 @@ class App extends Component {
       year: 'numeric'
     });
     const hijri = toHijri(now);
-    const greetWord = lang === 'العربية' ? hour < 12 ? 'صباح الخير' : hour < 18 ? 'مساء الخير' : 'طاب مساؤك' : lang === 'हिन्दी' ? hour < 12 ? 'सुप्रभात' : hour < 18 ? 'नमस्ते' : 'शुभ संध्या' : lang === 'فارسی' ? hour < 12 ? 'صبح بخیر' : hour < 18 ? 'روز بخیر' : 'شب بخیر' : lang === 'Urdu' ? hour < 12 ? 'صبح بخیر' : hour < 18 ? 'خوش آمدید' : 'شب بخیر' : hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
+    const greetWord = lang === 'العربية' ? hour < 12 ? 'صباح الخير' : hour < 18 ? 'مساء الخير' : 'طاب مساؤك' : lang === 'हिन्दी' ? hour < 12 ? 'सुप्रभात' : hour < 18 ? 'शुभ दोपहर' : 'शुभ संध्या' : lang === 'فارسی' ? hour < 12 ? 'صبح بخیر' : hour < 18 ? 'روز بخیر' : 'شب بخیر' : lang === 'Urdu' ? hour < 12 ? 'صبح بخیر' : hour < 18 ? 'خوش آمدید' : 'شب بخیر' : hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
     const salaam = greetWord + ' · السلام عليكم';
     const showNav = st.screen !== 'reading' && st.story === null;
     return /*#__PURE__*/React.createElement("div", {
