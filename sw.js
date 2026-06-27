@@ -1,4 +1,4 @@
-const CACHE = 'abi-v7';
+const CACHE = 'abi-v8';
 const SHELL = ['/', '/index.html', '/manifest.json',
   '/vendor/react.min.js', '/vendor/react-dom.min.js', '/app.js',
   '/adhan.mp3'];
@@ -17,12 +17,28 @@ self.addEventListener('activate', e => {
   );
 });
 
+self.addEventListener('push', e => {
+  let data = {};
+  try { data = JSON.parse(e.data.text()); } catch {}
+  const title = data.title || 'Ahlul Bayt Ireland';
+  const opts = {
+    body: data.body || '',
+    icon: data.icon || '/icon-192.png',
+    badge: data.badge || '/icon-192.png',
+    tag: data.type || 'update',
+    renotify: true,
+    data: { url: data.url || '/' }
+  };
+  e.waitUntil(self.registration.showNotification(title, opts));
+});
+
 self.addEventListener('notificationclick', e => {
   e.notification.close();
+  const url = (e.notification.data && e.notification.data.url) || '/';
   e.waitUntil(
     clients.matchAll({ type:'window', includeUncontrolled:true }).then(cs => {
       const open = cs.find(c => c.url.includes(self.location.origin) && 'focus' in c);
-      return open ? open.focus() : clients.openWindow('/');
+      return open ? open.focus() : clients.openWindow(url);
     })
   );
 });

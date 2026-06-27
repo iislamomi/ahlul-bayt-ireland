@@ -1244,6 +1244,71 @@ const SB_URL = 'https://zwpimotdtuhbpwjcooiz.supabase.co';
 const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp3cGltb3RkdHVoYnB3amNvb2l6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI1ODIxMTUsImV4cCI6MjA5ODE1ODExNX0.BEdbAK9_lquFL8WyWwOU_DQ1bGbwzSpO9A54kKQxZFU';
 const SB_HEADS = { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY, 'Content-Type': 'application/json' };
 
+/* ── WEB PUSH ── */
+const VAPID_PUBLIC_KEY = 'BGaIKdSnFYd_cHBqlukrEy1rI2wATyDLx7d08nvL90u2SxV240WaVz706fiqo5lPybZmf9Q0oEZuHpsOLHlPrs4';
+const EDGE_PUSH = SB_URL + '/functions/v1/send-push';
+
+const PUSH_MSG = {
+  announcement: 'New announcement from Ahlul Bayt Ireland',
+  events: 'New event added to the community calendar',
+  stories: 'New story or article has been published',
+  pinned: 'Featured message has been updated',
+  classifieds: 'New listing in community classifieds',
+  calEvents: 'Islamic calendar updated',
+  prayerPresets: 'Prayer times updated'
+};
+
+function urlBase64ToUint8Array(b64) {
+  const pad = '='.repeat((4 - b64.length % 4) % 4);
+  const raw = atob((b64 + pad).replace(/-/g, '+').replace(/_/g, '/'));
+  return Uint8Array.from([...raw].map(c => c.charCodeAt(0)));
+}
+
+async function subscribeToPush() {
+  if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
+  try {
+    const reg = await navigator.serviceWorker.ready;
+    let sub = await reg.pushManager.getSubscription();
+    if (!sub) {
+      sub = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+      });
+    }
+    const j = sub.toJSON();
+    await fetch(SB_URL + '/rest/v1/push_subscriptions', {
+      method: 'POST',
+      headers: { ...SB_HEADS, Prefer: 'resolution=ignore-duplicates' },
+      body: JSON.stringify({ endpoint: j.endpoint, p256dh: j.keys.p256dh, auth: j.keys.auth })
+    });
+  } catch (e) { console.error('[ABI] subscribeToPush:', e.message); }
+}
+
+async function sendPush(title, body, url) {
+  try {
+    await fetch(EDGE_PUSH, {
+      method: 'POST',
+      headers: SB_HEADS,
+      body: JSON.stringify({ title, body, url: url || '/' })
+    });
+  } catch (e) { console.error('[ABI] sendPush:', e.message); }
+}
+
+async function sendAdhanPush(prayerName, timeStr) {
+  // Use the content table as a distributed lock so only one open device sends the push
+  const dedupKey = 'adhan_' + prayerName.toLowerCase() + '_' + new Date().toISOString().slice(0, 13);
+  try {
+    const r = await fetch(SB_URL + '/rest/v1/content', {
+      method: 'POST',
+      headers: { ...SB_HEADS, Prefer: 'return=minimal' },
+      body: JSON.stringify({ key: dedupKey, value: { sent: true }, updated_at: new Date().toISOString() })
+    });
+    if (r.status === 201) {
+      await sendPush(prayerName + ' \xB7 Prayer Time', prayerName + ' — ' + timeStr + ' \xB7 Dublin, Ireland', '/');
+    }
+  } catch (e) { /* ignore */ }
+}
+
 const SB_KEY_MAP = {
   stories: 'liveStories', classifieds: 'liveClassifieds', events: 'liveEvents',
   announcement: 'liveAnnouncement', pinned: 'livePinned',
@@ -1398,6 +1463,7 @@ class App extends Component {
       lsSet(key, data);
       sbSave(key, data);
       this.setState({ [stateKey]: data });
+      sendPush('Ahlul Bayt Ireland', PUSH_MSG[key] || 'Community content updated', '/');
     });
     _defineProperty(this, "revertAll", async () => {
       const data = await sbLoadAll();
@@ -1503,23 +1569,22 @@ class App extends Component {
       } = this.state;
       if (adhanEnabled) this.playAdhan();
       if (notifEnabled && Notification.permission === 'granted') {
-        const title = `${match.name} · Prayer Time`;
+        const title = `${match.name} \xB7 Prayer Time`;
         const opts = {
-          body: `${match.en} prayer — ${match.time} · Dublin, Ireland`,
+          body: `${match.en} prayer — ${match.time} \xB7 Dublin, Ireland`,
           tag: 'prayer-alert',
-          renotify: true
+          renotify: true,
+          data: { url: '/' }
         };
         if ('serviceWorker' in navigator) {
           navigator.serviceWorker.ready.then(reg => reg.showNotification(title, opts)).catch(() => {
-            try {
-              new Notification(title, opts);
-            } catch (e) {}
+            try { new Notification(title, opts); } catch (e) {}
           });
         } else {
-          try {
-            new Notification(title, opts);
-          } catch (e) {}
+          try { new Notification(title, opts); } catch (e) {}
         }
+        // Send push to all other subscribers (closed devices)
+        sendAdhanPush(match.name, match.time);
       }
       this.showToast(`${match.name} — ${match.time}`);
     });
@@ -1535,7 +1600,7 @@ class App extends Component {
         notifPermission: perm,
         notifEnabled: enabled
       });
-      if (perm === 'granted') this.showToast('Notifications enabled');else if (perm === 'denied') this.showToast('Notifications blocked — check browser settings');
+      if (perm === 'granted') { subscribeToPush(); this.showToast('Notifications enabled'); } else if (perm === 'denied') this.showToast('Notifications blocked — check browser settings');
     });
     _defineProperty(this, "bearingToKaaba", (userLat, userLng) => {
       const kaabaLat = 21.4225;
@@ -1691,6 +1756,10 @@ class App extends Component {
     }, 1000);
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('./sw.js').catch(() => {});
+      // Re-subscribe to push if permission already granted (handles app restarts)
+      if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+        subscribeToPush();
+      }
     }
     window.addEventListener('beforeinstallprompt', e => {
       e.preventDefault();
