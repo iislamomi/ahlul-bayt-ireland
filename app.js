@@ -1700,21 +1700,21 @@ class App extends Component {
       });
       this.deferredPrompt = null;
     });
-    sbLoadAll().then(data => {
+    const applyRemoteData = data => {
       if (!data) return;
       const update = {};
       Object.entries(SB_KEY_MAP).forEach(([key, stateKey]) => {
-        if (data[key] !== undefined) {
-          update[stateKey] = data[key];
-          lsSet(key, data[key]);
-        }
+        if (data[key] !== undefined) { update[stateKey] = data[key]; lsSet(key, data[key]); }
       });
       if (Object.keys(update).length > 0) this.setState(update);
-    });
+    };
+    sbLoadAll().then(applyRemoteData);
+    this.refreshTimer = setInterval(() => sbLoadAll().then(applyRemoteData), 30 * 60 * 1000);
   }
   componentWillUnmount() {
     clearInterval(this.clockTimer);
     clearInterval(this.storyTimer);
+    clearInterval(this.refreshTimer);
     this.stopAdhan();
   }
   toMin(t) {
