@@ -478,7 +478,7 @@ const NAHJ = {
     tr: 'Knowledge is better than wealth. Knowledge guards you, while you have to guard wealth. Wealth decreases by spending, while knowledge multiplies by it.'
   }]
 };
-const CLASSIFIEDS = [{
+const PINNED_CLASSIFIED = {
   name: 'SoftEire Technology Limited',
   cat: 'Services',
   desc: 'SoftEire helps Irish SMEs use AI to reduce labour cost, automate customer support, and save money. Call us today for a free business audit.',
@@ -488,7 +488,9 @@ const CLASSIFIEDS = [{
   wa: '353892281688',
   ink: '#3a4a78',
   tint: '#e8ebf4'
-}, {
+};
+
+const CLASSIFIEDS = [{
   name: 'Al-Noor Halal Grocery',
   cat: 'Food',
   desc: 'Fresh produce, halal essentials & imported goods.',
@@ -3744,7 +3746,7 @@ class App extends Component {
     const allLabel = this.t('class.all');
     const cats = [allLabel, 'Food', 'Butcher', 'Travel', 'Education', 'Services'];
     const q = st.classQuery.trim().toLowerCase();
-    const cards = st.liveClassifieds.filter(c => st.classCat === allLabel || st.classCat === 'All' || c.cat === st.classCat).filter(c => !q || c.name.toLowerCase().includes(q) || c.desc.toLowerCase().includes(q));
+    const cards = [PINNED_CLASSIFIED, ...st.liveClassifieds.filter(c => c.name !== 'SoftEire Technology Limited').filter(c => st.classCat === allLabel || st.classCat === 'All' || c.cat === st.classCat).filter(c => !q || c.name.toLowerCase().includes(q) || c.desc.toLowerCase().includes(q))];
     const chipStyle = c => {
       const active = st.classCat === c;
       return {
@@ -5077,7 +5079,7 @@ class App extends Component {
         const isNew = st.adminEditIdx === -1;
         const cat = d.cat || 'Services';
         const saveItem = () => {
-          const list = [...st.liveClassifieds];
+          const list = st.liveClassifieds.filter(c => c.name !== 'SoftEire Technology Limited');
           const item = {
             name: d.name || '',
             cat,
@@ -5186,7 +5188,55 @@ class App extends Component {
         color: '#f3ead4',
         marginBottom: 14,
         width: '100%'
-      }), st.liveClassifieds.map((c, i) => /*#__PURE__*/React.createElement("div", {
+      }), /*#__PURE__*/React.createElement("div", {
+        style: {
+          display: 'flex',
+          alignItems: 'center',
+          gap: 12,
+          background: '#edf2ee',
+          border: '1px solid #c5d9cb',
+          borderRadius: 14,
+          padding: '12px 14px',
+          marginBottom: 8
+        }
+      }, /*#__PURE__*/React.createElement("div", {
+        style: {
+          width: 10,
+          height: 10,
+          borderRadius: '50%',
+          background: PINNED_CLASSIFIED.ink,
+          flexShrink: 0
+        }
+      }), /*#__PURE__*/React.createElement("div", {
+        style: {
+          flex: 1,
+          minWidth: 0
+        }
+      }, /*#__PURE__*/React.createElement("div", {
+        style: {
+          fontSize: 13.5,
+          fontWeight: 600,
+          color: '#2c2823',
+          whiteSpace: 'nowrap',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis'
+        }
+      }, PINNED_CLASSIFIED.name), /*#__PURE__*/React.createElement("div", {
+        style: {
+          fontSize: 11,
+          color: '#9a8f7c'
+        }
+      }, PINNED_CLASSIFIED.cat, " \xB7 ", PINNED_CLASSIFIED.loc)), /*#__PURE__*/React.createElement("span", {
+        style: {
+          fontSize: 11,
+          fontWeight: 700,
+          color: '#1f5145',
+          background: '#c5d9cb',
+          padding: '4px 9px',
+          borderRadius: 7,
+          flexShrink: 0
+        }
+      }, "Pinned")), st.liveClassifieds.filter(c => c.name !== 'SoftEire Technology Limited').map((c, i) => /*#__PURE__*/React.createElement("div", {
         key: i,
         style: {
           display: 'flex',
@@ -5233,7 +5283,7 @@ class App extends Component {
         fontSize: 12,
         padding: '6px 12px'
       }), btn('✕', () => {
-        const a = [...st.liveClassifieds];
+        const a = st.liveClassifieds.filter(c => c.name !== 'SoftEire Technology Limited');
         a.splice(i, 1);
         save('classifieds', 'liveClassifieds', a, 'Deleted');
       }, {
