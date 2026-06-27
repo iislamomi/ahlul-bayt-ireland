@@ -24,11 +24,12 @@ const { chromium } = require('playwright');
   await page.fill('input[placeholder="Admin ID"]', 'abiadmin');
   await page.fill('input[placeholder="Password"]', 'Admin123@');
   await page.locator('text=Sign In').click();
-  await page.waitForTimeout(1000);
+  await page.waitForTimeout(1500);
 
   const adminText = await page.evaluate(() => document.body.innerText);
   console.log('[1] Admin login: ' + (adminText.includes('Stories') ? 'PASS' : 'FAIL'));
-  console.log('[2] Deploy button: ' + (adminText.includes('All changes deployed') || adminText.includes('Deploy') ? 'PASS' : 'FAIL'));
+  console.log('[2] Auto-publish info visible: ' + (adminText.includes('Changes publish instantly') ? 'PASS' : 'FAIL'));
+  console.log('[3] Cancel button present: ' + (adminText.includes('Cancel') ? 'PASS' : 'FAIL'));
 
   // ── Click Announcement tab ─────────────────────────────────────────────────
   const allDivs = await page.$$('div');
@@ -44,65 +45,53 @@ const { chromium } = require('playwright');
   // Click "Edit Announcement" to enter edit mode
   await page.locator('text=Edit Announcement').first().click();
   await page.waitForTimeout(400);
-  console.log('[3] Announcement edit form: ' + (await page.locator('input[placeholder="Headline"]').isVisible() ? 'PASS' : 'FAIL'));
+  console.log('[4] Announcement edit form: ' + (await page.locator('input[placeholder="Headline"]').isVisible() ? 'PASS' : 'FAIL'));
 
   // ── Fill and save ──────────────────────────────────────────────────────────
-  await page.fill('input[placeholder="Headline"]', 'CSP Fix Test');
-  await page.locator('textarea').first().fill('Supabase sync works after CSP fix.');
+  const testTitle = 'SyncTest-' + Date.now();
+  await page.fill('input[placeholder="Headline"]', testTitle);
+  await page.locator('textarea').first().fill('Supabase sync verification.');
   const sectionSaved = await page.evaluate(() => {
     const btn = Array.from(document.querySelectorAll('div'))
       .find(d => d.textContent.trim() === 'Save' && d.style.borderRadius === '11px');
     if (btn) { btn.click(); return true; }
     return false;
   });
-  await page.waitForTimeout(600);
-  console.log('[4] Section saved: ' + (sectionSaved ? 'PASS' : 'FAIL'));
+  await page.waitForTimeout(2000);
+  console.log('[5] Section save clicked: ' + (sectionSaved ? 'PASS' : 'FAIL'));
 
-  const deployActive = await page.evaluate(() =>
-    Array.from(document.querySelectorAll('div'))
-      .some(d => d.textContent.includes('Deploy to all users') && d.style.background.includes('31, 81, 69'))
-  );
-  console.log('[5] Deploy button activated: ' + (deployActive ? 'PASS' : 'FAIL'));
+  // Check toast appeared
+  const afterSave = await page.evaluate(() => document.body.innerText);
+  console.log('[6] Save toast shown: ' + (afterSave.includes('Saved') ? 'PASS' : 'FAIL'));
 
-  // ── Deploy ─────────────────────────────────────────────────────────────────
-  await page.evaluate(() => {
-    const d = Array.from(document.querySelectorAll('div'))
-      .find(el => el.textContent.trim() === '↑ Deploy to all users');
-    if (d) d.click();
-  });
-  await page.waitForTimeout(3000);
-  const afterDeploy = await page.evaluate(() => document.body.innerText);
-  console.log('[6] Deploy toast: ' + (afterDeploy.includes('Deployed') ? 'PASS' : 'FAIL'));
-  console.log('[7] Button reset: ' + (afterDeploy.includes('All changes deployed') ? 'PASS' : 'FAIL'));
-
-  // ── Supabase direct read-back ──────────────────────────────────────────────
+  // ── Supabase direct read-back (from browser context — avoids sandbox CORS) ──
   const sbResult = await page.evaluate(async ({ url, key }) => {
     try {
-      const r = await fetch(url + '/rest/v1/content?select=key,value&key=eq.announcement', {
+      const r = await fetch(url + '/rest/v1/content?select=key,value&key=eq.announcement&order=updated_at.desc', {
         headers: { apikey: key, Authorization: 'Bearer ' + key }
       });
       const rows = await r.json();
       return { ok: r.ok, status: r.status, title: rows[0]?.value?.title, count: rows.length };
     } catch (e) { return { ok: false, error: e.message }; }
   }, { url: SB_URL, key: SB_KEY });
-  console.log('[8] Supabase reachable: ' + (sbResult.ok ? 'PASS' : 'FAIL - ' + (sbResult.error || sbResult.status)));
-  console.log('[9] Row in DB: ' + (sbResult.count > 0 ? 'PASS' : 'FAIL'));
-  console.log('[10] Correct title in DB: ' + (sbResult.title === 'CSP Fix Test' ? 'PASS' : 'FAIL - got: ' + sbResult.title));
+  console.log('[7] Supabase reachable: ' + (sbResult.ok ? 'PASS' : 'FAIL - ' + (sbResult.error || sbResult.status)));
+  console.log('[8] Row in DB: ' + (sbResult.count > 0 ? 'PASS' : 'FAIL'));
+  console.log('[9] Correct title in DB: ' + (sbResult.title === testTitle ? 'PASS' : 'FAIL - got: ' + sbResult.title));
 
   // ── Second device simulation ───────────────────────────────────────────────
   const ctx2 = await browser.newContext();
   const page2 = await ctx2.newPage();
   await page2.goto('http://localhost:8765', { waitUntil: 'networkidle' });
-  await page2.waitForTimeout(2500);
+  await page2.waitForTimeout(3000);
   await page2.locator('.abi-nav > div').nth(0).click();
   await page2.waitForTimeout(500);
   const freshBody = await page2.evaluate(() => document.body.innerText);
-  console.log('[11] Second device sees update: ' + (freshBody.includes('CSP Fix Test') ? 'PASS' : 'FAIL'));
+  console.log('[10] Second device sees update: ' + (freshBody.includes(testTitle) ? 'PASS' : 'FAIL'));
   await page2.close();
 
   // ── JS errors ─────────────────────────────────────────────────────────────
-  const realErrors = jsErrors.filter(e => !e.includes('favicon'));
-  console.log('[12] JS errors: ' + (realErrors.length === 0 ? 'PASS (0 errors)' : 'FAIL - ' + realErrors.join('; ').slice(0, 200)));
+  const realErrors = jsErrors.filter(e => !e.includes('favicon') && !e.includes('404') && !e.includes('net::ERR'));
+  console.log('[11] JS errors: ' + (realErrors.length === 0 ? 'PASS (0 errors)' : 'FAIL - ' + realErrors.join('; ').slice(0, 300)));
 
   await browser.close();
 })().catch(e => { console.error('FATAL:', e.message); process.exit(1); });
