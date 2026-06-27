@@ -1358,8 +1358,7 @@ class App extends Component {
       livePrayerPresets: lsGet('prayerPresets', PRAYER_PRESETS),
       liveCalEvents: lsGet('calEvents', CAL_EVENTS_DEFAULT),
       liveHealthTips: lsGet('healthTips', HEALTH_TIPS),
-      liveHealthVideos: lsGet('healthVideos', HEALTH_VIDEOS),
-      adminUnsaved: false
+      liveHealthVideos: lsGet('healthVideos', HEALTH_VIDEOS)
     });
     _defineProperty(this, "go", s => this.setState({
       screen: s,
@@ -1383,21 +1382,8 @@ class App extends Component {
     });
     _defineProperty(this, "saveContent", (key, stateKey, data) => {
       lsSet(key, data);
-      this.setState({ [stateKey]: data, adminUnsaved: true });
-    });
-    _defineProperty(this, "deployAll", async () => {
-      const st = this.state;
-      const pairs = [
-        ['stories', st.liveStories], ['classifieds', st.liveClassifieds],
-        ['events', st.liveEvents], ['announcement', st.liveAnnouncement],
-        ['pinned', st.livePinned], ['kidsVideos', st.liveKidsVideos],
-        ['kidsBooks', st.liveKidsBooks], ['kidsQuotes', st.liveKidsQuotes],
-        ['prayerPresets', st.livePrayerPresets], ['calEvents', st.liveCalEvents],
-        ['healthTips', st.liveHealthTips], ['healthVideos', st.liveHealthVideos]
-      ];
-      await Promise.all(pairs.map(([k, v]) => sbSave(k, v)));
-      this.setState({ adminUnsaved: false });
-      this.showToast('Deployed to all users!');
+      sbSave(key, data);
+      this.setState({ [stateKey]: data });
     });
     _defineProperty(this, "revertAll", async () => {
       const data = await sbLoadAll();
@@ -6390,23 +6376,19 @@ class App extends Component {
         margin: '8px 0 4px'
       }
     }, /*#__PURE__*/React.createElement("div", {
-      onClick: () => st.adminUnsaved && this.deployAll(),
       style: {
         flex: 1,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        gap: 6,
         padding: '9px 0',
         borderRadius: 11,
         fontSize: 13,
         fontWeight: 700,
-        cursor: st.adminUnsaved ? 'pointer' : 'default',
-        background: st.adminUnsaved ? '#1f5145' : '#c8d8d0',
-        color: '#fff',
-        transition: 'background .2s'
+        background: '#e8f0ec',
+        color: '#1f5145'
       }
-    }, st.adminUnsaved ? '↑ Deploy to all users' : '✓ All changes deployed'), /*#__PURE__*/React.createElement("div", {
+    }, '✓ Changes publish instantly on Save'), /*#__PURE__*/React.createElement("div", {
       onClick: () => this.revertAll(),
       style: {
         padding: '9px 18px',
@@ -6417,7 +6399,7 @@ class App extends Component {
         background: '#f3e6e8',
         color: '#6e2230'
       }
-    }, 'Revert')), /*#__PURE__*/React.createElement("div", {
+    }, 'Cancel')), /*#__PURE__*/React.createElement("div", {
       className: "s",
       style: {
         display: 'flex',
