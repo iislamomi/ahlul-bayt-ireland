@@ -1321,6 +1321,17 @@ const SB_KEY_MAP = {
   duas: 'liveDuas', ziyarat: 'liveZiyarat', nahj: 'liveNahj'
 };
 
+function pruneExpiredStories(list) {
+  const cutoff = Date.now() - 24 * 60 * 60 * 1000;
+  return (list || []).filter(s => !s.created || s.created > cutoff);
+}
+
+function ytId(url) {
+  if (!url) return null;
+  const m = String(url).match(/(?:youtube\.com\/(?:watch\?(?:.*&)?v=|shorts\/|embed\/|live\/)|youtu\.be\/)([\w-]{11})/);
+  return m ? m[1] : null;
+}
+
 function resizeImageFile(file, maxDim, quality) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -1451,7 +1462,8 @@ class App extends Component {
       adminLockUntil: null,
       adminLockMsg: '',
       /* ── LIVE CONTENT ── */
-      liveStories: lsGet('stories', STORIES),
+      liveStories: pruneExpiredStories(lsGet('stories', STORIES)),
+      ytPlayer: null,
       liveClassifieds: lsGet('classifieds', CLASSIFIEDS),
       liveEvents: lsGet('events', EVENT_DEFS),
       liveAnnouncement: lsGet('announcement', {
@@ -1479,6 +1491,12 @@ class App extends Component {
       screen: s,
       story: null
     }));
+    _defineProperty(this, "playYt", url => {
+      const id = ytId(url);
+      if (id) this.setState({
+        ytPlayer: id
+      });else this.showToast('No video linked yet');
+    });
     _defineProperty(this, "openReading", (type, item) => this.setState({
       screen: 'reading',
       readingType: type,
@@ -1811,17 +1829,26 @@ class App extends Component {
       if (!data) return;
       const update = {};
       Object.entries(SB_KEY_MAP).forEach(([key, stateKey]) => {
-        if (data[key] !== undefined) { update[stateKey] = data[key]; lsSet(key, data[key]); }
+        if (data[key] !== undefined) {
+          lsSet(key, data[key]);
+          update[stateKey] = key === 'stories' ? pruneExpiredStories(data[key]) : data[key];
+        }
       });
       if (Object.keys(update).length > 0) this.setState(update);
     };
     sbLoadAll().then(applyRemoteData);
     this.refreshTimer = setInterval(() => sbLoadAll().then(applyRemoteData), 30 * 60 * 1000);
+    // Expire 24h-old uploaded stories even while the app stays open
+    this.pruneTimer = setInterval(() => {
+      const pruned = pruneExpiredStories(this.state.liveStories);
+      if (pruned.length !== this.state.liveStories.length) this.setState({ liveStories: pruned });
+    }, 10 * 60 * 1000);
   }
   componentWillUnmount() {
     clearInterval(this.clockTimer);
     clearInterval(this.storyTimer);
     clearInterval(this.refreshTimer);
+    clearInterval(this.pruneTimer);
     this.stopAdhan();
   }
   toMin(t) {
@@ -2086,12 +2113,14 @@ class App extends Component {
         marginBottom: 16
       }
     }, /*#__PURE__*/React.createElement("div", {
+      onClick: () => this.go('calendar'),
       style: {
         flex: 1,
         background: '#fffdf9',
         border: '1px solid #ece4d4',
         borderRadius: 16,
-        padding: '13px 15px'
+        padding: '13px 15px',
+        cursor: 'pointer'
       }
     }, /*#__PURE__*/React.createElement("div", {
       style: {
@@ -2109,12 +2138,14 @@ class App extends Component {
         marginTop: 4
       }
     }, greg)), /*#__PURE__*/React.createElement("div", {
+      onClick: () => this.go('calendar'),
       style: {
         flex: 1,
         background: '#fffdf9',
         border: '1px solid #ece4d4',
         borderRadius: 16,
-        padding: '13px 15px'
+        padding: '13px 15px',
+        cursor: 'pointer'
       }
     }, /*#__PURE__*/React.createElement("div", {
       style: {
@@ -4890,6 +4921,7 @@ class App extends Component {
             color: d.color || '#6e2230',
             img: `linear-gradient(150deg,${d.color || '#6e2230'}cc,${d.color || '#1c1a17'})`,
             photo: d.photo || '',
+            created: isNew ? Date.now() : d.created,
             ar: d.ar || '',
             sub: d.sub || '',
             body: d.body || '',
@@ -5918,11 +5950,16 @@ class App extends Component {
         const isNew = st.adminEditIdx === -1;
         if (subSec === 'videos') {
           const save2 = () => {
+            if (d.yt && !ytId(d.yt)) {
+              this.showToast('That YouTube link is not valid');
+              return;
+            }
             const a = [...st.liveKidsVideos];
             const it = {
               title: d.title || '',
               meta: d.meta || '',
-              color: d.color || '#1f5145'
+              color: d.color || '#1f5145',
+              yt: d.yt || ''
             };
             if (isNew) a.push(it);else a[st.adminEditIdx] = it;
             save('kidsVideos', 'liveKidsVideos', a, isNew ? 'Video added!' : 'Updated!');
@@ -5953,6 +5990,14 @@ class App extends Component {
             }),
             placeholder: "Meta (e.g. Animated · 4 min)",
             maxLength: 60,
+            style: inp
+          }), /*#__PURE__*/React.createElement("input", {
+            value: d.yt || '',
+            onChange: e => this.setDraft({
+              yt: e.target.value
+            }),
+            placeholder: "YouTube URL (plays inside the app)",
+            maxLength: 200,
             style: inp
           }), /*#__PURE__*/React.createElement("select", {
             value: d.color || '#1f5145',
@@ -6217,11 +6262,16 @@ class App extends Component {
         const isNew = st.adminEditIdx === -1;
         if (subSec === 'videos') {
           const save2 = () => {
+            if (d.yt && !ytId(d.yt)) {
+              this.showToast('That YouTube link is not valid');
+              return;
+            }
             const a = [...(st.liveHealthVideos || [])];
             const it = {
               title: d.title || '',
               meta: d.meta || '',
-              color: d.color || '#1f5145'
+              color: d.color || '#1f5145',
+              yt: d.yt || ''
             };
             if (isNew) a.push(it);else a[st.adminEditIdx] = it;
             save('healthVideos', 'liveHealthVideos', a, isNew ? 'Video added!' : 'Updated!');
@@ -6252,6 +6302,14 @@ class App extends Component {
             }),
             placeholder: "Meta (e.g. Wellness · 3 min)",
             maxLength: 60,
+            style: inp
+          }), /*#__PURE__*/React.createElement("input", {
+            value: d.yt || '',
+            onChange: e => this.setDraft({
+              yt: e.target.value
+            }),
+            placeholder: "YouTube URL (plays inside the app)",
+            maxLength: 200,
             style: inp
           }), /*#__PURE__*/React.createElement("select", {
             value: d.color || '#1f5145',
@@ -7600,6 +7658,7 @@ class App extends Component {
       }
     }, st.liveKidsVideos.map((v, i) => /*#__PURE__*/React.createElement("div", {
       key: i,
+      onClick: () => this.playYt(v.yt),
       style: {
         flexShrink: 0,
         width: 170,
@@ -7611,7 +7670,7 @@ class App extends Component {
         aspectRatio: '16/10',
         borderRadius: 15,
         overflow: 'hidden',
-        background: v.color,
+        background: ytId(v.yt) ? `url(https://img.youtube.com/vi/${ytId(v.yt)}/hqdefault.jpg) center/cover` : v.color,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center'
@@ -7620,7 +7679,7 @@ class App extends Component {
       style: {
         position: 'absolute',
         inset: 0,
-        background: 'repeating-linear-gradient(135deg,rgba(255,255,255,.05) 0 10px,transparent 10px 20px)'
+        background: ytId(v.yt) ? 'rgba(0,0,0,.18)' : 'repeating-linear-gradient(135deg,rgba(255,255,255,.05) 0 10px,transparent 10px 20px)'
       }
     }), /*#__PURE__*/React.createElement("div", {
       style: {
@@ -7973,6 +8032,7 @@ class App extends Component {
       }
     }, (st.liveHealthVideos || []).map((v, i) => /*#__PURE__*/React.createElement("div", {
       key: i,
+      onClick: () => this.playYt(v.yt),
       style: {
         flexShrink: 0,
         width: 170,
@@ -7984,7 +8044,7 @@ class App extends Component {
         aspectRatio: '16/10',
         borderRadius: 15,
         overflow: 'hidden',
-        background: v.color,
+        background: ytId(v.yt) ? `url(https://img.youtube.com/vi/${ytId(v.yt)}/hqdefault.jpg) center/cover` : v.color,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center'
@@ -7993,7 +8053,7 @@ class App extends Component {
       style: {
         position: 'absolute',
         inset: 0,
-        background: 'repeating-linear-gradient(135deg,rgba(255,255,255,.05) 0 10px,transparent 10px 20px)'
+        background: ytId(v.yt) ? 'rgba(0,0,0,.18)' : 'repeating-linear-gradient(135deg,rgba(255,255,255,.05) 0 10px,transparent 10px 20px)'
       }
     }), /*#__PURE__*/React.createElement("div", {
       style: {
@@ -9141,6 +9201,68 @@ class App extends Component {
     }));
   }
 
+  /* ── YOUTUBE PLAYER ── */
+  renderYtPlayer(st) {
+    return /*#__PURE__*/React.createElement("div", {
+      onClick: () => this.setState({
+        ytPlayer: null
+      }),
+      style: {
+        position: 'fixed',
+        inset: 0,
+        zIndex: 200,
+        background: 'rgba(10,10,8,.94)',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: 16
+      },
+      className: "apo"
+    }, /*#__PURE__*/React.createElement("div", {
+      onClick: () => this.setState({
+        ytPlayer: null
+      }),
+      style: {
+        position: 'absolute',
+        top: 'calc(14px + env(safe-area-inset-top, 0px))',
+        right: 16,
+        width: 38,
+        height: 38,
+        borderRadius: '50%',
+        background: 'rgba(255,255,255,.14)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        color: '#fff',
+        fontSize: 22,
+        cursor: 'pointer'
+      }
+    }, "\xD7"), /*#__PURE__*/React.createElement("div", {
+      onClick: e => e.stopPropagation(),
+      style: {
+        width: '100%',
+        maxWidth: 430,
+        aspectRatio: '16/9',
+        borderRadius: 14,
+        overflow: 'hidden',
+        background: '#000',
+        boxShadow: '0 24px 60px -20px rgba(0,0,0,.8)'
+      }
+    }, /*#__PURE__*/React.createElement("iframe", {
+      src: `https://www.youtube-nocookie.com/embed/${st.ytPlayer}?autoplay=1&playsinline=1&rel=0`,
+      title: "Video player",
+      allow: "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share",
+      allowFullScreen: true,
+      style: {
+        width: '100%',
+        height: '100%',
+        border: 'none',
+        display: 'block'
+      }
+    })));
+  }
+
   /* ── TOAST ── */
   renderToast(msg) {
     return /*#__PURE__*/React.createElement("div", {
@@ -9290,7 +9412,7 @@ class App extends Component {
         fontSize: 20,
         cursor: 'pointer'
       }
-    }, "×")), showNav && this.renderNav(st), st.story !== null && this.renderStoryViewer(st), st.toast && this.renderToast(st.toast));
+    }, "×")), showNav && this.renderNav(st), st.story !== null && this.renderStoryViewer(st), st.ytPlayer && this.renderYtPlayer(st), st.toast && this.renderToast(st.toast));
   }
 }
 ReactDOM.createRoot(document.getElementById('root')).render(/*#__PURE__*/React.createElement(App, null));
