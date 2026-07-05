@@ -1,4 +1,4 @@
-const CACHE = 'abi-v9';
+const CACHE = 'abi-v10';
 const SHELL = ['/', '/index.html', '/manifest.json',
   '/vendor/react.min.js', '/vendor/react-dom.min.js', '/app.js',
   '/adhan.mp3', '/icon-192.png', '/icon-512.png'];

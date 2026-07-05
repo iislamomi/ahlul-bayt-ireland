@@ -1407,6 +1407,10 @@ class App extends Component {
       qiblaBearing: null,
       qiblaLat: null,
       qiblaLng: null,
+      /* ── KHUMS & ZAKAT ── */
+      khumsTab: 'khums',
+      khumsCalc: { cash: '', goods: '', receivables: '', other: '', debts: '', paid: '' },
+      zakatCalc: { cash: '', gold: '', silver: '', business: '', receivables: '', investments: '', debts: '', nisab: '600' },
       /* ── ADMIN ── */
       adminLoggedIn: false,
       adminInputId: '',
@@ -1823,17 +1827,29 @@ class App extends Component {
       last: i === activePrayers.length - 1
     }));
     const quickCards = [{
-      title: 'Nahj al-Balāgha',
-      sub: 'Sermons · Letters · Sayings',
-      glyph: 'ﻥ',
+      title: this.t('kids.title'),
+      sub: 'Books · videos · quizzes',
+      glyph: 'ﻙ',
+      tint: '#f3ecd9',
+      ink: '#b8923f',
+      span: '1',
+      go: () => this.go('kids')
+    }, {
+      title: this.t('home.classTitle'),
+      sub: 'Businesses & listings',
+      glyph: 'ﺱ',
+      tint: '#f3ecd9',
+      ink: '#9a7a2c',
+      span: '1',
+      go: () => this.go('classifieds')
+    }, {
+      title: this.t('more.health'),
+      sub: 'Tips & wellness videos',
+      glyph: '♡',
       tint: '#e6efe9',
       ink: '#2c5d52',
-      span: '2',
-      go: () => this.setState({
-        screen: 'library',
-        libTab: 'nahj',
-        libCat: 'All'
-      })
+      span: '1',
+      go: () => this.go('health')
     }, {
       title: 'Duʿāʾ',
       sub: 'Supplications',
@@ -1859,21 +1875,25 @@ class App extends Component {
         libCat: 'All'
       })
     }, {
-      title: this.t('kids.title'),
-      sub: 'Books · videos · quizzes',
-      glyph: 'ﻙ',
-      tint: '#f3ecd9',
-      ink: '#b8923f',
-      span: '1',
-      go: () => this.go('kids')
-    }, {
-      title: this.t('more.health'),
-      sub: 'Tips & wellness videos',
-      glyph: '♡',
+      title: 'Nahj al-Balāgha',
+      sub: 'Sermons · Letters · Sayings',
+      glyph: 'ﻥ',
       tint: '#e6efe9',
       ink: '#2c5d52',
       span: '1',
-      go: () => this.go('health')
+      go: () => this.setState({
+        screen: 'library',
+        libTab: 'nahj',
+        libCat: 'All'
+      })
+    }, {
+      title: 'Khums & Zakat',
+      sub: 'Calculators & guidance',
+      glyph: 'ﺥ',
+      tint: '#f3e6e8',
+      ink: '#6e2230',
+      span: '1',
+      go: () => this.go('khums')
     }, {
       title: this.t('qibla.title'),
       sub: this.t('more.qiblaSub'),
@@ -1888,7 +1908,7 @@ class App extends Component {
       glyph: 'ﮬ',
       tint: '#e8ebf4',
       ink: '#3a4a78',
-      span: '1',
+      span: '2',
       go: () => this.go('calendar')
     }];
     const now = st.now;
@@ -2165,58 +2185,6 @@ class App extends Component {
         fontWeight: 600
       }
     }, s.short)))), /*#__PURE__*/React.createElement("div", {
-      onClick: () => this.go('classifieds'),
-      style: {
-        display: 'flex',
-        alignItems: 'center',
-        gap: 13,
-        background: '#fffdf9',
-        border: '1px solid #ece4d4',
-        borderRadius: 16,
-        padding: '13px 16px',
-        cursor: 'pointer',
-        marginBottom: 18
-      }
-    }, /*#__PURE__*/React.createElement("div", {
-      style: {
-        width: 40,
-        height: 40,
-        borderRadius: 12,
-        background: '#f3ecd9',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        flexShrink: 0
-      }
-    }, /*#__PURE__*/React.createElement("span", {
-      style: {
-        fontFamily: 'Amiri,serif',
-        fontSize: 20,
-        color: '#9a7a2c'
-      },
-      dir: "rtl"
-    }, "ﺱ")), /*#__PURE__*/React.createElement("div", {
-      style: {
-        flex: 1
-      }
-    }, /*#__PURE__*/React.createElement("div", {
-      style: {
-        fontSize: 14.5,
-        fontWeight: 700,
-        color: '#2c2823'
-      }
-    }, this.t('home.classTitle')), /*#__PURE__*/React.createElement("div", {
-      style: {
-        fontSize: 12,
-        color: '#9a8f7c',
-        marginTop: 1
-      }
-    }, this.t('home.classSub'))), /*#__PURE__*/React.createElement("span", {
-      style: {
-        color: '#bba35f',
-        fontSize: 18
-      }
-    }, "›")), /*#__PURE__*/React.createElement("div", {
       onClick: () => this.go('prayer'),
       style: {
         position: 'relative',
@@ -2315,9 +2283,9 @@ class App extends Component {
       style: {
         background: '#fffdf9',
         border: '1px solid #ece4d4',
-        borderRadius: 18,
-        padding: '6px 4px',
-        marginBottom: 22
+        borderRadius: 16,
+        padding: '3px 4px',
+        marginBottom: 18
       }
     }, prayers.map(p => /*#__PURE__*/React.createElement("div", {
       key: p.name,
@@ -2325,33 +2293,33 @@ class App extends Component {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        padding: '11px 16px',
+        padding: '5.5px 14px',
         borderBottom: p.last ? 'none' : '1px solid #f3ecdd'
       }
     }, /*#__PURE__*/React.createElement("div", {
       style: {
         display: 'flex',
         alignItems: 'center',
-        gap: 12
+        gap: 10
       }
     }, /*#__PURE__*/React.createElement("span", {
       style: {
         fontFamily: 'Amiri,serif',
-        fontSize: 17,
+        fontSize: 14.5,
         color: '#bba35f',
-        width: 22,
+        width: 19,
         textAlign: 'center'
       },
       dir: "rtl"
     }, p.glyph), /*#__PURE__*/React.createElement("span", {
       style: {
-        fontSize: 15,
+        fontSize: 13.5,
         color: p.isNext ? '#1f5145' : '#3f3a32',
         fontWeight: p.isNext ? 700 : 500
       }
     }, p.name)), /*#__PURE__*/React.createElement("span", {
       style: {
-        fontSize: 15,
+        fontSize: 13.5,
         color: p.isNext ? '#1f5145' : '#3f3a32',
         fontWeight: p.isNext ? 700 : 500,
         fontVariantNumeric: 'tabular-nums'
@@ -7654,6 +7622,233 @@ class App extends Component {
   }
 
   /* ── QIBLA FINDER ── */
+  renderKhums(st) {
+    const kt = st.khumsTab || 'khums';
+    const num = v => Math.max(0, parseFloat(v) || 0);
+    const fmt = v => '€' + v.toLocaleString('en-IE', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    });
+    const tabStyle = k => ({
+      flex: 1,
+      textAlign: 'center',
+      padding: '8px 6px',
+      borderRadius: 10,
+      fontSize: 13,
+      fontWeight: 600,
+      cursor: 'pointer',
+      background: kt === k ? '#fffdf9' : 'transparent',
+      color: kt === k ? '#1f5145' : '#8c8270',
+      transition: 'background .15s'
+    });
+    const field = (calcKey, key, label, hint) => /*#__PURE__*/React.createElement("div", {
+      key: key,
+      style: {
+        marginBottom: 12
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 12.5,
+        fontWeight: 600,
+        color: '#5d564a',
+        marginBottom: 3
+      }
+    }, label), hint && /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 11,
+        color: '#9a8f7c',
+        marginBottom: 4,
+        lineHeight: 1.35
+      }
+    }, hint), /*#__PURE__*/React.createElement("input", {
+      type: "number",
+      inputMode: "decimal",
+      min: "0",
+      placeholder: "0.00",
+      value: st[calcKey][key],
+      onChange: e => this.setState({
+        [calcKey]: {
+          ...st[calcKey],
+          [key]: e.target.value
+        }
+      }),
+      style: {
+        width: '100%',
+        padding: '10px 12px',
+        borderRadius: 10,
+        border: '1px solid #e2d8c4',
+        background: '#fffdf9',
+        fontSize: 14,
+        outline: 'none',
+        fontVariantNumeric: 'tabular-nums'
+      }
+    }));
+    const resultRow = (label, value, strong) => /*#__PURE__*/React.createElement("div", {
+      key: label,
+      style: {
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: '7px 0',
+        borderBottom: strong ? 'none' : '1px solid rgba(255,255,255,.12)'
+      }
+    }, /*#__PURE__*/React.createElement("span", {
+      style: {
+        fontSize: strong ? 14.5 : 12.5,
+        fontWeight: strong ? 700 : 500,
+        color: strong ? '#f3ead4' : '#cdbf9e'
+      }
+    }, label), /*#__PURE__*/React.createElement("span", {
+      style: {
+        fontSize: strong ? 18 : 13.5,
+        fontWeight: strong ? 700 : 600,
+        color: strong ? '#e8d39a' : '#f3ead4',
+        fontVariantNumeric: 'tabular-nums'
+      }
+    }, value));
+    const sectionLabel = txt => /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 11,
+        letterSpacing: 1.2,
+        textTransform: 'uppercase',
+        fontWeight: 700,
+        color: '#b1a690',
+        margin: '18px 0 10px'
+      }
+    }, txt);
+    /* ── Khums: 20% of surplus at year end; half Sahm al-Imam, half Sahm al-Sadat ── */
+    const kc = st.khumsCalc;
+    const kAssets = num(kc.cash) + num(kc.goods) + num(kc.receivables) + num(kc.other);
+    const kDebts = num(kc.debts);
+    const kSurplus = Math.max(0, kAssets - kDebts);
+    const kDue = Math.max(0, kSurplus * 0.2 - num(kc.paid));
+    /* ── Zakat: 2.5% of net zakatable wealth if at or above nisab ── */
+    const zc = st.zakatCalc;
+    const zAssets = num(zc.cash) + num(zc.gold) + num(zc.silver) + num(zc.business) + num(zc.receivables) + num(zc.investments);
+    const zNet = Math.max(0, zAssets - num(zc.debts));
+    const zNisab = num(zc.nisab);
+    const zAbove = zNet >= zNisab && zNet > 0;
+    const zDue = zAbove ? zNet * 0.025 : 0;
+    return /*#__PURE__*/React.createElement("div", {
+      style: {
+        padding: '8px 20px 100px'
+      },
+      className: "afu"
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        padding: '8px 0 16px'
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 13,
+        color: '#9a8f7c',
+        fontWeight: 500
+      }
+    }, "Obligations"), /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontFamily: 'Spectral,serif',
+        fontSize: 26,
+        fontWeight: 600,
+        color: '#27241f',
+        marginTop: 2
+      }
+    }, "Khums & Zakat")), /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: 'flex',
+        gap: 6,
+        background: '#efe7d7',
+        borderRadius: 14,
+        padding: 4,
+        marginBottom: 16
+      }
+    }, [['khums', 'Khums'], ['zakat', 'Zakat']].map(([k, label]) => /*#__PURE__*/React.createElement("div", {
+      key: k,
+      onClick: () => this.setState({
+        khumsTab: k
+      }),
+      style: tabStyle(k)
+    }, label))), kt === 'khums' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+      style: {
+        background: '#fffdf9',
+        border: '1px solid #ece4d4',
+        borderRadius: 16,
+        padding: '13px 15px',
+        fontSize: 12.5,
+        color: '#6f675a',
+        lineHeight: 1.55,
+        marginBottom: 4
+      }
+    }, "Khums is an annual obligation of one-fifth (20%) of the surplus income remaining after your yearly living expenses, calculated on your khums due date. Half is Sahm al-Imām (paid to your marjaʿ or his representative) and half is Sahm al-Sādāt (given to needy Sayyids)."), sectionLabel('What you own on your khums date'), field('khumsCalc', 'cash', 'Cash in hand & bank accounts'), field('khumsCalc', 'goods', 'Unused items & provisions', 'Value of goods bought this year but not used — food stock, unworn clothes, unused household items.'), field('khumsCalc', 'receivables', 'Money owed to you', 'Loans you gave and payments due that you expect to receive.'), field('khumsCalc', 'other', 'Other surplus assets', 'Investments, savings certificates or business profits acquired from surplus income.'), sectionLabel('Deductions'), field('khumsCalc', 'debts', 'Outstanding debts & unpaid bills', 'Debts taken for this year’s living expenses and bills currently due.'), field('khumsCalc', 'paid', 'Khums already paid in advance this year'), /*#__PURE__*/React.createElement("div", {
+      style: {
+        background: 'linear-gradient(155deg,#1f5145 0%,#163b30 100%)',
+        borderRadius: 18,
+        padding: '16px 18px',
+        marginTop: 16,
+        boxShadow: '0 14px 28px -16px rgba(22,59,48,.7)'
+      }
+    }, resultRow('Total assets', fmt(kAssets)), resultRow('Deductions', '− ' + fmt(kDebts)), resultRow('Net surplus', fmt(kSurplus)), resultRow('Khums due (20%)', fmt(kDue), true), /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: 'flex',
+        gap: 10,
+        marginTop: 10
+      }
+    }, [['Sahm al-Imām (½)', kDue / 2], ['Sahm al-Sādāt (½)', kDue / 2]].map(([l, v]) => /*#__PURE__*/React.createElement("div", {
+      key: l,
+      style: {
+        flex: 1,
+        background: 'rgba(255,255,255,.08)',
+        borderRadius: 12,
+        padding: '9px 11px'
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 10.5,
+        color: '#cdbf9e',
+        marginBottom: 3
+      }
+    }, l), /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 14,
+        fontWeight: 700,
+        color: '#f3ead4',
+        fontVariantNumeric: 'tabular-nums'
+      }
+    }, fmt(v))))))), kt === 'zakat' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+      style: {
+        background: '#fffdf9',
+        border: '1px solid #ece4d4',
+        borderRadius: 16,
+        padding: '13px 15px',
+        fontSize: 12.5,
+        color: '#6f675a',
+        lineHeight: 1.55,
+        marginBottom: 4
+      }
+    }, "Zakat is 2.5% of your net zakatable wealth, due when it has remained at or above the nisab threshold for one lunar year. The nisab is the value of 87.48g of gold or 612.36g of silver — check current market prices."), sectionLabel('Zakatable assets'), field('zakatCalc', 'cash', 'Cash in hand & bank accounts'), field('zakatCalc', 'gold', 'Value of gold'), field('zakatCalc', 'silver', 'Value of silver'), field('zakatCalc', 'business', 'Business inventory & merchandise'), field('zakatCalc', 'receivables', 'Money owed to you'), field('zakatCalc', 'investments', 'Shares & investments'), sectionLabel('Deductions & threshold'), field('zakatCalc', 'debts', 'Debts & liabilities due'), field('zakatCalc', 'nisab', 'Nisab threshold', 'Default €600 ≈ value of 612.36g silver. Update with today’s silver or gold price.'), /*#__PURE__*/React.createElement("div", {
+      style: {
+        background: 'linear-gradient(155deg,#1f5145 0%,#163b30 100%)',
+        borderRadius: 18,
+        padding: '16px 18px',
+        marginTop: 16,
+        boxShadow: '0 14px 28px -16px rgba(22,59,48,.7)'
+      }
+    }, resultRow('Zakatable wealth', fmt(zAssets)), resultRow('Liabilities', '− ' + fmt(num(zc.debts))), resultRow('Net wealth', fmt(zNet)), resultRow('Zakat due (2.5%)', fmt(zDue), true), !zAbove && zNet > 0 && /*#__PURE__*/React.createElement("div", {
+      style: {
+        marginTop: 8,
+        fontSize: 11.5,
+        color: '#cdbf9e',
+        lineHeight: 1.4
+      }
+    }, "Your net wealth is below the nisab threshold — no Zakat is due."))), /*#__PURE__*/React.createElement("div", {
+      style: {
+        marginTop: 16,
+        fontSize: 11,
+        color: '#9a8f7c',
+        lineHeight: 1.5,
+        textAlign: 'center'
+      }
+    }, "These figures are a guide only. Rulings differ between marājiʿ — please confirm your calculation with your marjaʿ or a local scholar."));
+  }
   renderQibla(st) {
     const {
       qiblaStatus,
@@ -8536,7 +8731,7 @@ class App extends Component {
         position: 'relative',
         background: st.dark ? '#16191a' : '#f6f1e7'
       }
-    }, st.screen === 'home' && this.renderHome(st, next, cd, greg, hijri, salaam), st.screen === 'prayer' && this.renderPrayer(st, next, cd, greg), st.screen === 'library' && this.renderLibrary(st), st.screen === 'reading' && this.renderReading(st), st.screen === 'classifieds' && this.renderClassifieds(st), st.screen === 'more' && this.renderMore(st), st.screen === 'about' && this.renderAbout(), st.screen === 'offline' && this.renderOffline(), st.screen === 'admin' && this.renderAdmin(st), st.screen === 'calendar' && this.renderCalendar(st), st.screen === 'kids' && this.renderKids(st), st.screen === 'health' && this.renderHealth(st), st.screen === 'qibla' && this.renderQibla(st), st.screen === 'stories' && this.renderStories(st)), showNav && /*#__PURE__*/React.createElement("div", {
+    }, st.screen === 'home' && this.renderHome(st, next, cd, greg, hijri, salaam), st.screen === 'prayer' && this.renderPrayer(st, next, cd, greg), st.screen === 'library' && this.renderLibrary(st), st.screen === 'reading' && this.renderReading(st), st.screen === 'classifieds' && this.renderClassifieds(st), st.screen === 'more' && this.renderMore(st), st.screen === 'about' && this.renderAbout(), st.screen === 'offline' && this.renderOffline(), st.screen === 'admin' && this.renderAdmin(st), st.screen === 'calendar' && this.renderCalendar(st), st.screen === 'kids' && this.renderKids(st), st.screen === 'health' && this.renderHealth(st), st.screen === 'qibla' && this.renderQibla(st), st.screen === 'khums' && this.renderKhums(st), st.screen === 'stories' && this.renderStories(st)), showNav && /*#__PURE__*/React.createElement("div", {
       style: {
         flexShrink: 0,
         textAlign: 'center',
