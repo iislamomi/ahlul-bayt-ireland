@@ -1255,7 +1255,10 @@ const PUSH_MSG = {
   pinned: 'Featured message has been updated',
   classifieds: 'New listing in community classifieds',
   calEvents: 'Islamic calendar updated',
-  prayerPresets: 'Prayer times updated'
+  prayerPresets: 'Prayer times updated',
+  duas: 'Library updated — new duʿāʾ content',
+  ziyarat: 'Library updated — new ziyārah content',
+  nahj: 'Library updated — Nahj al-Balāgha'
 };
 
 function urlBase64ToUint8Array(b64) {
@@ -1314,8 +1317,33 @@ const SB_KEY_MAP = {
   announcement: 'liveAnnouncement', pinned: 'livePinned',
   kidsVideos: 'liveKidsVideos', kidsBooks: 'liveKidsBooks', kidsQuotes: 'liveKidsQuotes',
   prayerPresets: 'livePrayerPresets', calEvents: 'liveCalEvents',
-  healthTips: 'liveHealthTips', healthVideos: 'liveHealthVideos'
+  healthTips: 'liveHealthTips', healthVideos: 'liveHealthVideos',
+  duas: 'liveDuas', ziyarat: 'liveZiyarat', nahj: 'liveNahj'
 };
+
+function resizeImageFile(file, maxDim, quality) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        let w = img.width, h = img.height;
+        const scale = Math.min(1, maxDim / Math.max(w, h));
+        w = Math.round(w * scale);
+        h = Math.round(h * scale);
+        const canvas = document.createElement('canvas');
+        canvas.width = w;
+        canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      };
+      img.onerror = reject;
+      img.src = reader.result;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
 
 async function sbLoadAll() {
   try {
@@ -1441,7 +1469,11 @@ class App extends Component {
       livePrayerPresets: lsGet('prayerPresets', PRAYER_PRESETS),
       liveCalEvents: lsGet('calEvents', CAL_EVENTS_DEFAULT),
       liveHealthTips: lsGet('healthTips', HEALTH_TIPS),
-      liveHealthVideos: lsGet('healthVideos', HEALTH_VIDEOS)
+      liveHealthVideos: lsGet('healthVideos', HEALTH_VIDEOS),
+      liveDuas: lsGet('duas', DUAS),
+      liveZiyarat: lsGet('ziyarat', ZIYARAT),
+      liveNahj: lsGet('nahj', NAHJ),
+      adminLibTab: 'dua'
     });
     _defineProperty(this, "go", s => this.setState({
       screen: s,
@@ -2154,7 +2186,7 @@ class App extends Component {
         width: '100%',
         height: '100%',
         borderRadius: '50%',
-        background: s.img || s.color,
+        background: s.photo ? `url(${s.photo}) center/cover` : s.img || s.color,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -3117,20 +3149,23 @@ class App extends Component {
   /* ── LIBRARY ── */
   renderLibrary(st) {
     const q = st.libQuery.trim().toLowerCase();
+    const duaList = st.liveDuas || DUAS;
+    const ziyList = st.liveZiyarat || ZIYARAT;
+    const nahjData = st.liveNahj || NAHJ;
     const libMeta = {
       dua: {
         title: "Duʿāʾ",
         accent: '#9a7a2c',
         tint: '#f3ecd9',
-        list: DUAS,
-        cats: ['All', 'Daily', 'Weekly', 'Morning', 'Monthly']
+        list: duaList,
+        cats: ['All', ...new Set(duaList.map(it => it.cat).filter(Boolean))]
       },
       ziyarah: {
         title: 'Ziyārah',
         accent: '#6e2230',
         tint: '#f3e6e8',
-        list: ZIYARAT,
-        cats: ['All', 'Imam Ḥusayn', "The Aʾimmah", 'General']
+        list: ziyList,
+        cats: ['All', ...new Set(ziyList.map(it => it.cat).filter(Boolean))]
       },
       nahj: {
         title: 'Nahj al-Balāgha',
@@ -3172,13 +3207,13 @@ class App extends Component {
     if (st.libTab === 'dua' || st.libTab === 'ziyarah') {
       libCards = lm.list.filter(it => {
         const catOk = st.libCat === 'All' || it.cat === st.libCat;
-        const qOk = !q || it.title.toLowerCase().includes(q) || it.tr.toLowerCase().includes(q);
+        const qOk = !q || (it.title || '').toLowerCase().includes(q) || (it.tr || '').toLowerCase().includes(q);
         return catOk && qOk;
       });
     }
     let nahjCards = [];
     if (st.libTab === 'nahj') {
-      nahjCards = NAHJ[st.nahjTab].filter(it => !q || it.title.toLowerCase().includes(q) || it.tr.toLowerCase().includes(q));
+      nahjCards = (nahjData[st.nahjTab] || []).filter(it => !q || (it.title || '').toLowerCase().includes(q) || (it.tr || '').toLowerCase().includes(q));
     }
     const nahjTabStyle = k => ({
       padding: '0 0 11px',
@@ -4782,6 +4817,9 @@ class App extends Component {
       id: 'stories',
       label: 'Stories'
     }, {
+      id: 'library',
+      label: 'Library'
+    }, {
       id: 'classifieds',
       label: 'Classifieds'
     }, {
@@ -4851,6 +4889,7 @@ class App extends Component {
             tag: d.tag || '',
             color: d.color || '#6e2230',
             img: `linear-gradient(150deg,${d.color || '#6e2230'}cc,${d.color || '#1c1a17'})`,
+            photo: d.photo || '',
             ar: d.ar || '',
             sub: d.sub || '',
             body: d.body || '',
@@ -4968,7 +5007,61 @@ class App extends Component {
         }, COLORS.map(c => /*#__PURE__*/React.createElement("option", {
           key: c,
           value: c
-        }, COLOR_NAMES[c]))), isQuiz && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("input", {
+        }, COLOR_NAMES[c]))), /*#__PURE__*/React.createElement("div", {
+          style: {
+            marginBottom: 11
+          }
+        }, /*#__PURE__*/React.createElement("div", {
+          style: {
+            fontSize: 12.5,
+            fontWeight: 600,
+            color: '#5d564a',
+            marginBottom: 6
+          }
+        }, "Background image (optional)"), d.photo && /*#__PURE__*/React.createElement("div", {
+          style: {
+            marginBottom: 8
+          }
+        }, /*#__PURE__*/React.createElement("img", {
+          src: d.photo,
+          alt: "",
+          style: {
+            width: '100%',
+            maxHeight: 150,
+            objectFit: 'cover',
+            borderRadius: 12,
+            display: 'block',
+            marginBottom: 8
+          }
+        }), btn('Remove image', () => this.setDraft({
+          photo: ''
+        }), {
+          background: '#f3e6e8',
+          color: '#6e2230',
+          fontSize: 12,
+          padding: '6px 12px'
+        })), /*#__PURE__*/React.createElement("input", {
+          type: "file",
+          accept: "image/*",
+          onChange: async e => {
+            const f = e.target.files && e.target.files[0];
+            e.target.value = '';
+            if (!f) return;
+            try {
+              const url = await resizeImageFile(f, 1000, 0.8);
+              this.setDraft({
+                photo: url
+              });
+            } catch (_) {
+              this.showToast('Could not read that image');
+            }
+          },
+          style: {
+            width: '100%',
+            fontSize: 12.5,
+            color: '#6f675a'
+          }
+        })), isQuiz && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("input", {
           value: d.question || '',
           onChange: e => this.setDraft({
             question: e.target.value
@@ -6353,8 +6446,379 @@ class App extends Component {
         padding: '6px 10px'
       }))));
     };
+    /* ─ LIBRARY ─ */
+    const renderLibrarySection = () => {
+      const lt = st.adminLibTab || 'dua';
+      const pillBar = /*#__PURE__*/React.createElement("div", {
+        style: {
+          display: 'flex',
+          gap: 6,
+          background: '#efe7d7',
+          borderRadius: 12,
+          padding: 4,
+          marginBottom: 14
+        }
+      }, [['dua', 'Duʿāʾ'], ['ziyarah', 'Ziyārah'], ['nahj', 'Nahj']].map(([k, label]) => /*#__PURE__*/React.createElement("div", {
+        key: k,
+        onClick: () => this.setState({
+          adminLibTab: k,
+          adminEditIdx: null,
+          adminEditDraft: {}
+        }),
+        style: {
+          flex: 1,
+          textAlign: 'center',
+          padding: '7px 4px',
+          borderRadius: 9,
+          fontSize: 12.5,
+          fontWeight: 600,
+          cursor: 'pointer',
+          background: lt === k ? '#fffdf9' : 'transparent',
+          color: lt === k ? '#1f5145' : '#8c8270'
+        }
+      }, label)));
+      const rowStyle = {
+        display: 'flex',
+        alignItems: 'center',
+        gap: 10,
+        background: '#fffdf9',
+        border: '1px solid #ece4d4',
+        borderRadius: 13,
+        padding: '11px 13px',
+        marginBottom: 9
+      };
+      const rowBtns = (onEdit, onDelete) => /*#__PURE__*/React.createElement("div", {
+        style: {
+          display: 'flex',
+          gap: 6,
+          flexShrink: 0
+        }
+      }, btn('Edit', onEdit, {
+        background: '#e6efe9',
+        color: '#1f5145',
+        padding: '6px 12px',
+        fontSize: 12
+      }), btn('Delete', onDelete, {
+        background: '#f3e6e8',
+        color: '#6e2230',
+        padding: '6px 12px',
+        fontSize: 12
+      }));
+      if (lt === 'dua' || lt === 'ziyarah') {
+        const key = lt === 'dua' ? 'duas' : 'ziyarat';
+        const stateKey = lt === 'dua' ? 'liveDuas' : 'liveZiyarat';
+        const label = lt === 'dua' ? 'Duʿāʾ' : 'Ziyārah';
+        const list = st[stateKey] || [];
+        if (editing) {
+          const d = st.adminEditDraft;
+          const isNew = st.adminEditIdx === -1;
+          const saveItem = () => {
+            if (!(d.title || '').trim()) {
+              this.showToast('Title is required');
+              return;
+            }
+            const a = [...list];
+            const item = {
+              title: d.title || '',
+              cat: (d.cat || '').trim() || 'General',
+              ar: d.ar || '',
+              tr: d.tr || '',
+              note: d.note || '',
+              body: d.body || ''
+            };
+            if (isNew) a.unshift(item);else a[st.adminEditIdx] = item;
+            save(key, stateKey, a, isNew ? label + ' added!' : label + ' updated!');
+          };
+          return /*#__PURE__*/React.createElement("div", {
+            style: {
+              padding: '0 0 20px'
+            }
+          }, pillBar, /*#__PURE__*/React.createElement("div", {
+            style: {
+              fontSize: 13,
+              fontWeight: 700,
+              color: '#27241f',
+              marginBottom: 14
+            }
+          }, (isNew ? 'Add ' : 'Edit ') + label), /*#__PURE__*/React.createElement("input", {
+            value: d.title || '',
+            onChange: e => this.setDraft({
+              title: e.target.value
+            }),
+            placeholder: "Title",
+            maxLength: 100,
+            style: inp
+          }), /*#__PURE__*/React.createElement("input", {
+            value: d.cat || '',
+            onChange: e => this.setDraft({
+              cat: e.target.value
+            }),
+            placeholder: lt === 'dua' ? 'Category (e.g. Daily, Weekly, Morning)' : 'Category (e.g. Imam Ḥusayn, General)',
+            maxLength: 40,
+            style: inp
+          }), /*#__PURE__*/React.createElement("textarea", {
+            value: d.ar || '',
+            onChange: e => this.setDraft({
+              ar: e.target.value
+            }),
+            placeholder: "Arabic text",
+            maxLength: 2000,
+            style: {
+              ...inp,
+              minHeight: 70,
+              resize: 'none'
+            },
+            dir: "rtl"
+          }), /*#__PURE__*/React.createElement("input", {
+            value: d.tr || '',
+            onChange: e => this.setDraft({
+              tr: e.target.value
+            }),
+            placeholder: "Translation (opening line)",
+            maxLength: 300,
+            style: inp
+          }), /*#__PURE__*/React.createElement("input", {
+            value: d.note || '',
+            onChange: e => this.setDraft({
+              note: e.target.value
+            }),
+            placeholder: "Note (optional, e.g. when recited)",
+            maxLength: 160,
+            style: inp
+          }), /*#__PURE__*/React.createElement("textarea", {
+            value: d.body || '',
+            onChange: e => this.setDraft({
+              body: e.target.value
+            }),
+            placeholder: "Full text (English)",
+            maxLength: 8000,
+            style: {
+              ...inp,
+              minHeight: 120,
+              resize: 'none'
+            }
+          }), /*#__PURE__*/React.createElement("div", {
+            style: {
+              display: 'flex',
+              gap: 10
+            }
+          }, btn('Save', saveItem, {
+            flex: 1,
+            background: '#1f5145',
+            color: '#f3ead4'
+          }), btn('Cancel', this.cancelEdit, {
+            flex: 1,
+            border: '1px solid #e6dcc8',
+            background: '#fffdf9',
+            color: '#3f3a32'
+          })));
+        }
+        return /*#__PURE__*/React.createElement("div", null, pillBar, btn('+ Add ' + label, () => this.startEdit(-1, {}), {
+          background: '#1f5145',
+          color: '#f3ead4',
+          marginBottom: 14,
+          width: '100%'
+        }), list.map((it, i) => /*#__PURE__*/React.createElement("div", {
+          key: i,
+          style: rowStyle
+        }, /*#__PURE__*/React.createElement("div", {
+          style: {
+            flex: 1,
+            minWidth: 0
+          }
+        }, /*#__PURE__*/React.createElement("div", {
+          style: {
+            fontSize: 13.5,
+            fontWeight: 600,
+            color: '#2c2823',
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis'
+          }
+        }, it.title), /*#__PURE__*/React.createElement("div", {
+          style: {
+            fontSize: 11,
+            color: '#9a8f7c',
+            marginTop: 2
+          }
+        }, it.cat)), rowBtns(() => this.startEdit(i, {
+          ...it
+        }), () => {
+          const a = list.filter((_, x) => x !== i);
+          save(key, stateKey, a, 'Deleted');
+        }))));
+      }
+      /* nahj */
+      const nahj = st.liveNahj || NAHJ;
+      const groups = [['sermons', 'Sermons'], ['letters', 'Letters'], ['sayings', 'Sayings']];
+      if (editing) {
+        const d = st.adminEditDraft;
+        const isNew = st.adminEditIdx === -1;
+        const g = d._group || 'sermons';
+        const saveItem = () => {
+          if (!(d.title || '').trim()) {
+            this.showToast('Title is required');
+            return;
+          }
+          const next = {
+            sermons: [...(nahj.sermons || [])],
+            letters: [...(nahj.letters || [])],
+            sayings: [...(nahj.sayings || [])]
+          };
+          const item = {
+            ref: d.ref || '',
+            title: d.title || '',
+            sum: d.sum || '',
+            ar: d.ar || '',
+            tr: d.tr || ''
+          };
+          if (isNew) next[g].unshift(item);else next[g][st.adminEditIdx] = item;
+          save('nahj', 'liveNahj', next, isNew ? 'Entry added!' : 'Entry updated!');
+        };
+        return /*#__PURE__*/React.createElement("div", {
+          style: {
+            padding: '0 0 20px'
+          }
+        }, pillBar, /*#__PURE__*/React.createElement("div", {
+          style: {
+            fontSize: 13,
+            fontWeight: 700,
+            color: '#27241f',
+            marginBottom: 14
+          }
+        }, isNew ? 'Add Nahj Entry' : 'Edit Nahj Entry'), /*#__PURE__*/React.createElement("select", {
+          value: g,
+          disabled: !isNew,
+          onChange: e => this.setDraft({
+            _group: e.target.value
+          }),
+          style: {
+            ...inp,
+            cursor: isNew ? 'pointer' : 'not-allowed',
+            opacity: isNew ? 1 : .6
+          }
+        }, groups.map(([k, gl]) => /*#__PURE__*/React.createElement("option", {
+          key: k,
+          value: k
+        }, gl))), /*#__PURE__*/React.createElement("input", {
+          value: d.ref || '',
+          onChange: e => this.setDraft({
+            ref: e.target.value
+          }),
+          placeholder: "Reference (e.g. Sermon 1, Letter 31)",
+          maxLength: 40,
+          style: inp
+        }), /*#__PURE__*/React.createElement("input", {
+          value: d.title || '',
+          onChange: e => this.setDraft({
+            title: e.target.value
+          }),
+          placeholder: "Title",
+          maxLength: 100,
+          style: inp
+        }), /*#__PURE__*/React.createElement("input", {
+          value: d.sum || '',
+          onChange: e => this.setDraft({
+            sum: e.target.value
+          }),
+          placeholder: "Summary (optional)",
+          maxLength: 200,
+          style: inp
+        }), /*#__PURE__*/React.createElement("textarea", {
+          value: d.ar || '',
+          onChange: e => this.setDraft({
+            ar: e.target.value
+          }),
+          placeholder: "Arabic text (optional)",
+          maxLength: 2000,
+          style: {
+            ...inp,
+            minHeight: 70,
+            resize: 'none'
+          },
+          dir: "rtl"
+        }), /*#__PURE__*/React.createElement("textarea", {
+          value: d.tr || '',
+          onChange: e => this.setDraft({
+            tr: e.target.value
+          }),
+          placeholder: "Translation / text (English)",
+          maxLength: 8000,
+          style: {
+            ...inp,
+            minHeight: 120,
+            resize: 'none'
+          }
+        }), /*#__PURE__*/React.createElement("div", {
+          style: {
+            display: 'flex',
+            gap: 10
+          }
+        }, btn('Save', saveItem, {
+          flex: 1,
+          background: '#1f5145',
+          color: '#f3ead4'
+        }), btn('Cancel', this.cancelEdit, {
+          flex: 1,
+          border: '1px solid #e6dcc8',
+          background: '#fffdf9',
+          color: '#3f3a32'
+        })));
+      }
+      return /*#__PURE__*/React.createElement("div", null, pillBar, btn('+ Add Entry', () => this.startEdit(-1, {
+        _group: 'sermons'
+      }), {
+        background: '#1f5145',
+        color: '#f3ead4',
+        marginBottom: 14,
+        width: '100%'
+      }), groups.map(([g, gl]) => /*#__PURE__*/React.createElement(React.Fragment, {
+        key: g
+      }, /*#__PURE__*/React.createElement("div", {
+        style: {
+          fontSize: 11,
+          letterSpacing: 1.2,
+          textTransform: 'uppercase',
+          fontWeight: 700,
+          color: '#b1a690',
+          margin: '14px 0 8px'
+        }
+      }, gl), (nahj[g] || []).map((it, i) => /*#__PURE__*/React.createElement("div", {
+        key: i,
+        style: rowStyle
+      }, /*#__PURE__*/React.createElement("div", {
+        style: {
+          flex: 1,
+          minWidth: 0
+        }
+      }, /*#__PURE__*/React.createElement("div", {
+        style: {
+          fontSize: 13.5,
+          fontWeight: 600,
+          color: '#2c2823',
+          whiteSpace: 'nowrap',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis'
+        }
+      }, it.title), /*#__PURE__*/React.createElement("div", {
+        style: {
+          fontSize: 11,
+          color: '#9a8f7c',
+          marginTop: 2
+        }
+      }, it.ref)), rowBtns(() => this.startEdit(i, {
+        ...it,
+        _group: g
+      }), () => {
+        save('nahj', 'liveNahj', {
+          ...nahj,
+          [g]: (nahj[g] || []).filter((_, x) => x !== i)
+        }, 'Deleted');
+      }))))));
+    };
     const sectionContent = {
       stories: renderStoriesSection,
+      library: renderLibrarySection,
       classifieds: renderClassifiedsSection,
       events: renderEventsSection,
       prayers: renderPrayersSection,
@@ -8249,11 +8713,19 @@ class App extends Component {
         flexDirection: 'column'
       },
       className: "apo"
-    }, /*#__PURE__*/React.createElement("div", {
+    }, cur.photo && /*#__PURE__*/React.createElement("div", {
       style: {
         position: 'absolute',
         inset: 0,
-        background: 'radial-gradient(120% 90% at 50% 0%,rgba(255,255,255,.1),rgba(0,0,0,.35))'
+        backgroundImage: `url(${cur.photo})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center'
+      }
+    }), /*#__PURE__*/React.createElement("div", {
+      style: {
+        position: 'absolute',
+        inset: 0,
+        background: cur.photo ? 'linear-gradient(180deg,rgba(0,0,0,.5) 0%,rgba(0,0,0,.22) 42%,rgba(0,0,0,.68) 100%)' : 'radial-gradient(120% 90% at 50% 0%,rgba(255,255,255,.1),rgba(0,0,0,.35))'
       }
     }), /*#__PURE__*/React.createElement("div", {
       style: {
@@ -8529,7 +9001,7 @@ class App extends Component {
         display: 'flex',
         alignItems: 'center',
         gap: 14,
-        background: s.img,
+        background: s.photo ? `linear-gradient(rgba(0,0,0,.42),rgba(0,0,0,.42)),url(${s.photo}) center/cover` : s.img,
         borderRadius: 18,
         padding: '14px 16px',
         cursor: 'pointer',
