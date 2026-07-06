@@ -366,6 +366,15 @@ const KIDS_QUOTES = [{
   tr: 'Be kind to your parents.',
   who: "Imam ʿAlī ؏"
 }];
+const KIDS_QUIZZES = [{
+  question: 'How many times a day do Muslims pray?',
+  options: ['Three', 'Five', 'Seven'],
+  answer: 1
+}, {
+  question: 'Who was the first Imam of the Ahlul Bayt?',
+  options: ['Imam ʿAlī ؏', 'Imam Ḥasan ؏', 'Imam Ḥusayn ؏'],
+  answer: 0
+}];
 const DUAS = [{
   title: 'Duʿāʾ Kumayl',
   cat: 'Weekly',
@@ -1250,6 +1259,7 @@ const EDGE_PUSH = SB_URL + '/functions/v1/send-push';
 
 const PUSH_MSG = {
   announcement: 'Majlish Live — new announcement from Ahlul Bayt Ireland',
+  kidsQuizzes: 'New kids quiz published — can you get it right?',
   events: 'New event added to the community calendar',
   stories: 'New story or article has been published',
   pinned: 'Featured message has been updated',
@@ -1316,6 +1326,7 @@ const SB_KEY_MAP = {
   stories: 'liveStories', classifieds: 'liveClassifieds', events: 'liveEvents',
   announcement: 'liveAnnouncement', pinned: 'livePinned',
   kidsVideos: 'liveKidsVideos', kidsBooks: 'liveKidsBooks', kidsQuotes: 'liveKidsQuotes',
+  kidsQuizzes: 'liveKidsQuizzes', askImam: 'liveAskImam',
   prayerPresets: 'livePrayerPresets', calEvents: 'liveCalEvents',
   healthTips: 'liveHealthTips', healthVideos: 'liveHealthVideos',
   duas: 'liveDuas', ziyarat: 'liveZiyarat', nahj: 'liveNahj'
@@ -1493,6 +1504,13 @@ class App extends Component {
       liveDuas: lsGet('duas', DUAS),
       liveZiyarat: lsGet('ziyarat', ZIYARAT),
       liveNahj: lsGet('nahj', NAHJ),
+      liveKidsQuizzes: lsGet('kidsQuizzes', KIDS_QUIZZES),
+      liveAskImam: lsGet('askImam', {
+        number: ''
+      }),
+      kidsQuizPicks: {},
+      kidsVidCat: 'All',
+      healthVidCat: 'All',
       adminLibTab: 'dua'
     });
     _defineProperty(this, "go", s => this.setState({
@@ -2170,7 +2188,79 @@ class App extends Component {
         fontWeight: 600,
         marginTop: 4
       }
-    }, hijri))), /*#__PURE__*/React.createElement("div", {
+    }, hijri))), announcementActive(st.liveAnnouncement) && /*#__PURE__*/React.createElement("div", {
+      onClick: st.liveAnnouncement.yt ? () => this.playYt(st.liveAnnouncement.yt) : undefined,
+      style: {
+        display: 'flex',
+        gap: 13,
+        alignItems: 'flex-start',
+        background: 'linear-gradient(120deg,#faf4e6,#f6efe0)',
+        border: '1px solid #ecdfc2',
+        borderRadius: 18,
+        padding: '15px 16px',
+        marginBottom: 16,
+        cursor: st.liveAnnouncement.yt ? 'pointer' : 'default'
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        flexShrink: 0,
+        width: 34,
+        height: 34,
+        borderRadius: 10,
+        background: st.liveAnnouncement.yt ? '#6e2230' : '#e8d39a',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        color: st.liveAnnouncement.yt ? '#f6e7d7' : '#7a5d18',
+        fontWeight: 700,
+        fontFamily: 'Spectral,serif',
+        fontSize: st.liveAnnouncement.yt ? 12 : 15
+      }
+    }, st.liveAnnouncement.yt ? '▶' : '!'), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 10,
+        letterSpacing: 1.1,
+        textTransform: 'uppercase',
+        fontWeight: 800,
+        color: '#a03a3a',
+        marginBottom: 3,
+        display: 'flex',
+        alignItems: 'center',
+        gap: 5
+      }
+    }, /*#__PURE__*/React.createElement("span", {
+      style: {
+        width: 6,
+        height: 6,
+        borderRadius: '50%',
+        background: '#c0392b',
+        display: 'inline-block'
+      }
+    }), "Majlish Live"), /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 13.5,
+        fontWeight: 600,
+        color: '#5e4d22'
+      }
+    }, st.liveAnnouncement.title), /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 12,
+        color: '#8a7846',
+        marginTop: 3,
+        lineHeight: 1.4
+      }
+    }, st.liveAnnouncement.body), (st.liveAnnouncement.date || st.liveAnnouncement.yt) && /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 11,
+        color: '#a08c55',
+        marginTop: 5,
+        fontWeight: 600
+      }
+    }, [st.liveAnnouncement.date ? new Date(st.liveAnnouncement.date + 'T12:00').toLocaleDateString('en-IE', {
+      weekday: 'short',
+      day: 'numeric',
+      month: 'long'
+    }) : null, st.liveAnnouncement.yt ? 'Tap to watch ▶' : null].filter(Boolean).join(' · ')))), /*#__PURE__*/React.createElement("div", {
       style: {
         display: 'flex',
         alignItems: 'baseline',
@@ -2408,7 +2498,62 @@ class App extends Component {
         color: '#2c2823',
         marginBottom: 12
       }
-    }, this.t('home.explore')), /*#__PURE__*/React.createElement("div", {
+    }, this.t('home.explore')), st.liveAskImam && st.liveAskImam.number && /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: 13,
+        background: 'linear-gradient(120deg,#1f5145,#163b30)',
+        borderRadius: 18,
+        padding: '15px 16px',
+        marginBottom: 12,
+        boxShadow: '0 8px 22px -10px rgba(22,59,48,.55)'
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        flexShrink: 0,
+        width: 40,
+        height: 40,
+        borderRadius: 12,
+        background: 'rgba(216,184,99,.18)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        fontFamily: 'Amiri,serif',
+        fontSize: 22,
+        color: '#d8b863'
+      }
+    }, "؟"), /*#__PURE__*/React.createElement("div", {
+      style: {
+        flex: 1
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontFamily: 'Spectral,serif',
+        fontSize: 15,
+        fontWeight: 600,
+        color: '#f3ead4'
+      }
+    }, "Ask Your Imam"), /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 11.5,
+        color: '#bcd3ca',
+        marginTop: 2,
+        lineHeight: 1.35
+      }
+    }, "Have a question? Message the imam directly on WhatsApp.")), /*#__PURE__*/React.createElement("div", {
+      onClick: () => window.open('https://wa.me/' + String(st.liveAskImam.number).replace(/[^\d]/g, ''), '_blank'),
+      style: {
+        flexShrink: 0,
+        padding: '10px 18px',
+        borderRadius: 12,
+        background: '#d8b863',
+        color: '#163b30',
+        fontSize: 13.5,
+        fontWeight: 700,
+        cursor: 'pointer'
+      }
+    }, "Ask")), /*#__PURE__*/React.createElement("div", {
       style: {
         display: 'grid',
         gridTemplateColumns: '1fr 1fr',
@@ -2484,79 +2629,7 @@ class App extends Component {
         color: '#fff',
         lineHeight: 1.4
       }
-    }, st.livePinned.text)), announcementActive(st.liveAnnouncement) && /*#__PURE__*/React.createElement("div", {
-      onClick: st.liveAnnouncement.yt ? () => this.playYt(st.liveAnnouncement.yt) : undefined,
-      style: {
-        display: 'flex',
-        gap: 13,
-        alignItems: 'flex-start',
-        background: 'linear-gradient(120deg,#faf4e6,#f6efe0)',
-        border: '1px solid #ecdfc2',
-        borderRadius: 18,
-        padding: '15px 16px',
-        marginBottom: 14,
-        cursor: st.liveAnnouncement.yt ? 'pointer' : 'default'
-      }
-    }, /*#__PURE__*/React.createElement("div", {
-      style: {
-        flexShrink: 0,
-        width: 34,
-        height: 34,
-        borderRadius: 10,
-        background: st.liveAnnouncement.yt ? '#6e2230' : '#e8d39a',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        color: st.liveAnnouncement.yt ? '#f6e7d7' : '#7a5d18',
-        fontWeight: 700,
-        fontFamily: 'Spectral,serif',
-        fontSize: st.liveAnnouncement.yt ? 12 : 15
-      }
-    }, st.liveAnnouncement.yt ? '▶' : '!'), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
-      style: {
-        fontSize: 10,
-        letterSpacing: 1.1,
-        textTransform: 'uppercase',
-        fontWeight: 800,
-        color: '#a03a3a',
-        marginBottom: 3,
-        display: 'flex',
-        alignItems: 'center',
-        gap: 5
-      }
-    }, /*#__PURE__*/React.createElement("span", {
-      style: {
-        width: 6,
-        height: 6,
-        borderRadius: '50%',
-        background: '#c0392b',
-        display: 'inline-block'
-      }
-    }), "Majlish Live"), /*#__PURE__*/React.createElement("div", {
-      style: {
-        fontSize: 13.5,
-        fontWeight: 600,
-        color: '#5e4d22'
-      }
-    }, st.liveAnnouncement.title), /*#__PURE__*/React.createElement("div", {
-      style: {
-        fontSize: 12,
-        color: '#8a7846',
-        marginTop: 3,
-        lineHeight: 1.4
-      }
-    }, st.liveAnnouncement.body), (st.liveAnnouncement.date || st.liveAnnouncement.yt) && /*#__PURE__*/React.createElement("div", {
-      style: {
-        fontSize: 11,
-        color: '#a08c55',
-        marginTop: 5,
-        fontWeight: 600
-      }
-    }, [st.liveAnnouncement.date ? new Date(st.liveAnnouncement.date + 'T12:00').toLocaleDateString('en-IE', {
-      weekday: 'short',
-      day: 'numeric',
-      month: 'long'
-    }) : null, st.liveAnnouncement.yt ? 'Tap to watch ▶' : null].filter(Boolean).join(' · ')))), st.install && /*#__PURE__*/React.createElement("div", {
+    }, st.livePinned.text)), st.install && /*#__PURE__*/React.createElement("div", {
       style: {
         display: 'flex',
         alignItems: 'center',
@@ -3388,49 +3461,7 @@ class App extends Component {
         fontSize: 18,
         lineHeight: 1
       }
-    }, "×")), libCards.length > 0 && /*#__PURE__*/React.createElement("div", {
-      onClick: () => this.openReading(st.libTab, libCards[0]),
-      style: {
-        background: lm.tint,
-        border: `1px solid ${lm.accent}44`,
-        borderRadius: 18,
-        padding: '16px 17px',
-        cursor: 'pointer',
-        marginBottom: 14
-      }
-    }, /*#__PURE__*/React.createElement("div", {
-      style: {
-        fontSize: 10,
-        letterSpacing: 1,
-        textTransform: 'uppercase',
-        fontWeight: 700,
-        color: lm.accent,
-        marginBottom: 8
-      }
-    }, "Open · ", libCards[0].cat), /*#__PURE__*/React.createElement("div", {
-      style: {
-        fontFamily: 'Spectral,serif',
-        fontSize: 18,
-        fontWeight: 600,
-        color: '#2c2823'
-      }
-    }, libCards[0].title), /*#__PURE__*/React.createElement("div", {
-      style: {
-        fontFamily: 'Amiri,serif',
-        fontSize: 17,
-        color: '#6f675a',
-        marginTop: 6,
-        lineHeight: 1.7
-      },
-      dir: "rtl"
-    }, libCards[0].ar), /*#__PURE__*/React.createElement("div", {
-      style: {
-        fontSize: 12.5,
-        color: '#9a8f7c',
-        marginTop: 5,
-        lineHeight: 1.4
-      }
-    }, libCards[0].tr)), lm.cats.length > 0 && /*#__PURE__*/React.createElement("div", {
+    }, "×")), lm.cats.length > 0 && /*#__PURE__*/React.createElement("div", {
       className: "s",
       style: {
         display: 'flex',
@@ -3458,73 +3489,87 @@ class App extends Component {
         nahjTab: k
       }),
       style: nahjTabStyle(k)
-    }, label))), libCards.length > 1 && /*#__PURE__*/React.createElement("div", {
+    }, label))), libCards.length > 0 && /*#__PURE__*/React.createElement("div", {
       style: {
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 12
+        display: 'grid',
+        gridTemplateColumns: '1fr 1fr',
+        gap: 10
       }
-    }, libCards.slice(1).map((d, i) => /*#__PURE__*/React.createElement("div", {
+    }, libCards.map((it2, i) => /*#__PURE__*/React.createElement("div", {
       key: i,
-      onClick: () => this.openReading(st.libTab, d),
+      onClick: () => this.openReading(st.libTab, it2),
       style: {
         background: '#fffdf9',
         border: '1px solid #ece4d4',
-        borderRadius: 18,
-        padding: '16px 17px',
-        cursor: 'pointer'
+        borderRadius: 16,
+        padding: '12px 13px',
+        cursor: 'pointer',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 7
       }
     }, /*#__PURE__*/React.createElement("div", {
       style: {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        marginBottom: 9
+        gap: 6
       }
     }, /*#__PURE__*/React.createElement("span", {
       style: {
-        fontSize: 10.5,
-        letterSpacing: .8,
+        fontSize: 9.5,
+        letterSpacing: .7,
         textTransform: 'uppercase',
         fontWeight: 700,
         color: lm.accent,
         background: lm.tint,
-        padding: '4px 9px',
-        borderRadius: 7
+        padding: '3px 7px',
+        borderRadius: 6,
+        whiteSpace: 'nowrap',
+        overflow: 'hidden',
+        textOverflow: 'ellipsis'
       }
-    }, d.cat), /*#__PURE__*/React.createElement("span", {
+    }, it2.cat || 'General'), /*#__PURE__*/React.createElement("span", {
       style: {
         color: '#cdbf9e',
-        fontSize: 18
+        fontSize: 14,
+        flexShrink: 0
       }
-    }, "→")), /*#__PURE__*/React.createElement("div", {
+    }, "⤢")), /*#__PURE__*/React.createElement("div", {
       style: {
         fontFamily: 'Spectral,serif',
-        fontSize: 18,
+        fontSize: 14.5,
         fontWeight: 600,
-        color: '#2c2823'
+        color: '#2c2823',
+        lineHeight: 1.3,
+        display: '-webkit-box',
+        WebkitLineClamp: 2,
+        WebkitBoxOrient: 'vertical',
+        overflow: 'hidden'
       }
-    }, d.title), /*#__PURE__*/React.createElement("div", {
+    }, it2.title), /*#__PURE__*/React.createElement("div", {
+      dir: "rtl",
       style: {
         fontFamily: 'Amiri,serif',
-        fontSize: 19,
+        fontSize: 15,
         color: '#6f675a',
-        marginTop: 7,
-        lineHeight: 1.7
-      },
-      dir: "rtl"
-    }, d.ar), /*#__PURE__*/React.createElement("div", {
-      style: {
-        fontSize: 13,
-        color: '#9a8f7c',
-        marginTop: 6,
-        lineHeight: 1.45
+        lineHeight: 1.6,
+        whiteSpace: 'nowrap',
+        overflow: 'hidden',
+        textOverflow: 'ellipsis'
       }
-    }, d.tr)))), nahjCards.length > 0 && /*#__PURE__*/React.createElement("div", {
+    }, (it2.ar || '').split('\n')[0]), it2.pdf && /*#__PURE__*/React.createElement("div", {
       style: {
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 12
+        fontSize: 10,
+        fontWeight: 700,
+        color: lm.accent,
+        letterSpacing: .5
+      }
+    }, "PDF · tap to read")))), nahjCards.length > 0 && /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: 'grid',
+        gridTemplateColumns: '1fr 1fr',
+        gap: 10
       }
     }, nahjCards.map((n, i) => /*#__PURE__*/React.createElement("div", {
       key: i,
@@ -3532,54 +3577,70 @@ class App extends Component {
       style: {
         background: '#fffdf9',
         border: '1px solid #ece4d4',
-        borderRadius: 18,
-        padding: '16px 17px',
-        cursor: 'pointer'
+        borderRadius: 16,
+        padding: '12px 13px',
+        cursor: 'pointer',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 7
       }
     }, /*#__PURE__*/React.createElement("div", {
       style: {
         display: 'flex',
-        alignItems: 'baseline',
-        justifyContent: 'space-between'
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        gap: 6
       }
     }, /*#__PURE__*/React.createElement("span", {
       style: {
-        fontSize: 11,
-        letterSpacing: .6,
+        fontSize: 9.5,
+        letterSpacing: .7,
         textTransform: 'uppercase',
         fontWeight: 700,
-        color: '#2c5d52'
+        color: '#2c5d52',
+        background: '#e6efe9',
+        padding: '3px 7px',
+        borderRadius: 6,
+        whiteSpace: 'nowrap',
+        overflow: 'hidden',
+        textOverflow: 'ellipsis'
       }
     }, n.ref), /*#__PURE__*/React.createElement("span", {
       style: {
         color: '#cdbf9e',
-        fontSize: 18
+        fontSize: 14,
+        flexShrink: 0
       }
-    }, "→")), /*#__PURE__*/React.createElement("div", {
+    }, "⤢")), /*#__PURE__*/React.createElement("div", {
       style: {
         fontFamily: 'Spectral,serif',
-        fontSize: 18,
+        fontSize: 14.5,
         fontWeight: 600,
         color: '#2c2823',
-        marginTop: 5
+        lineHeight: 1.3,
+        display: '-webkit-box',
+        WebkitLineClamp: 2,
+        WebkitBoxOrient: 'vertical',
+        overflow: 'hidden'
       }
     }, n.title), /*#__PURE__*/React.createElement("div", {
       style: {
-        fontSize: 13.5,
-        color: '#7a7264',
-        marginTop: 7,
-        lineHeight: 1.5
-      }
-    }, n.tr), n.sum && /*#__PURE__*/React.createElement("div", {
-      style: {
         fontSize: 12,
         color: '#9a8f7c',
-        marginTop: 9,
-        paddingTop: 9,
-        borderTop: '1px solid #f1ebdd',
-        fontStyle: 'italic'
+        lineHeight: 1.45,
+        display: '-webkit-box',
+        WebkitLineClamp: 2,
+        WebkitBoxOrient: 'vertical',
+        overflow: 'hidden'
       }
-    }, n.sum)))), libCards.length === 0 && nahjCards.length === 0 && (q || st.libCat !== 'All') && /*#__PURE__*/React.createElement("div", {
+    }, n.sum || n.tr), n.pdf && /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 10,
+        fontWeight: 700,
+        color: '#2c5d52',
+        letterSpacing: .5
+      }
+    }, "PDF · tap to read")))), libCards.length === 0 && nahjCards.length === 0 && (q || st.libCat !== 'All') && /*#__PURE__*/React.createElement("div", {
       style: {
         textAlign: 'center',
         padding: '40px 20px',
@@ -3828,7 +3889,37 @@ class App extends Component {
         gap: 12,
         marginTop: 26
       }
-    }, /*#__PURE__*/React.createElement("div", {
+    }, r.pdf && /*#__PURE__*/React.createElement("div", {
+      onClick: () => window.open(r.pdf, '_blank'),
+      style: {
+        flex: 1,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 8,
+        padding: 14,
+        borderRadius: 14,
+        border: `1.5px solid ${readAccent}`,
+        color: readAccent,
+        background: rd.surf,
+        fontSize: 14,
+        fontWeight: 600,
+        cursor: 'pointer'
+      }
+    }, /*#__PURE__*/React.createElement("svg", {
+      width: "15",
+      height: "15",
+      viewBox: "0 0 24 24",
+      fill: "none",
+      stroke: "currentColor",
+      strokeWidth: "1.9",
+      strokeLinecap: "round",
+      strokeLinejoin: "round"
+    }, /*#__PURE__*/React.createElement("path", {
+      d: "M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
+    }), /*#__PURE__*/React.createElement("path", {
+      d: "M14 2v6h6M9 13h6M9 17h6"
+    })), "Read PDF"), /*#__PURE__*/React.createElement("div", {
       onClick: this.handleShare,
       style: {
         flex: 1,
@@ -4915,6 +5006,9 @@ class App extends Component {
       id: 'pinned',
       label: 'Pinned Msg'
     }, {
+      id: 'askImam',
+      label: 'Ask Imam'
+    }, {
       id: 'kids',
       label: 'Kids'
     }, {
@@ -5934,6 +6028,120 @@ class App extends Component {
       })));
     };
 
+    /* ─ ASK YOUR IMAM ─ */
+    const renderAskImamSection = () => {
+      const d = st.adminEditDraft;
+      const a = st.liveAskImam || {
+        number: ''
+      };
+      if (editing) {
+        return /*#__PURE__*/React.createElement("div", {
+          style: {
+            padding: '0 0 20px'
+          }
+        }, /*#__PURE__*/React.createElement("div", {
+          style: {
+            fontSize: 13,
+            fontWeight: 700,
+            color: '#27241f',
+            marginBottom: 14
+          }
+        }, "Edit Ask Your Imam"), /*#__PURE__*/React.createElement("input", {
+          value: d.number || '',
+          onChange: e => this.setDraft({
+            number: e.target.value
+          }),
+          placeholder: "WhatsApp number with country code (e.g. +353 87 123 4567)",
+          maxLength: 25,
+          inputMode: "tel",
+          style: inp
+        }), /*#__PURE__*/React.createElement("div", {
+          style: {
+            fontSize: 11.5,
+            color: '#8d8574',
+            margin: '2px 2px 12px'
+          }
+        }, "Users tap Ask on the home screen and a WhatsApp chat with this number opens."), /*#__PURE__*/React.createElement("div", {
+          style: {
+            display: 'flex',
+            gap: 10
+          }
+        }, btn('Save', () => {
+          const digits = String(d.number || '').replace(/[^\d]/g, '');
+          if (digits.length < 7) {
+            this.showToast('Enter a valid WhatsApp number with country code');
+            return;
+          }
+          save('askImam', 'liveAskImam', {
+            number: (d.number || '').trim()
+          }, 'Ask Your Imam saved!');
+        }, {
+          flex: 1,
+          background: '#1f5145',
+          color: '#f3ead4'
+        }), btn('Cancel', this.cancelEdit, {
+          flex: 1,
+          border: '1px solid #e6dcc8',
+          background: '#fffdf9',
+          color: '#3f3a32'
+        })));
+      }
+      return /*#__PURE__*/React.createElement("div", null, a.number ? /*#__PURE__*/React.createElement("div", {
+        style: {
+          background: 'linear-gradient(120deg,#e6efe9,#daeae2)',
+          border: '1px solid #c4ddd7',
+          borderRadius: 14,
+          padding: '14px',
+          marginBottom: 10
+        }
+      }, /*#__PURE__*/React.createElement("div", {
+        style: {
+          fontSize: 14,
+          fontWeight: 700,
+          color: '#1f5145'
+        }
+      }, "Ask Your Imam"), /*#__PURE__*/React.createElement("div", {
+        style: {
+          fontSize: 13,
+          color: '#3f5c52',
+          marginTop: 4,
+          fontVariantNumeric: 'tabular-nums'
+        }
+      }, "WhatsApp: ", a.number), /*#__PURE__*/React.createElement("div", {
+        style: {
+          fontSize: 12,
+          fontWeight: 700,
+          color: '#1f5145',
+          marginTop: 6
+        }
+      }, "● Live — card is showing at the top of Explore")) : /*#__PURE__*/React.createElement("div", {
+        style: {
+          fontSize: 13,
+          color: '#8d8574',
+          marginBottom: 10,
+          fontStyle: 'italic'
+        }
+      }, "No WhatsApp number set — the Ask Your Imam card is hidden."), /*#__PURE__*/React.createElement("div", {
+        style: {
+          display: 'flex',
+          gap: 10
+        }
+      }, btn(a.number ? 'Edit Number' : 'Add Number', () => this.startEdit(0, {
+        number: a.number || ''
+      }), {
+        flex: 1,
+        background: '#1f5145',
+        color: '#f3ead4'
+      }), a.number && btn('Remove', () => save('askImam', 'liveAskImam', {
+        number: ''
+      }, 'Ask Your Imam card removed'), {
+        flex: 1,
+        background: '#faeeee',
+        border: '1px solid #e6c9c9',
+        color: '#8a3030'
+      })));
+    };
+
     /* ─ PINNED MESSAGE ─ */
     const renderPinnedSection = () => {
       const d = st.adminEditDraft;
@@ -6065,19 +6273,31 @@ class App extends Component {
       if (editing) {
         const isNew = st.adminEditIdx === -1;
         if (subSec === 'videos') {
+          const VIDEO_CATS = ['Muharram Videos', 'Surah Explained', 'Imam Stories', 'Prophet Stories'];
+          const catSel = d._catSel !== undefined ? d._catSel : !d.cat ? '' : VIDEO_CATS.includes(d.cat) ? d.cat : '__other';
+          const catCustom = d._catCustom !== undefined ? d._catCustom : catSel === '__other' ? d.cat || '' : '';
           const save2 = () => {
             if (d.yt && !ytId(d.yt)) {
               this.showToast('That YouTube link is not valid');
               return;
             }
-            const a = [...st.liveKidsVideos];
+            let a = [...st.liveKidsVideos];
             const it = {
               title: d.title || '',
               meta: d.meta || '',
               color: d.color || '#1f5145',
-              yt: d.yt || ''
+              yt: d.yt || '',
+              cat: catSel === '__other' ? (catCustom || '').trim() : catSel,
+              hero: !!d.hero
             };
             if (isNew) a.push(it);else a[st.adminEditIdx] = it;
+            if (it.hero) {
+              const heroIdx = isNew ? a.length - 1 : st.adminEditIdx;
+              a = a.map((x, xi) => xi === heroIdx ? x : x.hero ? {
+                ...x,
+                hero: false
+              } : x);
+            }
             save('kidsVideos', 'liveKidsVideos', a, isNew ? 'Video added!' : 'Updated!');
           };
           return /*#__PURE__*/React.createElement("div", {
@@ -6116,6 +6336,61 @@ class App extends Component {
             maxLength: 200,
             style: inp
           }), /*#__PURE__*/React.createElement("select", {
+            value: catSel,
+            onChange: e => this.setDraft({
+              _catSel: e.target.value
+            }),
+            style: {
+              ...inp,
+              cursor: 'pointer'
+            }
+          }, [['', 'No category'], ...VIDEO_CATS.map(c => [c, c]), ['__other', 'Other (type your own)']].map(([v, l]) => /*#__PURE__*/React.createElement("option", {
+            key: v,
+            value: v
+          }, l))), catSel === '__other' && /*#__PURE__*/React.createElement("input", {
+            value: catCustom,
+            onChange: e => this.setDraft({
+              _catCustom: e.target.value
+            }),
+            placeholder: "Custom category (e.g. Ramadan Specials)",
+            maxLength: 40,
+            style: inp
+          }), /*#__PURE__*/React.createElement("div", {
+            onClick: () => this.setDraft({
+              hero: !d.hero
+            }),
+            style: {
+              display: 'flex',
+              alignItems: 'center',
+              gap: 10,
+              padding: '11px 13px',
+              borderRadius: 12,
+              border: `1.5px solid ${d.hero ? '#1f5145' : '#e6dcc8'}`,
+              background: d.hero ? '#e6efe9' : '#fffdf9',
+              cursor: 'pointer',
+              marginBottom: 10
+            }
+          }, /*#__PURE__*/React.createElement("span", {
+            style: {
+              width: 18,
+              height: 18,
+              borderRadius: 6,
+              border: `2px solid ${d.hero ? '#1f5145' : '#c9bfa9'}`,
+              background: d.hero ? '#1f5145' : 'transparent',
+              color: '#f3ead4',
+              fontSize: 12,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontWeight: 800
+            }
+          }, d.hero ? '✓' : ''), /*#__PURE__*/React.createElement("span", {
+            style: {
+              fontSize: 13,
+              fontWeight: 600,
+              color: '#3f3a32'
+            }
+          }, "Hero video — show at the top of Kids Corner")), /*#__PURE__*/React.createElement("select", {
             value: d.color || '#1f5145',
             onChange: e => this.setDraft({
               color: e.target.value
@@ -6262,6 +6537,99 @@ class App extends Component {
           })));
         }
       }
+      if (editing && subSec === 'quizzes') {
+        const isNew = st.adminEditIdx === -1;
+        const opts = d._opts !== undefined ? d._opts : d.options || ['', '', ''];
+        const ans = d._ans !== undefined ? d._ans : String(d.answer !== undefined ? d.answer : 0);
+        const setOpt = (i, v) => {
+          const o = [...opts];
+          o[i] = v;
+          this.setDraft({
+            _opts: o
+          });
+        };
+        const saveQuiz = () => {
+          if (!(d.question || '').trim()) {
+            this.showToast('Question is required');
+            return;
+          }
+          if (opts.some(o => !(o || '').trim())) {
+            this.showToast('All three options are required');
+            return;
+          }
+          const a = [...(st.liveKidsQuizzes || [])];
+          const it = {
+            question: (d.question || '').trim(),
+            options: opts.map(o => o.trim()),
+            answer: parseInt(ans, 10) || 0
+          };
+          if (isNew) a.push(it);else a[st.adminEditIdx] = it;
+          save('kidsQuizzes', 'liveKidsQuizzes', a, isNew ? 'Quiz added!' : 'Updated!');
+        };
+        return /*#__PURE__*/React.createElement("div", {
+          style: {
+            padding: '0 0 20px'
+          }
+        }, /*#__PURE__*/React.createElement("div", {
+          style: {
+            fontSize: 13,
+            fontWeight: 700,
+            color: '#27241f',
+            marginBottom: 14
+          }
+        }, isNew ? 'Add Quiz' : 'Edit Quiz'), /*#__PURE__*/React.createElement("textarea", {
+          value: d.question || '',
+          onChange: e => this.setDraft({
+            question: e.target.value
+          }),
+          placeholder: "Question",
+          maxLength: 200,
+          style: {
+            ...inp,
+            minHeight: 64,
+            resize: 'none'
+          }
+        }), ['A', 'B', 'C'].map((L, i) => /*#__PURE__*/React.createElement("input", {
+          key: L,
+          value: opts[i] || '',
+          onChange: e => setOpt(i, e.target.value),
+          placeholder: `Option ${L}`,
+          maxLength: 90,
+          style: inp
+        })), /*#__PURE__*/React.createElement("div", {
+          style: {
+            fontSize: 11.5,
+            color: '#8d8574',
+            margin: '2px 2px 7px'
+          }
+        }, "Correct answer"), /*#__PURE__*/React.createElement("select", {
+          value: ans,
+          onChange: e => this.setDraft({
+            _ans: e.target.value
+          }),
+          style: {
+            ...inp,
+            cursor: 'pointer'
+          }
+        }, ['A', 'B', 'C'].map((L, i) => /*#__PURE__*/React.createElement("option", {
+          key: L,
+          value: String(i)
+        }, `Option ${L}${(opts[i] || '').trim() ? ' — ' + opts[i] : ''}`))), /*#__PURE__*/React.createElement("div", {
+          style: {
+            display: 'flex',
+            gap: 10
+          }
+        }, btn('Save', saveQuiz, {
+          flex: 1,
+          background: '#1f5145',
+          color: '#f3ead4'
+        }), btn('Cancel', this.cancelEdit, {
+          flex: 1,
+          border: '1px solid #e6dcc8',
+          background: '#fffdf9',
+          color: '#3f3a32'
+        })));
+      }
       const kTabs = [{
         id: 'videos',
         label: 'Videos'
@@ -6271,10 +6639,13 @@ class App extends Component {
       }, {
         id: 'quotes',
         label: 'Quotes'
+      }, {
+        id: 'quizzes',
+        label: 'Quiz'
       }];
       const ks = d._sub || 'videos';
-      const list = ks === 'videos' ? st.liveKidsVideos : ks === 'books' ? st.liveKidsBooks : st.liveKidsQuotes;
-      const getLabel = (it, i) => ks === 'videos' ? it.title : ks === 'books' ? it.title : it.tr;
+      const list = ks === 'videos' ? st.liveKidsVideos : ks === 'books' ? st.liveKidsBooks : ks === 'quizzes' ? st.liveKidsQuizzes || [] : st.liveKidsQuotes;
+      const getLabel = (it, i) => ks === 'videos' ? it.title : ks === 'books' ? it.title : ks === 'quizzes' ? it.question : it.tr;
       return /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
         style: {
           display: 'flex',
@@ -6302,7 +6673,7 @@ class App extends Component {
           background: ks === t.id ? '#fffdf9' : 'transparent',
           color: ks === t.id ? '#1f5145' : '#8c8270'
         }
-      }, t.label))), btn(`+ Add ${ks.slice(0, -1).charAt(0).toUpperCase() + ks.slice(0, -1).slice(1)}`, () => this.startEdit(-1, {
+      }, t.label))), btn(`+ Add ${ks === 'quizzes' ? 'Quiz' : ks.slice(0, -1).charAt(0).toUpperCase() + ks.slice(0, -1).slice(1)}`, () => this.startEdit(-1, {
         _sub: ks
       }), {
         background: '#1f5145',
@@ -6342,8 +6713,8 @@ class App extends Component {
       }), btn('✕', () => {
         const a = [...list];
         a.splice(i, 1);
-        const kk = ks === 'videos' ? 'kidsVideos' : ks === 'books' ? 'kidsBooks' : 'kidsQuotes';
-        const sk = ks === 'videos' ? 'liveKidsVideos' : ks === 'books' ? 'liveKidsBooks' : 'liveKidsQuotes';
+        const kk = ks === 'videos' ? 'kidsVideos' : ks === 'books' ? 'kidsBooks' : ks === 'quizzes' ? 'kidsQuizzes' : 'kidsQuotes';
+        const sk = ks === 'videos' ? 'liveKidsVideos' : ks === 'books' ? 'liveKidsBooks' : ks === 'quizzes' ? 'liveKidsQuizzes' : 'liveKidsQuotes';
         save(kk, sk, a, 'Deleted');
       }, {
         background: '#fdf0f2',
@@ -6377,6 +6748,9 @@ class App extends Component {
       if (editing) {
         const isNew = st.adminEditIdx === -1;
         if (subSec === 'videos') {
+          const H_VIDEO_CATS = ['Muharram Videos', 'Surah Explained', 'Imam Stories', 'Prophet Stories'];
+          const hCatSel = d._catSel !== undefined ? d._catSel : !d.cat ? '' : H_VIDEO_CATS.includes(d.cat) ? d.cat : '__other';
+          const hCatCustom = d._catCustom !== undefined ? d._catCustom : hCatSel === '__other' ? d.cat || '' : '';
           const save2 = () => {
             if (d.yt && !ytId(d.yt)) {
               this.showToast('That YouTube link is not valid');
@@ -6387,7 +6761,8 @@ class App extends Component {
               title: d.title || '',
               meta: d.meta || '',
               color: d.color || '#1f5145',
-              yt: d.yt || ''
+              yt: d.yt || '',
+              cat: hCatSel === '__other' ? (hCatCustom || '').trim() : hCatSel
             };
             if (isNew) a.push(it);else a[st.adminEditIdx] = it;
             save('healthVideos', 'liveHealthVideos', a, isNew ? 'Video added!' : 'Updated!');
@@ -6426,6 +6801,26 @@ class App extends Component {
             }),
             placeholder: "YouTube URL (plays inside the app)",
             maxLength: 200,
+            style: inp
+          }), /*#__PURE__*/React.createElement("select", {
+            value: hCatSel,
+            onChange: e => this.setDraft({
+              _catSel: e.target.value
+            }),
+            style: {
+              ...inp,
+              cursor: 'pointer'
+            }
+          }, [['', 'No category'], ...H_VIDEO_CATS.map(c => [c, c]), ['__other', 'Other (type your own)']].map(([v, l]) => /*#__PURE__*/React.createElement("option", {
+            key: v,
+            value: v
+          }, l))), hCatSel === '__other' && /*#__PURE__*/React.createElement("input", {
+            value: hCatCustom,
+            onChange: e => this.setDraft({
+              _catCustom: e.target.value
+            }),
+            placeholder: "Custom category",
+            maxLength: 40,
             style: inp
           }), /*#__PURE__*/React.createElement("select", {
             value: d.color || '#1f5145',
@@ -6692,13 +7087,18 @@ class App extends Component {
               return;
             }
             const a = [...list];
+            if (d.pdf && !/^https?:\/\//.test(d.pdf.trim())) {
+              this.showToast('PDF link must start with http(s)://');
+              return;
+            }
             const item = {
               title: d.title || '',
               cat: (d.cat || '').trim() || 'General',
               ar: d.ar || '',
               tr: d.tr || '',
               note: d.note || '',
-              body: d.body || ''
+              body: d.body || '',
+              pdf: (d.pdf || '').trim()
             };
             if (isNew) a.unshift(item);else a[st.adminEditIdx] = item;
             save(key, stateKey, a, isNew ? label + ' added!' : label + ' updated!');
@@ -6771,6 +7171,14 @@ class App extends Component {
               minHeight: 120,
               resize: 'none'
             }
+          }), /*#__PURE__*/React.createElement("input", {
+            value: d.pdf || '',
+            onChange: e => this.setDraft({
+              pdf: e.target.value
+            }),
+            placeholder: "PDF link (optional — adds a Read PDF button)",
+            maxLength: 300,
+            style: inp
           }), /*#__PURE__*/React.createElement("div", {
             style: {
               display: 'flex',
@@ -6839,12 +7247,17 @@ class App extends Component {
             letters: [...(nahj.letters || [])],
             sayings: [...(nahj.sayings || [])]
           };
+          if (d.pdf && !/^https?:\/\//.test(d.pdf.trim())) {
+            this.showToast('PDF link must start with http(s)://');
+            return;
+          }
           const item = {
             ref: d.ref || '',
             title: d.title || '',
             sum: d.sum || '',
             ar: d.ar || '',
-            tr: d.tr || ''
+            tr: d.tr || '',
+            pdf: (d.pdf || '').trim()
           };
           if (isNew) next[g].unshift(item);else next[g][st.adminEditIdx] = item;
           save('nahj', 'liveNahj', next, isNew ? 'Entry added!' : 'Entry updated!');
@@ -6923,6 +7336,14 @@ class App extends Component {
             minHeight: 120,
             resize: 'none'
           }
+        }), /*#__PURE__*/React.createElement("input", {
+          value: d.pdf || '',
+          onChange: e => this.setDraft({
+            pdf: e.target.value
+          }),
+          placeholder: "PDF link (optional — adds a Read PDF button)",
+          maxLength: 300,
+          style: inp
         }), /*#__PURE__*/React.createElement("div", {
           style: {
             display: 'flex',
@@ -6998,6 +7419,7 @@ class App extends Component {
       prayers: renderPrayersSection,
       announcement: renderAnnouncementSection,
       pinned: renderPinnedSection,
+      askImam: renderAskImamSection,
       kids: renderKidsSection,
       health: renderHealthSection
     };
@@ -7636,6 +8058,10 @@ class App extends Component {
   /* ── KIDS CORNER ── */
   renderKids(st) {
     const kt = st.kidsTab || 'videos';
+    const heroV = (st.liveKidsVideos || []).find(v => v.hero && ytId(v.yt));
+    const kvCats = ['All', ...new Set((st.liveKidsVideos || []).map(v => v.cat).filter(Boolean))];
+    const kvCat = kvCats.includes(st.kidsVidCat) ? st.kidsVidCat : 'All';
+    const kidsVids = (st.liveKidsVideos || []).filter(v => kvCat === 'All' || v.cat === kvCat);
     const tabStyle = k => ({
       flex: 1,
       textAlign: 'center',
@@ -7671,7 +8097,65 @@ class App extends Component {
         color: st.dark ? '#ece6d8' : '#27241f',
         marginTop: 2
       }
-    }, this.t('kids.title'))), /*#__PURE__*/React.createElement("div", {
+    }, this.t('kids.title'))), heroV && /*#__PURE__*/React.createElement("div", {
+      onClick: () => this.playYt(heroV.yt),
+      style: {
+        position: 'relative',
+        overflow: 'hidden',
+        borderRadius: 20,
+        aspectRatio: '16/10',
+        background: `linear-gradient(rgba(0,0,0,.22),rgba(0,0,0,.5)),url(https://img.youtube.com/vi/${ytId(heroV.yt)}/hqdefault.jpg) center/cover`,
+        marginBottom: 18,
+        cursor: 'pointer',
+        display: 'flex',
+        alignItems: 'flex-end',
+        padding: 18
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        position: 'absolute',
+        top: '50%',
+        left: '50%',
+        transform: 'translate(-50%,-50%)',
+        width: 58,
+        height: 58,
+        borderRadius: '50%',
+        background: 'rgba(255,253,249,.92)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        boxShadow: '0 8px 20px -6px rgba(0,0,0,.4)'
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        width: 0,
+        height: 0,
+        borderLeft: '18px solid #1f5145',
+        borderTop: '11px solid transparent',
+        borderBottom: '11px solid transparent',
+        marginLeft: 4
+      }
+    })), /*#__PURE__*/React.createElement("div", {
+      style: {
+        position: 'relative',
+        color: '#fff'
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 10.5,
+        letterSpacing: 1,
+        textTransform: 'uppercase',
+        fontWeight: 700,
+        color: '#d8b863'
+      }
+    }, "Hero video", heroV.cat ? ' · ' + heroV.cat : ''), /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontFamily: 'Spectral,serif',
+        fontSize: 19,
+        fontWeight: 600,
+        marginTop: 3
+      }
+    }, heroV.title))), /*#__PURE__*/React.createElement("div", {
       style: {
         display: 'flex',
         gap: 6,
@@ -7680,13 +8164,13 @@ class App extends Component {
         padding: 4,
         marginBottom: 18
       }
-    }, [['videos', this.t('kids.videos')], ['books', this.t('kids.books')], ['wisdom', this.t('kids.wisdom')]].map(([k, label]) => /*#__PURE__*/React.createElement("div", {
+    }, [['videos', this.t('kids.videos')], ['books', this.t('kids.books')], ['wisdom', this.t('kids.wisdom')], ['quiz', 'Quiz']].map(([k, label]) => /*#__PURE__*/React.createElement("div", {
       key: k,
       onClick: () => this.setState({
         kidsTab: k
       }),
       style: tabStyle(k)
-    }, label))), kt === 'videos' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+    }, label))), kt === 'videos' && /*#__PURE__*/React.createElement(React.Fragment, null, !heroV && /*#__PURE__*/React.createElement("div", {
       style: {
         position: 'relative',
         overflow: 'hidden',
@@ -7763,7 +8247,32 @@ class App extends Component {
         color: '#2c2823',
         marginBottom: 12
       }
-    }, this.t('kids.videos')), /*#__PURE__*/React.createElement("div", {
+    }, this.t('kids.videos')), kvCats.length > 1 && /*#__PURE__*/React.createElement("div", {
+      className: "s",
+      style: {
+        display: 'flex',
+        gap: 8,
+        overflowX: 'auto',
+        margin: '0 -20px 12px',
+        padding: '0 20px 2px'
+      }
+    }, kvCats.map(c => /*#__PURE__*/React.createElement("div", {
+      key: c,
+      onClick: () => this.setState({
+        kidsVidCat: c
+      }),
+      style: {
+        flexShrink: 0,
+        padding: '7px 14px',
+        borderRadius: 20,
+        fontSize: 12,
+        fontWeight: 600,
+        cursor: 'pointer',
+        background: kvCat === c ? '#1f5145' : '#fffdf9',
+        color: kvCat === c ? '#fffdf9' : '#6f675a',
+        border: `1px solid ${kvCat === c ? '#1f5145' : '#e6dcc8'}`
+      }
+    }, c))), /*#__PURE__*/React.createElement("div", {
       className: "s",
       style: {
         display: 'flex',
@@ -7772,7 +8281,7 @@ class App extends Component {
         margin: '0 -20px 24px',
         padding: '0 20px 4px'
       }
-    }, st.liveKidsVideos.map((v, i) => /*#__PURE__*/React.createElement("div", {
+    }, kidsVids.map((v, i) => /*#__PURE__*/React.createElement("div", {
       key: i,
       onClick: () => this.playYt(v.yt),
       style: {
@@ -7940,7 +8449,113 @@ class App extends Component {
         color: '#9a8f7c',
         marginTop: 7
       }
-    }, b.meta)))), /*#__PURE__*/React.createElement("div", {
+    }, b.meta))))), kt === 'quiz' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontFamily: 'Spectral,serif',
+        fontSize: 17,
+        fontWeight: 600,
+        color: '#2c2823',
+        marginBottom: 12
+      }
+    }, "Quiz Time"), (st.liveKidsQuizzes || []).map((qz, qi) => {
+      const pick = (st.kidsQuizPicks || {})[qi];
+      const answered = pick !== undefined;
+      return /*#__PURE__*/React.createElement("div", {
+        key: qi,
+        style: {
+          background: '#fffdf9',
+          border: '1px solid #ece4d4',
+          borderRadius: 18,
+          padding: '16px 17px',
+          marginBottom: 14
+        }
+      }, /*#__PURE__*/React.createElement("div", {
+        style: {
+          fontSize: 10.5,
+          letterSpacing: .8,
+          textTransform: 'uppercase',
+          fontWeight: 700,
+          color: '#6e2230',
+          marginBottom: 8
+        }
+      }, "Question ", qi + 1), /*#__PURE__*/React.createElement("div", {
+        style: {
+          fontFamily: 'Spectral,serif',
+          fontSize: 16.5,
+          fontWeight: 600,
+          color: '#2c2823',
+          lineHeight: 1.4,
+          marginBottom: 12
+        }
+      }, qz.question), /*#__PURE__*/React.createElement("div", {
+        style: {
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 9
+        }
+      }, (qz.options || []).map((opt, oi) => {
+        const picked = pick === oi;
+        const correct = oi === qz.answer;
+        const bg = answered ? correct ? '#e4f3e7' : picked ? '#fbe9e9' : '#faf7f0' : '#faf7f0';
+        const bd = answered && correct ? '#7cc38f' : answered && picked ? '#e0a0a0' : '#e6dcc8';
+        const mark = answered ? correct ? '✓' : picked ? '✕' : '' : String.fromCharCode(65 + oi);
+        return /*#__PURE__*/React.createElement("div", {
+          key: oi,
+          onClick: () => {
+            if (!answered) this.setState({
+              kidsQuizPicks: {
+                ...(st.kidsQuizPicks || {}),
+                [qi]: oi
+              }
+            });
+          },
+          style: {
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            padding: '12px 14px',
+            borderRadius: 12,
+            background: bg,
+            border: `1.5px solid ${bd}`,
+            fontSize: 14,
+            fontWeight: 600,
+            color: '#2c2823',
+            cursor: answered ? 'default' : 'pointer'
+          }
+        }, /*#__PURE__*/React.createElement("span", null, opt), /*#__PURE__*/React.createElement("span", {
+          style: {
+            fontSize: 13,
+            fontWeight: 800,
+            color: answered ? correct ? '#2e7d43' : '#a33636' : '#b3a890'
+          }
+        }, mark));
+      })), answered && /*#__PURE__*/React.createElement("div", {
+        style: {
+          marginTop: 11,
+          fontSize: 13,
+          fontWeight: 600,
+          color: pick === qz.answer ? '#1f5145' : '#6e2230'
+        }
+      }, pick === qz.answer ? 'Correct — well done!' : 'Not quite — the correct answer is highlighted.'), answered && /*#__PURE__*/React.createElement("div", {
+        onClick: () => {
+          const p = {
+            ...(st.kidsQuizPicks || {})
+          };
+          delete p[qi];
+          this.setState({
+            kidsQuizPicks: p
+          });
+        },
+        style: {
+          marginTop: 8,
+          fontSize: 12,
+          fontWeight: 600,
+          color: '#8c8270',
+          cursor: 'pointer',
+          textDecoration: 'underline'
+        }
+      }, "Try again"));
+    })), kt === 'quiz' && /*#__PURE__*/React.createElement("div", {
       onClick: () => this.openStory(STORIES.findIndex(s => s.kind === 'quiz')),
       style: {
         display: 'flex',
@@ -7987,12 +8602,15 @@ class App extends Component {
         color: '#bba35f',
         fontSize: 20
       }
-    }, "→"))));
+    }, "→")));
   }
 
   /* ── HEALTH & WELLNESS ── */
   renderHealth(st) {
     const ht = st.healthTab || 'videos';
+    const hvCats = ['All', ...new Set((st.liveHealthVideos || []).map(v => v.cat).filter(Boolean))];
+    const hvCat = hvCats.includes(st.healthVidCat) ? st.healthVidCat : 'All';
+    const healthVids = (st.liveHealthVideos || []).filter(v => hvCat === 'All' || v.cat === hvCat);
     const tabStyle = k => ({
       flex: 1,
       textAlign: 'center',
@@ -8137,7 +8755,32 @@ class App extends Component {
         color: st.dark ? '#ece6d8' : '#2c2823',
         marginBottom: 12
       }
-    }, "Videos"), /*#__PURE__*/React.createElement("div", {
+    }, "Videos"), hvCats.length > 1 && /*#__PURE__*/React.createElement("div", {
+      className: "s",
+      style: {
+        display: 'flex',
+        gap: 8,
+        overflowX: 'auto',
+        margin: '0 -20px 12px',
+        padding: '0 20px 2px'
+      }
+    }, hvCats.map(c => /*#__PURE__*/React.createElement("div", {
+      key: c,
+      onClick: () => this.setState({
+        healthVidCat: c
+      }),
+      style: {
+        flexShrink: 0,
+        padding: '7px 14px',
+        borderRadius: 20,
+        fontSize: 12,
+        fontWeight: 600,
+        cursor: 'pointer',
+        background: hvCat === c ? '#1f5145' : '#fffdf9',
+        color: hvCat === c ? '#fffdf9' : '#6f675a',
+        border: `1px solid ${hvCat === c ? '#1f5145' : '#e6dcc8'}`
+      }
+    }, c))), /*#__PURE__*/React.createElement("div", {
       className: "s",
       style: {
         display: 'flex',
@@ -8146,7 +8789,7 @@ class App extends Component {
         margin: '0 -20px 24px',
         padding: '0 20px 4px'
       }
-    }, (st.liveHealthVideos || []).map((v, i) => /*#__PURE__*/React.createElement("div", {
+    }, healthVids.map((v, i) => /*#__PURE__*/React.createElement("div", {
       key: i,
       onClick: () => this.playYt(v.yt),
       style: {
@@ -8941,7 +9584,7 @@ class App extends Component {
     })))), /*#__PURE__*/React.createElement("div", {
       style: {
         position: 'relative',
-        zIndex: 2,
+        zIndex: 5,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
