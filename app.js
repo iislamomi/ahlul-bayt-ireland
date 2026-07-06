@@ -369,10 +369,10 @@ const KIDS_QUOTES = [{
 const DUAS = [{
   title: 'Duʿāʾ Kumayl',
   cat: 'Weekly',
-  ar: 'اللّٰهُمَّ إِنِّي أَسْأَلُكَ بِرَحْمَتِكَ الَّتِي وَسِعَتْ كُلَّ شَيْءٍ',
+  ar: 'بِسْمِ اللهِ الرَّحْمٰنِ الرَّحِيمِ\nاللَّهُمَّ إِنِّي أَسْأَلُكَ بِرَحْمَتِكَ الَّتِي وَسِعَتْ كُلَّ شَيْءٍ\nوَبِقُوَّتِكَ الَّتِي قَهَرْتَ بِهَا كُلَّ شَيْءٍ وَخَضَعَ لَهَا كُلُّ شَيْءٍ وَذَلَّ لَهَا كُلُّ شَيْءٍ\nوَبِجَبَرُوتِكَ الَّتِي غَلَبْتَ بِهَا كُلَّ شَيْءٍ\nوَبِعِزَّتِكَ الَّتِي لَا يَقُومُ لَهَا شَيْءٌ\nوَبِعَظَمَتِكَ الَّتِي مَلَأَتْ كُلَّ شَيْءٍ\nوَبِسُلْطَانِكَ الَّذِي عَلَا كُلَّ شَيْءٍ\nوَبِوَجْهِكَ الْبَاقِي بَعْدَ فَنَاءِ كُلِّ شَيْءٍ\nوَبِأَسْمَائِكَ الَّتِي مَلَأَتْ أَرْكَانَ كُلِّ شَيْءٍ\nوَبِعِلْمِكَ الَّذِي أَحَاطَ بِكُلِّ شَيْءٍ\nوَبِنُورِ وَجْهِكَ الَّذِي أَضَاءَ لَهُ كُلُّ شَيْءٍ\nيَا نُورُ يَا قُدُّوسُ يَا أَوَّلَ الْأَوَّلِينَ وَيَا آخِرَ الْآخِرِينَ\nاللَّهُمَّ اغْفِرْ لِيَ الذُّنُوبَ الَّتِي تَهْتِكُ الْعِصَمَ\nاللَّهُمَّ اغْفِرْ لِيَ الذُّنُوبَ الَّتِي تُنْزِلُ النِّقَمَ\nاللَّهُمَّ اغْفِرْ لِيَ الذُّنُوبَ الَّتِي تُغَيِّرُ النِّعَمَ\nاللَّهُمَّ اغْفِرْ لِيَ الذُّنُوبَ الَّتِي تَحْبِسُ الدُّعَاءَ\nاللَّهُمَّ اغْفِرْ لِيَ الذُّنُوبَ الَّتِي تُنْزِلُ الْبَلَاءَ\nاللَّهُمَّ اغْفِرْ لِي كُلَّ ذَنْبٍ أَذْنَبْتُهُ وَكُلَّ خَطِيئَةٍ أَخْطَأْتُهَا\nاللَّهُمَّ إِنِّي أَتَقَرَّبُ إِلَيْكَ بِذِكْرِكَ وَأَسْتَشْفِعُ بِكَ إِلَى نَفْسِكَ وَأَسْأَلُكَ بِجُودِكَ أَنْ تُدْنِيَنِي مِنْ قُرْبِكَ وَأَنْ تُوزِعَنِي شُكْرَكَ وَأَنْ تُلْهِمَنِي ذِكْرَكَ\nاللَّهُمَّ إِنِّي أَسْأَلُكَ سُؤَالَ خَاضِعٍ مُتَذَلِّلٍ خَاشِعٍ أَنْ تُسَامِحَنِي وَتَرْحَمَنِي وَتَجْعَلَنِي بِقِسْمِكَ رَاضِيًا قَانِعًا وَفِي جَمِيعِ الْأَحْوَالِ مُتَوَاضِعًا\nاللَّهُمَّ وَأَسْأَلُكَ سُؤَالَ مَنِ اشْتَدَّتْ فَاقَتُهُ وَأَنْزَلَ بِكَ عِنْدَ الشَّدَائِدِ حَاجَتَهُ وَعَظُمَ فِيمَا عِنْدَكَ رَغْبَتُهُ\nاللَّهُمَّ عَظُمَ سُلْطَانُكَ وَعَلَا مَكَانُكَ وَخَفِيَ مَكْرُكَ وَظَهَرَ أَمْرُكَ وَغَلَبَ قَهْرُكَ وَجَرَتْ قُدْرَتُكَ وَلَا يُمْكِنُ الْفِرَارُ مِنْ حُكُومَتِكَ\nاللَّهُمَّ لَا أَجِدُ لِذُنُوبِي غَافِرًا وَلَا لِقَبَائِحِي سَاتِرًا وَلَا لِشَيْءٍ مِنْ عَمَلِيَ الْقَبِيحِ بِالْحَسَنِ مُبَدِّلًا غَيْرَكَ\nلَا إِلَهَ إِلَّا أَنْتَ سُبْحَانَكَ وَبِحَمْدِكَ ظَلَمْتُ نَفْسِي وَتَجَرَّأْتُ بِجَهْلِي وَسَكَنْتُ إِلَى قَدِيمِ ذِكْرِكَ لِي وَمَنِّكَ عَلَيَّ\nاللَّهُمَّ مَوْلَايَ كَمْ مِنْ قَبِيحٍ سَتَرْتَهُ وَكَمْ مِنْ فَادِحٍ مِنَ الْبَلَاءِ أَقَلْتَهُ وَكَمْ مِنْ عِثَارٍ وَقَيْتَهُ وَكَمْ مِنْ مَكْرُوهٍ دَفَعْتَهُ وَكَمْ مِنْ ثَنَاءٍ جَمِيلٍ لَسْتُ أَهْلًا لَهُ نَشَرْتَهُ\nاللَّهُمَّ عَظُمَ بَلَائِي وَأَفْرَطَ بِي سُوءُ حَالِي وَقَصُرَتْ بِي أَعْمَالِي وَقَعَدَتْ بِي أَغْلَالِي وَحَبَسَنِي عَنْ نَفْعِي بُعْدُ أَمَلِي وَخَدَعَتْنِي الدُّنْيَا بِغُرُورِهَا وَنَفْسِي بِجِنَايَتِهَا وَمِطَالِي\nيَا سَيِّدِي فَأَسْأَلُكَ بِعِزَّتِكَ أَنْ لَا يَحْجُبَ عَنْكَ دُعَائِي سُوءُ عَمَلِي وَفِعَالِي وَلَا تَفْضَحْنِي بِخَفِيِّ مَا اطَّلَعْتَ عَلَيْهِ مِنْ سِرِّي وَلَا تُعَاجِلْنِي بِالْعُقُوبَةِ عَلَى مَا عَمِلْتُهُ فِي خَلَوَاتِي مِنْ سُوءِ فِعْلِي وَإِسَاءَتِي وَدَوَامِ تَفْرِيطِي وَجَهَالَتِي وَكَثْرَةِ شَهَوَاتِي وَغَفْلَتِي\nوَكُنِ اللَّهُمَّ بِعِزَّتِكَ لِي فِي كُلِّ الْأَحْوَالِ رَؤُوفًا وَعَلَيَّ فِي جَمِيعِ الْأُمُورِ عَطُوفًا\nإِلَهِي وَرَبِّي مَنْ لِي غَيْرُكَ أَسْأَلُهُ كَشْفَ ضُرِّي وَالنَّظَرَ فِي أَمْرِي\nإِلَهِي وَمَوْلَايَ أَجْرَيْتَ عَلَيَّ حُكْمًا اتَّبَعْتُ فِيهِ هَوَى نَفْسِي وَلَمْ أَحْتَرِسْ فِيهِ مِنْ تَزْيِينِ عَدُوِّي فَغَرَّنِي بِمَا أَهْوَى وَأَسْعَدَهُ عَلَى ذَلِكَ الْقَضَاءُ فَتَجَاوَزْتُ بِمَا جَرَى عَلَيَّ مِنْ ذَلِكَ بَعْضَ حُدُودِكَ وَخَالَفْتُ بَعْضَ أَوَامِرِكَ\nفَلَكَ الْحُجَّةُ عَلَيَّ فِي جَمِيعِ ذَلِكَ وَلَا حُجَّةَ لِي فِيمَا جَرَى عَلَيَّ فِيهِ قَضَاؤُكَ وَأَلْزَمَنِي حُكْمُكَ وَبَلَاؤُكَ\nوَقَدْ أَتَيْتُكَ يَا إِلَهِي بَعْدَ تَقْصِيرِي وَإِسْرَافِي عَلَى نَفْسِي مُعْتَذِرًا نَادِمًا مُنْكَسِرًا مُسْتَقِيلًا مُسْتَغْفِرًا مُنِيبًا مُقِرًّا مُذْعِنًا مُعْتَرِفًا لَا أَجِدُ مَفَرًّا مِمَّا كَانَ مِنِّي وَلَا مَفْزَعًا أَتَوَجَّهُ إِلَيْهِ فِي أَمْرِي غَيْرَ قَبُولِكَ عُذْرِي وَإِدْخَالِكَ إِيَّايَ فِي سَعَةٍ مِنْ رَحْمَتِكَ\nاللَّهُمَّ فَاقْبَلْ عُذْرِي وَارْحَمْ شِدَّةَ ضُرِّي وَفُكَّنِي مِنْ شَدِّ وَثَاقِي\nيَا رَبِّ ارْحَمْ ضَعْفَ بَدَنِي وَرِقَّةَ جِلْدِي وَدِقَّةَ عَظْمِي\nيَا مَنْ بَدَأَ خَلْقِي وَذِكْرِي وَتَرْبِيَتِي وَبِرِّي وَتَغْذِيَتِي هَبْنِي لِابْتِدَاءِ كَرَمِكَ وَسَالِفِ بِرِّكَ بِي\nيَا إِلَهِي وَسَيِّدِي وَرَبِّي أَتُرَاكَ مُعَذِّبِي بِنَارِكَ بَعْدَ تَوْحِيدِكَ وَبَعْدَ مَا انْطَوَى عَلَيْهِ قَلْبِي مِنْ مَعْرِفَتِكَ وَلَهِجَ بِهِ لِسَانِي مِنْ ذِكْرِكَ وَاعْتَقَدَهُ ضَمِيرِي مِنْ حُبِّكَ وَبَعْدَ صِدْقِ اعْتِرَافِي وَدُعَائِي خَاضِعًا لِرُبُوبِيَّتِكَ\nهَيْهَاتَ أَنْتَ أَكْرَمُ مِنْ أَنْ تُضَيِّعَ مَنْ رَبَّيْتَهُ أَوْ تُبْعِدَ مَنْ أَدْنَيْتَهُ أَوْ تُشَرِّدَ مَنْ آوَيْتَهُ أَوْ تُسَلِّمَ إِلَى الْبَلَاءِ مَنْ كَفَيْتَهُ وَرَحِمْتَهُ\nوَلَيْتَ شِعْرِي يَا سَيِّدِي وَإِلَهِي وَمَوْلَايَ أَتُسَلِّطُ النَّارَ عَلَى وُجُوهٍ خَرَّتْ لِعَظَمَتِكَ سَاجِدَةً وَعَلَى أَلْسُنٍ نَطَقَتْ بِتَوْحِيدِكَ صَادِقَةً وَبِشُكْرِكَ مَادِحَةً وَعَلَى قُلُوبٍ اعْتَرَفَتْ بِإِلَهِيَّتِكَ مُحَقِّقَةً وَعَلَى ضَمَائِرَ حَوَتْ مِنَ الْعِلْمِ بِكَ حَتَّى صَارَتْ خَاشِعَةً وَعَلَى جَوَارِحَ سَعَتْ إِلَى أَوْطَانِ تَعَبُّدِكَ طَائِعَةً وَأَشَارَتْ بِاسْتِغْفَارِكَ مُذْعِنَةً\nمَا هَكَذَا الظَّنُّ بِكَ وَلَا أُخْبِرْنَا بِفَضْلِكَ عَنْكَ يَا كَرِيمُ يَا رَبِّ\nوَأَنْتَ تَعْلَمُ ضَعْفِي عَنْ قَلِيلٍ مِنْ بَلَاءِ الدُّنْيَا وَعُقُوبَاتِهَا وَمَا يَجْرِي فِيهَا مِنَ الْمَكَارِهِ عَلَى أَهْلِهَا عَلَى أَنَّ ذَلِكَ بَلَاءٌ وَمَكْرُوهٌ قَلِيلٌ مَكْثُهُ يَسِيرٌ بَقَاؤُهُ قَصِيرٌ مُدَّتُهُ\nفَكَيْفَ احْتِمَالِي لِبَلَاءِ الْآخِرَةِ وَجَلِيلِ وُقُوعِ الْمَكَارِهِ فِيهَا وَهُوَ بَلَاءٌ تَطُولُ مُدَّتُهُ وَيَدُومُ مَقَامُهُ وَلَا يُخَفَّفُ عَنْ أَهْلِهِ لِأَنَّهُ لَا يَكُونُ إِلَّا عَنْ غَضَبِكَ وَانْتِقَامِكَ وَسَخَطِكَ وَهَذَا مَا لَا تَقُومُ لَهُ السَّمَاوَاتُ وَالْأَرْضُ\nيَا سَيِّدِي فَكَيْفَ لِي وَأَنَا عَبْدُكَ الضَّعِيفُ الذَّلِيلُ الْحَقِيرُ الْمِسْكِينُ الْمُسْتَكِينُ\nيَا إِلَهِي وَرَبِّي وَسَيِّدِي وَمَوْلَايَ لِأَيِّ الْأُمُورِ إِلَيْكَ أَشْكُو وَلِمَا مِنْهَا أَضِجُّ وَأَبْكِي لِأَلِيمِ الْعَذَابِ وَشِدَّتِهِ أَمْ لِطُولِ الْبَلَاءِ وَمُدَّتِهِ\nفَلَئِنْ صَيَّرْتَنِي لِلْعُقُوبَاتِ مَعَ أَعْدَائِكَ وَجَمَعْتَ بَيْنِي وَبَيْنَ أَهْلِ بَلَائِكَ وَفَرَّقْتَ بَيْنِي وَبَيْنَ أَحِبَّائِكَ وَأَوْلِيَائِكَ فَهَبْنِي يَا إِلَهِي وَسَيِّدِي وَمَوْلَايَ وَرَبِّي صَبَرْتُ عَلَى عَذَابِكَ فَكَيْفَ أَصْبِرُ عَلَى فِرَاقِكَ وَهَبْنِي صَبَرْتُ عَلَى حَرِّ نَارِكَ فَكَيْفَ أَصْبِرُ عَنِ النَّظَرِ إِلَى كَرَامَتِكَ أَمْ كَيْفَ أَسْكُنُ فِي النَّارِ وَرَجَائِي عَفْوُكَ\nفَبِعِزَّتِكَ يَا سَيِّدِي وَمَوْلَايَ أُقْسِمُ صَادِقًا لَئِنْ تَرَكْتَنِي نَاطِقًا لَأَضِجَّنَّ إِلَيْكَ بَيْنَ أَهْلِهَا ضَجِيجَ الْآمِلِينَ وَلَأَصْرُخَنَّ إِلَيْكَ صُرَاخَ الْمُسْتَصْرِخِينَ وَلَأَبْكِيَنَّ عَلَيْكَ بُكَاءَ الْفَاقِدِينَ وَلَأُنَادِيَنَّكَ أَيْنَ كُنْتَ يَا وَلِيَّ الْمُؤْمِنِينَ يَا غَايَةَ آمَالِ الْعَارِفِينَ يَا غِيَاثَ الْمُسْتَغِيثِينَ يَا حَبِيبَ قُلُوبِ الصَّادِقِينَ وَيَا إِلَهَ الْعَالَمِينَ\nأَفَتُرَاكَ سُبْحَانَكَ يَا إِلَهِي وَبِحَمْدِكَ تَسْمَعُ فِيهَا صَوْتَ عَبْدٍ مُسْلِمٍ سُجِنَ فِيهَا بِمُخَالَفَتِهِ وَذَاقَ طَعْمَ عَذَابِهَا بِمَعْصِيَتِهِ وَحُبِسَ بَيْنَ أَطْبَاقِهَا بِجُرْمِهِ وَجَرِيرَتِهِ وَهُوَ يَضِجُّ إِلَيْكَ ضَجِيجَ مُؤَمِّلٍ لِرَحْمَتِكَ وَيُنَادِيكَ بِلِسَانِ أَهْلِ تَوْحِيدِكَ وَيَتَوَسَّلُ إِلَيْكَ بِرُبُوبِيَّتِكَ\nيَا مَوْلَايَ فَكَيْفَ يَبْقَى فِي الْعَذَابِ وَهُوَ يَرْجُو مَا سَلَفَ مِنْ حِلْمِكَ أَمْ كَيْفَ تُؤْلِمُهُ النَّارُ وَهُوَ يَأْمُلُ فَضْلَكَ وَرَحْمَتَكَ أَمْ كَيْفَ يُحْرِقُهُ لَهِيبُهَا وَأَنْتَ تَسْمَعُ صَوْتَهُ وَتَرَى مَكَانَهُ أَمْ كَيْفَ يَشْتَمِلُ عَلَيْهِ زَفِيرُهَا وَأَنْتَ تَعْلَمُ ضَعْفَهُ أَمْ كَيْفَ يَتَقَلْقَلُ بَيْنَ أَطْبَاقِهَا وَأَنْتَ تَعْلَمُ صِدْقَهُ أَمْ كَيْفَ تَزْجُرُهُ زَبَانِيَتُهَا وَهُوَ يُنَادِيكَ يَا رَبَّهُ أَمْ كَيْفَ يَرْجُو فَضْلَكَ فِي عِتْقِهِ مِنْهَا فَتَتْرُكُهُ فِيهَا\nهَيْهَاتَ مَا ذَلِكَ الظَّنُّ بِكَ وَلَا الْمَعْرُوفُ مِنْ فَضْلِكَ وَلَا مُشْبِهٌ لِمَا عَامَلْتَ بِهِ الْمُوَحِّدِينَ مِنْ بِرِّكَ وَإِحْسَانِكَ\nفَبِالْيَقِينِ أَقْطَعُ لَوْلَا مَا حَكَمْتَ بِهِ مِنْ تَعْذِيبِ جَاحِدِيكَ وَقَضَيْتَ بِهِ مِنْ إِخْلَادِ مُعَانِدِيكَ لَجَعَلْتَ النَّارَ كُلَّهَا بَرْدًا وَسَلَامًا وَمَا كَانَ لِأَحَدٍ فِيهَا مَقَرًّا وَلَا مُقَامًا لَكِنَّكَ تَقَدَّسَتْ أَسْمَاؤُكَ أَقْسَمْتَ أَنْ تَمْلَأَهَا مِنَ الْكَافِرِينَ مِنَ الْجِنَّةِ وَالنَّاسِ أَجْمَعِينَ وَأَنْ تُخَلِّدَ فِيهَا الْمُعَانِدِينَ\nوَأَنْتَ جَلَّ ثَنَاؤُكَ قُلْتَ مُبْتَدِئًا وَتَطَوَّلْتَ بِالْإِنْعَامِ مُتَكَرِّمًا أَفَمَنْ كَانَ مُؤْمِنًا كَمَنْ كَانَ فَاسِقًا لَا يَسْتَوُونَ\nإِلَهِي وَسَيِّدِي فَأَسْأَلُكَ بِالْقُدْرَةِ الَّتِي قَدَّرْتَهَا وَبِالْقَضِيَّةِ الَّتِي حَتَمْتَهَا وَحَكَمْتَهَا وَغَلَبْتَ مَنْ عَلَيْهِ أَجْرَيْتَهَا أَنْ تَهَبَ لِي فِي هَذِهِ اللَّيْلَةِ وَفِي هَذِهِ السَّاعَةِ كُلَّ جُرْمٍ أَجْرَمْتُهُ وَكُلَّ ذَنْبٍ أَذْنَبْتُهُ وَكُلَّ قَبِيحٍ أَسْرَرْتُهُ وَكُلَّ جَهْلٍ عَمِلْتُهُ كَتَمْتُهُ أَوْ أَعْلَنْتُهُ أَخْفَيْتُهُ أَوْ أَظْهَرْتُهُ وَكُلَّ سَيِّئَةٍ أَمَرْتَ بِإِثْبَاتِهَا الْكِرَامَ الْكَاتِبِينَ الَّذِينَ وَكَّلْتَهُمْ بِحِفْظِ مَا يَكُونُ مِنِّي وَجَعَلْتَهُمْ شُهُودًا عَلَيَّ مَعَ جَوَارِحِي وَكُنْتَ أَنْتَ الرَّقِيبَ عَلَيَّ مِنْ وَرَائِهِمْ وَالشَّاهِدَ لِمَا خَفِيَ عَنْهُمْ وَبِرَحْمَتِكَ أَخْفَيْتَهُ وَبِفَضْلِكَ سَتَرْتَهُ\nوَأَنْ تُوَفِّرَ حَظِّي مِنْ كُلِّ خَيْرٍ أَنْزَلْتَهُ أَوْ إِحْسَانٍ فَضَّلْتَهُ أَوْ بِرٍّ نَشَرْتَهُ أَوْ رِزْقٍ بَسَطْتَهُ أَوْ ذَنْبٍ تَغْفِرُهُ أَوْ خَطَإٍ تَسْتُرُهُ\nيَا رَبِّ يَا رَبِّ يَا رَبِّ يَا إِلَهِي وَسَيِّدِي وَمَوْلَايَ وَمَالِكَ رِقِّي يَا مَنْ بِيَدِهِ نَاصِيَتِي يَا عَلِيمًا بِضُرِّي وَمَسْكَنَتِي يَا خَبِيرًا بِفَقْرِي وَفَاقَتِي\nيَا رَبِّ يَا رَبِّ يَا رَبِّ أَسْأَلُكَ بِحَقِّكَ وَقُدْسِكَ وَأَعْظَمِ صِفَاتِكَ وَأَسْمَائِكَ أَنْ تَجْعَلَ أَوْقَاتِي مِنَ اللَّيْلِ وَالنَّهَارِ بِذِكْرِكَ مَعْمُورَةً وَبِخِدْمَتِكَ مَوْصُولَةً وَأَعْمَالِي عِنْدَكَ مَقْبُولَةً حَتَّى تَكُونَ أَعْمَالِي وَأَوْرَادِي كُلُّهَا وِرْدًا وَاحِدًا وَحَالِي فِي خِدْمَتِكَ سَرْمَدًا\nيَا سَيِّدِي يَا مَنْ عَلَيْهِ مُعَوَّلِي يَا مَنْ إِلَيْهِ شَكَوْتُ أَحْوَالِي يَا رَبِّ يَا رَبِّ يَا رَبِّ قَوِّ عَلَى خِدْمَتِكَ جَوَارِحِي وَاشْدُدْ عَلَى الْعَزِيمَةِ جَوَانِحِي وَهَبْ لِيَ الْجِدَّ فِي خَشْيَتِكَ وَالدَّوَامَ فِي الِاتِّصَالِ بِخِدْمَتِكَ حَتَّى أَسْرَحَ إِلَيْكَ فِي مَيَادِينِ السَّابِقِينَ وَأُسْرِعَ إِلَيْكَ فِي الْبَارِزِينَ وَأَشْتَاقَ إِلَى قُرْبِكَ فِي الْمُشْتَاقِينَ وَأَدْنُوَ مِنْكَ دُنُوَّ الْمُخْلِصِينَ وَأَخَافَكَ مَخَافَةَ الْمُوقِنِينَ وَأَجْتَمِعَ فِي جِوَارِكَ مَعَ الْمُؤْمِنِينَ\nاللَّهُمَّ وَمَنْ أَرَادَنِي بِسُوءٍ فَأَرِدْهُ وَمَنْ كَادَنِي فَكِدْهُ وَاجْعَلْنِي مِنْ أَحْسَنِ عَبِيدِكَ نَصِيبًا عِنْدَكَ وَأَقْرَبِهِمْ مَنْزِلَةً مِنْكَ وَأَخَصِّهِمْ زُلْفَةً لَدَيْكَ فَإِنَّهُ لَا يُنَالُ ذَلِكَ إِلَّا بِفَضْلِكَ\nوَجُدْ لِي بِجُودِكَ وَاعْطِفْ عَلَيَّ بِمَجْدِكَ وَاحْفَظْنِي بِرَحْمَتِكَ وَاجْعَلْ لِسَانِي بِذِكْرِكَ لَهِجًا وَقَلْبِي بِحُبِّكَ مُتَيَّمًا وَمُنَّ عَلَيَّ بِحُسْنِ إِجَابَتِكَ وَأَقِلْنِي عَثْرَتِي وَاغْفِرْ زَلَّتِي\nفَإِنَّكَ قَضَيْتَ عَلَى عِبَادِكَ بِعِبَادَتِكَ وَأَمَرْتَهُمْ بِدُعَائِكَ وَضَمِنْتَ لَهُمُ الْإِجَابَةَ فَإِلَيْكَ يَا رَبِّ نَصَبْتُ وَجْهِي وَإِلَيْكَ يَا رَبِّ مَدَدْتُ يَدِي فَبِعِزَّتِكَ اسْتَجِبْ لِي دُعَائِي وَبَلِّغْنِي مُنَايَ وَلَا تَقْطَعْ مِنْ فَضْلِكَ رَجَائِي وَاكْفِنِي شَرَّ الْجِنِّ وَالْإِنْسِ مِنْ أَعْدَائِي\nيَا سَرِيعَ الرِّضَا اغْفِرْ لِمَنْ لَا يَمْلِكُ إِلَّا الدُّعَاءَ فَإِنَّكَ فَعَّالٌ لِمَا تَشَاءُ\nيَا مَنِ اسْمُهُ دَوَاءٌ وَذِكْرُهُ شِفَاءٌ وَطَاعَتُهُ غِنًى ارْحَمْ مَنْ رَأْسُ مَالِهِ الرَّجَاءُ وَسِلَاحُهُ الْبُكَاءُ\nيَا سَابِغَ النِّعَمِ يَا دَافِعَ النِّقَمِ يَا نُورَ الْمُسْتَوْحِشِينَ فِي الظُّلَمِ يَا عَالِمًا لَا يُعَلَّمُ صَلِّ عَلَى مُحَمَّدٍ وَآلِ مُحَمَّدٍ وَافْعَلْ بِي مَا أَنْتَ أَهْلُهُ\nوَصَلَّى اللَّهُ عَلَى رَسُولِهِ وَالْأَئِمَّةِ الْمَيَامِينَ مِنْ آلِهِ وَسَلَّمَ تَسْلِيمًا كَثِيرًا',
   tr: 'O Allah, I ask You by Your mercy, which embraces all things.',
-  note: 'Traditionally recited on Thursday nights.',
-  body: 'O Allah, I ask You by Your mercy, which embraces all things; and by Your strength, through which You dominate all things, and towards which all things are humble and before which all things are lowly.'
+  note: 'Taught by Imam ʿAlī (a) to Kumayl ibn Ziyād. Traditionally recited on Thursday nights. Text: duas.org',
+  body: 'In the Name of Allah, the All-beneficent, the All-merciful.\n\nO Allah, I ask You by Your mercy, which embraces all things; and by Your strength, through which You dominate all things, and toward which all things are humble and before which all things are lowly; and by Your invincibility, through which You overwhelm all things; and by Your might, which nothing can resist; and by Your tremendousness, which has filled all things; and by Your force, which towers over all things; and by Your face, which subsists after the annihilation of all things; and by Your Names, which have filled the foundations of all things; and by Your knowledge, which encompasses all things; and by the light of Your face, through which all things are illumined!\n\nO Light! O All-holy! O First of those who are first and O Last of those who are last!\n\nO Allah, forgive me those sins which tear apart safeguards! O Allah, forgive me those sins which draw down adversities! O Allah, forgive me those sins which alter blessings! O Allah, forgive me those sins which hold back supplication! O Allah, forgive me those sins which draw down tribulation! O Allah, forgive me every sin I have committed and every mistake I have made!\n\nO Allah, verily I seek nearness to You through remembrance of You, and I seek intercession from You with Yourself, and I ask You through Your munificence to bring me near to Your proximity, and to provide me with gratitude toward You, and to inspire me with Your remembrance.\n\nO Allah, verily I ask You with the asking of a submissive, abased and lowly man to show me forbearance, to have mercy on me and to make me satisfied and content with Your appointment and humble in every state.\n\nO Allah, and I ask You with the asking of one whose indigence is extreme, and who has stated to You in difficulties his need, and whose desire for what is with You has become great.\n\nO Allah, Your force is tremendous, Your place is lofty, Your deception is hidden, Your command is manifest, Your domination is overwhelming, Your power is unhindered, and escape from Your governance is impossible.\n\nO Allah, I find no forgiver of my sins, nor concealer of my ugly acts, nor transformer of any of my ugly acts into good acts but You. There is no god but You! Glory be to You, and Yours is the praise! I have wronged myself, and I have been audacious in my ignorance, and I have depended upon Your ancient remembrance of me and Your favour toward me.\n\nO Allah! O my Protector! How many ugly things You have concealed! How many burdensome tribulations You have abolished! How many stumbles You have prevented! How many ordeals You have repelled! And how much beautiful praise, for which I was unworthy, You have spread abroad!\n\nO Allah, my tribulation is tremendous, my bad state is excessive, my acts are inadequate, my fetters have tied me down, my far-fetched hopes have held me back from my gain, and this world with its delusions, my own soul with its offences, and my delay have deceived me.\n\nO my Master, so I ask You by Your might not to let my evil works and acts veil my supplication from You, not to disgrace me through the hidden things You know of my secrets, and not to hasten me to punishment for what I have done in private — my evil acts in secrecy, my misdeeds, my continuous negligence, my ignorance, my manifold passions and my forgetfulness.\n\nAnd by Your might, O Allah, be kind to me in all states, and be gracious to me in all affairs!\n\nMy God and my Lord! Have I any but You from whom to ask removal of my affliction and regard for my affairs?\n\nMy God and my Protector! You put into effect through me a decree in which I followed the caprice of my own soul and did not remain wary of adorning my enemy. So he deluded me through my soul’s caprice, and therein destiny favoured him. So, in what was put into effect through me in that situation, I transgressed some of Your statutes and disobeyed some of Your commands.\n\nSo Yours is the argument against me in all of that. I have no argument in what Your destiny put into effect through me therein, nor in what Your decree and Your tribulation imposed upon me.\n\nNow I have come to You, my God, after my shortcoming and my immoderation toward myself, proffering my excuse, regretful, broken, apologising, asking forgiveness, repenting, acknowledging, submissive, confessing. I find no place to flee from what occurred through me, nor any place of escape to which I may turn in my affairs, other than Your acceptance of my excuse and Your entering me into the compass of Your mercy.\n\nO Allah, so accept my excuse, have mercy upon the severity of my affliction, and release me from the tightness of my fetters. My Lord, have mercy upon the weakness of my body, the thinness of my skin and the frailty of my bones.\n\nO You who gave rise to my creation, to the remembrance of me, to the nurture of me, to goodness toward me and to nourishment on me — bestow upon me for the sake of Your having given rise to me with generosity and Your previous goodness to me!\n\nO my God, my Master and my Lord! Can You see Yourself tormenting me with Your fire after I have professed Your Unity, and after the knowledge of You my heart has embraced, and the remembrance of You my tongue has constantly mentioned, and the love of You to which my mind has clung, and after the sincerity of my confession and my supplication, humble before Your lordship?\n\nFar be it from You! You are more generous than that You should squander him whom You have nurtured, or banish him whom You have brought nigh, or drive away him whom You have given an abode, or submit to tribulation him whom You have spared and shown mercy.\n\nWould that I knew, my Master, my God and my Protector, whether You will give the Fire dominion over faces fallen down prostrate before Your tremendousness, over tongues voicing sincerely the profession of Your Unity and giving thanks to You in praise, over hearts acknowledging Your divinity through verification, over minds encompassing knowledge of You until they have become humble, and over bodily members speeding to the places of Your worship in obedience and beckoning for Your forgiveness in submission.\n\nNo such opinion is held of You! Nor has such been reported — thanks to Your bounty — concerning You, O All-generous! My Lord! And You know my weakness before a little of this world’s tribulations and punishments, and before those ordeals which befall its inhabitants, even though it is a tribulation and ordeal whose stay is short, whose subsistence is but little and whose period is but fleeting.\n\nSo how can I endure the tribulations of the next world and the great ordeals that occur within it? For it is a tribulation whose period is long, whose station endures and whose sufferers are given no respite, since it only occurs as a result of Your wrath, Your vengeance and Your anger — and these cannot be withstood by the heavens and the earth.\n\nO Master, so how can I — a weak, insignificant, humble, poor and destitute slave of Yours — endure it?\n\nO my God, my Lord, my Master and my Protector! For which things would I complain to You? And for which of them would I lament and weep? For the pain and severity of chastisement? Or for the length and period of tribulation?\n\nSo if You take me to the punishments with Your enemies, and gather me with the people of Your tribulation, and separate me from Your friends and saints — then suppose, my God, my Master, my Protector and my Lord, that I am able to endure Your chastisement: how can I endure separation from You? And suppose that I am able to endure the heat of Your fire: how can I endure not gazing upon Your generosity? Or how can I dwell in the Fire while my hope is Your pardon?\n\nSo by Your might, my Master and my Protector, I swear sincerely: if You leave me with speech, I will lament to You from the midst of the Fire’s inhabitants with the lamentation of the hopeful; I will cry to You with the cry of those crying for help; I will weep to You with the weeping of the bereft; and I will call upon You: Where are You, O Sponsor of the believers, O Goal of the hopes of Your knowers, O Aid of those who seek assistance, O Friend of the hearts of the sincere, and O God of all the world’s inhabitants!\n\nCan You see Yourself — glory be to You, my God, and Yours is the praise — hearing within the Fire the voice of a servant surrendered to You, imprisoned there because of his violations, tasting the flavour of its torment because of his disobedience, and confined within its levels because of his sin and crime, while he laments to You with the lament of one hopeful for Your mercy, and calls to You with the tongue of those who profess Your Unity, and entreats You by Your lordship?\n\nO my Protector, so how should he remain in the chastisement while he has hope for Your previous clemency? Or how should the Fire cause him pain while he expects Your bounty and mercy? Or how should its roaring flames burn him while You hear his voice and see his place? Or how should its groaning encompass him while You know his weakness? Or how should he be convulsed among its levels while You know his sincerity? Or how should its keepers torture him while he calls out to You, O Lord? Or how should he have hope of Your bounty in freeing him from it, while You abandon him within it?\n\nFar be it from You! That is not what is expected of You, nor what is well known of Your bounty, nor is it similar to the goodness and kindness You have shown to those who profess Your Unity.\n\nSo I declare with certainty that, were it not for what You have decreed concerning the chastisement of Your deniers, and what You have foreordained concerning the everlasting home of those who stubbornly resist, You would make the Fire, all of it, coolness and safety, and no one would have a place of rest or abode within it. But You — holy are Your Names — have sworn that You will fill it with the unbelievers, both jinn and men together, and that You will place those who stubbornly resist therein forever.\n\nAnd You — majestic is Your eulogy — said at the beginning, and were gracious through kindness as a favour: “What, is he who has been a believer like unto him who has been ungodly? They are not equal.”\n\nMy God and my Master! So I ask You by the power You have apportioned, and by the decision which You have determined and imposed and through which You have overcome him toward whom it has been put into effect, that You forgive me in this night and at this hour every offence I have committed, and every sin I have performed, and every ugly thing I have concealed, and every folly I have enacted — whether I have hidden or announced it, or I have concealed it or manifested it — and every evil act which You have commanded the Noble Writers to record, those whom You have appointed to watch over what appears from me, and whom You have made, along with my bodily members, witnesses against me. And You were Yourself the Watcher over me from behind them, and the Witness of what is hidden from them. Through Your mercy You concealed it, and through Your bounty You veiled it.\n\nAnd I ask You that You bestow upon me an abundant share of every good You send down, or kindness You confer, or goodness You unfold, or provision You spread out, or sin You forgive, or error You cover.\n\nO Lord! O Lord! O Lord! My God, my Master, my Protector and Owner of my bondage! O He in whose hand is my forelock! O He who knows my affliction and my misery! O He who is aware of my poverty and indigence!\n\nO Lord! O Lord! O Lord! I ask You by Your Truth and Your Holiness, and the greatest of Your attributes and Names, that You make my times in the night and the day inhabited by Your remembrance, joined to Your service, and my works acceptable to You — so that my works and my litanies may all be a single litany, and my occupation with Your service everlasting.\n\nMy Master! O He upon whom I depend! O He to whom I complain about my states! O Lord! O Lord! O Lord! Strengthen my bodily members in Your service, and fortify my ribs in determination, and bestow upon me earnestness in my fear of You, and continuity in my being joined to Your service — so that I may move easily toward You in the battlefields of the foremost, and hurry to You among the prominent, and desire fervently Your proximity among the fervently desirous, and move nearer to You with the nearness of the sincere, and fear You with the fear of those who have certitude, and gather with the believers in Your vicinity.\n\nO Allah, whoever desires evil for me, desire it for him! And whoever deceives me — deceive him! And make me one of the most excellent of Your servants in portion from You, and the nearest of them in station to You, and the most elect of them in proximity to You — for that cannot be attained except by Your bounty.\n\nAnd grant generously to me through Your munificence, and incline toward me with Your splendour, and protect me with Your mercy! And make my tongue remember You without ceasing, and my heart enthralled by Your love! And be gracious to me by answering me favourably, and nullify my slips, and forgive my lapses!\n\nFor You have decreed Your worship for Your servants, and commanded them to supplicate You, and assured them that they would be answered. So toward You, my Lord, I have turned my face, and toward You, my Lord, I have extended my hand. So by Your might, comply with my supplication, and make me attain my desires, and do not sever my hoping for Your favours, and spare me the evil of my enemies from among the jinn and men!\n\nO He whose pleasure is quickly achieved! Forgive him who owns nothing but supplication, for You do what You will.\n\nO He whose Name is a remedy, and whose remembrance is a cure, and whose obedience is wealth! Have mercy upon him whose capital is hope and whose weapon is tears!\n\nO Ample in blessings! O Repeller of adversities! O Light of those who are lonely in the darkness! O Knower who was never taught! Bless Muḥammad and Muḥammad’s household, and do with me what is worthy of You!\n\nAnd may Allah bless His Messenger and the holy Imams of his household, and give them abundant peace!'
 }, {
   title: 'Duʿāʾ al-Faraj',
   cat: 'Daily',
@@ -1249,7 +1249,7 @@ const VAPID_PUBLIC_KEY = 'BGaIKdSnFYd_cHBqlukrEy1rI2wATyDLx7d08nvL90u2SxV240WaVz
 const EDGE_PUSH = SB_URL + '/functions/v1/send-push';
 
 const PUSH_MSG = {
-  announcement: 'New announcement from Ahlul Bayt Ireland',
+  announcement: 'Majlish Live — new announcement from Ahlul Bayt Ireland',
   events: 'New event added to the community calendar',
   stories: 'New story or article has been published',
   pinned: 'Featured message has been updated',
@@ -1321,6 +1321,14 @@ const SB_KEY_MAP = {
   duas: 'liveDuas', ziyarat: 'liveZiyarat', nahj: 'liveNahj'
 };
 
+function announcementActive(a) {
+  if (!a || !a.title) return false;
+  if (a.date) {
+    const end = new Date(a.date + 'T23:59:59');
+    if (!isNaN(end.getTime()) && Date.now() > end.getTime()) return false;
+  }
+  return true;
+}
 function pruneExpiredStories(list) {
   const cutoff = Date.now() - 24 * 60 * 60 * 1000;
   return (list || []).filter(s => !s.created || s.created > cutoff);
@@ -2348,16 +2356,21 @@ class App extends Component {
         border: '1px solid #ece4d4',
         borderRadius: 16,
         padding: '3px 4px',
-        marginBottom: 18
+        marginBottom: 18,
+        display: 'grid',
+        gridAutoFlow: 'column',
+        gridTemplateColumns: '1fr 1fr',
+        gridTemplateRows: `repeat(${Math.ceil(prayers.length / 2)}, auto)`
       }
-    }, prayers.map(p => /*#__PURE__*/React.createElement("div", {
+    }, prayers.map((p, i) => /*#__PURE__*/React.createElement("div", {
       key: p.name,
       style: {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        padding: '5.5px 14px',
-        borderBottom: p.last ? 'none' : '1px solid #f3ecdd'
+        padding: '5.5px 12px',
+        borderBottom: i % Math.ceil(prayers.length / 2) === Math.ceil(prayers.length / 2) - 1 || i === prayers.length - 1 ? 'none' : '1px solid #f3ecdd',
+        borderLeft: i >= Math.ceil(prayers.length / 2) ? '1px solid #f3ecdd' : 'none'
       }
     }, /*#__PURE__*/React.createElement("div", {
       style: {
@@ -2471,7 +2484,8 @@ class App extends Component {
         color: '#fff',
         lineHeight: 1.4
       }
-    }, st.livePinned.text)), /*#__PURE__*/React.createElement("div", {
+    }, st.livePinned.text)), announcementActive(st.liveAnnouncement) && /*#__PURE__*/React.createElement("div", {
+      onClick: st.liveAnnouncement.yt ? () => this.playYt(st.liveAnnouncement.yt) : undefined,
       style: {
         display: 'flex',
         gap: 13,
@@ -2480,7 +2494,8 @@ class App extends Component {
         border: '1px solid #ecdfc2',
         borderRadius: 18,
         padding: '15px 16px',
-        marginBottom: 14
+        marginBottom: 14,
+        cursor: st.liveAnnouncement.yt ? 'pointer' : 'default'
       }
     }, /*#__PURE__*/React.createElement("div", {
       style: {
@@ -2488,15 +2503,36 @@ class App extends Component {
         width: 34,
         height: 34,
         borderRadius: 10,
-        background: '#e8d39a',
+        background: st.liveAnnouncement.yt ? '#6e2230' : '#e8d39a',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        color: '#7a5d18',
+        color: st.liveAnnouncement.yt ? '#f6e7d7' : '#7a5d18',
         fontWeight: 700,
-        fontFamily: 'Spectral,serif'
+        fontFamily: 'Spectral,serif',
+        fontSize: st.liveAnnouncement.yt ? 12 : 15
       }
-    }, "!"), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+    }, st.liveAnnouncement.yt ? '▶' : '!'), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 10,
+        letterSpacing: 1.1,
+        textTransform: 'uppercase',
+        fontWeight: 800,
+        color: '#a03a3a',
+        marginBottom: 3,
+        display: 'flex',
+        alignItems: 'center',
+        gap: 5
+      }
+    }, /*#__PURE__*/React.createElement("span", {
+      style: {
+        width: 6,
+        height: 6,
+        borderRadius: '50%',
+        background: '#c0392b',
+        display: 'inline-block'
+      }
+    }), "Majlish Live"), /*#__PURE__*/React.createElement("div", {
       style: {
         fontSize: 13.5,
         fontWeight: 600,
@@ -2509,7 +2545,18 @@ class App extends Component {
         marginTop: 3,
         lineHeight: 1.4
       }
-    }, st.liveAnnouncement.body))), st.install && /*#__PURE__*/React.createElement("div", {
+    }, st.liveAnnouncement.body), (st.liveAnnouncement.date || st.liveAnnouncement.yt) && /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 11,
+        color: '#a08c55',
+        marginTop: 5,
+        fontWeight: 600
+      }
+    }, [st.liveAnnouncement.date ? new Date(st.liveAnnouncement.date + 'T12:00').toLocaleDateString('en-IE', {
+      weekday: 'short',
+      day: 'numeric',
+      month: 'long'
+    }) : null, st.liveAnnouncement.yt ? 'Tap to watch ▶' : null].filter(Boolean).join(' · ')))), st.install && /*#__PURE__*/React.createElement("div", {
       style: {
         display: 'flex',
         alignItems: 'center',
@@ -3715,7 +3762,8 @@ class App extends Component {
         fontSize: arSize,
         lineHeight: 2.1,
         color: rd.arInk,
-        textAlign: 'center'
+        textAlign: 'center',
+        whiteSpace: 'pre-line'
       },
       dir: "rtl"
     }, r.ar)), /*#__PURE__*/React.createElement("div", {
@@ -3748,7 +3796,8 @@ class App extends Component {
         fontFamily: 'Spectral,serif',
         fontSize: trSize,
         lineHeight: 1.85,
-        color: rd.text
+        color: rd.text,
+        whiteSpace: 'pre-line'
       }
     }, r.body), r.sum && /*#__PURE__*/React.createElement("div", {
       style: {
@@ -4861,7 +4910,7 @@ class App extends Component {
       label: 'Prayer Times'
     }, {
       id: 'announcement',
-      label: 'Announcement'
+      label: 'Majlish Live'
     }, {
       id: 'pinned',
       label: 'Pinned Msg'
@@ -5747,7 +5796,7 @@ class App extends Component {
             color: '#27241f',
             marginBottom: 14
           }
-        }, "Edit Announcement"), /*#__PURE__*/React.createElement("input", {
+        }, "Edit Majlish Live"), /*#__PURE__*/React.createElement("input", {
           value: d.title || '',
           onChange: e => this.setDraft({
             title: e.target.value
@@ -5767,15 +5816,43 @@ class App extends Component {
             minHeight: 80,
             resize: 'none'
           }
+        }), /*#__PURE__*/React.createElement("input", {
+          value: d.yt || '',
+          onChange: e => this.setDraft({
+            yt: e.target.value
+          }),
+          placeholder: "YouTube URL (plays inside the app)",
+          style: inp
+        }), /*#__PURE__*/React.createElement("div", {
+          style: {
+            fontSize: 11.5,
+            color: '#8d8574',
+            margin: '2px 2px 7px'
+          }
+        }, "Majlis date — the banner disappears at 11:59 pm on this date"), /*#__PURE__*/React.createElement("input", {
+          type: "date",
+          value: d.date || '',
+          onChange: e => this.setDraft({
+            date: e.target.value
+          }),
+          style: inp
         }), /*#__PURE__*/React.createElement("div", {
           style: {
             display: 'flex',
             gap: 10
           }
-        }, btn('Save', () => save('announcement', 'liveAnnouncement', {
-          title: d.title || '',
-          body: d.body || ''
-        }, 'Announcement saved!'), {
+        }, btn('Save', () => {
+          if (d.yt && !ytId(d.yt)) {
+            this.showToast('That YouTube link is not valid');
+            return;
+          }
+          save('announcement', 'liveAnnouncement', {
+            title: d.title || '',
+            body: d.body || '',
+            yt: d.yt || '',
+            date: d.date || ''
+          }, 'Majlish Live saved!');
+        }, {
           flex: 1,
           background: '#1f5145',
           color: '#f3ead4'
@@ -5787,13 +5864,14 @@ class App extends Component {
         })));
       }
       const a = st.liveAnnouncement;
-      return /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+      const live = announcementActive(a);
+      return /*#__PURE__*/React.createElement("div", null, a.title ? /*#__PURE__*/React.createElement("div", {
         style: {
           background: 'linear-gradient(120deg,#faf4e6,#f6efe0)',
           border: '1px solid #ecdfc2',
           borderRadius: 14,
           padding: '14px',
-          marginBottom: 14
+          marginBottom: 10
         }
       }, /*#__PURE__*/React.createElement("div", {
         style: {
@@ -5808,14 +5886,52 @@ class App extends Component {
           marginTop: 4,
           lineHeight: 1.5
         }
-      }, a.body)), btn('Edit Announcement', () => this.startEdit(0, {
-        title: a.title,
-        body: a.body
+      }, a.body), (a.yt || a.date) && /*#__PURE__*/React.createElement("div", {
+        style: {
+          fontSize: 11.5,
+          color: '#a08c55',
+          marginTop: 6,
+          fontWeight: 600
+        }
+      }, [a.date ? 'Majlis date: ' + a.date : null, a.yt ? 'YouTube linked ▶' : null].filter(Boolean).join(' · '))) : /*#__PURE__*/React.createElement("div", {
+        style: {
+          fontSize: 13,
+          color: '#8d8574',
+          marginBottom: 10,
+          fontStyle: 'italic'
+        }
+      }, "No Majlish Live announcement at the moment."), a.title && /*#__PURE__*/React.createElement("div", {
+        style: {
+          fontSize: 12,
+          fontWeight: 700,
+          color: live ? '#1f5145' : '#8a3030',
+          marginBottom: 12
+        }
+      }, live ? a.date ? '● Live — expires 11:59 pm on ' + a.date : '● Live — no expiry date set' : '○ Expired — no longer shown to users'), /*#__PURE__*/React.createElement("div", {
+        style: {
+          display: 'flex',
+          gap: 10
+        }
+      }, btn('Edit Majlish Live', () => this.startEdit(0, {
+        title: a.title || '',
+        body: a.body || '',
+        yt: a.yt || '',
+        date: a.date || ''
       }), {
+        flex: 1,
         background: '#1f5145',
-        color: '#f3ead4',
-        width: '100%'
-      }));
+        color: '#f3ead4'
+      }), a.title && btn('Remove', () => save('announcement', 'liveAnnouncement', {
+        title: '',
+        body: '',
+        yt: '',
+        date: ''
+      }, 'Majlish Live removed'), {
+        flex: 1,
+        background: '#faeeee',
+        border: '1px solid #e6c9c9',
+        color: '#8a3030'
+      })));
     };
 
     /* ─ PINNED MESSAGE ─ */
