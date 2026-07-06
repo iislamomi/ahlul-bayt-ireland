@@ -1258,7 +1258,7 @@ const VAPID_PUBLIC_KEY = 'BGaIKdSnFYd_cHBqlukrEy1rI2wATyDLx7d08nvL90u2SxV240WaVz
 const EDGE_PUSH = SB_URL + '/functions/v1/send-push';
 
 const PUSH_MSG = {
-  announcement: 'Majlish Live — new announcement from Ahlul Bayt Ireland',
+  announcement: 'Majlis Live — new announcement from Ahlul Bayt Ireland',
   kidsQuizzes: 'New kids quiz published — can you get it right?',
   events: 'New event added to the community calendar',
   stories: 'New story or article has been published',
@@ -2236,7 +2236,7 @@ class App extends Component {
         background: '#c0392b',
         display: 'inline-block'
       }
-    }), "Majlish Live"), /*#__PURE__*/React.createElement("div", {
+    }), "Majlis Live"), /*#__PURE__*/React.createElement("div", {
       style: {
         fontSize: 13.5,
         fontWeight: 600,
@@ -2534,14 +2534,14 @@ class App extends Component {
         fontWeight: 600,
         color: '#f3ead4'
       }
-    }, "Ask Your Imam"), /*#__PURE__*/React.createElement("div", {
+    }, "Ask Your Maulana"), /*#__PURE__*/React.createElement("div", {
       style: {
         fontSize: 11.5,
         color: '#bcd3ca',
         marginTop: 2,
         lineHeight: 1.35
       }
-    }, "Have a question? Message the imam directly on WhatsApp.")), /*#__PURE__*/React.createElement("div", {
+    }, "Have a question? Message the maulana directly on WhatsApp.")), /*#__PURE__*/React.createElement("div", {
       onClick: () => window.open('https://wa.me/' + String(st.liveAskImam.number).replace(/[^\d]/g, ''), '_blank'),
       style: {
         flexShrink: 0,
@@ -5001,13 +5001,13 @@ class App extends Component {
       label: 'Prayer Times'
     }, {
       id: 'announcement',
-      label: 'Majlish Live'
+      label: 'Majlis Live'
     }, {
       id: 'pinned',
       label: 'Pinned Msg'
     }, {
       id: 'askImam',
-      label: 'Ask Imam'
+      label: 'Ask Maulana'
     }, {
       id: 'kids',
       label: 'Kids'
@@ -5890,7 +5890,7 @@ class App extends Component {
             color: '#27241f',
             marginBottom: 14
           }
-        }, "Edit Majlish Live"), /*#__PURE__*/React.createElement("input", {
+        }, "Edit Majlis Live"), /*#__PURE__*/React.createElement("input", {
           value: d.title || '',
           onChange: e => this.setDraft({
             title: e.target.value
@@ -5945,7 +5945,7 @@ class App extends Component {
             body: d.body || '',
             yt: d.yt || '',
             date: d.date || ''
-          }, 'Majlish Live saved!');
+          }, 'Majlis Live saved!');
         }, {
           flex: 1,
           background: '#1f5145',
@@ -5994,7 +5994,7 @@ class App extends Component {
           marginBottom: 10,
           fontStyle: 'italic'
         }
-      }, "No Majlish Live announcement at the moment."), a.title && /*#__PURE__*/React.createElement("div", {
+      }, "No Majlis Live announcement at the moment."), a.title && /*#__PURE__*/React.createElement("div", {
         style: {
           fontSize: 12,
           fontWeight: 700,
@@ -6006,7 +6006,7 @@ class App extends Component {
           display: 'flex',
           gap: 10
         }
-      }, btn('Edit Majlish Live', () => this.startEdit(0, {
+      }, btn('Edit Majlis Live', () => this.startEdit(0, {
         title: a.title || '',
         body: a.body || '',
         yt: a.yt || '',
@@ -6020,7 +6020,7 @@ class App extends Component {
         body: '',
         yt: '',
         date: ''
-      }, 'Majlish Live removed'), {
+      }, 'Majlis Live removed'), {
         flex: 1,
         background: '#faeeee',
         border: '1px solid #e6c9c9',
@@ -6046,7 +6046,7 @@ class App extends Component {
             color: '#27241f',
             marginBottom: 14
           }
-        }, "Edit Ask Your Imam"), /*#__PURE__*/React.createElement("input", {
+        }, "Edit Ask Your Maulana"), /*#__PURE__*/React.createElement("input", {
           value: d.number || '',
           onChange: e => this.setDraft({
             number: e.target.value
@@ -6074,7 +6074,7 @@ class App extends Component {
           }
           save('askImam', 'liveAskImam', {
             number: (d.number || '').trim()
-          }, 'Ask Your Imam saved!');
+          }, 'Ask Your Maulana saved!');
         }, {
           flex: 1,
           background: '#1f5145',
@@ -6100,7 +6100,7 @@ class App extends Component {
           fontWeight: 700,
           color: '#1f5145'
         }
-      }, "Ask Your Imam"), /*#__PURE__*/React.createElement("div", {
+      }, "Ask Your Maulana"), /*#__PURE__*/React.createElement("div", {
         style: {
           fontSize: 13,
           color: '#3f5c52',
@@ -6121,7 +6121,7 @@ class App extends Component {
           marginBottom: 10,
           fontStyle: 'italic'
         }
-      }, "No WhatsApp number set — the Ask Your Imam card is hidden."), /*#__PURE__*/React.createElement("div", {
+      }, "No WhatsApp number set — the Ask Your Maulana card is hidden."), /*#__PURE__*/React.createElement("div", {
         style: {
           display: 'flex',
           gap: 10
@@ -6134,7 +6134,7 @@ class App extends Component {
         color: '#f3ead4'
       }), a.number && btn('Remove', () => save('askImam', 'liveAskImam', {
         number: ''
-      }, 'Ask Your Imam card removed'), {
+      }, 'Ask Your Maulana card removed'), {
         flex: 1,
         background: '#faeeee',
         border: '1px solid #e6c9c9',
@@ -6756,15 +6756,23 @@ class App extends Component {
               this.showToast('That YouTube link is not valid');
               return;
             }
-            const a = [...(st.liveHealthVideos || [])];
+            let a = [...(st.liveHealthVideos || [])];
             const it = {
               title: d.title || '',
               meta: d.meta || '',
               color: d.color || '#1f5145',
               yt: d.yt || '',
-              cat: hCatSel === '__other' ? (hCatCustom || '').trim() : hCatSel
+              cat: hCatSel === '__other' ? (hCatCustom || '').trim() : hCatSel,
+              hero: !!d.hero
             };
             if (isNew) a.push(it);else a[st.adminEditIdx] = it;
+            if (it.hero) {
+              const heroIdx = isNew ? a.length - 1 : st.adminEditIdx;
+              a = a.map((x, xi) => xi === heroIdx ? x : x.hero ? {
+                ...x,
+                hero: false
+              } : x);
+            }
             save('healthVideos', 'liveHealthVideos', a, isNew ? 'Video added!' : 'Updated!');
           };
           return /*#__PURE__*/React.createElement("div", {
@@ -6822,7 +6830,42 @@ class App extends Component {
             placeholder: "Custom category",
             maxLength: 40,
             style: inp
-          }), /*#__PURE__*/React.createElement("select", {
+          }), /*#__PURE__*/React.createElement("div", {
+            onClick: () => this.setDraft({
+              hero: !d.hero
+            }),
+            style: {
+              display: 'flex',
+              alignItems: 'center',
+              gap: 10,
+              padding: '11px 13px',
+              borderRadius: 12,
+              border: `1.5px solid ${d.hero ? '#1f5145' : '#e6dcc8'}`,
+              background: d.hero ? '#e6efe9' : '#fffdf9',
+              cursor: 'pointer',
+              marginBottom: 10
+            }
+          }, /*#__PURE__*/React.createElement("span", {
+            style: {
+              width: 18,
+              height: 18,
+              borderRadius: 6,
+              border: `2px solid ${d.hero ? '#1f5145' : '#c9bfa9'}`,
+              background: d.hero ? '#1f5145' : 'transparent',
+              color: '#f3ead4',
+              fontSize: 12,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontWeight: 800
+            }
+          }, d.hero ? '✓' : ''), /*#__PURE__*/React.createElement("span", {
+            style: {
+              fontSize: 13,
+              fontWeight: 600,
+              color: '#3f3a32'
+            }
+          }, "Hero video — show at the top of Health & Wellness")), /*#__PURE__*/React.createElement("select", {
             value: d.color || '#1f5145',
             onChange: e => this.setDraft({
               color: e.target.value
@@ -8608,6 +8651,7 @@ class App extends Component {
   /* ── HEALTH & WELLNESS ── */
   renderHealth(st) {
     const ht = st.healthTab || 'videos';
+    const hHeroV = (st.liveHealthVideos || []).find(v => v.hero && ytId(v.yt));
     const hvCats = ['All', ...new Set((st.liveHealthVideos || []).map(v => v.cat).filter(Boolean))];
     const hvCat = hvCats.includes(st.healthVidCat) ? st.healthVidCat : 'All';
     const healthVids = (st.liveHealthVideos || []).filter(v => hvCat === 'All' || v.cat === hvCat);
@@ -8663,7 +8707,65 @@ class App extends Component {
         borderRadius: 10,
         padding: '6px 12px'
       }
-    }, "Edit")), /*#__PURE__*/React.createElement("div", {
+    }, "Edit")), hHeroV && /*#__PURE__*/React.createElement("div", {
+      onClick: () => this.playYt(hHeroV.yt),
+      style: {
+        position: 'relative',
+        overflow: 'hidden',
+        borderRadius: 20,
+        aspectRatio: '16/10',
+        background: `linear-gradient(rgba(0,0,0,.22),rgba(0,0,0,.5)),url(https://img.youtube.com/vi/${ytId(hHeroV.yt)}/hqdefault.jpg) center/cover`,
+        marginBottom: 18,
+        cursor: 'pointer',
+        display: 'flex',
+        alignItems: 'flex-end',
+        padding: 18
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        position: 'absolute',
+        top: '50%',
+        left: '50%',
+        transform: 'translate(-50%,-50%)',
+        width: 58,
+        height: 58,
+        borderRadius: '50%',
+        background: 'rgba(255,253,249,.92)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        boxShadow: '0 8px 20px -6px rgba(0,0,0,.4)'
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        width: 0,
+        height: 0,
+        borderLeft: '18px solid #1f5145',
+        borderTop: '11px solid transparent',
+        borderBottom: '11px solid transparent',
+        marginLeft: 4
+      }
+    })), /*#__PURE__*/React.createElement("div", {
+      style: {
+        position: 'relative',
+        color: '#fff'
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 10.5,
+        letterSpacing: 1,
+        textTransform: 'uppercase',
+        fontWeight: 700,
+        color: '#d8b863'
+      }
+    }, "Hero video", hHeroV.cat ? ' · ' + hHeroV.cat : ''), /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontFamily: 'Spectral,serif',
+        fontSize: 19,
+        fontWeight: 600,
+        marginTop: 3
+      }
+    }, hHeroV.title))), /*#__PURE__*/React.createElement("div", {
       style: {
         display: 'flex',
         gap: 6,
