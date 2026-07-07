@@ -3541,11 +3541,7 @@ class App extends Component {
         fontSize: 14.5,
         fontWeight: 600,
         color: '#2c2823',
-        lineHeight: 1.3,
-        display: '-webkit-box',
-        WebkitLineClamp: 2,
-        WebkitBoxOrient: 'vertical',
-        overflow: 'hidden'
+        lineHeight: 1.3
       }
     }, it2.title), /*#__PURE__*/React.createElement("div", {
       dir: "rtl",
@@ -3553,10 +3549,11 @@ class App extends Component {
         fontFamily: 'Amiri,serif',
         fontSize: 15,
         color: '#6f675a',
-        lineHeight: 1.6,
-        whiteSpace: 'nowrap',
-        overflow: 'hidden',
-        textOverflow: 'ellipsis'
+        lineHeight: 1.7,
+        display: '-webkit-box',
+        WebkitLineClamp: 2,
+        WebkitBoxOrient: 'vertical',
+        overflow: 'hidden'
       }
     }, (it2.ar || '').split('\n')[0]), it2.pdf && /*#__PURE__*/React.createElement("div", {
       style: {
@@ -8221,7 +8218,6 @@ class App extends Component {
         aspectRatio: '16/10',
         background: 'linear-gradient(150deg,#2a6a58,#143b2f)',
         marginBottom: 10,
-        cursor: 'pointer',
         display: 'flex',
         alignItems: 'flex-end',
         padding: 18
@@ -8316,27 +8312,32 @@ class App extends Component {
         border: `1px solid ${kvCat === c ? '#1f5145' : '#e6dcc8'}`
       }
     }, c))), /*#__PURE__*/React.createElement("div", {
-      className: "s",
       style: {
         display: 'flex',
-        gap: 13,
-        overflowX: 'auto',
-        margin: '0 -20px 24px',
-        padding: '0 20px 4px'
+        flexDirection: 'column',
+        gap: 10,
+        marginBottom: 24
       }
     }, kidsVids.map((v, i) => /*#__PURE__*/React.createElement("div", {
       key: i,
       onClick: () => this.playYt(v.yt),
       style: {
-        flexShrink: 0,
-        width: 170,
+        display: 'flex',
+        gap: 12,
+        alignItems: 'center',
+        background: '#fffdf9',
+        border: '1px solid #ece4d4',
+        borderRadius: 14,
+        padding: 10,
         cursor: 'pointer'
       }
     }, /*#__PURE__*/React.createElement("div", {
       style: {
         position: 'relative',
+        flexShrink: 0,
+        width: 132,
         aspectRatio: '16/10',
-        borderRadius: 15,
+        borderRadius: 10,
         overflow: 'hidden',
         background: ytId(v.yt) ? `url(https://img.youtube.com/vi/${ytId(v.yt)}/hqdefault.jpg) center/cover` : v.color,
         display: 'flex',
@@ -8351,8 +8352,8 @@ class App extends Component {
       }
     }), /*#__PURE__*/React.createElement("div", {
       style: {
-        width: 40,
-        height: 40,
+        width: 34,
+        height: 34,
         borderRadius: '50%',
         background: 'rgba(255,253,249,.92)',
         display: 'flex',
@@ -8364,26 +8365,30 @@ class App extends Component {
       style: {
         width: 0,
         height: 0,
-        borderLeft: '13px solid #1f5145',
-        borderTop: '8px solid transparent',
-        borderBottom: '8px solid transparent',
+        borderLeft: '11px solid #1f5145',
+        borderTop: '7px solid transparent',
+        borderBottom: '7px solid transparent',
         marginLeft: 3
       }
     }))), /*#__PURE__*/React.createElement("div", {
       style: {
+        flex: 1,
+        minWidth: 0
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
         fontSize: 13.5,
         fontWeight: 600,
         color: '#2c2823',
-        marginTop: 8,
         lineHeight: 1.3
       }
     }, v.title), /*#__PURE__*/React.createElement("div", {
       style: {
         fontSize: 11,
         color: '#9a8f7c',
-        marginTop: 2
+        marginTop: 3
       }
-    }, v.meta))))), kt === 'wisdom' && /*#__PURE__*/React.createElement("div", {
+    }, v.meta)))))), kt === 'wisdom' && /*#__PURE__*/React.createElement("div", {
       style: {
         background: 'linear-gradient(150deg,#1f5145,#163b30)',
         borderRadius: 20,
@@ -8782,69 +8787,6 @@ class App extends Component {
       style: tabStyle(k)
     }, label))), ht === 'videos' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
       style: {
-        position: 'relative',
-        overflow: 'hidden',
-        borderRadius: 20,
-        aspectRatio: '16/10',
-        background: 'linear-gradient(150deg,#2a6a58,#143b2f)',
-        marginBottom: 10,
-        cursor: 'pointer',
-        display: 'flex',
-        alignItems: 'flex-end',
-        padding: 18
-      }
-    }, /*#__PURE__*/React.createElement("div", {
-      style: {
-        position: 'absolute',
-        inset: 0,
-        background: 'repeating-linear-gradient(135deg,rgba(255,255,255,.05) 0 12px,transparent 12px 24px)'
-      }
-    }), /*#__PURE__*/React.createElement("div", {
-      style: {
-        position: 'absolute',
-        top: '50%',
-        left: '50%',
-        transform: 'translate(-50%,-50%)',
-        width: 58,
-        height: 58,
-        borderRadius: '50%',
-        background: 'rgba(255,253,249,.92)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        boxShadow: '0 8px 20px -6px rgba(0,0,0,.4)'
-      }
-    }, /*#__PURE__*/React.createElement("div", {
-      style: {
-        width: 0,
-        height: 0,
-        borderLeft: '18px solid #1f5145',
-        borderTop: '11px solid transparent',
-        borderBottom: '11px solid transparent',
-        marginLeft: 4
-      }
-    })), /*#__PURE__*/React.createElement("div", {
-      style: {
-        position: 'relative',
-        color: '#fff'
-      }
-    }, /*#__PURE__*/React.createElement("div", {
-      style: {
-        fontSize: 10.5,
-        letterSpacing: 1,
-        textTransform: 'uppercase',
-        fontWeight: 700,
-        color: '#d8b863'
-      }
-    }, "Featured · Wellness"), /*#__PURE__*/React.createElement("div", {
-      style: {
-        fontFamily: 'Spectral,serif',
-        fontSize: 19,
-        fontWeight: 600,
-        marginTop: 3
-      }
-    }, "Islam & Healthy Living"))), /*#__PURE__*/React.createElement("div", {
-      style: {
         fontSize: 11.5,
         color: '#a89d88',
         marginBottom: 22
@@ -8883,27 +8825,32 @@ class App extends Component {
         border: `1px solid ${hvCat === c ? '#1f5145' : '#e6dcc8'}`
       }
     }, c))), /*#__PURE__*/React.createElement("div", {
-      className: "s",
       style: {
         display: 'flex',
-        gap: 13,
-        overflowX: 'auto',
-        margin: '0 -20px 24px',
-        padding: '0 20px 4px'
+        flexDirection: 'column',
+        gap: 10,
+        marginBottom: 24
       }
     }, healthVids.map((v, i) => /*#__PURE__*/React.createElement("div", {
       key: i,
       onClick: () => this.playYt(v.yt),
       style: {
-        flexShrink: 0,
-        width: 170,
+        display: 'flex',
+        gap: 12,
+        alignItems: 'center',
+        background: '#fffdf9',
+        border: '1px solid #ece4d4',
+        borderRadius: 14,
+        padding: 10,
         cursor: 'pointer'
       }
     }, /*#__PURE__*/React.createElement("div", {
       style: {
         position: 'relative',
+        flexShrink: 0,
+        width: 132,
         aspectRatio: '16/10',
-        borderRadius: 15,
+        borderRadius: 10,
         overflow: 'hidden',
         background: ytId(v.yt) ? `url(https://img.youtube.com/vi/${ytId(v.yt)}/hqdefault.jpg) center/cover` : v.color,
         display: 'flex',
@@ -8918,8 +8865,8 @@ class App extends Component {
       }
     }), /*#__PURE__*/React.createElement("div", {
       style: {
-        width: 40,
-        height: 40,
+        width: 34,
+        height: 34,
         borderRadius: '50%',
         background: 'rgba(255,253,249,.92)',
         display: 'flex',
@@ -8931,26 +8878,30 @@ class App extends Component {
       style: {
         width: 0,
         height: 0,
-        borderLeft: '13px solid #1f5145',
-        borderTop: '8px solid transparent',
-        borderBottom: '8px solid transparent',
+        borderLeft: '11px solid #1f5145',
+        borderTop: '7px solid transparent',
+        borderBottom: '7px solid transparent',
         marginLeft: 3
       }
     }))), /*#__PURE__*/React.createElement("div", {
       style: {
+        flex: 1,
+        minWidth: 0
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
         fontSize: 13.5,
         fontWeight: 600,
         color: st.dark ? '#ece6d8' : '#2c2823',
-        marginTop: 8,
         lineHeight: 1.3
       }
     }, v.title), /*#__PURE__*/React.createElement("div", {
       style: {
         fontSize: 11,
         color: '#9a8f7c',
-        marginTop: 2
+        marginTop: 3
       }
-    }, v.meta))))), ht === 'tips' && /*#__PURE__*/React.createElement("div", {
+    }, v.meta)))))), ht === 'tips' && /*#__PURE__*/React.createElement("div", {
       style: {
         display: 'flex',
         flexDirection: 'column',
@@ -9862,6 +9813,15 @@ class App extends Component {
         fontWeight: 500
       }
     }, st.quizPick === cur.answer ? 'Correct — well done!' : 'Not quite. The answer is highlighted.')), cur.link && /*#__PURE__*/React.createElement("div", {
+      onClick: e => {
+        e.stopPropagation();
+        this.closeStory();
+        if (cur.kind === 'kids') this.go('kids');else if (cur.kind === 'classified') this.go('classifieds');else if (cur.kind === 'announce') this.go('calendar');else if (cur.kind === 'sermon') this.setState({
+          screen: 'library',
+          libTab: 'nahj',
+          story: null
+        });else this.go('library');
+      },
       style: {
         pointerEvents: 'auto',
         display: 'inline-flex',
