@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https://img.youtube.com https://i.ytimg.com; connect-src 'self' https://zwpimotdtuhbpwjcooiz.supabase.co; media-src 'self'; frame-src https://www.youtube-nocookie.com https://www.youtube.com; object-src 'none'; base-uri 'self'">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="theme-color" content="#163b30">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -16,14 +16,14 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,400;0,500;0,600;1,400&family=Hanken+Grotesk:wght@400;500;600;700&family=Amiri:wght@400;700&display=swap" rel="stylesheet">
   <style>
-    *, *::before, *::after { box-sizing: border-box; -webkit-font-smoothing: antialiased; }
-    html { height: 100%; }
-    body { height: 100%; min-height: -webkit-fill-available; margin: 0; background: #f6f1e7; font-family: 'Hanken Grotesk', system-ui, sans-serif; }
+    *, *::before, *::after { box-sizing: border-box; -webkit-font-smoothing: antialiased; touch-action: manipulation; }
+    html { height: 100%; overscroll-behavior: none; }
+    body { position: fixed; inset: 0; width: 100%; height: 100%; min-height: -webkit-fill-available; margin: 0; overflow: hidden; overscroll-behavior: none; background: #f6f1e7; font-family: 'Hanken Grotesk', system-ui, sans-serif; }
     #root { height: 100%; height: 100dvh; display: flex; align-items: center; justify-content: center; background: #163b30; }
     .app { position: relative; width: 100%; max-width: 430px; height: 100%; max-height: 900px; background: #f6f1e7; overflow: hidden; display: flex; flex-direction: column; }
     @media (max-width: 430px) { .app { max-height: 100%; max-height: 100dvh; } #root { background: #f6f1e7; } }
     .s::-webkit-scrollbar { display: none; }
-    .s { scrollbar-width: none; -ms-overflow-style: none; }
+    .s { scrollbar-width: none; -ms-overflow-style: none; overscroll-behavior: contain; }
     @keyframes fu { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:none; } }
     @keyframes su { from { transform:translateY(100%); } to { transform:none; } }
     @keyframes po { from { opacity:0; transform:scale(.96); } to { opacity:1; transform:scale(1); } }
