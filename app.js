@@ -1912,36 +1912,8 @@ class App extends Component {
       last: i === activePrayers.length - 1
     }));
     const quickCards = [{
-      title: this.t('kids.title'),
-      sub: 'Books · videos · quizzes',
-      glyph: 'ﻙ',
-      tint: '#f3ecd9',
-      ink: '#b8923f',
-      span: '1',
-      go: () => this.go('kids')
-    }, {
-      title: this.t('home.classTitle'),
-      sub: 'Businesses & listings',
-      glyph: 'ﺱ',
-      tint: '#f3ecd9',
-      ink: '#9a7a2c',
-      span: '1',
-      go: () => this.go('classifieds')
-    }, {
-      title: this.t('more.health'),
-      sub: 'Tips & wellness videos',
-      glyph: '♡',
-      tint: '#e6efe9',
-      ink: '#2c5d52',
-      span: '1',
-      go: () => this.go('health')
-    }, {
       title: 'Duʿāʾ',
-      sub: 'Supplications',
-      glyph: 'ﺀ',
-      tint: '#f3ecd9',
-      ink: '#9a7a2c',
-      span: '1',
+      icon: '🤲',
       go: () => this.setState({
         screen: 'library',
         libTab: 'dua',
@@ -1949,11 +1921,7 @@ class App extends Component {
       })
     }, {
       title: 'Ziyārah',
-      sub: 'Salutations',
-      glyph: 'ﺯ',
-      tint: '#f3e6e8',
-      ink: '#6e2230',
-      span: '1',
+      icon: '🕌',
       go: () => this.setState({
         screen: 'library',
         libTab: 'ziyarah',
@@ -1961,39 +1929,35 @@ class App extends Component {
       })
     }, {
       title: 'Nahj al-Balāgha',
-      sub: 'Sermons · Letters · Sayings',
-      glyph: 'ﻥ',
-      tint: '#e6efe9',
-      ink: '#2c5d52',
-      span: '1',
+      icon: '📖',
       go: () => this.setState({
         screen: 'library',
         libTab: 'nahj',
         libCat: 'All'
       })
     }, {
+      title: this.t('kids.title'),
+      icon: '🧸',
+      go: () => this.go('kids')
+    }, {
+      title: this.t('more.health'),
+      icon: '🌿',
+      go: () => this.go('health')
+    }, {
+      title: this.t('home.classTitle'),
+      icon: '🏪',
+      go: () => this.go('classifieds')
+    }, {
       title: 'Khums & Zakat',
-      sub: 'Calculators & guidance',
-      glyph: 'ﺥ',
-      tint: '#f3e6e8',
-      ink: '#6e2230',
-      span: '1',
+      icon: '🧮',
       go: () => this.go('khums')
     }, {
       title: this.t('qibla.title'),
-      sub: this.t('more.qiblaSub'),
-      glyph: 'ﻕ',
-      tint: '#e6efe9',
-      ink: '#1f5145',
-      span: '1',
+      icon: '🧭',
       go: () => this.go('qibla')
     }, {
       title: this.t('cal.title'),
-      sub: 'Events & Hijri dates',
-      glyph: 'ﮬ',
-      tint: '#e8ebf4',
-      ink: '#3a4a78',
-      span: '2',
+      icon: '📅',
       go: () => this.go('calendar')
     }];
     const now = st.now;
@@ -2556,56 +2520,40 @@ class App extends Component {
     }, "Ask")), /*#__PURE__*/React.createElement("div", {
       style: {
         display: 'grid',
-        gridTemplateColumns: '1fr 1fr',
-        gap: 12,
+        gridTemplateColumns: 'repeat(3, 1fr)',
+        gap: 10,
         marginBottom: 14
       }
     }, quickCards.map((q, i) => /*#__PURE__*/React.createElement("div", {
       key: i,
       onClick: q.go,
       style: {
-        gridColumn: `span ${q.span}`,
         background: '#fffdf9',
         border: '1px solid #ece4d4',
         borderRadius: 18,
-        padding: 16,
+        padding: '16px 6px 13px',
         cursor: 'pointer',
         display: 'flex',
         flexDirection: 'column',
-        gap: 10,
-        minHeight: 96,
-        justifyContent: 'space-between'
-      }
-    }, /*#__PURE__*/React.createElement("div", {
-      style: {
-        width: 38,
-        height: 38,
-        borderRadius: 11,
-        background: q.tint,
-        display: 'flex',
         alignItems: 'center',
-        justifyContent: 'center'
+        justifyContent: 'center',
+        gap: 9,
+        minHeight: 100,
+        textAlign: 'center'
       }
     }, /*#__PURE__*/React.createElement("span", {
       style: {
-        fontFamily: 'Amiri,serif',
-        fontSize: 18,
-        color: q.ink
-      },
-      dir: "rtl"
-    }, q.glyph)), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+        fontSize: 28,
+        lineHeight: 1
+      }
+    }, q.icon), /*#__PURE__*/React.createElement("div", {
       style: {
-        fontSize: 15,
+        fontSize: 12.5,
         fontWeight: 600,
-        color: '#2c2823'
+        color: '#2c2823',
+        lineHeight: 1.25
       }
-    }, q.title), /*#__PURE__*/React.createElement("div", {
-      style: {
-        fontSize: 11.5,
-        color: '#9a8f7c',
-        marginTop: 2
-      }
-    }, q.sub))))), st.livePinned.on && st.livePinned.text && /*#__PURE__*/React.createElement("div", {
+    }, q.title)))), st.livePinned.on && st.livePinned.text && /*#__PURE__*/React.createElement("div", {
       style: {
         display: 'flex',
         gap: 13,
@@ -3491,8 +3439,8 @@ class App extends Component {
       style: nahjTabStyle(k)
     }, label))), libCards.length > 0 && /*#__PURE__*/React.createElement("div", {
       style: {
-        display: 'grid',
-        gridTemplateColumns: '1fr 1fr',
+        display: 'flex',
+        flexDirection: 'column',
         gap: 10
       }
     }, libCards.map((it2, i) => /*#__PURE__*/React.createElement("div", {
@@ -3502,67 +3450,44 @@ class App extends Component {
         background: '#fffdf9',
         border: '1px solid #ece4d4',
         borderRadius: 16,
-        padding: '12px 13px',
+        padding: '14px 15px',
         cursor: 'pointer',
         display: 'flex',
-        flexDirection: 'column',
-        gap: 7
+        alignItems: 'center',
+        gap: 13
       }
     }, /*#__PURE__*/React.createElement("div", {
       style: {
+        flexShrink: 0,
+        width: 36,
+        height: 36,
+        clipPath: 'polygon(30% 0, 70% 0, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0 70%, 0 30%)',
+        background: lm.tint,
+        color: lm.accent,
         display: 'flex',
         alignItems: 'center',
-        justifyContent: 'space-between',
-        gap: 6
+        justifyContent: 'center',
+        fontSize: 13,
+        fontWeight: 700
       }
-    }, /*#__PURE__*/React.createElement("span", {
+    }, i + 1), /*#__PURE__*/React.createElement("div", {
       style: {
-        fontSize: 9.5,
-        letterSpacing: .7,
-        textTransform: 'uppercase',
-        fontWeight: 700,
-        color: lm.accent,
-        background: lm.tint,
-        padding: '3px 7px',
-        borderRadius: 6,
-        whiteSpace: 'nowrap',
-        overflow: 'hidden',
-        textOverflow: 'ellipsis'
-      }
-    }, it2.cat || 'General'), /*#__PURE__*/React.createElement("span", {
-      style: {
-        color: '#cdbf9e',
-        fontSize: 14,
-        flexShrink: 0
-      }
-    }, "⤢")), /*#__PURE__*/React.createElement("div", {
-      style: {
+        flex: 1,
+        minWidth: 0,
         fontFamily: 'Spectral,serif',
-        fontSize: 14.5,
+        fontSize: 16,
         fontWeight: 600,
         color: '#2c2823',
         lineHeight: 1.3
       }
-    }, it2.title), /*#__PURE__*/React.createElement("div", {
-      dir: "rtl",
+    }, it2.title), /*#__PURE__*/React.createElement("span", {
       style: {
-        fontFamily: 'Amiri,serif',
-        fontSize: 15,
-        color: '#6f675a',
-        lineHeight: 1.7,
-        display: '-webkit-box',
-        WebkitLineClamp: 2,
-        WebkitBoxOrient: 'vertical',
-        overflow: 'hidden'
+        flexShrink: 0,
+        color: '#cdbf9e',
+        fontSize: 18,
+        lineHeight: 1
       }
-    }, (it2.ar || '').split('\n')[0]), it2.pdf && /*#__PURE__*/React.createElement("div", {
-      style: {
-        fontSize: 10,
-        fontWeight: 700,
-        color: lm.accent,
-        letterSpacing: .5
-      }
-    }, "PDF · tap to read")))), nahjCards.length > 0 && /*#__PURE__*/React.createElement("div", {
+    }, "›")))), nahjCards.length > 0 && /*#__PURE__*/React.createElement("div", {
       style: {
         display: 'grid',
         gridTemplateColumns: '1fr 1fr',
