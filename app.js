@@ -1022,11 +1022,11 @@ const STRINGS = {
     Urdu: 'ویڈیوز'
   },
   'kids.books': {
-    English: 'Books',
-    'العربية': 'كتب',
-    'हिन्दी': 'किताबें',
-    'فارسی': 'کتاب‌ها',
-    Urdu: 'کتابیں'
+    English: 'Madarsa',
+    'العربية': 'المدرسة',
+    'हिन्दी': 'मदरसा',
+    'فارسی': 'مدرسه',
+    Urdu: 'مدرسہ'
   },
   'kids.wisdom': {
     English: 'Wisdom',
@@ -1259,6 +1259,7 @@ const EDGE_PUSH = SB_URL + '/functions/v1/send-push';
 
 const PUSH_MSG = {
   announcement: 'Majlis Live — new announcement from Ahlul Bayt Ireland',
+  askImam: 'Ask Your Maulana — contact list updated',
   kidsQuizzes: 'New kids quiz published — can you get it right?',
   events: 'New event added to the community calendar',
   stories: 'New story or article has been published',
@@ -1505,9 +1506,7 @@ class App extends Component {
       liveZiyarat: lsGet('ziyarat', ZIYARAT),
       liveNahj: lsGet('nahj', NAHJ),
       liveKidsQuizzes: lsGet('kidsQuizzes', KIDS_QUIZZES),
-      liveAskImam: lsGet('askImam', {
-        number: ''
-      }),
+      liveAskImam: lsGet('askImam', []),
       kidsQuizPicks: {},
       kidsVidCat: 'All',
       healthVidCat: 'All',
@@ -1672,6 +1671,33 @@ class App extends Component {
         sendAdhanPush(match.name, match.time);
       }
       this.showToast(`${match.name} — ${match.time}`);
+    });
+    _defineProperty(this, "notifyTodayEvents", () => {
+      try {
+        if (typeof Notification === 'undefined' || Notification.permission !== 'granted') return;
+        const now = new Date();
+        const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+        if (lsGet('evNotifDate', '') === todayStr) return;
+        const evs = (this.state.liveCalEvents || []).filter(e => e.date === todayStr);
+        if (!evs.length) return;
+        lsSet('evNotifDate', todayStr);
+        const title = evs.length === 1 ? 'Today: ' + evs[0].title : evs.length + ' events today';
+        const body = evs.length === 1 ? evs[0].type + (evs[0].desc ? ' — ' + evs[0].desc : '') : evs.map(e => e.title).join(' · ');
+        const opts = {
+          body,
+          icon: '/icon-192.png',
+          badge: '/icon-192.png',
+          tag: 'today-event',
+          data: { url: '/' }
+        };
+        if ('serviceWorker' in navigator) {
+          navigator.serviceWorker.ready.then(reg => reg.showNotification(title, opts)).catch(() => {
+            try { new Notification(title, opts); } catch (e) {}
+          });
+        } else {
+          try { new Notification(title, opts); } catch (e) {}
+        }
+      } catch (e) {}
     });
     _defineProperty(this, "requestNotifPermission", async () => {
       if (!('Notification' in window)) {
@@ -1867,7 +1893,11 @@ class App extends Component {
       });
       if (Object.keys(update).length > 0) this.setState(update);
     };
-    sbLoadAll().then(applyRemoteData);
+    sbLoadAll().then(data => {
+      applyRemoteData(data);
+      this.notifyTodayEvents();
+    });
+    setTimeout(() => this.notifyTodayEvents(), 4000);
     this.refreshTimer = setInterval(() => sbLoadAll().then(applyRemoteData), 30 * 60 * 1000);
     // Expire 24h-old uploaded stories even while the app stays open
     this.pruneTimer = setInterval(() => {
@@ -1965,6 +1995,10 @@ class App extends Component {
       icon: '📅',
       go: () => this.go('calendar')
     }];
+    const maulanas = Array.isArray(st.liveAskImam) ? st.liveAskImam.filter(m => m && m.number) : st.liveAskImam && st.liveAskImam.number ? [{
+      name: '',
+      number: st.liveAskImam.number
+    }] : [];
     const now = st.now;
     const todayD = now.getDate();
     const calY = now.getFullYear(),
@@ -2061,7 +2095,34 @@ class App extends Component {
         fontSize: 20,
         cursor: 'pointer'
       }
-    }, "×")), /*#__PURE__*/React.createElement("div", {
+    }, "×")), st.livePinned.on && st.livePinned.text && /*#__PURE__*/React.createElement("div", {
+      style: {
+        position: 'sticky',
+        top: 6,
+        zIndex: 12,
+        display: 'flex',
+        gap: 13,
+        alignItems: 'flex-start',
+        background: st.livePinned.color,
+        borderRadius: 18,
+        padding: '14px 16px',
+        margin: '4px 0 12px',
+        boxShadow: `0 6px 18px -8px ${st.livePinned.color}cc`
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        flexShrink: 0,
+        fontSize: 20
+      }
+    }, "📌"), /*#__PURE__*/React.createElement("div", {
+      style: {
+        flex: 1,
+        fontSize: 13.5,
+        fontWeight: 600,
+        color: '#fff',
+        lineHeight: 1.4
+      }
+    }, st.livePinned.text)), /*#__PURE__*/React.createElement("div", {
       style: {
         display: 'flex',
         alignItems: 'flex-start',
@@ -2469,16 +2530,19 @@ class App extends Component {
         color: '#2c2823',
         marginBottom: 12
       }
-    }, this.t('home.explore')), st.liveAskImam && st.liveAskImam.number && /*#__PURE__*/React.createElement("div", {
+    }, this.t('home.explore')), maulanas.length > 0 && /*#__PURE__*/React.createElement("div", {
       style: {
-        display: 'flex',
-        alignItems: 'center',
-        gap: 13,
         background: 'linear-gradient(120deg,#1f5145,#163b30)',
         borderRadius: 18,
         padding: '15px 16px',
         marginBottom: 12,
         boxShadow: '0 8px 22px -10px rgba(22,59,48,.55)'
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: 13
       }
     }, /*#__PURE__*/React.createElement("div", {
       style: {
@@ -2512,19 +2576,40 @@ class App extends Component {
         marginTop: 2,
         lineHeight: 1.35
       }
-    }, "Have a question? Message the maulana directly on WhatsApp.")), /*#__PURE__*/React.createElement("div", {
-      onClick: () => window.open('https://wa.me/' + String(st.liveAskImam.number).replace(/[^\d]/g, ''), '_blank'),
+    }, "Have a question? Message a maulana directly on WhatsApp."))), maulanas.map((m, mi) => /*#__PURE__*/React.createElement("div", {
+      key: mi,
+      style: {
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        gap: 10,
+        marginTop: 11,
+        paddingTop: 11,
+        borderTop: '1px solid rgba(243,234,212,.16)'
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 13.5,
+        fontWeight: 600,
+        color: '#f3ead4',
+        minWidth: 0,
+        overflow: 'hidden',
+        textOverflow: 'ellipsis',
+        whiteSpace: 'nowrap'
+      }
+    }, m.name || 'Maulana'), /*#__PURE__*/React.createElement("div", {
+      onClick: () => window.open('https://wa.me/' + String(m.number).replace(/[^\d]/g, ''), '_blank'),
       style: {
         flexShrink: 0,
-        padding: '10px 18px',
-        borderRadius: 12,
+        padding: '8px 16px',
+        borderRadius: 11,
         background: '#d8b863',
         color: '#163b30',
-        fontSize: 13.5,
+        fontSize: 12.5,
         fontWeight: 700,
         cursor: 'pointer'
       }
-    }, "Ask")), /*#__PURE__*/React.createElement("div", {
+    }, "Ask")))), /*#__PURE__*/React.createElement("div", {
       style: {
         display: 'grid',
         gridTemplateColumns: 'repeat(3, 1fr)',
@@ -2560,31 +2645,7 @@ class App extends Component {
         color: '#2c2823',
         lineHeight: 1.25
       }
-    }, q.title)))), st.livePinned.on && st.livePinned.text && /*#__PURE__*/React.createElement("div", {
-      style: {
-        display: 'flex',
-        gap: 13,
-        alignItems: 'flex-start',
-        background: st.livePinned.color,
-        borderRadius: 18,
-        padding: '14px 16px',
-        marginBottom: 14,
-        boxShadow: `0 6px 18px -8px ${st.livePinned.color}99`
-      }
-    }, /*#__PURE__*/React.createElement("div", {
-      style: {
-        flexShrink: 0,
-        fontSize: 20
-      }
-    }, "📌"), /*#__PURE__*/React.createElement("div", {
-      style: {
-        flex: 1,
-        fontSize: 13.5,
-        fontWeight: 600,
-        color: '#fff',
-        lineHeight: 1.4
-      }
-    }, st.livePinned.text)), st.install && /*#__PURE__*/React.createElement("div", {
+    }, q.title)))), st.install && /*#__PURE__*/React.createElement("div", {
       style: {
         display: 'flex',
         alignItems: 'center',
@@ -4886,18 +4947,22 @@ class App extends Component {
       '#b8923f': 'Amber'
     };
     const STORY_KINDS = ['verse', 'sermon', 'kids', 'quiz', 'classified', 'announce'];
-    const EVENT_TYPES = ['Community', 'Majlis', 'Class', 'Programme'];
+    const EVENT_TYPES = ['Community', 'Majlis', 'Class', 'Programme', 'Dua e Kumail', 'Friday Prayer'];
     const EVENT_COLORS = {
       'Community': '#1f5145',
       'Majlis': '#6e2230',
       'Class': '#9a7a2c',
-      'Programme': '#2c5d52'
+      'Programme': '#2c5d52',
+      'Dua e Kumail': '#3a4a78',
+      'Friday Prayer': '#8a4b2c'
     };
     const EVENT_TINTS = {
       'Community': '#e6efe9',
       'Majlis': '#f3e6e8',
       'Class': '#f3ecd9',
-      'Programme': '#e6efe9'
+      'Programme': '#e6efe9',
+      'Dua e Kumail': '#e8ebf4',
+      'Friday Prayer': '#f6ebe4'
     };
     const CAT_COLORS = {
       'Food': '#1f5145',
@@ -5960,10 +6025,12 @@ class App extends Component {
     /* ─ ASK YOUR IMAM ─ */
     const renderAskImamSection = () => {
       const d = st.adminEditDraft;
-      const a = st.liveAskImam || {
-        number: ''
-      };
+      const list = Array.isArray(st.liveAskImam) ? st.liveAskImam : st.liveAskImam && st.liveAskImam.number ? [{
+        name: '',
+        number: st.liveAskImam.number
+      }] : [];
       if (editing) {
+        const isNew = st.adminEditIdx === -1;
         return /*#__PURE__*/React.createElement("div", {
           style: {
             padding: '0 0 20px'
@@ -5975,7 +6042,15 @@ class App extends Component {
             color: '#27241f',
             marginBottom: 14
           }
-        }, "Edit Ask Your Maulana"), /*#__PURE__*/React.createElement("input", {
+        }, isNew ? 'Add Maulana' : 'Edit Maulana'), /*#__PURE__*/React.createElement("input", {
+          value: d.name || '',
+          onChange: e => this.setDraft({
+            name: e.target.value
+          }),
+          placeholder: "Maulana name (e.g. Maulana Syed Ali)",
+          maxLength: 60,
+          style: inp
+        }), /*#__PURE__*/React.createElement("input", {
           value: d.number || '',
           onChange: e => this.setDraft({
             number: e.target.value
@@ -5990,7 +6065,7 @@ class App extends Component {
             color: '#8d8574',
             margin: '2px 2px 12px'
           }
-        }, "Users tap Ask on the home screen and a WhatsApp chat with this number opens."), /*#__PURE__*/React.createElement("div", {
+        }, "Users tap Ask next to this maulana on the home screen and a WhatsApp chat opens."), /*#__PURE__*/React.createElement("div", {
           style: {
             display: 'flex',
             gap: 10
@@ -6001,9 +6076,13 @@ class App extends Component {
             this.showToast('Enter a valid WhatsApp number with country code');
             return;
           }
-          save('askImam', 'liveAskImam', {
+          const item = {
+            name: (d.name || '').trim(),
             number: (d.number || '').trim()
-          }, 'Ask Your Maulana saved!');
+          };
+          const a = [...list];
+          if (isNew) a.push(item);else a[st.adminEditIdx] = item;
+          save('askImam', 'liveAskImam', a, isNew ? 'Maulana added!' : 'Maulana updated!');
         }, {
           flex: 1,
           background: '#1f5145',
@@ -6015,60 +6094,76 @@ class App extends Component {
           color: '#3f3a32'
         })));
       }
-      return /*#__PURE__*/React.createElement("div", null, a.number ? /*#__PURE__*/React.createElement("div", {
+      return /*#__PURE__*/React.createElement("div", null, btn('+ Add Maulana', () => this.startEdit(-1, {
+        name: '',
+        number: ''
+      }), {
+        background: '#1f5145',
+        color: '#f3ead4',
+        marginBottom: 14,
+        width: '100%'
+      }), list.length > 0 ? /*#__PURE__*/React.createElement(React.Fragment, null, list.map((m, i) => /*#__PURE__*/React.createElement("div", {
+        key: i,
         style: {
-          background: 'linear-gradient(120deg,#e6efe9,#daeae2)',
-          border: '1px solid #c4ddd7',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 12,
+          background: '#fffdf9',
+          border: '1px solid #ece4d4',
           borderRadius: 14,
-          padding: '14px',
-          marginBottom: 10
+          padding: '12px 14px',
+          marginBottom: 8
         }
       }, /*#__PURE__*/React.createElement("div", {
         style: {
-          fontSize: 14,
-          fontWeight: 700,
-          color: '#1f5145'
+          flex: 1,
+          minWidth: 0
         }
-      }, "Ask Your Maulana"), /*#__PURE__*/React.createElement("div", {
+      }, /*#__PURE__*/React.createElement("div", {
         style: {
-          fontSize: 13,
-          color: '#3f5c52',
-          marginTop: 4,
+          fontSize: 13.5,
+          fontWeight: 600,
+          color: '#2c2823',
+          whiteSpace: 'nowrap',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis'
+        }
+      }, m.name || 'Maulana'), /*#__PURE__*/React.createElement("div", {
+        style: {
+          fontSize: 11,
+          color: '#9a8f7c',
           fontVariantNumeric: 'tabular-nums'
         }
-      }, "WhatsApp: ", a.number), /*#__PURE__*/React.createElement("div", {
+      }, m.number)), btn('Edit', () => this.startEdit(i, {
+        ...m
+      }), {
+        background: '#e6efe9',
+        color: '#1f5145',
+        fontSize: 12,
+        padding: '6px 12px'
+      }), btn('✕', () => {
+        const a = [...list];
+        a.splice(i, 1);
+        save('askImam', 'liveAskImam', a, 'Maulana removed');
+      }, {
+        background: '#fdf0f2',
+        color: '#6e2230',
+        fontSize: 12,
+        padding: '6px 10px'
+      }))), /*#__PURE__*/React.createElement("div", {
         style: {
           fontSize: 12,
           fontWeight: 700,
           color: '#1f5145',
-          marginTop: 6
+          marginTop: 4
         }
-      }, "● Live — card is showing at the top of Explore")) : /*#__PURE__*/React.createElement("div", {
+      }, "● Live — the Ask Your Maulana card is showing at the top of Explore")) : /*#__PURE__*/React.createElement("div", {
         style: {
           fontSize: 13,
           color: '#8d8574',
-          marginBottom: 10,
           fontStyle: 'italic'
         }
-      }, "No WhatsApp number set — the Ask Your Maulana card is hidden."), /*#__PURE__*/React.createElement("div", {
-        style: {
-          display: 'flex',
-          gap: 10
-        }
-      }, btn(a.number ? 'Edit Number' : 'Add Number', () => this.startEdit(0, {
-        number: a.number || ''
-      }), {
-        flex: 1,
-        background: '#1f5145',
-        color: '#f3ead4'
-      }), a.number && btn('Remove', () => save('askImam', 'liveAskImam', {
-        number: ''
-      }, 'Ask Your Maulana card removed'), {
-        flex: 1,
-        background: '#faeeee',
-        border: '1px solid #e6c9c9',
-        color: '#8a3030'
-      })));
+      }, "No maulana added — the Ask Your Maulana card is hidden."));
     };
 
     /* ─ PINNED MESSAGE ─ */
@@ -6564,7 +6659,7 @@ class App extends Component {
         label: 'Videos'
       }, {
         id: 'books',
-        label: 'Books'
+        label: 'Madarsa'
       }, {
         id: 'quotes',
         label: 'Quotes'
@@ -8059,7 +8154,7 @@ class App extends Component {
     const heroV = (st.liveKidsVideos || []).find(v => v.hero && ytId(v.yt));
     const kvCats = ['All', ...new Set((st.liveKidsVideos || []).map(v => v.cat).filter(Boolean))];
     const kvCat = kvCats.includes(st.kidsVidCat) ? st.kidsVidCat : 'All';
-    const kidsVids = (st.liveKidsVideos || []).filter(v => kvCat === 'All' || v.cat === kvCat);
+    const kidsVids = [...(st.liveKidsVideos || [])].reverse().filter(v => kvCat === 'All' || v.cat === kvCat);
     const tabStyle = k => ({
       flex: 1,
       textAlign: 'center',
@@ -8617,7 +8712,7 @@ class App extends Component {
     const hHeroV = (st.liveHealthVideos || []).find(v => v.hero && ytId(v.yt));
     const hvCats = ['All', ...new Set((st.liveHealthVideos || []).map(v => v.cat).filter(Boolean))];
     const hvCat = hvCats.includes(st.healthVidCat) ? st.healthVidCat : 'All';
-    const healthVids = (st.liveHealthVideos || []).filter(v => hvCat === 'All' || v.cat === hvCat);
+    const healthVids = [...(st.liveHealthVideos || [])].reverse().filter(v => hvCat === 'All' || v.cat === hvCat);
     const tabStyle = k => ({
       flex: 1,
       textAlign: 'center',
