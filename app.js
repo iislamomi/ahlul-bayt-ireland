@@ -1538,7 +1538,8 @@ class App extends Component {
     _defineProperty(this, "openReading", (type, item) => this.setState({
       screen: 'reading',
       readingType: type,
-      readingItem: item
+      readingItem: item,
+      readingLang: null
     }));
     _defineProperty(this, "t", key => {
       const lang = this.state.lang;
@@ -3739,309 +3740,127 @@ class App extends Component {
     const readAccent = rtype === 'ziyarah' ? '#6e2230' : rtype === 'nahj' ? '#2c5d52' : '#9a7a2c';
     const kicker = rtype === 'dua' ? 'Supplication' : rtype === 'ziyarah' ? 'Salutation' : r.ref || 'Nahj al-Balāgha';
     const isBookmarked = st.bookmarks.some(b => b.title === r.title);
-    return /*#__PURE__*/React.createElement("div", {
+    const enBody = r.body || r.tr || '';
+    const hasEn = !!(enBody || r.sum);
+    const hasAr = !!r.ar;
+    const hasPdf = !!r.pdf;
+    const tabs = [];
+    if (hasEn) tabs.push(['en', 'English']);
+    if (hasAr) tabs.push(['ar', '\u0627\u0644\u0639\u0631\u0628\u064a\u0629']);
+    if (hasPdf) tabs.push(['pdf', 'PDF']);
+    const lang = tabs.some(t => t[0] === st.readingLang) ? st.readingLang : tabs.length ? tabs[0][0] : 'en';
+    const pill = ([k, label]) => React.createElement("div", {
+      key: k,
+      onClick: () => this.setState({ readingLang: k }),
       style: {
-        minHeight: '100%',
-        background: rd.bg
-      }
-    }, /*#__PURE__*/React.createElement("div", {
-      style: {
-        position: 'sticky',
-        top: 0,
-        zIndex: 4,
-        background: rd.barBg,
-        backdropFilter: 'blur(12px)',
-        borderBottom: `1px solid ${rd.border}`,
-        padding: '12px 16px',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between'
-      }
-    }, /*#__PURE__*/React.createElement("div", {
-      onClick: () => this.setState({
-        screen: 'library'
-      }),
-      style: {
-        display: 'flex',
-        alignItems: 'center',
-        gap: 5,
-        cursor: 'pointer',
-        color: rd.accent,
-        fontSize: 14,
-        fontWeight: 600
-      }
-    }, /*#__PURE__*/React.createElement("span", {
-      style: {
-        fontSize: 18
-      }
-    }, "‹"), " ", this.t('lib.back')), /*#__PURE__*/React.createElement("div", {
-      style: {
-        display: 'flex',
-        alignItems: 'center',
-        gap: 8
-      }
-    }, /*#__PURE__*/React.createElement("div", {
-      onClick: () => this.setState(s => ({
-        textSize: Math.max(.85, s.textSize - .12)
-      })),
-      style: {
-        width: 34,
-        height: 34,
-        borderRadius: 10,
-        border: `1px solid ${rd.border}`,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        color: rd.text,
-        fontSize: 13,
-        cursor: 'pointer',
-        background: rd.surf
-      }
-    }, "A−"), /*#__PURE__*/React.createElement("div", {
-      onClick: () => this.setState(s => ({
-        textSize: Math.min(1.5, s.textSize + .12)
-      })),
-      style: {
-        width: 34,
-        height: 34,
-        borderRadius: 10,
-        border: `1px solid ${rd.border}`,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        color: rd.text,
-        fontSize: 17,
-        cursor: 'pointer',
-        background: rd.surf
-      }
-    }, "A+"), /*#__PURE__*/React.createElement("div", {
-      onClick: () => this.setState(s => ({
-        dark: !s.dark
-      })),
-      style: {
-        width: 34,
-        height: 34,
-        borderRadius: 10,
-        border: `1px solid ${rd.border}`,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        cursor: 'pointer',
-        background: rd.surf
-      }
-    }, /*#__PURE__*/React.createElement("svg", {
-      width: "17",
-      height: "17",
-      viewBox: "0 0 24 24",
-      fill: "none",
-      stroke: rd.accent,
-      strokeWidth: "1.8",
-      strokeLinecap: "round",
-      strokeLinejoin: "round"
-    }, /*#__PURE__*/React.createElement("path", {
-      d: "M20 14a8 8 0 1 1-9.8-9.6A6.5 6.5 0 0 0 20 14z"
-    }))))), /*#__PURE__*/React.createElement("div", {
-      style: {
-        padding: '22px 22px 100px'
-      },
-      className: "afu"
-    }, /*#__PURE__*/React.createElement("div", {
-      style: {
-        fontSize: 11,
-        letterSpacing: 1.4,
-        textTransform: 'uppercase',
-        fontWeight: 700,
-        color: readAccent
-      }
-    }, kicker), /*#__PURE__*/React.createElement("div", {
-      style: {
-        fontFamily: 'Spectral,serif',
-        fontSize: 27,
-        fontWeight: 600,
-        color: rd.text,
-        marginTop: 6,
-        lineHeight: 1.2
-      }
-    }, r.title), r.note && /*#__PURE__*/React.createElement("div", {
-      style: {
-        fontSize: 13,
-        color: rd.muted,
-        marginTop: 7,
-        fontStyle: 'italic'
-      }
-    }, r.note), r.ar && /*#__PURE__*/React.createElement("div", {
-      style: {
-        background: rd.surf,
-        border: `1px solid ${rd.border}`,
-        borderRadius: 20,
-        padding: '26px 22px',
-        marginTop: 22
-      }
-    }, /*#__PURE__*/React.createElement("div", {
-      style: {
-        fontFamily: 'Amiri,serif',
-        fontSize: arSize,
-        lineHeight: 2.1,
-        color: rd.arInk,
+        flex: 1,
         textAlign: 'center',
-        whiteSpace: 'pre-line'
-      },
-      dir: "rtl"
-    }, r.ar)), /*#__PURE__*/React.createElement("div", {
-      style: {
-        marginTop: 22
-      }
-    }, /*#__PURE__*/React.createElement("div", {
-      style: {
-        display: 'flex',
-        alignItems: 'center',
-        gap: 10,
-        marginBottom: 12
-      }
-    }, /*#__PURE__*/React.createElement("span", {
-      style: {
-        fontSize: 11,
-        letterSpacing: 1.2,
-        textTransform: 'uppercase',
+        padding: '9px 0',
+        borderRadius: 12,
+        fontSize: 13.5,
         fontWeight: 700,
-        color: rd.muted
+        cursor: 'pointer',
+        fontFamily: k === 'ar' ? 'Amiri,serif' : 'inherit',
+        background: lang === k ? readAccent : rd.surf,
+        color: lang === k ? '#fffdf9' : rd.muted,
+        border: `1px solid ${lang === k ? readAccent : rd.border}`
       }
-    }, this.t('lib.translation')), /*#__PURE__*/React.createElement("span", {
-      style: {
-        flex: 1,
-        height: 1,
-        background: rd.border
-      }
-    })), /*#__PURE__*/React.createElement("div", {
-      style: {
-        fontFamily: 'Spectral,serif',
-        fontSize: trSize,
-        lineHeight: 1.85,
-        color: rd.text,
-        whiteSpace: 'pre-line'
-      }
-    }, r.body), r.sum && /*#__PURE__*/React.createElement("div", {
-      style: {
-        background: rd.surf,
-        border: `1px solid ${rd.border}`,
-        borderRadius: 16,
-        padding: '15px 17px',
-        marginTop: 20
-      }
-    }, /*#__PURE__*/React.createElement("div", {
-      style: {
-        fontSize: 11,
-        letterSpacing: 1,
-        textTransform: 'uppercase',
-        fontWeight: 700,
-        color: rd.muted,
-        marginBottom: 6
-      }
-    }, this.t('lib.summary')), /*#__PURE__*/React.createElement("div", {
-      style: {
-        fontSize: 14,
-        lineHeight: 1.6,
-        color: rd.text
-      }
-    }, r.sum))), /*#__PURE__*/React.createElement("div", {
-      style: {
-        display: 'flex',
-        gap: 12,
-        marginTop: 26
-      }
-    }, r.pdf && /*#__PURE__*/React.createElement("div", {
-      onClick: () => window.open(r.pdf, '_blank'),
-      style: {
-        flex: 1,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: 8,
-        padding: 14,
-        borderRadius: 14,
-        border: `1.5px solid ${readAccent}`,
-        color: readAccent,
-        background: rd.surf,
-        fontSize: 14,
-        fontWeight: 600,
-        cursor: 'pointer'
-      }
-    }, /*#__PURE__*/React.createElement("svg", {
-      width: "15",
-      height: "15",
-      viewBox: "0 0 24 24",
-      fill: "none",
-      stroke: "currentColor",
-      strokeWidth: "1.9",
-      strokeLinecap: "round",
-      strokeLinejoin: "round"
-    }, /*#__PURE__*/React.createElement("path", {
-      d: "M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
-    }), /*#__PURE__*/React.createElement("path", {
-      d: "M14 2v6h6M9 13h6M9 17h6"
-    })), "Read PDF"), /*#__PURE__*/React.createElement("div", {
+    }, label);
+    const actionRow = React.createElement("div", {
+      style: { display: 'flex', gap: 12, marginTop: 26 }
+    }, React.createElement("div", {
       onClick: this.handleShare,
       style: {
-        flex: 1,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: 8,
-        padding: 14,
-        borderRadius: 14,
-        background: readAccent,
-        color: '#fffdf9',
-        fontSize: 14,
-        fontWeight: 600,
-        cursor: 'pointer'
+        flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+        padding: 14, borderRadius: 14, background: readAccent, color: '#fffdf9',
+        fontSize: 14, fontWeight: 600, cursor: 'pointer'
       }
-    }, /*#__PURE__*/React.createElement("svg", {
-      width: "16",
-      height: "16",
-      viewBox: "0 0 24 24",
-      fill: "none",
-      stroke: "currentColor",
-      strokeWidth: "1.9",
-      strokeLinecap: "round",
-      strokeLinejoin: "round"
-    }, /*#__PURE__*/React.createElement("circle", {
-      cx: "18",
-      cy: "5",
-      r: "2.6"
-    }), /*#__PURE__*/React.createElement("circle", {
-      cx: "6",
-      cy: "12",
-      r: "2.6"
-    }), /*#__PURE__*/React.createElement("circle", {
-      cx: "18",
-      cy: "19",
-      r: "2.6"
-    }), /*#__PURE__*/React.createElement("path", {
-      d: "M8.3 10.7l7.4-4.4M8.3 13.3l7.4 4.4"
-    })), this.t('lib.share')), /*#__PURE__*/React.createElement("div", {
+    }, React.createElement("svg", {
+      width: "16", height: "16", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor",
+      strokeWidth: "1.9", strokeLinecap: "round", strokeLinejoin: "round"
+    }, React.createElement("circle", { cx: "18", cy: "5", r: "2.6" }),
+      React.createElement("circle", { cx: "6", cy: "12", r: "2.6" }),
+      React.createElement("circle", { cx: "18", cy: "19", r: "2.6" }),
+      React.createElement("path", { d: "M8.3 10.7l7.4-4.4M8.3 13.3l7.4 4.4" })), this.t('lib.share')),
+    React.createElement("div", {
       onClick: this.handleBookmark,
       style: {
-        width: 52,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        borderRadius: 14,
-        border: `1px solid ${rd.border}`,
-        background: isBookmarked ? rd.surf : rd.surf,
-        cursor: 'pointer'
+        width: 52, display: 'flex', alignItems: 'center', justifyContent: 'center',
+        borderRadius: 14, border: `1px solid ${rd.border}`, background: rd.surf, cursor: 'pointer'
       }
-    }, /*#__PURE__*/React.createElement("svg", {
-      width: "18",
-      height: "18",
-      viewBox: "0 0 24 24",
-      fill: isBookmarked ? readAccent : 'none',
-      stroke: readAccent,
-      strokeWidth: "1.8",
-      strokeLinecap: "round",
-      strokeLinejoin: "round"
-    }, /*#__PURE__*/React.createElement("path", {
-      d: "M6 4h12v16l-6-4-6 4z"
-    }))))));
+    }, React.createElement("svg", {
+      width: "18", height: "18", viewBox: "0 0 24 24",
+      fill: isBookmarked ? readAccent : 'none', stroke: readAccent,
+      strokeWidth: "1.8", strokeLinecap: "round", strokeLinejoin: "round"
+    }, React.createElement("path", { d: "M6 4h12v16l-6-4-6 4z" }))));
+    return React.createElement("div", {
+      style: { height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: rd.bg }
+    }, React.createElement("div", {
+      style: {
+        flexShrink: 0, background: rd.barBg, backdropFilter: 'blur(12px)',
+        borderBottom: `1px solid ${rd.border}`, padding: '12px 16px',
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between'
+      }
+    }, React.createElement("div", {
+      onClick: () => this.setState({ screen: 'library' }),
+      style: { display: 'flex', alignItems: 'center', gap: 5, cursor: 'pointer', color: rd.accent, fontSize: 14, fontWeight: 600 }
+    }, React.createElement("span", { style: { fontSize: 18 } }, "\u2039"), " ", this.t('lib.back')),
+    React.createElement("div", { style: { display: 'flex', alignItems: 'center', gap: 8 } },
+      React.createElement("div", {
+        onClick: () => this.setState(s => ({ textSize: Math.max(.85, s.textSize - .12) })),
+        style: { width: 34, height: 34, borderRadius: 10, border: `1px solid ${rd.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: rd.text, fontSize: 13, cursor: 'pointer', background: rd.surf }
+      }, "A\u2212"),
+      React.createElement("div", {
+        onClick: () => this.setState(s => ({ textSize: Math.min(1.5, s.textSize + .12) })),
+        style: { width: 34, height: 34, borderRadius: 10, border: `1px solid ${rd.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: rd.text, fontSize: 17, cursor: 'pointer', background: rd.surf }
+      }, "A+"),
+      React.createElement("div", {
+        onClick: () => this.setState(s => ({ dark: !s.dark })),
+        style: { width: 34, height: 34, borderRadius: 10, border: `1px solid ${rd.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', background: rd.surf }
+      }, React.createElement("svg", {
+        width: "17", height: "17", viewBox: "0 0 24 24", fill: "none", stroke: rd.accent,
+        strokeWidth: "1.8", strokeLinecap: "round", strokeLinejoin: "round"
+      }, React.createElement("path", { d: "M20 14a8 8 0 1 1-9.8-9.6A6.5 6.5 0 0 0 20 14z" }))))),
+    React.createElement("div", { style: { flexShrink: 0, padding: '16px 22px 14px', background: rd.bg, borderBottom: `1px solid ${rd.border}` } },
+      React.createElement("div", { style: { fontSize: 11, letterSpacing: 1.4, textTransform: 'uppercase', fontWeight: 700, color: readAccent } }, kicker),
+      React.createElement("div", { style: { fontFamily: 'Spectral,serif', fontSize: 24, fontWeight: 600, color: rd.text, marginTop: 5, lineHeight: 1.2 } }, r.title),
+      r.note && React.createElement("div", { style: { fontSize: 12.5, color: rd.muted, marginTop: 6, fontStyle: 'italic' } }, r.note),
+      tabs.length > 1 && React.createElement("div", { style: { display: 'flex', gap: 8, marginTop: 13 } }, tabs.map(pill))),
+    React.createElement("div", {
+      className: "s",
+      style: { flex: '1 1 auto', overflowY: 'auto', padding: '18px 22px 40px' }
+    }, lang === 'ar' && hasAr && React.createElement("div", {
+      style: { background: rd.surf, border: `1px solid ${rd.border}`, borderRadius: 20, padding: '26px 22px' }
+    }, React.createElement("div", {
+      style: { fontFamily: 'Amiri,serif', fontSize: arSize, lineHeight: 2.1, color: rd.arInk, textAlign: 'center', whiteSpace: 'pre-line' },
+      dir: "rtl"
+    }, r.ar)),
+    lang === 'en' && hasEn && React.createElement(React.Fragment, null,
+      enBody && React.createElement("div", {
+        style: { fontFamily: 'Spectral,serif', fontSize: trSize, lineHeight: 1.85, color: rd.text, whiteSpace: 'pre-line' }
+      }, enBody),
+      r.sum && React.createElement("div", {
+        style: { background: rd.surf, border: `1px solid ${rd.border}`, borderRadius: 16, padding: '15px 17px', marginTop: enBody ? 20 : 0 }
+      }, React.createElement("div", {
+        style: { fontSize: 11, letterSpacing: 1, textTransform: 'uppercase', fontWeight: 700, color: rd.muted, marginBottom: 6 }
+      }, this.t('lib.summary')), React.createElement("div", {
+        style: { fontSize: 14, lineHeight: 1.6, color: rd.text }
+      }, r.sum))),
+    lang === 'pdf' && hasPdf && React.createElement(React.Fragment, null,
+      React.createElement("iframe", {
+        src: 'https://docs.google.com/gview?embedded=1&url=' + encodeURIComponent(r.pdf),
+        title: "PDF",
+        style: { width: '100%', height: '62vh', border: `1px solid ${rd.border}`, borderRadius: 16, background: rd.surf }
+      }),
+      React.createElement("div", {
+        onClick: () => window.open(r.pdf, '_blank'),
+        style: {
+          marginTop: 12, textAlign: 'center', padding: 13, borderRadius: 14,
+          border: `1.5px solid ${readAccent}`, color: readAccent, background: rd.surf,
+          fontSize: 13.5, fontWeight: 600, cursor: 'pointer'
+        }
+      }, "Open PDF in browser \u2197")),
+    lang !== 'pdf' && actionRow));
   }
 
   /* ── CLASSIFIEDS ── */
