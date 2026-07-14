@@ -1303,13 +1303,10 @@ async function inflateRaw(u8) {
   const stream = new Blob([u8]).stream().pipeThrough(new DecompressionStream('deflate-raw'));
   return new Uint8Array(await new Response(stream).arrayBuffer());
 }
-async function loadQiblaLottie() {
-  if (qiblaAnimCache) return qiblaAnimCache;
-  const res = await fetch(QIBLA_LOTTIE_URL);
+async function parseLottieResponse(res) {
   if (!res.ok) throw new Error('http ' + res.status);
   const buf = await res.arrayBuffer();
   const head = new Uint8Array(buf, 0, 2);
-  let json;
   if (head[0] === 0x50 && head[1] === 0x4b) {
     // dotLottie: zip archive with animations/*.json inside
     const files = unzipEntries(buf);
@@ -1317,10 +1314,20 @@ async function loadQiblaLottie() {
     if (!entry) throw new Error('no animation in .lottie');
     const f = files[entry];
     const raw = f.method === 8 ? await inflateRaw(f.data) : f.data;
-    json = JSON.parse(new TextDecoder().decode(raw));
-  } else {
-    json = JSON.parse(new TextDecoder().decode(buf));
+    return JSON.parse(new TextDecoder().decode(raw));
   }
+  return JSON.parse(new TextDecoder().decode(buf));
+}
+async function loadQiblaLottie() {
+  if (qiblaAnimCache) return qiblaAnimCache;
+  let json;
+  try {
+    // plain JSON variant plays without unzip support — try it first
+    json = await parseLottieResponse(await fetch(QIBLA_LOTTIE_URL.replace(/\.lottie$/, '.json')));
+  } catch (e) {
+    json = await parseLottieResponse(await fetch(QIBLA_LOTTIE_URL));
+  }
+  if (!json || !json.layers) throw new Error('not a lottie animation');
   qiblaAnimCache = json;
   return json;
 }
@@ -1579,6 +1586,8 @@ class App extends Component {
     });
     _defineProperty(this, "ensureQiblaAnim", () => {
       if (this.state.qiblaAnim || this._qiblaAnimLoading || typeof window.lottie === 'undefined') return;
+      if (this._qiblaAnimLastTry && Date.now() - this._qiblaAnimLastTry < 30000) return;
+      this._qiblaAnimLastTry = Date.now();
       this._qiblaAnimLoading = true;
       loadQiblaLottie().then(data => this.setState({
         qiblaAnim: data
@@ -1600,7 +1609,10 @@ class App extends Component {
         renderer: 'svg',
         loop: true,
         autoplay: true,
-        animationData: this.state.qiblaAnim
+        animationData: this.state.qiblaAnim,
+        rendererSettings: {
+          preserveAspectRatio: 'xMidYMid meet'
+        }
       });
     });
     _defineProperty(this, "playYt", url => {
@@ -9321,6 +9333,7 @@ class App extends Component {
     }, "These figures are a guide only. Rulings differ between marājiʿ — please confirm your calculation with your marjaʿ or a local scholar."));
   }
   renderQibla(st) {
+    this.ensureQiblaAnim();
     const {
       qiblaStatus,
       qiblaBearing,
@@ -9611,6 +9624,52 @@ class App extends Component {
         marginBottom: 16
       }
     }, this.t('qibla.unsupported')), /*#__PURE__*/React.createElement("div", {
+      onClick: () => window.open('https://qiblafinder.withgoogle.com/intl/en/desktop/finder', '_blank'),
+      style: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: 13,
+        background: '#fffdf9',
+        border: '1px solid #ece4d4',
+        borderRadius: 16,
+        padding: '14px 16px',
+        marginBottom: 16,
+        cursor: 'pointer'
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        flexShrink: 0,
+        fontSize: 24
+      }
+    }, "🕋"), /*#__PURE__*/React.createElement("div", {
+      style: {
+        flex: 1,
+        minWidth: 0
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 14,
+        fontWeight: 600,
+        color: '#2c2823'
+      }
+    }, "Need pinpoint accuracy?"), /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 11.5,
+        color: '#9a8f7c',
+        marginTop: 2,
+        lineHeight: 1.35
+      }
+    }, "Open Google's Qibla Finder — camera-guided, uses your phone's compass.")), /*#__PURE__*/React.createElement("div", {
+      style: {
+        flexShrink: 0,
+        padding: '9px 15px',
+        borderRadius: 11,
+        background: '#1f5145',
+        color: '#f3ead4',
+        fontSize: 12.5,
+        fontWeight: 700
+      }
+    }, "Open")), /*#__PURE__*/React.createElement("div", {
       style: {
         display: 'flex',
         gap: 11,
