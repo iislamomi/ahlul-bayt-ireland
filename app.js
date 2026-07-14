@@ -1515,7 +1515,12 @@ class App extends Component {
     });
     _defineProperty(this, "go", s => this.setState({
       screen: s,
-      story: null
+      story: null,
+      ...(s === 'calendar' ? {
+        calViewY: null,
+        calViewM: undefined,
+        calDay: null
+      } : {})
     }));
     _defineProperty(this, "playYt", url => {
       const id = ytId(url);
@@ -2016,6 +2021,8 @@ class App extends Component {
     }))), /*#__PURE__*/React.createElement("div", {
       onClick: () => this.setState({
         screen: 'calendar',
+        calViewY: null,
+        calViewM: undefined,
         calDay: null,
         notifDismissed: true
       }),
@@ -7577,10 +7584,10 @@ class App extends Component {
     const eventsByDay = {};
     (st.liveCalEvents || []).forEach(e => {
       const [ey, em, ed] = (e.date || '').split('-').map(Number);
-      if (ey === calY && em === calM + 1) eventsByDay[ed] = e;
+      if (ey === calY && em === calM + 1) (eventsByDay[ed] = eventsByDay[ed] || []).push(e);
     });
     const selDay = st.calDay || (isCurrentMonth ? todayD : 1);
-    const selEvent = eventsByDay[selDay];
+    const selEvents = eventsByDay[selDay] || [];
     const selDayDate = new Date(calY, calM, selDay);
     const selDayGreg = selDayDate.toLocaleDateString('en-IE', {
       weekday: 'long',
@@ -7588,14 +7595,15 @@ class App extends Component {
       month: 'long'
     });
     const selHijri = toHijri(selDayDate);
-    const calEventList = Object.keys(eventsByDay).map(d => ({
-      day: +d,
-      ...eventsByDay[d],
-      dateLabel: new Date(calY, calM, +d).toLocaleDateString('en-IE', {
+    const todayStart = new Date(todayY, todayM, todayD).getTime();
+    const calEventList = Object.keys(eventsByDay).map(d => +d).filter(d => new Date(calY, calM, d).getTime() >= todayStart).sort((a, b) => a - b).flatMap(d => eventsByDay[d].map(ev => ({
+      day: d,
+      ...ev,
+      dateLabel: new Date(calY, calM, d).toLocaleDateString('en-IE', {
         day: 'numeric',
         month: 'short'
       })
-    })).sort((a, b) => a.day - b.day);
+    })));
     const weekHead = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
     const hijriMonthYear = toHijri(new Date(calY, calM, 15)).split(' ').slice(1).join(' ');
     const cells = [];
@@ -7604,7 +7612,6 @@ class App extends Component {
       key: 'b' + i
     });
     for (let d = 1; d <= daysInMonth; d++) {
-      const ev = eventsByDay[d];
       const isToday = isCurrentMonth && d === todayD;
       const sel = selDay === d;
       const hijriDay = toHijri(new Date(calY, calM, d)).split(' ')[0];
@@ -7616,7 +7623,7 @@ class App extends Component {
         bg: sel ? '#1f5145' : isToday ? '#e6efe9' : 'transparent',
         ink: sel ? '#fffdf9' : isToday ? '#1f5145' : '#3f3a32',
         hijriInk: sel ? 'rgba(255,255,255,.55)' : '#c2a35a',
-        dot: ev ? ev.color : 'transparent'
+        dots: (eventsByDay[d] || []).slice(0, 3).map(x => x.color)
       });
     }
     const canPrev = !(calY <= 2024 && calM === 0);
@@ -7780,12 +7787,18 @@ class App extends Component {
       style: {
         position: 'absolute',
         bottom: 3,
+        display: 'flex',
+        gap: 2
+      }
+    }, c.dots.map((col, di) => /*#__PURE__*/React.createElement("span", {
+      key: di,
+      style: {
         width: 4,
         height: 4,
         borderRadius: '50%',
-        background: c.dot
+        background: col
       }
-    })))), /*#__PURE__*/React.createElement("div", {
+    })))))), /*#__PURE__*/React.createElement("div", {
       style: {
         background: '#fffdf9',
         border: '1px solid #ece4d4',
@@ -7806,7 +7819,8 @@ class App extends Component {
         fontWeight: 500,
         marginTop: 3
       }
-    }, selHijri, " AH"), selEvent ? /*#__PURE__*/React.createElement("div", {
+    }, selHijri, " AH"), selEvents.length > 0 ? /*#__PURE__*/React.createElement(React.Fragment, null, selEvents.map((selEvent, si) => /*#__PURE__*/React.createElement("div", {
+      key: si,
       style: {
         display: 'flex',
         gap: 12,
@@ -7863,12 +7877,9 @@ class App extends Component {
       onClick: () => this.setState({
         screen: 'admin',
         adminSection: 'events',
-        adminEditIdx: null,
+        adminEditIdx: (st.liveCalEvents || []).indexOf(selEvent),
         adminEditDraft: {
-          date: `${calY}-${String(calM + 1).padStart(2, '0')}-${String(selDay).padStart(2, '0')}`,
-          type: selEvent.type,
-          title: selEvent.title,
-          desc: selEvent.desc
+          ...selEvent
         }
       }),
       style: {
@@ -7882,7 +7893,29 @@ class App extends Component {
         borderRadius: 8,
         background: '#eef7f4'
       }
-    }, "Edit")) : /*#__PURE__*/React.createElement("div", {
+    }, "Edit"))), st.adminLoggedIn && /*#__PURE__*/React.createElement("div", {
+      onClick: () => this.setState({
+        screen: 'admin',
+        adminSection: 'events',
+        adminEditIdx: -1,
+        adminEditDraft: {
+          date: `${calY}-${String(calM + 1).padStart(2, '0')}-${String(selDay).padStart(2, '0')}`,
+          type: 'Community'
+        }
+      }),
+      style: {
+        marginTop: 12,
+        fontSize: 11.5,
+        color: '#1f5145',
+        fontWeight: 600,
+        cursor: 'pointer',
+        textAlign: 'center',
+        padding: '7px 10px',
+        border: '1px dashed #c4ddd7',
+        borderRadius: 9,
+        background: '#f4fbf8'
+      }
+    }, "+ Add another event on this date")) : /*#__PURE__*/React.createElement("div", {
       style: {
         marginTop: 10,
         display: 'flex',
