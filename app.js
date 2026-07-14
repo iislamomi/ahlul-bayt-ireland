@@ -1030,7 +1030,7 @@ const STRINGS = {
     Urdu: 'ویڈیوز'
   },
   'kids.books': {
-    English: 'Madarsa',
+    English: 'Madrasa',
     'العربية': 'المدرسة',
     'हिन्दी': 'मदरसा',
     'فارسی': 'مدرسه',
@@ -6729,7 +6729,7 @@ class App extends Component {
         label: 'Videos'
       }, {
         id: 'books',
-        label: 'Madarsa'
+        label: 'Madrasa'
       }, {
         id: 'quotes',
         label: 'Quotes'
