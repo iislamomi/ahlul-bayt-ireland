@@ -2714,17 +2714,66 @@ class App extends Component {
     }));
     const livePresets = st.livePrayerPresets || PRAYER_PRESETS;
     const activePreset = livePresets.find(p => p.id === st.prayerPreset) || livePresets[0];
-    const monthFajr = ['03:28', '03:29', '03:29', '03:30', '03:31', '03:32', '03:33', '03:34'];
-    const monthMaghrib = ['22:16', '22:16', '22:17', '22:17', '22:17', '22:18', '22:18', '22:18'];
+    // Monthly table: full current month, anchored to the active preset's
+    // official times for today, shifted day-by-day by real solar drift (Dublin).
+    const solarLocalMin = (y, mo, d) => {
+      const lat = 53.3498,
+        lng = -6.2603,
+        rad = Math.PI / 180;
+      const doy = Math.round((Date.UTC(y, mo, d) - Date.UTC(y, 0, 0)) / 864e5);
+      const g = 2 * Math.PI / 365 * (doy - 1 + 0.5);
+      const eq = 229.18 * (0.000075 + 0.001868 * Math.cos(g) - 0.032077 * Math.sin(g) - 0.014615 * Math.cos(2 * g) - 0.040849 * Math.sin(2 * g));
+      const de = 0.006918 - 0.399912 * Math.cos(g) + 0.070257 * Math.sin(g) - 0.006758 * Math.cos(2 * g) + 0.000907 * Math.sin(2 * g) - 0.002697 * Math.cos(3 * g) + 0.00148 * Math.sin(3 * g);
+      let cosHa = Math.cos(90.833 * rad) / (Math.cos(lat * rad) * Math.cos(de)) - Math.tan(lat * rad) * Math.tan(de);
+      cosHa = Math.max(-1, Math.min(1, cosHa));
+      const ha = Math.acos(cosHa) / rad;
+      const noon = 720 - 4 * lng - eq;
+      const local = utcMin => {
+        const dt = new Date(Date.UTC(y, mo, d) + utcMin * 60000);
+        return dt.getHours() * 60 + dt.getMinutes();
+      };
+      return {
+        sunrise: local(noon - 4 * ha),
+        noon: local(noon),
+        sunset: local(noon + 4 * ha)
+      };
+    };
+    const hmToMin = s => {
+      const [h, m] = String(s || '0:0').split(':').map(Number);
+      return (h || 0) * 60 + (m || 0);
+    };
+    const minToHM = v => {
+      v = ((Math.round(v) % 1440) + 1440) % 1440;
+      return String(Math.floor(v / 60)).padStart(2, '0') + ':' + String(v % 60).padStart(2, '0');
+    };
+    const mNow = st.now;
+    const mY = mNow.getFullYear(),
+      mM = mNow.getMonth(),
+      mToday = mNow.getDate();
+    const daysInM = new Date(mY, mM + 1, 0).getDate();
+    const anchor = solarLocalMin(mY, mM, mToday);
+    const presetMin = n => {
+      const p = activePreset.prayers.find(x => x.name === n);
+      return p ? hmToMin(p.time) : 0;
+    };
+    const aFajr = presetMin('Fajr'),
+      aDhuhr = presetMin('Dhuhr'),
+      aMaghrib = presetMin('Maghrib');
     const monthRows = Array.from({
-      length: 8
-    }, (_, i) => ({
-      day: `${i + 18} Jun`,
-      fajr: monthFajr[i],
-      dhuhr: '13:26',
-      maghrib: monthMaghrib[i],
-      today: i === 0
-    }));
+      length: daysInM
+    }, (_, i) => {
+      const s = solarLocalMin(mY, mM, i + 1);
+      return {
+        day: new Date(mY, mM, i + 1).toLocaleDateString('en-IE', {
+          day: 'numeric',
+          month: 'short'
+        }),
+        fajr: minToHM(aFajr + (s.sunrise - anchor.sunrise)),
+        dhuhr: minToHM(aDhuhr + (s.noon - anchor.noon)),
+        maghrib: minToHM(aMaghrib + (s.sunset - anchor.sunset)),
+        today: i + 1 === mToday
+      };
+    });
     const tabStyle = active => ({
       flex: 1,
       textAlign: 'center',
@@ -2960,7 +3009,18 @@ class App extends Component {
         flex: 1,
         textAlign: 'center'
       }
-    }, m.maghrib)))), tab === 'settings' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+    }, m.maghrib))), /*#__PURE__*/React.createElement("div", {
+      style: {
+        padding: '11px 16px',
+        background: '#faf6ec',
+        fontSize: 11,
+        color: '#a2967f',
+        lineHeight: 1.45
+      }
+    }, mNow.toLocaleDateString('en-IE', {
+      month: 'long',
+      year: 'numeric'
+    }), " · Dublin · anchored to today's ", activePreset.name, " times, adjusted daily by sun position")), tab === 'settings' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
       style: {
         fontSize: 11,
         fontWeight: 700,
