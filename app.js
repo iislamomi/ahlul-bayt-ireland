@@ -7257,7 +7257,6 @@ class App extends Component {
               title: e.target.value
             }),
             placeholder: "Title",
-            maxLength: 100,
             style: inp
           }), /*#__PURE__*/React.createElement("input", {
             value: d.cat || '',
@@ -7265,7 +7264,6 @@ class App extends Component {
               cat: e.target.value
             }),
             placeholder: lt === 'dua' ? 'Category (e.g. Daily, Weekly, Morning)' : 'Category (e.g. Imam Ḥusayn, General)',
-            maxLength: 40,
             style: inp
           }), /*#__PURE__*/React.createElement("textarea", {
             value: d.ar || '',
@@ -7273,7 +7271,6 @@ class App extends Component {
               ar: e.target.value
             }),
             placeholder: "Arabic text",
-            maxLength: 2000,
             style: {
               ...inp,
               minHeight: 70,
@@ -7286,7 +7283,6 @@ class App extends Component {
               tr: e.target.value
             }),
             placeholder: "Translation (opening line)",
-            maxLength: 300,
             style: inp
           }), /*#__PURE__*/React.createElement("input", {
             value: d.note || '',
@@ -7294,7 +7290,6 @@ class App extends Component {
               note: e.target.value
             }),
             placeholder: "Note (optional, e.g. when recited)",
-            maxLength: 160,
             style: inp
           }), /*#__PURE__*/React.createElement("textarea", {
             value: d.body || '',
@@ -7302,7 +7297,6 @@ class App extends Component {
               body: e.target.value
             }),
             placeholder: "Full text (English)",
-            maxLength: 8000,
             style: {
               ...inp,
               minHeight: 120,
@@ -7314,7 +7308,6 @@ class App extends Component {
               pdf: e.target.value
             }),
             placeholder: "PDF link (optional — adds a Read PDF button)",
-            maxLength: 300,
             style: inp
           }), /*#__PURE__*/React.createElement("div", {
             style: {
@@ -7430,7 +7423,6 @@ class App extends Component {
             ref: e.target.value
           }),
           placeholder: "Reference (e.g. Sermon 1, Letter 31)",
-          maxLength: 40,
           style: inp
         }), /*#__PURE__*/React.createElement("input", {
           value: d.title || '',
@@ -7438,7 +7430,6 @@ class App extends Component {
             title: e.target.value
           }),
           placeholder: "Title",
-          maxLength: 100,
           style: inp
         }), /*#__PURE__*/React.createElement("input", {
           value: d.sum || '',
@@ -7446,7 +7437,6 @@ class App extends Component {
             sum: e.target.value
           }),
           placeholder: "Summary (optional)",
-          maxLength: 200,
           style: inp
         }), /*#__PURE__*/React.createElement("textarea", {
           value: d.ar || '',
@@ -7454,7 +7444,6 @@ class App extends Component {
             ar: e.target.value
           }),
           placeholder: "Arabic text (optional)",
-          maxLength: 2000,
           style: {
             ...inp,
             minHeight: 70,
@@ -7467,7 +7456,6 @@ class App extends Component {
             tr: e.target.value
           }),
           placeholder: "Translation / text (English)",
-          maxLength: 8000,
           style: {
             ...inp,
             minHeight: 120,
@@ -7479,7 +7467,6 @@ class App extends Component {
             pdf: e.target.value
           }),
           placeholder: "PDF link (optional — adds a Read PDF button)",
-          maxLength: 300,
           style: inp
         }), /*#__PURE__*/React.createElement("div", {
           style: {
