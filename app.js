@@ -1272,6 +1272,59 @@ const PUSH_MSG = {
   nahj: 'Library updated — Nahj al-Balāgha'
 };
 
+/* ── QIBLA LOTTIE ── */
+const QIBLA_LOTTIE_URL = 'https://lottie.host/a38c2387-01a7-4d74-9435-85779cf32f08/vo4vVPPng4.lottie';
+let qiblaAnimCache = null;
+function unzipEntries(buf) {
+  const dv = new DataView(buf);
+  let i = buf.byteLength - 22;
+  while (i >= 0 && dv.getUint32(i, true) !== 0x06054b50) i--;
+  if (i < 0) throw new Error('not a zip');
+  const count = dv.getUint16(i + 10, true);
+  let off = dv.getUint32(i + 16, true);
+  const files = {};
+  for (let n = 0; n < count; n++) {
+    if (dv.getUint32(off, true) !== 0x02014b50) break;
+    const method = dv.getUint16(off + 10, true);
+    const csize = dv.getUint32(off + 20, true);
+    const nlen = dv.getUint16(off + 28, true);
+    const elen = dv.getUint16(off + 30, true);
+    const clen = dv.getUint16(off + 32, true);
+    const lho = dv.getUint32(off + 42, true);
+    const name = new TextDecoder().decode(new Uint8Array(buf, off + 46, nlen));
+    const lnlen = dv.getUint16(lho + 26, true);
+    const lelen = dv.getUint16(lho + 28, true);
+    files[name] = { method, data: new Uint8Array(buf, lho + 30 + lnlen + lelen, csize) };
+    off += 46 + nlen + elen + clen;
+  }
+  return files;
+}
+async function inflateRaw(u8) {
+  const stream = new Blob([u8]).stream().pipeThrough(new DecompressionStream('deflate-raw'));
+  return new Uint8Array(await new Response(stream).arrayBuffer());
+}
+async function loadQiblaLottie() {
+  if (qiblaAnimCache) return qiblaAnimCache;
+  const res = await fetch(QIBLA_LOTTIE_URL);
+  if (!res.ok) throw new Error('http ' + res.status);
+  const buf = await res.arrayBuffer();
+  const head = new Uint8Array(buf, 0, 2);
+  let json;
+  if (head[0] === 0x50 && head[1] === 0x4b) {
+    // dotLottie: zip archive with animations/*.json inside
+    const files = unzipEntries(buf);
+    const entry = Object.keys(files).find(n => /^animations\/.+\.json$/.test(n)) || Object.keys(files).find(n => n.endsWith('.json') && !n.includes('manifest'));
+    if (!entry) throw new Error('no animation in .lottie');
+    const f = files[entry];
+    const raw = f.method === 8 ? await inflateRaw(f.data) : f.data;
+    json = JSON.parse(new TextDecoder().decode(raw));
+  } else {
+    json = JSON.parse(new TextDecoder().decode(buf));
+  }
+  qiblaAnimCache = json;
+  return json;
+}
+
 function urlBase64ToUint8Array(b64) {
   const pad = '='.repeat((4 - b64.length % 4) % 4);
   const raw = atob((b64 + pad).replace(/-/g, '+').replace(/_/g, '/'));
@@ -1512,15 +1565,44 @@ class App extends Component {
       healthVidCat: 'All',
       adminLibTab: 'dua'
     });
-    _defineProperty(this, "go", s => this.setState({
-      screen: s,
-      story: null,
-      ...(s === 'calendar' ? {
-        calViewY: null,
-        calViewM: undefined,
-        calDay: null
-      } : {})
-    }));
+    _defineProperty(this, "go", s => {
+      if (s === 'qibla') this.ensureQiblaAnim();
+      this.setState({
+        screen: s,
+        story: null,
+        ...(s === 'calendar' ? {
+          calViewY: null,
+          calViewM: undefined,
+          calDay: null
+        } : {})
+      });
+    });
+    _defineProperty(this, "ensureQiblaAnim", () => {
+      if (this.state.qiblaAnim || this._qiblaAnimLoading || typeof window.lottie === 'undefined') return;
+      this._qiblaAnimLoading = true;
+      loadQiblaLottie().then(data => this.setState({
+        qiblaAnim: data
+      })).catch(() => {
+        this._qiblaAnimLoading = false;
+      });
+    });
+    _defineProperty(this, "qiblaLottieRef", el => {
+      if (!el) {
+        if (this._qiblaLottie) {
+          this._qiblaLottie.destroy();
+          this._qiblaLottie = null;
+        }
+        return;
+      }
+      if (this._qiblaLottie || !window.lottie || !this.state.qiblaAnim) return;
+      this._qiblaLottie = window.lottie.loadAnimation({
+        container: el,
+        renderer: 'svg',
+        loop: true,
+        autoplay: true,
+        animationData: this.state.qiblaAnim
+      });
+    });
     _defineProperty(this, "playYt", url => {
       const id = ytId(url);
       if (id) this.setState({
@@ -9410,7 +9492,16 @@ class App extends Component {
         justifyContent: 'center',
         margin: '8px 0 6px'
       }
-    }, /*#__PURE__*/React.createElement(Compass, {
+    }, bearing === null && st.qiblaAnim && window.lottie ? /*#__PURE__*/React.createElement("div", {
+      ref: this.qiblaLottieRef,
+      style: {
+        width: 268,
+        height: 268,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center'
+      }
+    }) : /*#__PURE__*/React.createElement(Compass, {
       deg: bearing !== null ? bearing : 0
     })), bearing !== null ? /*#__PURE__*/React.createElement("div", {
       style: {

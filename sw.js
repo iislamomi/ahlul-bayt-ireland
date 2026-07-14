@@ -1,6 +1,6 @@
-const CACHE = 'abi-v22';
+const CACHE = 'abi-v23';
 const SHELL = ['/', '/index.html', '/manifest.json',
-  '/vendor/react.min.js', '/vendor/react-dom.min.js', '/app.js',
+  '/vendor/react.min.js', '/vendor/react-dom.min.js', '/vendor/lottie.min.js', '/app.js',
   '/adhan.mp3', '/icon-192.png', '/icon-512.png'];
 
 self.addEventListener('install', e => {
@@ -49,7 +49,13 @@ self.addEventListener('fetch', e => {
   // Network-first for CDN (fonts, React), cache-first for app shell
   if (url.origin !== self.location.origin) {
     e.respondWith(
-      fetch(e.request).catch(() => caches.match(e.request))
+      fetch(e.request).then(res => {
+        if (res.ok && url.hostname === 'lottie.host') {
+          const c = res.clone();
+          caches.open(CACHE).then(cache => cache.put(e.request, c));
+        }
+        return res;
+      }).catch(() => caches.match(e.request))
     );
     return;
   }
