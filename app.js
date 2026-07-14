@@ -553,6 +553,7 @@ const CLASSIFIEDS = [{
 const NAV_ICONS = {
   home: '<path d="M4 11l8-6 8 6"/><path d="M6 10v9h12v-9"/>',
   prayer: '<path d="M17 5a7 7 0 1 0 2 9 5.6 5.6 0 0 1-2-9z"/>',
+  madrasa: '<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>',
   library: '<path d="M12 6c-1.6-1-4-1.4-6-1v12c2-.4 4.4 0 6 1 1.6-1 4-1.4 6-1V5c-2-.4-4.4 0-6 1z"/><path d="M12 6v13"/>',
   stories: '<circle cx="12" cy="12" r="8" strokeDasharray="3 2.4"/><circle cx="12" cy="12" r="3.2"/>',
   more: '<circle cx="5" cy="12" r="1.2" fill="currentColor"/><circle cx="12" cy="12" r="1.2" fill="currentColor"/><circle cx="19" cy="12" r="1.2" fill="currentColor"/>'
@@ -663,6 +664,13 @@ const STRINGS = {
     'हिन्दी': 'नमाज़',
     'فارسی': 'نماز',
     Urdu: 'نماز'
+  },
+  'nav.madrasa': {
+    English: 'Madrasa',
+    'العربية': 'المدرسة',
+    'हिन्दी': 'मदरसा',
+    'فارسی': 'مدرسه',
+    Urdu: 'مدرسہ'
   },
   'nav.library': {
     English: 'Library',
@@ -1809,13 +1817,15 @@ class App extends Component {
       this.showToast('Opening prayer calendar…');
       setTimeout(() => window.open('https://ahlulbaytireland.com/prayer-calendar.pdf', '_blank', 'noopener,noreferrer'), 300);
     });
-    _defineProperty(this, "openStory", i => {
+    _defineProperty(this, "openStory", (i, manual) => {
       clearInterval(this.storyTimer);
       this.setState({
         story: i,
-        storyProg: 0,
+        storyProg: manual ? 100 : 0,
+        storyManual: !!manual,
         quizPick: null
       });
+      if (manual) return; // opened from Updates tab — no timer, browse freely
       this.storyTimer = setInterval(() => {
         this.setState(st => {
           if (st.story === null) return {};
@@ -1850,10 +1860,10 @@ class App extends Component {
       });
     });
     _defineProperty(this, "prevStory", () => {
-      if (this.state.story > 0) this.openStory(this.state.story - 1);
+      if (this.state.story > 0) this.openStory(this.state.story - 1, this.state.storyManual);
     });
     _defineProperty(this, "nextStory", () => {
-      if (this.state.story < STORIES.length - 1) this.openStory(this.state.story + 1);else this.closeStory();
+      if (this.state.story < STORIES.length - 1) this.openStory(this.state.story + 1, this.state.storyManual);else this.closeStory();
     });
   }
   componentDidMount() {
@@ -9990,7 +10000,7 @@ class App extends Component {
       }
     }, st.liveStories.map((s, i) => /*#__PURE__*/React.createElement("div", {
       key: i,
-      onClick: () => this.openStory(i),
+      onClick: () => this.openStory(i, true),
       style: {
         display: 'flex',
         alignItems: 'center',
@@ -10061,9 +10071,9 @@ class App extends Component {
       label: this.t('nav.home'),
       d: NAV_ICONS.home
     }, {
-      key: 'prayer',
-      label: this.t('nav.prayer'),
-      d: NAV_ICONS.prayer
+      key: 'kids',
+      label: this.t('nav.madrasa'),
+      d: NAV_ICONS.madrasa
     }, {
       key: 'library',
       label: this.t('nav.library'),
@@ -10094,7 +10104,12 @@ class App extends Component {
       const color = active ? st.dark ? '#d8b863' : '#1f5145' : st.dark ? '#526060' : '#b3a890';
       return /*#__PURE__*/React.createElement("div", {
         key: n.key,
-        onClick: () => this.go(n.key),
+        onClick: () => {
+          this.go(n.key);
+          if (n.key === 'kids') this.setState({
+            kidsTab: 'books'
+          });
+        },
         style: {
           flex: 1,
           display: 'flex',
