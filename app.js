@@ -73,89 +73,12 @@ const PRAYER_PRESETS = [{
     glyph: '☾',
     time: '01:12'
   }]
-}, {
-  id: 'icci',
-  name: 'Islamic Centre Ireland',
-  sub: 'ICCI Dublin · Ḥanafī',
-  prayers: [{
-    name: 'Fajr',
-    en: 'Dawn',
-    ar: 'الفجر',
-    glyph: 'ﭐ',
-    time: '03:15'
-  }, {
-    name: 'Sunrise',
-    en: 'Shurūq',
-    ar: 'الشروق',
-    glyph: '✷',
-    time: '04:52'
-  }, {
-    name: 'Dhuhr',
-    en: 'Noon',
-    ar: 'الظهر',
-    glyph: 'ﭖ',
-    time: '13:27'
-  }, {
-    name: 'Sunset',
-    en: 'Ghurūb',
-    ar: 'الغروب',
-    glyph: '✸',
-    time: '21:53'
-  }, {
-    name: 'Maghrib',
-    en: 'Dusk',
-    ar: 'المغرب',
-    glyph: 'ﮊ',
-    time: '22:08'
-  }, {
-    name: 'Midnight',
-    en: 'Muntaṣaf',
-    ar: 'منتصف الليل',
-    glyph: '☾',
-    time: '01:02'
-  }]
-}, {
-  id: 'mwl',
-  name: 'Muslim World League',
-  sub: 'MWL method · Shāfiʿī',
-  prayers: [{
-    name: 'Fajr',
-    en: 'Dawn',
-    ar: 'الفجر',
-    glyph: 'ﭐ',
-    time: '03:10'
-  }, {
-    name: 'Sunrise',
-    en: 'Shurūq',
-    ar: 'الشروق',
-    glyph: '✷',
-    time: '04:54'
-  }, {
-    name: 'Dhuhr',
-    en: 'Noon',
-    ar: 'الظهر',
-    glyph: 'ﭖ',
-    time: '13:26'
-  }, {
-    name: 'Sunset',
-    en: 'Ghurūb',
-    ar: 'الغروب',
-    glyph: '✸',
-    time: '21:57'
-  }, {
-    name: 'Maghrib',
-    en: 'Dusk',
-    ar: 'المغرب',
-    glyph: 'ﮊ',
-    time: '22:12'
-  }, {
-    name: 'Midnight',
-    en: 'Muntaṣaf',
-    ar: 'منتصف الليل',
-    glyph: '☾',
-    time: '01:03'
-  }]
 }];
+const abiPresets = ps => {
+  const list = Array.isArray(ps) && ps.length ? ps : PRAYER_PRESETS;
+  const only = list.filter(p => p && p.id === 'ahlulbayt');
+  return only.length ? only : PRAYER_PRESETS;
+};
 const STORIES = [{
   kind: 'verse',
   title: 'Daily Verse',
@@ -1548,7 +1471,7 @@ class App extends Component {
       return s[lang] !== undefined ? s[lang] : s['English'] ?? key;
     });
     _defineProperty(this, "getActivePrayers", () => {
-      const presets = this.state.livePrayerPresets || PRAYER_PRESETS;
+      const presets = abiPresets(this.state.livePrayerPresets);
       const preset = presets.find(p => p.id === this.state.prayerPreset) || presets[0];
       return preset.prayers;
     });
@@ -2723,7 +2646,7 @@ class App extends Component {
       isNext: p.name === next.name,
       last: i === activePrayers.length - 1
     }));
-    const livePresets = st.livePrayerPresets || PRAYER_PRESETS;
+    const livePresets = abiPresets(st.livePrayerPresets);
     const activePreset = livePresets.find(p => p.id === st.prayerPreset) || livePresets[0];
     // Monthly table: full current month, anchored to the active preset's
     // official times for today, shifted day-by-day by real solar drift (Dublin).
@@ -3040,7 +2963,7 @@ class App extends Component {
         color: '#a2967f',
         marginBottom: 10
       }
-    }, this.t('prayer.source')), (st.livePrayerPresets || PRAYER_PRESETS).map(preset => {
+    }, this.t('prayer.source')), (abiPresets(st.livePrayerPresets)).map(preset => {
       const active = st.prayerPreset === preset.id;
       return /*#__PURE__*/React.createElement("div", {
         key: preset.id,
@@ -5633,7 +5556,7 @@ class App extends Component {
 
     /* ─ PRAYER TIMES ─ */
     const renderPrayersSection = () => {
-      const presets = st.livePrayerPresets || PRAYER_PRESETS;
+      const presets = abiPresets(st.livePrayerPresets);
       const d = st.adminEditDraft;
       if (editing) {
         const presetIdx = st.adminEditIdx;
@@ -7092,8 +7015,10 @@ class App extends Component {
             placeholder: "Arabic text",
             style: {
               ...inp,
-              minHeight: 70,
-              resize: 'none'
+              height: 220,
+              minHeight: 140,
+              overflowY: 'auto',
+              resize: 'vertical'
             },
             dir: "rtl"
           }), /*#__PURE__*/React.createElement("input", {
@@ -7118,8 +7043,10 @@ class App extends Component {
             placeholder: "Full text (English)",
             style: {
               ...inp,
-              minHeight: 120,
-              resize: 'none'
+              height: 240,
+              minHeight: 140,
+              overflowY: 'auto',
+              resize: 'vertical'
             }
           }), /*#__PURE__*/React.createElement("input", {
             value: d.pdf || '',
@@ -7265,8 +7192,10 @@ class App extends Component {
           placeholder: "Arabic text (optional)",
           style: {
             ...inp,
-            minHeight: 70,
-            resize: 'none'
+            height: 220,
+            minHeight: 140,
+            overflowY: 'auto',
+            resize: 'vertical'
           },
           dir: "rtl"
         }), /*#__PURE__*/React.createElement("textarea", {
@@ -7277,8 +7206,10 @@ class App extends Component {
           placeholder: "Translation / text (English)",
           style: {
             ...inp,
-            minHeight: 120,
-            resize: 'none'
+            height: 240,
+            minHeight: 140,
+            overflowY: 'auto',
+            resize: 'vertical'
           }
         }), /*#__PURE__*/React.createElement("input", {
           value: d.pdf || '',
