@@ -1438,6 +1438,7 @@ class App extends Component {
       liveNahj: lsGet('nahj', NAHJ),
       liveKidsQuizzes: lsGet('kidsQuizzes', KIDS_QUIZZES),
       liveAskImam: lsGet('askImam', []),
+      liveAutoTimes: lsGet('autoTimes', null),
       kidsQuizPicks: {},
       kidsVidCat: 'All',
       healthVidCat: 'All',
@@ -1473,7 +1474,50 @@ class App extends Component {
     _defineProperty(this, "getActivePrayers", () => {
       const presets = abiPresets(this.state.livePrayerPresets);
       const preset = presets.find(p => p.id === this.state.prayerPreset) || presets[0];
+      const auto = this.state.liveAutoTimes;
+      const n = new Date();
+      const today = `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, '0')}-${String(n.getDate()).padStart(2, '0')}`;
+      if (auto && auto.date === today && auto.times) {
+        return preset.prayers.map(p => auto.times[p.name] ? {
+          ...p,
+          time: auto.times[p.name]
+        } : p);
+      }
       return preset.prayers;
+    });
+    _defineProperty(this, "fetchAutoTimes", () => {
+      const n = new Date();
+      const today = `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, '0')}-${String(n.getDate()).padStart(2, '0')}`;
+      const cached = this.state.liveAutoTimes;
+      if (cached && cached.date === today && cached.times) return;
+      if (this._autoTimesLastTry && Date.now() - this._autoTimesLastTry < 5 * 60 * 1000) return;
+      this._autoTimesLastTry = Date.now();
+      const dd = String(n.getDate()).padStart(2, '0'),
+        mm = String(n.getMonth() + 1).padStart(2, '0');
+      // Shia Ithna-Ashari (Leva Institute, Qum) calculation for Dublin —
+      // the Jaʿfarī method used by Ahlul-Bait Islamic Centre (ahlulbait.ie)
+      fetch(`https://api.aladhan.com/v1/timings/${dd}-${mm}-${n.getFullYear()}?latitude=53.3498&longitude=-6.2603&method=0&midnightMode=1`).then(r => r.json()).then(j => {
+        const tm = j && j.data && j.data.timings;
+        if (!tm || !tm.Fajr) return;
+        const clean = v => {
+          const m = String(v).match(/\d{1,2}:\d{2}/);
+          return m ? m[0].padStart(5, '0') : null;
+        };
+        const times = {};
+        ['Fajr', 'Sunrise', 'Dhuhr', 'Sunset', 'Maghrib', 'Midnight'].forEach(k => {
+          const v = clean(tm[k]);
+          if (v) times[k] = v;
+        });
+        if (!times.Fajr || !times.Maghrib) return;
+        const data = {
+          date: today,
+          times
+        };
+        lsSet('autoTimes', data);
+        this.setState({
+          liveAutoTimes: data
+        });
+      }).catch(() => {});
     });
     _defineProperty(this, "saveContent", (key, stateKey, data) => {
       lsSet(key, data);
@@ -1798,7 +1842,14 @@ class App extends Component {
         now
       });
       this.checkPrayerAlert(now);
+      if (now.getDate() !== this._autoDay) {
+        this._autoDay = now.getDate();
+        this.fetchAutoTimes();
+      }
     }, 1000);
+    this._autoDay = new Date().getDate();
+    this.fetchAutoTimes();
+    this.autoTimesTimer = setInterval(() => this.fetchAutoTimes(), 60 * 60 * 1000);
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('./sw.js').catch(() => {});
       // Re-subscribe to push if permission already granted (handles app restarts)
@@ -2687,9 +2738,10 @@ class App extends Component {
     const daysInM = new Date(mY, mM + 1, 0).getDate();
     const anchor = solarLocalMin(mY, mM, mToday);
     const presetMin = n => {
-      const p = activePreset.prayers.find(x => x.name === n);
+      const p = activePrayers.find(x => x.name === n) || activePreset.prayers.find(x => x.name === n);
       return p ? hmToMin(p.time) : 0;
     };
+    const autoLive = st.liveAutoTimes && st.liveAutoTimes.date === `${mY}-${String(mM + 1).padStart(2, '0')}-${String(mToday).padStart(2, '0')}`;
     const aFajr = presetMin('Fajr'),
       aDhuhr = presetMin('Dhuhr'),
       aMaghrib = presetMin('Maghrib');
@@ -2954,7 +3006,7 @@ class App extends Component {
     }, mNow.toLocaleDateString('en-IE', {
       month: 'long',
       year: 'numeric'
-    }), " · Dublin · anchored to today's ", activePreset.name, " times, adjusted daily by sun position")), tab === 'settings' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+    }), " · Dublin · ", autoLive ? 'live Jaʿfarī times, updated daily' : `anchored to saved ${activePreset.name} times`, " · adjusted by sun position")), tab === 'settings' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
       style: {
         fontSize: 11,
         fontWeight: 700,
@@ -2963,7 +3015,14 @@ class App extends Component {
         color: '#a2967f',
         marginBottom: 10
       }
-    }, this.t('prayer.source')), (abiPresets(st.livePrayerPresets)).map(preset => {
+    }, this.t('prayer.source')), /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 12,
+        fontWeight: 600,
+        color: autoLive ? '#1f5145' : '#9a7a2c',
+        marginBottom: 10
+      }
+    }, autoLive ? '● Live — synced today with the Jaʿfarī (Leva, Qum) calculation for Dublin' : '○ Live sync unavailable — showing saved times'), (abiPresets(st.livePrayerPresets)).map(preset => {
       const active = st.prayerPreset === preset.id;
       return /*#__PURE__*/React.createElement("div", {
         key: preset.id,
@@ -5643,7 +5702,7 @@ class App extends Component {
           color: '#9a8f7c',
           marginBottom: 12
         }
-      }, "Tap a source to edit its prayer times."), presets.map((p, i) => /*#__PURE__*/React.createElement("div", {
+      }, "Times auto-sync daily with the Jaʿfarī (Leva, Qum) calculation for Dublin. The times saved here are the fallback used when the live service is unreachable. Tap a source to edit."), presets.map((p, i) => /*#__PURE__*/React.createElement("div", {
         key: i,
         onClick: () => this.startEdit(i, {}),
         style: {
