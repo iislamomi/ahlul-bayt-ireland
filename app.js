@@ -1274,7 +1274,13 @@ function announcementActive(a) {
 }
 function pruneExpiredStories(list) {
   const cutoff = Date.now() - 24 * 60 * 60 * 1000;
-  return (list || []).filter(s => !s.created || s.created > cutoff);
+  return (list || []).filter(s => {
+    if (!s || typeof s !== 'object') return false;
+    if (s.created && s.created <= cutoff) return false;
+    // drop blank stories: no title, body, question, photo or Arabic content
+    const hasContent = (s.title && String(s.title).trim()) || (s.body && String(s.body).trim()) || (s.question && String(s.question).trim()) || s.photo || (s.ar && String(s.ar).trim()) || (s.sub && String(s.sub).trim());
+    return !!hasContent;
+  });
 }
 
 function ytId(url) {
@@ -3727,10 +3733,10 @@ class App extends Component {
     const hasAr = !!r.ar;
     const hasPdf = !!r.pdf;
     const tabs = [];
-    if (hasEn) tabs.push(['en', 'English']);
     if (hasAr) tabs.push(['ar', '\u0627\u0644\u0639\u0631\u0628\u064a\u0629']);
+    if (hasEn) tabs.push(['en', 'English']);
     if (hasPdf) tabs.push(['pdf', 'PDF']);
-    const lang = tabs.some(t => t[0] === st.readingLang) ? st.readingLang : tabs.length ? tabs[0][0] : 'en';
+    const lang = tabs.some(t => t[0] === st.readingLang) ? st.readingLang : hasAr ? 'ar' : tabs.length ? tabs[0][0] : 'en';
     const pill = ([k, label]) => React.createElement("div", {
       key: k,
       onClick: () => this.setState({ readingLang: k }),
@@ -10054,7 +10060,7 @@ class App extends Component {
     const hijri = toHijri(now);
     const greetWord = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
     const salaam = greetWord + ' · السلام عليكم';
-    const showNav = st.screen !== 'reading' && st.story === null;
+    const showNav = st.story === null;
     return /*#__PURE__*/React.createElement("div", {
       className: "app",
       dir: isRtl ? 'rtl' : 'ltr',
