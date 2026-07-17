@@ -280,6 +280,37 @@ const KIDS_BOOKS = [{
   color: '#e8ebf4',
   ink: '#3a4a78'
 }];
+/* ═══════════════════════════════════════════════════════════════════════
+   ANCHOR: MADRASA_CONTENT
+   Mirrors https://www.ahlulbait.ie/madrasa ("City of Knowledge").
+   Single source of truth for the Madrasa tab — edit the fields below to
+   update the in-app page (rendered in renderKids → kt === 'books').
+   ═══════════════════════════════════════════════════════════════════════ */
+const MADRASA_INFO = {
+  name: 'City of Knowledge',
+  tagline: 'Saturday Evening Madrasa',
+  year: '2026 / 27',
+  status: 'Registration open',
+  ages: 'Ages 5 – 12',
+  day: 'Saturday evenings',
+  place: 'Ahlul-Bait Islamic Centre, Dublin',
+  intro: 'A warm, structured programme helping children build a meaningful connection with their faith, the Arabic language and the teachings of the Ahlul-Bait (AS).',
+  subjects: [{
+    icon: '🔤',
+    title: 'Arabic Language',
+    desc: 'The Arabic alphabet and vocabulary, taught in a fun and engaging way — reading simple words, understanding common phrases, and beginning the journey with the language of the Qurʾān.'
+  }, {
+    icon: '🕌',
+    title: 'Islamic Studies',
+    desc: 'Core Islamic beliefs, daily duʿās and practical akhlāq that children can carry into everyday life.'
+  }, {
+    icon: '🌙',
+    title: 'Munāsabāt',
+    desc: 'The significance of key Islamic occasions and the lives and teachings of the Ahlul-Bait (AS).'
+  }],
+  note: 'Places are limited — parents are encouraged to register early.',
+  registerUrl: 'https://www.ahlulbait.ie/madrasa'
+};
 const KIDS_QUOTES = [{
   ar: 'طَلَبُ الْعِلْمِ فَرِيضَةٌ',
   tr: 'Seeking knowledge is an obligation.',
@@ -1450,15 +1481,28 @@ class App extends Component {
       healthVidCat: 'All',
       adminLibTab: 'dua'
     });
-    _defineProperty(this, "go", s => this.setState({
-      screen: s,
-      story: null,
-      ...(s === 'calendar' ? {
+    _defineProperty(this, "go", s => {
+      // Refresh every page on navigation: reset transient view state so each
+      // screen opens fresh, and scroll the content area back to the top.
+      this.setState({
+        screen: s,
+        story: null,
+        libTab: 'dua',
+        libCat: 'All',
+        libQuery: '',
+        prayerTab: 'today',
+        kidsTab: 'videos',
+        kidsVidCat: 'All',
+        kidsQuizPicks: {},
+        healthTab: 'videos',
+        healthVidCat: 'All',
         calViewY: null,
         calViewM: undefined,
         calDay: null
-      } : {})
-    }));
+      });
+      const sc = document.querySelector('.app > .s');
+      if (sc) sc.scrollTop = 0;
+    });
     _defineProperty(this, "playYt", url => {
       const id = ytId(url);
       if (id) this.setState({
@@ -8367,62 +8411,158 @@ class App extends Component {
         color: '#bcae8d',
         marginTop: 6
       }
-    }, "— ", q.who)))), kt === 'books' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+    }, "— ", q.who)))), kt === 'books' && /*#__PURE__*/React.createElement(React.Fragment, null,
+    /* ANCHOR: MADRASA_CONTENT render — mirrors ahlulbait.ie/madrasa (data in MADRASA_INFO) */
+    /*#__PURE__*/React.createElement("div", {
       style: {
-        fontFamily: 'Spectral,serif',
-        fontSize: 17,
-        fontWeight: 600,
-        color: '#2c2823',
-        marginBottom: 12
-      }
-    }, this.t('kids.books')), /*#__PURE__*/React.createElement("div", {
-      style: {
-        display: 'grid',
-        gridTemplateColumns: '1fr 1fr',
-        gap: 12,
-        marginBottom: 24
-      }
-    }, st.liveKidsBooks.map((b, i) => /*#__PURE__*/React.createElement("div", {
-      key: i,
-      style: {
-        cursor: 'pointer'
-      }
-    }, /*#__PURE__*/React.createElement("div", {
-      style: {
-        aspectRatio: '3/4',
-        borderRadius: 14,
-        background: b.color,
-        display: 'flex',
-        alignItems: 'flex-end',
-        padding: 14,
+        background: 'linear-gradient(150deg,#1f5145,#163b30)',
+        borderRadius: 20,
+        padding: '22px 20px',
         position: 'relative',
-        overflow: 'hidden'
+        overflow: 'hidden',
+        marginBottom: 16
       }
     }, /*#__PURE__*/React.createElement("div", {
       style: {
         position: 'absolute',
-        left: 0,
-        top: 0,
-        bottom: 0,
-        width: 7,
-        background: b.ink,
-        opacity: .55
+        right: -30,
+        top: -30,
+        width: 120,
+        height: 120,
+        borderRadius: '50%',
+        border: '1px solid rgba(216,184,99,.2)'
       }
     }), /*#__PURE__*/React.createElement("div", {
       style: {
+        display: 'inline-block',
+        fontSize: 10,
+        letterSpacing: 1,
+        textTransform: 'uppercase',
+        fontWeight: 700,
+        color: '#163b30',
+        background: '#d8b863',
+        borderRadius: 20,
+        padding: '4px 11px'
+      }
+    }, MADRASA_INFO.status + ' · ' + MADRASA_INFO.year), /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontFamily: 'Spectral,serif',
+        fontSize: 28,
+        fontWeight: 600,
+        marginTop: 12,
+        color: '#fffdf9'
+      }
+    }, MADRASA_INFO.name), /*#__PURE__*/React.createElement("div", {
+      style: {
         fontFamily: 'Spectral,serif',
         fontSize: 15,
-        fontWeight: 600,
-        color: b.ink,
-        lineHeight: 1.25
+        fontStyle: 'italic',
+        color: '#d8b863',
+        marginTop: 2
       }
-    }, b.title)), /*#__PURE__*/React.createElement("div", {
+    }, MADRASA_INFO.tagline), /*#__PURE__*/React.createElement("div", {
       style: {
-        fontSize: 11,
-        color: '#9a8f7c',
-        marginTop: 7
+        fontSize: 12.5,
+        color: '#bcae8d',
+        marginTop: 8
       }
-    }, b.meta))))), kt === 'quiz' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+    }, MADRASA_INFO.place)), /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: 'flex',
+        gap: 8,
+        marginBottom: 16,
+        flexWrap: 'wrap'
+      }
+    }, [['👧', MADRASA_INFO.ages], ['🗓️', MADRASA_INFO.day]].map(([ic, tx]) => /*#__PURE__*/React.createElement("div", {
+      key: tx,
+      style: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: 6,
+        background: st.dark ? '#20262a' : '#fffdf9',
+        border: `1px solid ${st.dark ? '#2c3234' : '#ece4d4'}`,
+        borderRadius: 20,
+        padding: '8px 13px',
+        fontSize: 12.5,
+        fontWeight: 600,
+        color: st.dark ? '#ece6d8' : '#2c2823'
+      }
+    }, /*#__PURE__*/React.createElement("span", null, ic), tx))), /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 14,
+        lineHeight: 1.6,
+        color: st.dark ? '#c8c2b4' : '#4a4438',
+        marginBottom: 20
+      }
+    }, MADRASA_INFO.intro), /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontFamily: 'Spectral,serif',
+        fontSize: 17,
+        fontWeight: 600,
+        color: st.dark ? '#ece6d8' : '#2c2823',
+        marginBottom: 12
+      }
+    }, "What we teach"), /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 10,
+        marginBottom: 22
+      }
+    }, MADRASA_INFO.subjects.map((s2, i) => /*#__PURE__*/React.createElement("div", {
+      key: i,
+      style: {
+        display: 'flex',
+        gap: 13,
+        background: st.dark ? '#20262a' : '#fffdf9',
+        border: `1px solid ${st.dark ? '#2c3234' : '#ece4d4'}`,
+        borderRadius: 14,
+        padding: 14
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 24,
+        lineHeight: 1,
+        flexShrink: 0
+      }
+    }, s2.icon), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontFamily: 'Spectral,serif',
+        fontSize: 15.5,
+        fontWeight: 600,
+        color: st.dark ? '#d8b863' : '#1f5145',
+        marginBottom: 3
+      }
+    }, s2.title), /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 12.5,
+        lineHeight: 1.5,
+        color: st.dark ? '#a7a091' : '#6f675a'
+      }
+    }, s2.desc))))), /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 12.5,
+        color: '#9a7a2c',
+        background: st.dark ? '#2a2818' : '#f7f0dd',
+        border: `1px solid ${st.dark ? '#4a4224' : '#ecdfb8'}`,
+        borderRadius: 12,
+        padding: '11px 14px',
+        marginBottom: 16
+      }
+    }, "★ " + MADRASA_INFO.note), /*#__PURE__*/React.createElement("div", {
+      onClick: () => window.open(MADRASA_INFO.registerUrl, '_blank'),
+      style: {
+        textAlign: 'center',
+        background: '#1f5145',
+        color: '#fffdf9',
+        borderRadius: 14,
+        padding: '15px',
+        fontSize: 15,
+        fontWeight: 700,
+        cursor: 'pointer',
+        marginBottom: 24
+      }
+    }, "Register your child ↗")), kt === 'quiz' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
       style: {
         fontFamily: 'Spectral,serif',
         fontSize: 17,
