@@ -3877,7 +3877,7 @@ class App extends Component {
       }
     }, label);
     const actionRow = React.createElement("div", {
-      style: { display: 'flex', gap: 12, marginTop: 26 }
+      style: { display: 'flex', gap: 12 }
     }, React.createElement("div", {
       onClick: this.handleShare,
       style: {
@@ -3935,24 +3935,24 @@ class App extends Component {
         width: "17", height: "17", viewBox: "0 0 24 24", fill: "none", stroke: rd.accent,
         strokeWidth: "1.8", strokeLinecap: "round", strokeLinejoin: "round"
       }, React.createElement("path", { d: "M20 14a8 8 0 1 1-9.8-9.6A6.5 6.5 0 0 0 20 14z" }))))),
-    React.createElement("div", { style: { flexShrink: 0, padding: '16px 22px 14px', background: rd.bg, borderBottom: `1px solid ${rd.border}` } },
-      React.createElement("div", { style: { fontSize: 11, letterSpacing: 1.4, textTransform: 'uppercase', fontWeight: 700, color: readAccent } }, kicker),
-      React.createElement("div", { style: { fontFamily: 'Spectral,serif', fontSize: 24, fontWeight: 600, color: rd.text, marginTop: 5, lineHeight: 1.2 } }, r.title),
-      r.note && React.createElement("div", { style: { fontSize: 12.5, color: rd.muted, marginTop: 6, fontStyle: 'italic' } }, r.note),
-      tabs.length > 1 && React.createElement("div", { style: { display: 'flex', gap: 8, marginTop: 13 } }, tabs.map(pill))),
+    React.createElement("div", { style: { flexShrink: 0, padding: '10px 22px 10px', background: rd.bg, borderBottom: `1px solid ${rd.border}` } },
+      React.createElement("div", { style: { fontSize: 10, letterSpacing: 1.2, textTransform: 'uppercase', fontWeight: 700, color: readAccent } }, kicker),
+      React.createElement("div", { style: { fontFamily: 'Spectral,serif', fontSize: 18, fontWeight: 600, color: rd.text, marginTop: 2, lineHeight: 1.2 } }, r.title),
+      r.note && React.createElement("div", { style: { fontSize: 11.5, color: rd.muted, marginTop: 3, fontStyle: 'italic' } }, r.note),
+      tabs.length > 1 && React.createElement("div", { style: { display: 'flex', gap: 8, marginTop: 9 } }, tabs.map(pill))),
     React.createElement("div", {
       className: "s",
-      style: { flex: '1 1 auto', overflowY: 'auto', padding: '18px 22px 40px' }
+      style: { flex: '1 1 auto', overflowY: 'auto', padding: '14px 22px 24px' }
     }, lang === 'ar' && hasAr && React.createElement("div", {
-      style: { background: rd.surf, border: `1px solid ${rd.border}`, borderRadius: 20, padding: '26px 22px' }
+      style: { background: rd.surf, border: `1px solid ${rd.border}`, borderRadius: 20, padding: '18px 16px' }
     }, React.createElement("div", {
-      style: { fontFamily: 'Amiri,serif', fontSize: arSize, lineHeight: 2.1, color: rd.arInk, textAlign: 'center', whiteSpace: 'pre-line' },
+      style: { fontFamily: 'Amiri,serif', fontSize: arSize, lineHeight: 1.75, color: rd.arInk, textAlign: 'center', whiteSpace: 'pre-line' },
       dir: "rtl"
-    }, r.ar)),
+    }, String(r.ar).replace(/\n\s*\n+/g, '\n').trim())),
     lang === 'en' && hasEn && React.createElement(React.Fragment, null,
       enBody && React.createElement("div", {
-        style: { fontFamily: 'Spectral,serif', fontSize: trSize, lineHeight: 1.85, color: rd.text, whiteSpace: 'pre-line' }
-      }, enBody),
+        style: { fontFamily: 'Spectral,serif', fontSize: trSize, lineHeight: 1.6, color: rd.text, whiteSpace: 'pre-line' }
+      }, String(enBody).replace(/\n\s*\n+/g, '\n').trim()),
       r.sum && React.createElement("div", {
         style: { background: rd.surf, border: `1px solid ${rd.border}`, borderRadius: 16, padding: '15px 17px', marginTop: enBody ? 20 : 0 }
       }, React.createElement("div", {
@@ -3973,8 +3973,10 @@ class App extends Component {
           border: `1.5px solid ${readAccent}`, color: readAccent, background: rd.surf,
           fontSize: 13.5, fontWeight: 600, cursor: 'pointer'
         }
-      }, "Open PDF in browser \u2197")),
-    lang !== 'pdf' && actionRow));
+      }, "Open PDF in browser \u2197"))),
+    lang !== 'pdf' && React.createElement("div", {
+      style: { flexShrink: 0, padding: '10px 22px 12px', background: rd.bg, borderTop: `1px solid ${rd.border}` }
+    }, actionRow));
   }
 
   /* ── CLASSIFIEDS ── */
