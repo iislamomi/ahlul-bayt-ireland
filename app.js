@@ -4917,25 +4917,17 @@ class App extends Component {
         minHeight: '70vh'
       },
       className: "afu"
-    }, /*#__PURE__*/React.createElement("div", {
+    }, /*#__PURE__*/React.createElement("img", {
+      src: "./icon-192.png",
+      alt: "Ahlul Bayt Ireland",
       style: {
         width: 60,
         height: 60,
         borderRadius: 18,
-        background: 'linear-gradient(150deg,#23564a,#16463a)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
+        objectFit: 'cover',
         marginBottom: 18
       }
-    }, /*#__PURE__*/React.createElement("div", {
-      style: {
-        width: 26,
-        height: 26,
-        borderRadius: '50%',
-        boxShadow: 'inset -7px 0 0 0 #d8b863'
-      }
-    })), /*#__PURE__*/React.createElement("div", {
+    }), /*#__PURE__*/React.createElement("div", {
       style: {
         fontFamily: 'Spectral,serif',
         fontSize: 22,
@@ -10442,15 +10434,14 @@ class App extends Component {
       alt: "Ahlul Bayt Ireland",
       style: {
         position: 'absolute',
-        top: 'calc(20px + env(safe-area-inset-top, 0px))',
+        top: 20,
         right: 16,
         width: s,
         height: s,
         borderRadius: 14,
         zIndex: 40,
         pointerEvents: 'none',
-        objectFit: 'cover',
-        boxShadow: '0 4px 14px -4px rgba(22,70,58,.5)'
+        objectFit: 'cover'
       }
     });
   }
@@ -10476,13 +10467,15 @@ class App extends Component {
     const greetWord = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
     const salaam = greetWord + ' · السلام عليكم';
     const showNav = st.story === null;
+    // Reader draws its own logo in the toolbar; admin login draws it centred.
+    const showBrand = st.screen !== 'reading' && !(st.screen === 'admin' && !st.adminLoggedIn);
     return /*#__PURE__*/React.createElement("div", {
       className: "app",
       dir: isRtl ? 'rtl' : 'ltr',
       style: {
         background: st.dark ? '#16191a' : '#f6f1e7'
       }
-    }, st.screen !== 'reading' && this.renderBrandMark(), /*#__PURE__*/React.createElement("div", {
+    }, /*#__PURE__*/React.createElement("div", {
       className: "s",
       style: {
         flex: '1 1 auto',
@@ -10491,7 +10484,7 @@ class App extends Component {
         position: 'relative',
         background: st.dark ? '#16191a' : '#f6f1e7'
       }
-    }, st.screen === 'home' && this.renderHome(st, next, cd, greg, hijri, salaam), st.screen === 'prayer' && this.renderPrayer(st, next, cd, greg), st.screen === 'library' && this.renderLibrary(st), st.screen === 'reading' && this.renderReading(st), st.screen === 'classifieds' && this.renderClassifieds(st), st.screen === 'more' && this.renderMore(st), st.screen === 'about' && this.renderAbout(), st.screen === 'offline' && this.renderOffline(), st.screen === 'admin' && this.renderAdmin(st), st.screen === 'calendar' && this.renderCalendar(st), st.screen === 'kids' && this.renderKids(st), st.screen === 'health' && this.renderHealth(st), st.screen === 'qibla' && this.renderQibla(st), st.screen === 'khums' && this.renderKhums(st), st.screen === 'stories' && this.renderStories(st)), showNav && /*#__PURE__*/React.createElement("div", {
+    }, showBrand && this.renderBrandMark(), st.screen === 'home' && this.renderHome(st, next, cd, greg, hijri, salaam), st.screen === 'prayer' && this.renderPrayer(st, next, cd, greg), st.screen === 'library' && this.renderLibrary(st), st.screen === 'reading' && this.renderReading(st), st.screen === 'classifieds' && this.renderClassifieds(st), st.screen === 'more' && this.renderMore(st), st.screen === 'about' && this.renderAbout(), st.screen === 'offline' && this.renderOffline(), st.screen === 'admin' && this.renderAdmin(st), st.screen === 'calendar' && this.renderCalendar(st), st.screen === 'kids' && this.renderKids(st), st.screen === 'health' && this.renderHealth(st), st.screen === 'qibla' && this.renderQibla(st), st.screen === 'khums' && this.renderKhums(st), st.screen === 'stories' && this.renderStories(st)), showNav && /*#__PURE__*/React.createElement("div", {
       style: {
         flexShrink: 0,
         textAlign: 'center',
