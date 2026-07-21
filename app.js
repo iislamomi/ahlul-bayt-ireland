@@ -782,6 +782,13 @@ const STRINGS = {
     'فارسی': 'صدا در وقت نماز',
     'Urdu': 'نماز کے وقت آواز'
   },
+  'prayer.adhanSound': {
+    English: 'Adhan Sound',
+    'العربية': 'صوت الأذان',
+    'हिन्दी': 'अज़ान की आवाज़',
+    'فارسی': 'صدای اذان',
+    'Urdu': 'اذان کی آواز'
+  },
   'prayer.notif': {
     English: 'Prayer Notifications',
     'العربية': 'إشعارات الصلاة',
@@ -1226,6 +1233,23 @@ function lsSet(key, val) {
   } catch (e) {}
 }
 
+/* ── QUIZ DIFFICULTY ── */
+const QUIZ_LEVELS = [
+  { key: 'beginner', label: 'Beginner', color: '#2c5d52' },
+  { key: 'intermediate', label: 'Intermediate', color: '#9a7a2c' },
+  { key: 'advanced', label: 'Advanced', color: '#6e2230' }
+];
+const quizLevel = q => {
+  const k = String((q && q.level) || 'beginner').toLowerCase();
+  return QUIZ_LEVELS.some(l => l.key === k) ? k : 'beginner';
+};
+
+/* ── ADHAN SOUNDS ── */
+const ADHAN_SOUNDS = [
+  { key: 'default', label: 'Classic Adhan', sub: 'The original call', file: './adhan.mp3' },
+  { key: 'najaf', label: 'Najaf — Imam Ali', sub: 'Recited at the shrine', file: './adhan-najaf.mp3' }
+];
+
 /* ── SUPABASE SYNC ── */
 const SB_URL = 'https://zwpimotdtuhbpwjcooiz.supabase.co';
 const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp3cGltb3RkdHVoYnB3amNvb2l6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI1ODIxMTUsImV4cCI6MjA5ODE1ODExNX0.BEdbAK9_lquFL8WyWwOU_DQ1bGbwzSpO9A54kKQxZFU';
@@ -1455,6 +1479,7 @@ class App extends Component {
       prayerPreset: 'ahlulbayt',
       adhanEnabled: true,
       adhanMuted: lsGet('adhanMuted', {}),
+      adhanSound: lsGet('adhanSound', 'default'),
       notifEnabled: lsGet('notifEnabled', false),
       adhanPlaying: false,
       adhanPending: false,
@@ -1695,9 +1720,21 @@ class App extends Component {
         ...patch
       }
     })));
+    _defineProperty(this, "setAdhanSound", key => {
+      const pick = ADHAN_SOUNDS.find(s => s.key === key);
+      if (!pick) return;
+      this.stopAdhan();
+      lsSet('adhanSound', key);
+      this.setState({
+        adhanSound: key
+      });
+      // Warm the service-worker cache so the chosen adhan still plays offline
+      fetch(pick.file).catch(() => {});
+    });
     _defineProperty(this, "playAdhan", () => {
       this.stopAdhan();
-      this.adhanAudio = new Audio('./adhan.mp3');
+      const pick = ADHAN_SOUNDS.find(s => s.key === this.state.adhanSound) || ADHAN_SOUNDS[0];
+      this.adhanAudio = new Audio(pick.file);
       this.adhanAudio.onended = () => this.setState({
         adhanPlaying: false,
         adhanPending: false
@@ -2243,22 +2280,9 @@ class App extends Component {
       style: {
         width: 44,
         height: 44,
-        borderRadius: 14,
-        background: 'linear-gradient(150deg,#23564a,#16463a)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        boxShadow: '0 4px 14px -4px rgba(22,70,58,.5)',
         flexShrink: 0
       }
-    }, /*#__PURE__*/React.createElement("div", {
-      style: {
-        width: 20,
-        height: 20,
-        borderRadius: '50%',
-        boxShadow: 'inset -6px 0 0 0 #d8b863'
-      }
-    }))), /*#__PURE__*/React.createElement("div", {
+    })), /*#__PURE__*/React.createElement("div", {
       style: {
         display: 'flex',
         gap: 10,
@@ -2883,7 +2907,7 @@ class App extends Component {
       className: "afu"
     }, /*#__PURE__*/React.createElement("div", {
       style: {
-        padding: '8px 0 16px'
+        padding: '8px 56px 16px 0'
       }
     }, /*#__PURE__*/React.createElement("div", {
       style: {
@@ -3289,9 +3313,53 @@ class App extends Component {
       }
     }))), st.adhanEnabled && /*#__PURE__*/React.createElement("div", {
       style: {
+        marginTop: 12
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 10,
+        letterSpacing: 1,
+        textTransform: 'uppercase',
+        fontWeight: 700,
+        color: '#9a8f7c',
+        marginBottom: 7
+      }
+    }, this.t('prayer.adhanSound')), /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: 'flex',
+        gap: 8
+      }
+    }, ADHAN_SOUNDS.map(snd => {
+      const on = st.adhanSound === snd.key;
+      return /*#__PURE__*/React.createElement("div", {
+        key: snd.key,
+        onClick: () => this.setAdhanSound(snd.key),
+        style: {
+          flex: 1,
+          padding: '9px 11px',
+          borderRadius: 12,
+          cursor: 'pointer',
+          background: on ? '#1f5145' : '#fffdf9',
+          border: `1.5px solid ${on ? '#1f5145' : '#e4dac2'}`
+        }
+      }, /*#__PURE__*/React.createElement("div", {
+        style: {
+          fontSize: 12.5,
+          fontWeight: 700,
+          color: on ? '#fffdf9' : '#2c2823'
+        }
+      }, snd.label), /*#__PURE__*/React.createElement("div", {
+        style: {
+          fontSize: 10.5,
+          marginTop: 1,
+          color: on ? 'rgba(255,253,249,.7)' : '#9a8f7c'
+        }
+      }, snd.sub));
+    }))), st.adhanEnabled && /*#__PURE__*/React.createElement("div", {
+      style: {
         display: 'flex',
         gap: 8,
-        marginTop: 12
+        marginTop: 10
       }
     }, !st.adhanPlaying ? /*#__PURE__*/React.createElement("div", {
       onClick: this.playAdhan,
@@ -3575,7 +3643,7 @@ class App extends Component {
       className: "afu"
     }, /*#__PURE__*/React.createElement("div", {
       style: {
-        padding: '8px 0 14px'
+        padding: '8px 56px 14px 0'
       }
     }, /*#__PURE__*/React.createElement("div", {
       style: {
@@ -3877,16 +3945,16 @@ class App extends Component {
       }
     }, label);
     const actionRow = React.createElement("div", {
-      style: { display: 'flex', gap: 12 }
+      style: { display: 'flex', gap: 10 }
     }, React.createElement("div", {
       onClick: this.handleShare,
       style: {
-        flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-        padding: 14, borderRadius: 14, background: readAccent, color: '#fffdf9',
-        fontSize: 14, fontWeight: 600, cursor: 'pointer'
+        flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7,
+        padding: '9px 14px', borderRadius: 12, background: readAccent, color: '#fffdf9',
+        fontSize: 13, fontWeight: 600, cursor: 'pointer'
       }
     }, React.createElement("svg", {
-      width: "16", height: "16", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor",
+      width: "14", height: "14", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor",
       strokeWidth: "1.9", strokeLinecap: "round", strokeLinejoin: "round"
     }, React.createElement("circle", { cx: "18", cy: "5", r: "2.6" }),
       React.createElement("circle", { cx: "6", cy: "12", r: "2.6" }),
@@ -3895,8 +3963,8 @@ class App extends Component {
     React.createElement("div", {
       onClick: this.handleBookmark,
       style: {
-        width: 52, display: 'flex', alignItems: 'center', justifyContent: 'center',
-        borderRadius: 14, border: `1px solid ${rd.border}`, background: rd.surf, cursor: 'pointer'
+        width: 46, display: 'flex', alignItems: 'center', justifyContent: 'center',
+        borderRadius: 12, border: `1px solid ${rd.border}`, background: rd.surf, cursor: 'pointer'
       }
     }, React.createElement("svg", {
       width: "18", height: "18", viewBox: "0 0 24 24",
@@ -3934,15 +4002,20 @@ class App extends Component {
       }, React.createElement("svg", {
         width: "17", height: "17", viewBox: "0 0 24 24", fill: "none", stroke: rd.accent,
         strokeWidth: "1.8", strokeLinecap: "round", strokeLinejoin: "round"
-      }, React.createElement("path", { d: "M20 14a8 8 0 1 1-9.8-9.6A6.5 6.5 0 0 0 20 14z" }))))),
-    React.createElement("div", { style: { flexShrink: 0, padding: '10px 22px 10px', background: rd.bg, borderBottom: `1px solid ${rd.border}` } },
-      React.createElement("div", { style: { fontSize: 10, letterSpacing: 1.2, textTransform: 'uppercase', fontWeight: 700, color: readAccent } }, kicker),
-      React.createElement("div", { style: { fontFamily: 'Spectral,serif', fontSize: 18, fontWeight: 600, color: rd.text, marginTop: 2, lineHeight: 1.2 } }, r.title),
-      r.note && React.createElement("div", { style: { fontSize: 11.5, color: rd.muted, marginTop: 3, fontStyle: 'italic' } }, r.note),
-      tabs.length > 1 && React.createElement("div", { style: { display: 'flex', gap: 8, marginTop: 9 } }, tabs.map(pill))),
+      }, React.createElement("path", { d: "M20 14a8 8 0 1 1-9.8-9.6A6.5 6.5 0 0 0 20 14z" }))),
+      React.createElement("img", {
+        src: "./icon-192.png",
+        alt: "Ahlul Bayt Ireland",
+        style: { width: 34, height: 34, borderRadius: 10, objectFit: 'cover', flexShrink: 0 }
+      }))),
+    React.createElement("div", { style: { flexShrink: 0, padding: '6px 22px 7px', background: rd.bg, borderBottom: `1px solid ${rd.border}` } },
+      React.createElement("div", { style: { fontSize: 8.5, letterSpacing: 1, textTransform: 'uppercase', fontWeight: 700, color: readAccent } }, kicker),
+      React.createElement("div", { style: { fontFamily: 'Spectral,serif', fontSize: 15, fontWeight: 600, color: rd.text, marginTop: 1, lineHeight: 1.2 } }, r.title),
+      r.note && React.createElement("div", { style: { fontSize: 10.5, color: rd.muted, marginTop: 2, fontStyle: 'italic' } }, r.note),
+      tabs.length > 1 && React.createElement("div", { style: { display: 'flex', gap: 8, marginTop: 7 } }, tabs.map(pill))),
     React.createElement("div", {
       className: "s",
-      style: { flex: '1 1 auto', overflowY: 'auto', padding: '14px 22px 24px' }
+      style: { flex: '1 1 auto', overflowY: 'auto', padding: '12px 22px 18px' }
     }, lang === 'ar' && hasAr && React.createElement("div", {
       style: { background: rd.surf, border: `1px solid ${rd.border}`, borderRadius: 20, padding: '18px 16px' }
     }, React.createElement("div", {
@@ -3975,7 +4048,7 @@ class App extends Component {
         }
       }, "Open PDF in browser \u2197"))),
     lang !== 'pdf' && React.createElement("div", {
-      style: { flexShrink: 0, padding: '10px 22px 12px', background: rd.bg, borderTop: `1px solid ${rd.border}` }
+      style: { flexShrink: 0, padding: '7px 22px 9px', background: rd.bg, borderTop: `1px solid ${rd.border}` }
     }, actionRow));
   }
 
@@ -4018,7 +4091,7 @@ class App extends Component {
       className: "afu"
     }, /*#__PURE__*/React.createElement("div", {
       style: {
-        padding: '8px 0 14px'
+        padding: '8px 56px 14px 0'
       }
     }, /*#__PURE__*/React.createElement("div", {
       style: {
@@ -4316,7 +4389,7 @@ class App extends Component {
       className: "afu"
     }, /*#__PURE__*/React.createElement("div", {
       style: {
-        padding: '8px 0 16px'
+        padding: '8px 56px 16px 0'
       }
     }, /*#__PURE__*/React.createElement("div", {
       style: {
@@ -6599,6 +6672,7 @@ class App extends Component {
         const isNew = st.adminEditIdx === -1;
         const opts = d._opts !== undefined ? d._opts : d.options || ['', '', ''];
         const ans = d._ans !== undefined ? d._ans : String(d.answer !== undefined ? d.answer : 0);
+        const lvl = d._lvl !== undefined ? d._lvl : quizLevel(d);
         const setOpt = (i, v) => {
           const o = [...opts];
           o[i] = v;
@@ -6619,7 +6693,8 @@ class App extends Component {
           const it = {
             question: (d.question || '').trim(),
             options: opts.map(o => o.trim()),
-            answer: parseInt(ans, 10) || 0
+            answer: parseInt(ans, 10) || 0,
+            level: lvl
           };
           if (isNew) a.push(it);else a[st.adminEditIdx] = it;
           save('kidsQuizzes', 'liveKidsQuizzes', a, isNew ? 'Quiz added!' : 'Updated!');
@@ -6673,6 +6748,38 @@ class App extends Component {
           key: L,
           value: String(i)
         }, `Option ${L}${(opts[i] || '').trim() ? ' — ' + opts[i] : ''}`))), /*#__PURE__*/React.createElement("div", {
+          style: {
+            fontSize: 11.5,
+            color: '#8d8574',
+            margin: '10px 2px 7px'
+          }
+        }, "Difficulty"), /*#__PURE__*/React.createElement("div", {
+          style: {
+            display: 'flex',
+            gap: 8,
+            marginBottom: 14
+          }
+        }, QUIZ_LEVELS.map(L => {
+          const on = lvl === L.key;
+          return /*#__PURE__*/React.createElement("div", {
+            key: L.key,
+            onClick: () => this.setDraft({
+              _lvl: L.key
+            }),
+            style: {
+              flex: 1,
+              textAlign: 'center',
+              padding: '9px 4px',
+              borderRadius: 10,
+              fontSize: 12.5,
+              fontWeight: 700,
+              cursor: 'pointer',
+              background: on ? L.color : '#fffdf9',
+              color: on ? '#fffdf9' : '#6f675a',
+              border: `1.5px solid ${on ? L.color : '#e6dcc8'}`
+            }
+          }, L.label);
+        })), /*#__PURE__*/React.createElement("div", {
           style: {
             display: 'flex',
             gap: 10
@@ -7777,7 +7884,7 @@ class App extends Component {
       className: "afu"
     }, /*#__PURE__*/React.createElement("div", {
       style: {
-        padding: '8px 0 16px'
+        padding: '8px 56px 16px 0'
       }
     }, /*#__PURE__*/React.createElement("div", {
       style: {
@@ -8203,7 +8310,7 @@ class App extends Component {
       className: "afu"
     }, /*#__PURE__*/React.createElement("div", {
       style: {
-        padding: '8px 0 16px'
+        padding: '8px 56px 16px 0'
       }
     }, /*#__PURE__*/React.createElement("div", {
       style: {
@@ -8683,7 +8790,54 @@ class App extends Component {
         color: '#2c2823',
         marginBottom: 12
       }
-    }, "Quiz Time"), (st.liveKidsQuizzes || []).map((qz, qi) => {
+    }, "Quiz Time"), /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: 'flex',
+        gap: 8,
+        marginBottom: 14
+      }
+    }, QUIZ_LEVELS.map(L => {
+      const on = (st.kidsQuizLevel || 'beginner') === L.key;
+      const n = (st.liveKidsQuizzes || []).filter(q => quizLevel(q) === L.key).length;
+      return /*#__PURE__*/React.createElement("div", {
+        key: L.key,
+        onClick: () => this.setState({
+          kidsQuizLevel: L.key
+        }),
+        style: {
+          flex: 1,
+          textAlign: 'center',
+          padding: '9px 4px',
+          borderRadius: 12,
+          fontSize: 12.5,
+          fontWeight: 700,
+          cursor: 'pointer',
+          background: on ? L.color : '#fffdf9',
+          color: on ? '#fffdf9' : '#6f675a',
+          border: `1.5px solid ${on ? L.color : '#e6dcc8'}`
+        }
+      }, L.label, n ? /*#__PURE__*/React.createElement("span", {
+        style: {
+          opacity: .7,
+          fontWeight: 600
+        }
+      }, " · ", n) : null);
+    })), (() => {
+      const lvl = st.kidsQuizLevel || 'beginner';
+      const picked = (st.liveKidsQuizzes || []).map((qz, qi) => ({ qz, qi })).filter(x => quizLevel(x.qz) === lvl);
+      if (!picked.length) return /*#__PURE__*/React.createElement("div", {
+        style: {
+          background: '#fffdf9',
+          border: '1px dashed #e6dcc8',
+          borderRadius: 18,
+          padding: '22px 18px',
+          textAlign: 'center',
+          fontSize: 13.5,
+          color: '#8c8270',
+          marginBottom: 14
+        }
+      }, "No ", (QUIZ_LEVELS.find(l => l.key === lvl) || {}).label.toLowerCase(), " quizzes yet — check back soon.");
+      return picked.map(({ qz, qi }, pos) => {
       const pick = (st.kidsQuizPicks || {})[qi];
       const answered = pick !== undefined;
       return /*#__PURE__*/React.createElement("div", {
@@ -8704,7 +8858,7 @@ class App extends Component {
           color: '#6e2230',
           marginBottom: 8
         }
-      }, "Question ", qi + 1), /*#__PURE__*/React.createElement("div", {
+      }, "Question ", pos + 1), /*#__PURE__*/React.createElement("div", {
         style: {
           fontFamily: 'Spectral,serif',
           fontSize: 16.5,
@@ -8781,7 +8935,8 @@ class App extends Component {
           textDecoration: 'underline'
         }
       }, "Try again"));
-    })), kt === 'quiz' && /*#__PURE__*/React.createElement("div", {
+    });
+    })()), kt === 'quiz' && /*#__PURE__*/React.createElement("div", {
       onClick: () => this.openStory(STORIES.findIndex(s => s.kind === 'quiz')),
       style: {
         display: 'flex',
@@ -8860,7 +9015,7 @@ class App extends Component {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        padding: '8px 0 16px'
+        padding: '8px 56px 16px 0'
       }
     }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
       style: {
@@ -9250,7 +9405,7 @@ class App extends Component {
       className: "afu"
     }, /*#__PURE__*/React.createElement("div", {
       style: {
-        padding: '8px 0 16px'
+        padding: '8px 56px 16px 0'
       }
     }, /*#__PURE__*/React.createElement("div", {
       style: {
@@ -9513,7 +9668,7 @@ class App extends Component {
       className: "afu"
     }, /*#__PURE__*/React.createElement("div", {
       style: {
-        padding: '8px 0 14px'
+        padding: '8px 56px 14px 0'
       }
     }, /*#__PURE__*/React.createElement("div", {
       style: {
@@ -10031,7 +10186,7 @@ class App extends Component {
       className: "afu"
     }, /*#__PURE__*/React.createElement("div", {
       style: {
-        padding: '8px 0 16px'
+        padding: '8px 56px 16px 0'
       }
     }, /*#__PURE__*/React.createElement("div", {
       style: {
@@ -10279,6 +10434,27 @@ class App extends Component {
     }, msg));
   }
 
+  /* ── BRAND MARK (top-right on every screen) ── */
+  renderBrandMark(size) {
+    const s = size || 44;
+    return /*#__PURE__*/React.createElement("img", {
+      src: "./icon-192.png",
+      alt: "Ahlul Bayt Ireland",
+      style: {
+        position: 'absolute',
+        top: 'calc(20px + env(safe-area-inset-top, 0px))',
+        right: 16,
+        width: s,
+        height: s,
+        borderRadius: 14,
+        zIndex: 40,
+        pointerEvents: 'none',
+        objectFit: 'cover',
+        boxShadow: '0 4px 14px -4px rgba(22,70,58,.5)'
+      }
+    });
+  }
+
   /* ── MAIN RENDER ── */
   render() {
     const st = this.state;
@@ -10306,7 +10482,7 @@ class App extends Component {
       style: {
         background: st.dark ? '#16191a' : '#f6f1e7'
       }
-    }, /*#__PURE__*/React.createElement("div", {
+    }, st.screen !== 'reading' && this.renderBrandMark(), /*#__PURE__*/React.createElement("div", {
       className: "s",
       style: {
         flex: '1 1 auto',
