@@ -1308,6 +1308,7 @@ const PUSH_MSG = {
   pinned: 'Featured message has been updated',
   classifieds: 'New listing in community classifieds',
   calEvents: 'Islamic calendar updated',
+  reminders: 'A new reminder has been added',
   prayerPresets: 'Prayer times updated',
   duas: 'Library updated — new duʿāʾ content',
   ziyarat: 'Library updated — new ziyārah content',
@@ -1372,7 +1373,8 @@ const SB_KEY_MAP = {
   kidsQuizzes: 'liveKidsQuizzes', askImam: 'liveAskImam',
   prayerPresets: 'livePrayerPresets', calEvents: 'liveCalEvents',
   healthTips: 'liveHealthTips', healthVideos: 'liveHealthVideos',
-  duas: 'liveDuas', ziyarat: 'liveZiyarat', nahj: 'liveNahj'
+  duas: 'liveDuas', ziyarat: 'liveZiyarat', nahj: 'liveNahj',
+  reminders: 'liveReminders'
 };
 
 function announcementActive(a) {
@@ -1562,6 +1564,7 @@ class App extends Component {
       liveKidsQuotes: lsGet('kidsQuotes', KIDS_QUOTES),
       livePrayerPresets: lsGet('prayerPresets', PRAYER_PRESETS),
       liveCalEvents: lsGet('calEvents', CAL_EVENTS_DEFAULT),
+      liveReminders: lsGet('reminders', []),
       liveHealthTips: lsGet('healthTips', HEALTH_TIPS),
       liveHealthVideos: lsGet('healthVideos', HEALTH_VIDEOS),
       liveDuas: lsGet('duas', DUAS),
@@ -2295,32 +2298,16 @@ class App extends Component {
       }
     }, st.livePinned.text)), /*#__PURE__*/React.createElement("div", {
       style: {
-        display: 'flex',
-        alignItems: 'flex-start',
-        justifyContent: 'space-between',
         padding: '10px 0 18px'
       }
-    }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+    }, /*#__PURE__*/React.createElement("img", {
+      src: "./App_title_icon.svg",
+      alt: "Ahlul Bayt Ireland",
       style: {
-        fontSize: 13,
-        color: st.dark ? '#8e9490' : '#9a8f7c',
-        fontWeight: 500,
-        letterSpacing: .2
-      }
-    }, salaam), /*#__PURE__*/React.createElement("div", {
-      style: {
-        fontFamily: 'Spectral,serif',
-        fontSize: 25,
-        fontWeight: 600,
-        color: st.dark ? '#ece6d8' : '#27241f',
-        lineHeight: 1.15,
-        marginTop: 3
-      }
-    }, "Ahlul Bayt Ireland")), /*#__PURE__*/React.createElement("div", {
-      style: {
-        width: 44,
-        height: 44,
-        flexShrink: 0
+        width: 64,
+        height: 64,
+        borderRadius: 16,
+        display: 'block'
       }
     })), /*#__PURE__*/React.createElement("div", {
       style: {
@@ -3683,6 +3670,15 @@ class App extends Component {
       className: "afu"
     }, /*#__PURE__*/React.createElement("div", {
       style: {
+        position: 'sticky',
+        top: 0,
+        zIndex: 6,
+        margin: '0 -20px',
+        padding: '0 20px 4px',
+        background: st.dark ? '#16191a' : '#f6f1e7'
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
         padding: '8px 56px 14px 0'
       }
     }, /*#__PURE__*/React.createElement("div", {
@@ -3702,8 +3698,7 @@ class App extends Component {
     }, lm.title)), /*#__PURE__*/React.createElement("div", {
       style: {
         display: 'flex',
-        gap: 8,
-        marginBottom: 16
+        gap: 8
       }
     }, [['dua', "Duʿāʾ"], ['ziyarah', 'Ziyārah'], ['nahj', 'Nahj']].map(([k, label]) => /*#__PURE__*/React.createElement("div", {
       key: k,
@@ -3713,11 +3708,12 @@ class App extends Component {
         libCat: 'All'
       }),
       style: tabStyle(k)
-    }, label))), /*#__PURE__*/React.createElement("div", {
+    }, label)))), /*#__PURE__*/React.createElement("div", {
       style: {
         display: 'flex',
         alignItems: 'center',
         gap: 10,
+        marginTop: 16,
         background: '#fffdf9',
         border: '1px solid #ece4d4',
         borderRadius: 14,
@@ -5095,6 +5091,9 @@ class App extends Component {
       id: 'events',
       label: 'Events'
     }, {
+      id: 'reminders',
+      label: 'Reminders'
+    }, {
       id: 'prayers',
       label: 'Prayer Times'
     }, {
@@ -5913,6 +5912,143 @@ class App extends Component {
         const a = [...(st.liveCalEvents || [])];
         a.splice(i, 1);
         save('calEvents', 'liveCalEvents', a, 'Deleted');
+      }, {
+        background: '#fdf0f2',
+        color: '#6e2230',
+        fontSize: 12,
+        padding: '6px 10px'
+      }))));
+    };
+
+    /* ─ REMINDERS ─ */
+    const renderRemindersSection = () => {
+      if (editing) {
+        const d = st.adminEditDraft;
+        const isNew = st.adminEditIdx === -1;
+        const saveItem = () => {
+          if (!(d.text || '').trim()) {
+            this.showToast('Reminder text is required');
+            return;
+          }
+          if (!(d.date || '').trim()) {
+            this.showToast('Please pick a date');
+            return;
+          }
+          const list = [...(st.liveReminders || [])];
+          const item = {
+            text: (d.text || '').trim(),
+            date: d.date || ''
+          };
+          if (isNew) list.push(item);else list[st.adminEditIdx] = item;
+          save('reminders', 'liveReminders', list, isNew ? 'Reminder added!' : 'Reminder updated!');
+        };
+        return /*#__PURE__*/React.createElement("div", {
+          style: {
+            padding: '0 0 20px'
+          }
+        }, /*#__PURE__*/React.createElement("div", {
+          style: {
+            fontSize: 13,
+            fontWeight: 700,
+            color: '#27241f',
+            marginBottom: 14
+          }
+        }, isNew ? 'Add Reminder' : 'Edit Reminder'), /*#__PURE__*/React.createElement("textarea", {
+          value: d.text || '',
+          onChange: e => this.setDraft({
+            text: e.target.value
+          }),
+          placeholder: "Reminder (e.g. Dua Kumayl tonight after Isha)",
+          maxLength: 160,
+          style: {
+            ...inp,
+            minHeight: 60,
+            resize: 'none'
+          }
+        }), /*#__PURE__*/React.createElement("input", {
+          value: d.date || '',
+          onChange: e => this.setDraft({
+            date: e.target.value
+          }),
+          type: "date",
+          min: "2024-01-01",
+          max: "2036-12-31",
+          style: inp
+        }), /*#__PURE__*/React.createElement("div", {
+          style: {
+            display: 'flex',
+            gap: 10
+          }
+        }, btn('Save', saveItem, {
+          flex: 1,
+          background: '#1f5145',
+          color: '#f3ead4'
+        }), btn('Cancel', this.cancelEdit, {
+          flex: 1,
+          border: '1px solid #e6dcc8',
+          background: '#fffdf9',
+          color: '#3f3a32'
+        })));
+      }
+      const rem = [...(st.liveReminders || [])].map((r, i) => ({ r, i })).sort((a, b) => (a.r.date || '').localeCompare(b.r.date || ''));
+      return /*#__PURE__*/React.createElement("div", null, btn('+ Add Reminder', () => this.startEdit(-1, {
+        date: ''
+      }), {
+        background: '#1f5145',
+        color: '#f3ead4',
+        marginBottom: 14,
+        width: '100%'
+      }), rem.length === 0 ? /*#__PURE__*/React.createElement("div", {
+        style: {
+          textAlign: 'center',
+          fontSize: 13,
+          color: '#9a8f7c',
+          padding: '18px 0'
+        }
+      }, "No reminders yet.") : rem.map(({ r, i }) => /*#__PURE__*/React.createElement("div", {
+        key: i,
+        style: {
+          display: 'flex',
+          alignItems: 'center',
+          gap: 12,
+          background: '#fffdf9',
+          border: '1px solid #ece4d4',
+          borderRadius: 14,
+          padding: '12px 14px',
+          marginBottom: 8
+        }
+      }, /*#__PURE__*/React.createElement("div", {
+        style: {
+          flex: 1,
+          minWidth: 0
+        }
+      }, /*#__PURE__*/React.createElement("div", {
+        style: {
+          fontSize: 13.5,
+          fontWeight: 600,
+          color: '#2c2823'
+        }
+      }, r.text), /*#__PURE__*/React.createElement("div", {
+        style: {
+          fontSize: 11,
+          color: '#9a8f7c',
+          marginTop: 2
+        }
+      }, r.date ? new Date(r.date + 'T00:00:00').toLocaleDateString('en-IE', {
+        weekday: 'short',
+        day: 'numeric',
+        month: 'short'
+      }) : 'No date')), btn('Edit', () => this.startEdit(i, {
+        ...r
+      }), {
+        background: '#e6efe9',
+        color: '#1f5145',
+        fontSize: 12,
+        padding: '6px 12px'
+      }), btn('✕', () => {
+        const a = [...(st.liveReminders || [])];
+        a.splice(i, 1);
+        save('reminders', 'liveReminders', a, 'Deleted');
       }, {
         background: '#fdf0f2',
         color: '#6e2230',
@@ -7691,6 +7827,7 @@ class App extends Component {
       library: renderLibrarySection,
       classifieds: renderClassifiedsSection,
       events: renderEventsSection,
+      reminders: renderRemindersSection,
       prayers: renderPrayersSection,
       announcement: renderAnnouncementSection,
       pinned: renderPinnedSection,
@@ -7937,6 +8074,10 @@ class App extends Component {
       month: 'long'
     });
     const selHijri = toHijri(selDayDate);
+    const selDayStr = `${calY}-${String(calM + 1).padStart(2, '0')}-${String(selDay).padStart(2, '0')}`;
+    const selIsToday = isCurrentMonth && selDay === todayD;
+    const dayReminders = (st.liveReminders || []).filter(r => r.date === selDayStr);
+    const dayLabelShort = selIsToday ? 'Today' : selDayDate.toLocaleDateString('en-IE', { weekday: 'short', day: 'numeric', month: 'short' });
     const todayStart = new Date(todayY, todayM, todayD).getTime();
     const calEventList = Object.keys(eventsByDay).map(d => +d).filter(d => new Date(calY, calM, d).getTime() >= todayStart).sort((a, b) => a - b).flatMap(d => eventsByDay[d].map(ev => ({
       day: d,
@@ -7962,10 +8103,9 @@ class App extends Component {
         key: 'd' + d,
         day: d,
         hijriDay,
-        bg: sel ? '#1f5145' : isToday ? '#e6efe9' : 'transparent',
-        ink: sel ? '#fffdf9' : isToday ? '#1f5145' : '#3f3a32',
-        hijriInk: sel ? 'rgba(255,255,255,.55)' : '#c2a35a',
-        dots: (eventsByDay[d] || []).slice(0, 3).map(x => x.color)
+        sel,
+        isToday,
+        hasEvent: !!eventsByDay[d]
       });
     }
     const canPrev = !(calY <= 2024 && calM === 0);
@@ -7988,411 +8128,160 @@ class App extends Component {
         calDay: null
       });
     };
+    const monthOnly = new Date(calY, calM, 1).toLocaleDateString('en-IE', { month: 'long' });
+    const arrowBtn = (glyph, enabled, onClick) => /*#__PURE__*/React.createElement("div", {
+      onClick,
+      style: { width: 34, height: 34, flexShrink: 0, borderRadius: 10, background: enabled ? '#f4faf7' : '#f5f0e8', border: '1px solid #e0ded4', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: enabled ? 'pointer' : 'default', color: enabled ? '#1f5145' : '#c9bfae', fontSize: 18, fontWeight: 700 }
+    }, glyph);
+    const calIcon = /*#__PURE__*/React.createElement("svg", { width: 16, height: 16, viewBox: "0 0 24 24", fill: 'none', stroke: '#1f5145', strokeWidth: 1.9, strokeLinecap: 'round', strokeLinejoin: 'round' }, /*#__PURE__*/React.createElement("rect", { x: 3, y: 4, width: 18, height: 18, rx: 3 }), /*#__PURE__*/React.createElement("path", { d: "M3 10h18M8 2v4M16 2v4" }));
+    const clockIcon = /*#__PURE__*/React.createElement("svg", { width: 13, height: 13, viewBox: "0 0 24 24", fill: 'none', stroke: '#9a8f7c', strokeWidth: 1.9, strokeLinecap: 'round', strokeLinejoin: 'round' }, /*#__PURE__*/React.createElement("circle", { cx: 12, cy: 12, r: 9 }), /*#__PURE__*/React.createElement("path", { d: "M12 7v5l3 2" }));
+    const bellIcon = /*#__PURE__*/React.createElement("svg", { width: 16, height: 16, viewBox: "0 0 24 24", fill: 'none', stroke: '#1f5145', strokeWidth: 1.9, strokeLinecap: 'round', strokeLinejoin: 'round' }, /*#__PURE__*/React.createElement("path", { d: "M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" }), /*#__PURE__*/React.createElement("path", { d: "M13.7 21a2 2 0 0 1-3.4 0" }));
     return /*#__PURE__*/React.createElement("div", {
-      style: {
-        padding: '8px 20px 100px'
-      },
+      style: { padding: '8px 20px 100px' },
       className: "afu"
+    },
+    /*#__PURE__*/React.createElement("div", {
+      style: { padding: '8px 56px 16px 0' }
     }, /*#__PURE__*/React.createElement("div", {
-      style: {
-        padding: '8px 56px 16px 0'
-      }
-    }, /*#__PURE__*/React.createElement("div", {
-      style: {
-        fontSize: 13,
-        color: '#9a8f7c',
-        fontWeight: 500
-      }
+      style: { fontSize: 13, color: '#9a8f7c', fontWeight: 500 }
     }, this.t('cal.community')), /*#__PURE__*/React.createElement("div", {
-      style: {
-        fontFamily: 'Spectral,serif',
-        fontSize: 26,
-        fontWeight: 600,
-        color: '#27241f',
-        marginTop: 2
-      }
-    }, this.t('cal.title'))), /*#__PURE__*/React.createElement("div", {
-      style: {
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        marginBottom: 14
-      }
+      style: { fontFamily: 'Spectral,serif', fontSize: 26, fontWeight: 600, color: '#27241f', marginTop: 2 }
+    }, this.t('cal.title'))),
+    /*#__PURE__*/React.createElement("div", {
+      style: { background: '#fffdf9', border: '1px solid #ece4d4', borderRadius: 22, padding: '16px 14px', boxShadow: '0 10px 26px -20px rgba(31,81,69,.55)' }
+    },
+      /*#__PURE__*/React.createElement("div", {
+        style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6 }
+      }, arrowBtn("‹", canPrev, () => canPrev && goMonth(0, -1)), /*#__PURE__*/React.createElement("div", {
+        style: { flex: 1, textAlign: 'right', fontFamily: 'Spectral,serif', fontSize: 17, fontWeight: 600, color: '#2c2823' }
+      }, monthOnly), /*#__PURE__*/React.createElement("div", {
+        style: { position: 'relative', width: 66, height: 66, flexShrink: 0, borderRadius: '50%', background: 'radial-gradient(circle,#ffffff 55%,#eef5f1 56%)', border: '2px solid #1f5145', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 14px -6px rgba(31,81,69,.55)' }
+      }, /*#__PURE__*/React.createElement("div", {
+        style: { position: 'absolute', inset: 5, borderRadius: '50%', border: '1.5px dashed #c2a35a' }
+      }), /*#__PURE__*/React.createElement("div", {
+        style: { fontFamily: 'Spectral,serif', fontSize: 24, fontWeight: 700, color: '#1f5145' }
+      }, selDay)), /*#__PURE__*/React.createElement("div", {
+        style: { flex: 1, textAlign: 'left', fontFamily: 'Spectral,serif', fontSize: 17, fontWeight: 600, color: '#2c2823' }
+      }, String(calY)), arrowBtn("›", canNext, () => canNext && goMonth(0, 1))),
+      /*#__PURE__*/React.createElement("div", {
+        style: { textAlign: 'center', fontSize: 12.5, color: '#9a7a2c', fontWeight: 600, marginTop: 7 }
+      }, selHijri, " AH"),
+      /*#__PURE__*/React.createElement("div", {
+        style: { display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', marginTop: 12, marginBottom: 2 }
+      }, weekHead.map((w, i) => /*#__PURE__*/React.createElement("div", {
+        key: i,
+        style: { textAlign: 'center', fontSize: 11, fontWeight: 700, color: '#b1a690' }
+      }, w))),
+      /*#__PURE__*/React.createElement("div", {
+        style: { display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', gap: 2 }
+      }, cells.map(c => c.blank ? /*#__PURE__*/React.createElement("div", { key: c.key }) : /*#__PURE__*/React.createElement("div", {
+        key: c.key,
+        onClick: () => this.setState({ calDay: c.day }),
+        style: { aspectRatio: '0.82', borderRadius: 13, background: c.sel ? '#1f5145' : c.isToday ? '#e6efe9' : 'transparent', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', position: 'relative', gap: 2 }
+      }, c.hasEvent && /*#__PURE__*/React.createElement("span", {
+        style: { position: 'absolute', top: 6, right: 7, width: 6, height: 6, borderRadius: '50%', background: c.sel ? '#f0c07a' : '#e08a3c' }
+      }), /*#__PURE__*/React.createElement("span", {
+        style: { fontSize: 13.5, fontWeight: 600, color: c.sel ? '#fffdf9' : c.isToday ? '#1f5145' : '#3f3a32', lineHeight: 1 }
+      }, c.day), /*#__PURE__*/React.createElement("span", {
+        style: { fontSize: 9, fontWeight: 500, color: c.sel ? 'rgba(255,255,255,.6)' : '#c2a35a', lineHeight: 1 }
+      }, c.hijriDay))))),
+    /*#__PURE__*/React.createElement("div", {
+      style: { background: '#fffdf9', border: '1px solid #ece4d4', borderRadius: 18, marginTop: 16, overflow: 'hidden' }
     }, /*#__PURE__*/React.createElement("div", {
-      onClick: () => canPrev && goMonth(0, -1),
-      style: {
-        width: 36,
-        height: 36,
-        borderRadius: 10,
-        background: canPrev ? '#fffdf9' : '#f5f0e8',
-        border: '1px solid #ece4d4',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        cursor: canPrev ? 'pointer' : 'default',
-        color: canPrev ? '#2c2823' : '#c9bfae',
-        fontSize: 18,
-        fontWeight: 700
-      }
-    }, "‹"), /*#__PURE__*/React.createElement("div", {
-      style: {
-        textAlign: 'center'
-      }
+      style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '13px 16px', background: '#e8f0ec' }
     }, /*#__PURE__*/React.createElement("div", {
-      style: {
-        fontFamily: 'Spectral,serif',
-        fontSize: 19,
-        fontWeight: 700,
-        color: '#2c2823'
-      }
-    }, monthName), /*#__PURE__*/React.createElement("div", {
-      style: {
-        fontSize: 11,
-        color: '#9a7a2c',
-        fontWeight: 500,
-        marginTop: 1
-      }
-    }, hijriMonthYear)), /*#__PURE__*/React.createElement("div", {
-      onClick: () => canNext && goMonth(0, 1),
-      style: {
-        width: 36,
-        height: 36,
-        borderRadius: 10,
-        background: canNext ? '#fffdf9' : '#f5f0e8',
-        border: '1px solid #ece4d4',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        cursor: canNext ? 'pointer' : 'default',
-        color: canNext ? '#2c2823' : '#c9bfae',
-        fontSize: 18,
-        fontWeight: 700
-      }
-    }, "›")), /*#__PURE__*/React.createElement("div", {
-      style: {
-        display: 'grid',
-        gridTemplateColumns: 'repeat(7,1fr)',
-        marginBottom: 4
-      }
-    }, weekHead.map((w, i) => /*#__PURE__*/React.createElement("div", {
-      key: i,
-      style: {
-        textAlign: 'center',
-        fontSize: 11,
-        fontWeight: 700,
-        color: '#b1a690'
-      }
-    }, w))), /*#__PURE__*/React.createElement("div", {
-      style: {
-        display: 'grid',
-        gridTemplateColumns: 'repeat(7,1fr)',
-        gap: 3,
-        background: '#fffdf9',
-        border: '1px solid #ece4d4',
-        borderRadius: 18,
-        padding: 8
-      }
-    }, cells.map(c => c.blank ? /*#__PURE__*/React.createElement("div", {
-      key: c.key
-    }) : /*#__PURE__*/React.createElement("div", {
-      key: c.key,
-      onClick: () => this.setState({
-        calDay: c.day
-      }),
-      style: {
-        aspectRatio: '1',
-        borderRadius: 11,
-        background: c.bg,
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        cursor: 'pointer',
-        position: 'relative',
-        gap: 1
-      }
-    }, /*#__PURE__*/React.createElement("span", {
-      style: {
-        fontSize: 13,
-        fontWeight: 600,
-        color: c.ink,
-        lineHeight: 1
-      }
-    }, c.day), /*#__PURE__*/React.createElement("span", {
-      style: {
-        fontSize: 8.5,
-        fontWeight: 500,
-        color: c.hijriInk,
-        lineHeight: 1
-      }
-    }, c.hijriDay), /*#__PURE__*/React.createElement("span", {
-      style: {
-        position: 'absolute',
-        bottom: 3,
-        display: 'flex',
-        gap: 2
-      }
-    }, c.dots.map((col, di) => /*#__PURE__*/React.createElement("span", {
-      key: di,
-      style: {
-        width: 4,
-        height: 4,
-        borderRadius: '50%',
-        background: col
-      }
-    })))))), /*#__PURE__*/React.createElement("div", {
-      style: {
-        background: '#fffdf9',
-        border: '1px solid #ece4d4',
-        borderRadius: 18,
-        padding: 17,
-        marginTop: 16
-      }
-    }, /*#__PURE__*/React.createElement("div", {
-      style: {
-        fontSize: 15,
-        fontWeight: 600,
-        color: '#2c2823'
-      }
-    }, selDayGreg), /*#__PURE__*/React.createElement("div", {
-      style: {
-        fontSize: 12.5,
-        color: '#9a7a2c',
-        fontWeight: 500,
-        marginTop: 3
-      }
-    }, selHijri, " AH"), selEvents.length > 0 ? /*#__PURE__*/React.createElement(React.Fragment, null, selEvents.map((selEvent, si) => /*#__PURE__*/React.createElement("div", {
+      style: { display: 'flex', alignItems: 'center', gap: 9 }
+    }, calIcon, /*#__PURE__*/React.createElement("div", {
+      style: { fontSize: 15, fontWeight: 700, color: '#1f5145' }
+    }, selIsToday ? "Today's Events" : "Events")), calEventList.length > 0 && /*#__PURE__*/React.createElement("div", {
+      onClick: () => { const el = document.getElementById('cal-upcoming'); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); },
+      style: { fontSize: 12.5, fontWeight: 600, color: '#1f5145', cursor: 'pointer' }
+    }, "See all ›")), /*#__PURE__*/React.createElement("div", {
+      style: { padding: '2px 16px 12px' }
+    }, selEvents.length > 0 ? selEvents.map((ev, si) => /*#__PURE__*/React.createElement("div", {
       key: si,
-      style: {
-        display: 'flex',
-        gap: 12,
-        alignItems: 'flex-start',
-        marginTop: 14,
-        paddingTop: 14,
-        borderTop: '1px solid #f1ebdd'
-      }
+      style: { padding: '12px 0', borderTop: si > 0 ? '1px solid #f1ebdd' : 'none' }
     }, /*#__PURE__*/React.createElement("div", {
-      style: {
-        flexShrink: 0,
-        width: 38,
-        height: 38,
-        borderRadius: 11,
-        background: selEvent.tint,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center'
-      }
+      style: { fontSize: 10.5, letterSpacing: .7, textTransform: 'uppercase', fontWeight: 700, color: ev.color }
+    }, ev.type), /*#__PURE__*/React.createElement("div", {
+      style: { fontSize: 15, fontWeight: 600, color: '#2c2823', marginTop: 2 }
+    }, ev.title), ev.desc && /*#__PURE__*/React.createElement("div", {
+      style: { fontSize: 12.5, color: '#7a7264', marginTop: 4, lineHeight: 1.5 }
+    }, ev.desc), st.adminLoggedIn && /*#__PURE__*/React.createElement("div", {
+      onClick: () => this.setState({ screen: 'admin', adminSection: 'events', adminEditIdx: (st.liveCalEvents || []).indexOf(ev), adminEditDraft: { ...ev } }),
+      style: { marginTop: 8, display: 'inline-block', fontSize: 11, color: '#1f5145', fontWeight: 600, cursor: 'pointer', padding: '4px 10px', border: '1px solid #c4ddd7', borderRadius: 8, background: '#eef7f4' }
+    }, "Edit"))) : /*#__PURE__*/React.createElement("div", {
+      style: { fontSize: 13, color: '#b1a690', padding: '12px 0 4px' }
+    }, this.t('cal.noEvent')), /*#__PURE__*/React.createElement("div", {
+      style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 4, paddingTop: 10, borderTop: '1px solid #f1ebdd' }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: { display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: '#9a8f7c', fontWeight: 600 }
+    }, clockIcon, dayLabelShort), st.adminLoggedIn && /*#__PURE__*/React.createElement("div", {
+      onClick: () => this.setState({ screen: 'admin', adminSection: 'events', adminEditIdx: -1, adminEditDraft: { date: selDayStr, type: 'Community' } }),
+      style: { fontSize: 11, color: '#1f5145', fontWeight: 600, cursor: 'pointer', padding: '5px 10px', border: '1px solid #c4ddd7', borderRadius: 8, background: '#eef7f4' }
+    }, "+ Add event")))),
+    /*#__PURE__*/React.createElement("div", {
+      style: { background: '#fffdf9', border: '1px solid #ece4d4', borderRadius: 18, marginTop: 14, overflow: 'hidden' }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '13px 16px', background: '#e8f0ec' }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: { display: 'flex', alignItems: 'center', gap: 9 }
+    }, bellIcon, /*#__PURE__*/React.createElement("div", {
+      style: { fontSize: 15, fontWeight: 700, color: '#1f5145' }
+    }, "Reminder (" + dayReminders.length + ")")), /*#__PURE__*/React.createElement("div", {
+      style: { fontSize: 12.5, fontWeight: 600, color: '#1f5145' }
+    }, dayLabelShort)), /*#__PURE__*/React.createElement("div", {
+      style: { padding: '12px 16px 14px' }
+    }, dayReminders.length > 0 && /*#__PURE__*/React.createElement("div", {
+      style: { display: 'flex', flexDirection: 'column', gap: 9, marginBottom: 12 }
+    }, dayReminders.map((rm, ri) => /*#__PURE__*/React.createElement("div", {
+      key: ri,
+      style: { display: 'flex', gap: 10, alignItems: 'flex-start' }
     }, /*#__PURE__*/React.createElement("span", {
-      style: {
-        width: 11,
-        height: 11,
-        borderRadius: '50%',
-        background: selEvent.color
-      }
-    })), /*#__PURE__*/React.createElement("div", {
-      style: {
-        flex: 1
-      }
+      style: { flexShrink: 0, marginTop: 5, width: 7, height: 7, borderRadius: '50%', background: '#1f5145' }
+    }), /*#__PURE__*/React.createElement("div", {
+      style: { flex: 1, fontSize: 13.5, color: '#2c2823', lineHeight: 1.45 }
+    }, rm.text), st.adminLoggedIn && /*#__PURE__*/React.createElement("span", {
+      onClick: () => this.setState({ screen: 'admin', adminSection: 'reminders', adminEditIdx: (st.liveReminders || []).indexOf(rm), adminEditDraft: { ...rm } }),
+      style: { flexShrink: 0, fontSize: 11, color: '#1f5145', fontWeight: 600, cursor: 'pointer' }
+    }, "Edit")))), st.adminLoggedIn ? /*#__PURE__*/React.createElement("div", {
+      onClick: () => this.setState({ screen: 'admin', adminSection: 'reminders', adminEditIdx: -1, adminEditDraft: { date: selDayStr } }),
+      style: { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, padding: '11px', borderRadius: 12, border: '1px dashed #c4ddd7', background: '#f4fbf8', color: '#1f5145', fontSize: 13.5, fontWeight: 600, cursor: 'pointer' }
+    }, "+ Add A Reminder") : dayReminders.length === 0 && /*#__PURE__*/React.createElement("div", {
+      style: { fontSize: 13, color: '#b1a690', textAlign: 'center', padding: '4px 0' }
+    }, "No reminders for this day.")),
+    st.adminLoggedIn && /*#__PURE__*/React.createElement("div", {
+      onClick: () => this.setState({ screen: 'admin', adminSection: 'events', adminEditIdx: null, adminEditDraft: {} }),
+      style: { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginTop: 16, padding: '12px', borderRadius: 14, border: '1px dashed #c4ddd7', background: '#f4fbf8', cursor: 'pointer' }
+    }, /*#__PURE__*/React.createElement("span", {
+      style: { color: '#1f5145', fontSize: 14, fontWeight: 600 }
+    }, "⚙ Manage Events & Reminders")),
+    calEventList.length > 0 && /*#__PURE__*/React.createElement("div", {
+      id: 'cal-upcoming'
     }, /*#__PURE__*/React.createElement("div", {
-      style: {
-        fontSize: 10.5,
-        letterSpacing: .7,
-        textTransform: 'uppercase',
-        fontWeight: 700,
-        color: selEvent.color
-      }
-    }, selEvent.type), /*#__PURE__*/React.createElement("div", {
-      style: {
-        fontSize: 15,
-        fontWeight: 600,
-        color: '#2c2823',
-        marginTop: 2
-      }
-    }, selEvent.title), /*#__PURE__*/React.createElement("div", {
-      style: {
-        fontSize: 12.5,
-        color: '#7a7264',
-        marginTop: 4,
-        lineHeight: 1.5
-      }
-    }, selEvent.desc)), st.adminLoggedIn && /*#__PURE__*/React.createElement("div", {
-      onClick: () => this.setState({
-        screen: 'admin',
-        adminSection: 'events',
-        adminEditIdx: (st.liveCalEvents || []).indexOf(selEvent),
-        adminEditDraft: {
-          ...selEvent
-        }
-      }),
-      style: {
-        flexShrink: 0,
-        fontSize: 11,
-        color: '#1f5145',
-        fontWeight: 600,
-        cursor: 'pointer',
-        padding: '4px 8px',
-        border: '1px solid #c4ddd7',
-        borderRadius: 8,
-        background: '#eef7f4'
-      }
-    }, "Edit"))), st.adminLoggedIn && /*#__PURE__*/React.createElement("div", {
-      onClick: () => this.setState({
-        screen: 'admin',
-        adminSection: 'events',
-        adminEditIdx: -1,
-        adminEditDraft: {
-          date: `${calY}-${String(calM + 1).padStart(2, '0')}-${String(selDay).padStart(2, '0')}`,
-          type: 'Community'
-        }
-      }),
-      style: {
-        marginTop: 12,
-        fontSize: 11.5,
-        color: '#1f5145',
-        fontWeight: 600,
-        cursor: 'pointer',
-        textAlign: 'center',
-        padding: '7px 10px',
-        border: '1px dashed #c4ddd7',
-        borderRadius: 9,
-        background: '#f4fbf8'
-      }
-    }, "+ Add another event on this date")) : /*#__PURE__*/React.createElement("div", {
-      style: {
-        marginTop: 10,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between'
-      }
-    }, /*#__PURE__*/React.createElement("div", {
-      style: {
-        fontSize: 13,
-        color: '#b1a690'
-      }
-    }, this.t('cal.noEvent')), st.adminLoggedIn && /*#__PURE__*/React.createElement("div", {
-      onClick: () => this.setState({
-        screen: 'admin',
-        adminSection: 'events',
-        adminEditIdx: -1,
-        adminEditDraft: {
-          date: `${calY}-${String(calM + 1).padStart(2, '0')}-${String(selDay).padStart(2, '0')}`,
-          type: 'Community'
-        }
-      }),
-      style: {
-        fontSize: 11,
-        color: '#1f5145',
-        fontWeight: 600,
-        cursor: 'pointer',
-        padding: '5px 10px',
-        border: '1px solid #c4ddd7',
-        borderRadius: 8,
-        background: '#eef7f4'
-      }
-    }, "+ Add event"))), calEventList.length > 0 && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
-      style: {
-        fontSize: 11,
-        letterSpacing: 1.2,
-        textTransform: 'uppercase',
-        fontWeight: 700,
-        color: '#b1a690',
-        margin: '22px 0 12px'
-      }
+      style: { fontSize: 11, letterSpacing: 1.2, textTransform: 'uppercase', fontWeight: 700, color: '#b1a690', margin: '22px 0 12px' }
     }, this.t('cal.upcoming')), /*#__PURE__*/React.createElement("div", {
-      style: {
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 10
-      }
+      style: { display: 'flex', flexDirection: 'column', gap: 10 }
     }, calEventList.map((e, i) => /*#__PURE__*/React.createElement("div", {
       key: i,
-      onClick: () => this.setState({
-        calDay: e.day
-      }),
-      style: {
-        display: 'flex',
-        gap: 13,
-        alignItems: 'center',
-        background: '#fffdf9',
-        border: '1px solid #ece4d4',
-        borderRadius: 15,
-        padding: '13px 15px',
-        cursor: 'pointer'
-      }
+      onClick: () => this.setState({ calDay: e.day }),
+      style: { display: 'flex', gap: 13, alignItems: 'center', background: '#fffdf9', border: '1px solid #ece4d4', borderRadius: 15, padding: '13px 15px', cursor: 'pointer' }
     }, /*#__PURE__*/React.createElement("div", {
-      style: {
-        flexShrink: 0,
-        width: 46,
-        textAlign: 'center',
-        borderRight: '1px solid #f1ebdd',
-        paddingRight: 11
-      }
+      style: { flexShrink: 0, width: 46, textAlign: 'center', borderRight: '1px solid #f1ebdd', paddingRight: 11 }
     }, /*#__PURE__*/React.createElement("div", {
-      style: {
-        fontSize: 18,
-        fontWeight: 700,
-        color: e.color,
-        lineHeight: 1
-      }
+      style: { fontSize: 18, fontWeight: 700, color: e.color, lineHeight: 1 }
     }, e.day), /*#__PURE__*/React.createElement("div", {
-      style: {
-        fontSize: 10,
-        color: '#a89d88',
-        marginTop: 2
-      }
+      style: { fontSize: 10, color: '#a89d88', marginTop: 2 }
     }, e.dateLabel)), /*#__PURE__*/React.createElement("div", {
-      style: {
-        flex: 1
-      }
+      style: { flex: 1 }
     }, /*#__PURE__*/React.createElement("div", {
-      style: {
-        fontSize: 10,
-        letterSpacing: .6,
-        textTransform: 'uppercase',
-        fontWeight: 700,
-        color: e.color
-      }
+      style: { fontSize: 10, letterSpacing: .6, textTransform: 'uppercase', fontWeight: 700, color: e.color }
     }, e.type), /*#__PURE__*/React.createElement("div", {
-      style: {
-        fontSize: 14.5,
-        fontWeight: 600,
-        color: '#2c2823',
-        marginTop: 1
-      }
-    }, e.title)))))), st.adminLoggedIn && /*#__PURE__*/React.createElement("div", {
-      onClick: () => this.setState({
-        screen: 'admin',
-        adminSection: 'events',
-        adminEditIdx: null,
-        adminEditDraft: {}
-      }),
-      style: {
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: 8,
-        marginTop: 22,
-        padding: '12px',
-        borderRadius: 14,
-        border: '1px dashed #c4ddd7',
-        background: '#f4fbf8',
-        cursor: 'pointer'
-      }
-    }, /*#__PURE__*/React.createElement("span", {
-      style: {
-        color: '#1f5145',
-        fontSize: 14,
-        fontWeight: 600
-      }
-    }, "⚙ Manage Calendar Events")), /*#__PURE__*/React.createElement("div", {
-      style: {
-        textAlign: 'center',
-        fontSize: 11.5,
-        color: '#a89d88',
-        lineHeight: 1.5,
-        padding: '18px 24px 0'
-      }
-    }, "Events are managed by Ahlul Bayt Ireland."));
+      style: { fontSize: 14.5, fontWeight: 600, color: '#2c2823', marginTop: 1 }
+    }, e.title))))))),
+    /*#__PURE__*/React.createElement("div", {
+      style: { textAlign: 'center', fontSize: 11.5, color: '#a89d88', lineHeight: 1.5, padding: '18px 24px 0' }
+    }, "Events and reminders are managed by Ahlul Bayt Ireland."));
   }
 
   /* ── KIDS CORNER ── */
@@ -10589,7 +10478,7 @@ class App extends Component {
     const salaam = greetWord + ' · السلام عليكم';
     const showNav = st.story === null;
     // Reader draws its own logo in the toolbar; admin login draws it centred.
-    const showBrand = st.screen !== 'reading' && !(st.screen === 'admin' && !st.adminLoggedIn);
+    const showBrand = st.screen !== 'reading' && st.screen !== 'home' && !(st.screen === 'admin' && !st.adminLoggedIn);
     return /*#__PURE__*/React.createElement("div", {
       className: "app",
       dir: isRtl ? 'rtl' : 'ltr',
