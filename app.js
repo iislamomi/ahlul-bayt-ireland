@@ -47,6 +47,47 @@ function toHijri(date) {
   return `${hd} ${HIJRI_MONTHS[hm - 1]} ${hy}`;
 }
 
+/* Numeric Hijri parts for a date, via the browser's Umm al-Qura calendar. */
+function toHijriParts(date) {
+  try {
+    _hijriFmt = _hijriFmt || new Intl.DateTimeFormat('en-u-ca-islamic-umalqura', {
+      day: 'numeric',
+      month: 'numeric',
+      year: 'numeric'
+    });
+    const g = {};
+    _hijriFmt.formatToParts(date).forEach(p => g[p.type] = p.value);
+    const hd = parseInt(g.day, 10),
+      hm = parseInt(g.month, 10),
+      hy = parseInt(g.year, 10);
+    if (hd && hm && hy) return { hd, hm, hy };
+  } catch (e) {}
+  return null;
+}
+
+/* Parse an admin 'YYYY-MM-DD' string to a local Date (midnight), matching the calendar grid convention. */
+function gregToDate(s) {
+  const [y, m, d] = String(s || '').split('-').map(Number);
+  if (!y || !m || !d) return null;
+  return new Date(y, m - 1, d);
+}
+
+/* Does an event fall on `date`? Events are anchored to the Hijri calendar: a one-off
+   matches the exact Hijri day/month/year; a yearly event matches Hijri day+month in any year.
+   Falls back to exact Gregorian match if the Islamic calendar is unavailable. */
+function eventOnDate(ev, date) {
+  if (!ev) return false;
+  const src = gregToDate(ev.date);
+  if (!src) return false;
+  const a = toHijriParts(date),
+    b = toHijriParts(src);
+  if (!a || !b) {
+    return ev.date === `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+  }
+  if (ev.recurring) return a.hm === b.hm && a.hd === b.hd;
+  return a.hy === b.hy && a.hm === b.hm && a.hd === b.hd;
+}
+
 /* ── PRAYER PRESETS ── */
 const PRAYER_PRESETS = [{
   id: 'ahlulbayt',
@@ -1246,8 +1287,7 @@ const quizLevel = q => {
 
 /* ── ADHAN SOUNDS ── */
 const ADHAN_SOUNDS = [
-  { key: 'default', label: 'Classic Adhan', sub: 'The original call', file: './adhan.mp3' },
-  { key: 'najaf', label: 'Najaf — Imam Ali', sub: 'Recited at the shrine', file: './adhan-najaf.mp3' }
+  { key: 'default', label: 'Classic Adhan', sub: 'The original call', file: './adhan.mp3' }
 ];
 
 /* ── SUPABASE SYNC ── */
@@ -1798,7 +1838,7 @@ class App extends Component {
         const now = new Date();
         const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
         if (lsGet('evNotifDate', '') === todayStr) return;
-        const evs = (this.state.liveCalEvents || []).filter(e => e.date === todayStr);
+        const evs = (this.state.liveCalEvents || []).filter(e => eventOnDate(e, now));
         if (!evs.length) return;
         lsSet('evNotifDate', todayStr);
         const title = evs.length === 1 ? 'Today: ' + evs[0].title : evs.length + ' events today';
@@ -2135,7 +2175,7 @@ class App extends Component {
     const calY = now.getFullYear(),
       calM = now.getMonth();
     const todayStr = `${calY}-${String(calM + 1).padStart(2, '0')}-${String(todayD).padStart(2, '0')}`;
-    const todayEvent = (st.liveCalEvents || []).find(e => e.date === todayStr);
+    const todayEvent = (st.liveCalEvents || []).find(e => eventOnDate(e, now));
     const showNotif = !!todayEvent && !st.notifDismissed;
     return /*#__PURE__*/React.createElement("div", {
       style: {
@@ -3311,7 +3351,7 @@ class App extends Component {
         transition: 'left .2s',
         boxShadow: '0 1px 4px rgba(0,0,0,.25)'
       }
-    }))), st.adhanEnabled && /*#__PURE__*/React.createElement("div", {
+    }))), st.adhanEnabled && ADHAN_SOUNDS.length > 1 && /*#__PURE__*/React.createElement("div", {
       style: {
         marginTop: 12
       }
@@ -5706,7 +5746,8 @@ class App extends Component {
             color: EVENT_COLORS[type],
             tint: EVENT_TINTS[type],
             desc: d.desc || '',
-            date: d.date || ''
+            date: d.date || '',
+            recurring: !!d.recurring
           };
           if (isNew) list.push(item);else list[st.adminEditIdx] = item;
           save('calEvents', 'liveCalEvents', list, isNew ? 'Event added!' : 'Event updated!');
@@ -5760,6 +5801,45 @@ class App extends Component {
           max: "2036-12-31",
           style: inp
         }), /*#__PURE__*/React.createElement("div", {
+          style: {
+            fontSize: 11.5,
+            color: '#8d8574',
+            margin: '2px 2px 7px'
+          }
+        }, "Repeats"), /*#__PURE__*/React.createElement("div", {
+          style: {
+            display: 'flex',
+            gap: 8,
+            marginBottom: 8
+          }
+        }, [['One-off', false], ['Every year', true]].map(([lbl, val]) => {
+          const on = !!d.recurring === val;
+          return /*#__PURE__*/React.createElement("div", {
+            key: lbl,
+            onClick: () => this.setDraft({
+              recurring: val
+            }),
+            style: {
+              flex: 1,
+              textAlign: 'center',
+              padding: '10px 4px',
+              borderRadius: 10,
+              fontSize: 13,
+              fontWeight: 700,
+              cursor: 'pointer',
+              background: on ? '#1f5145' : '#fffdf9',
+              color: on ? '#f3ead4' : '#6f675a',
+              border: `1.5px solid ${on ? '#1f5145' : '#e6dcc8'}`
+            }
+          }, lbl);
+        })), /*#__PURE__*/React.createElement("div", {
+          style: {
+            fontSize: 11,
+            color: '#9a8f7c',
+            margin: '0 2px 14px',
+            lineHeight: 1.45
+          }
+        }, d.recurring ? (gregToDate(d.date) ? `Returns every year on ${toHijri(gregToDate(d.date)).split(' ').slice(0, 2).join(' ')} (Islamic calendar).` : 'Returns on the same Islamic-calendar date every year.') : 'Shows on this date only.'), /*#__PURE__*/React.createElement("div", {
           style: {
             display: 'flex',
             gap: 10
@@ -7658,7 +7738,8 @@ class App extends Component {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        marginBottom: 10
+        minHeight: 44,
+        marginBottom: 14
       }
     }, /*#__PURE__*/React.createElement("div", {
       onClick: () => this.go('more'),
@@ -7683,16 +7764,11 @@ class App extends Component {
         color: '#27241f'
       }
     }, "Admin Dashboard"), /*#__PURE__*/React.createElement("div", {
-      onClick: () => this.setState({
-        adminLoggedIn: false
-      }),
       style: {
-        fontSize: 13,
-        fontWeight: 600,
-        color: '#6e2230',
-        cursor: 'pointer'
+        width: 52,
+        flexShrink: 0
       }
-    }, "Log out")), /*#__PURE__*/React.createElement("div", {
+    })), /*#__PURE__*/React.createElement("div", {
       style: {
         display: 'grid',
         gridTemplateColumns: 'repeat(4,1fr)',
@@ -7784,9 +7860,49 @@ class App extends Component {
       style: {
         flex: 1,
         overflowY: 'auto',
-        padding: '16px 20px 110px'
+        padding: '16px 20px 24px'
       }
-    }, sectionContent[sec]()));
+    }, sectionContent[sec]()), /*#__PURE__*/React.createElement("div", {
+      style: {
+        flexShrink: 0,
+        padding: '10px 20px calc(10px + env(safe-area-inset-bottom, 0px))',
+        background: '#fffdf9',
+        borderTop: '1px solid #ece4d4'
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      onClick: () => this.setState({
+        adminLoggedIn: false
+      }),
+      style: {
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 7,
+        padding: '11px 0',
+        borderRadius: 12,
+        fontSize: 14,
+        fontWeight: 700,
+        cursor: 'pointer',
+        background: '#f3e6e8',
+        color: '#6e2230',
+        border: '1px solid #e6cdd2'
+      }
+    }, /*#__PURE__*/React.createElement("svg", {
+      width: "15",
+      height: "15",
+      viewBox: "0 0 24 24",
+      fill: "none",
+      stroke: "currentColor",
+      strokeWidth: "2",
+      strokeLinecap: "round",
+      strokeLinejoin: "round"
+    }, /*#__PURE__*/React.createElement("path", {
+      d: "M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"
+    }), /*#__PURE__*/React.createElement("path", {
+      d: "M16 17l5-5-5-5"
+    }), /*#__PURE__*/React.createElement("path", {
+      d: "M21 12H9"
+    })), "Log out")));
   }
 
   /* ── CALENDAR ── */
@@ -7804,11 +7920,14 @@ class App extends Component {
       month: 'long',
       year: 'numeric'
     });
+    // Match events to each day by Hijri anchor (one-off = exact Hijri date; yearly = Hijri day+month).
     const eventsByDay = {};
-    (st.liveCalEvents || []).forEach(e => {
-      const [ey, em, ed] = (e.date || '').split('-').map(Number);
-      if (ey === calY && em === calM + 1) (eventsByDay[ed] = eventsByDay[ed] || []).push(e);
-    });
+    const evList = st.liveCalEvents || [];
+    for (let d = 1; d <= daysInMonth; d++) {
+      const dayDate = new Date(calY, calM, d);
+      const hits = evList.filter(e => eventOnDate(e, dayDate));
+      if (hits.length) eventsByDay[d] = hits;
+    }
     const selDay = st.calDay || (isCurrentMonth ? todayD : 1);
     const selEvents = eventsByDay[selDay] || [];
     const selDayDate = new Date(calY, calM, selDay);
@@ -8369,7 +8488,7 @@ class App extends Component {
         fontWeight: 700,
         color: '#d8b863'
       }
-    }, "Hero video", heroV.cat ? ' · ' + heroV.cat : ''), /*#__PURE__*/React.createElement("div", {
+    }, heroV.cat || ''), /*#__PURE__*/React.createElement("div", {
       style: {
         fontFamily: 'Spectral,serif',
         fontSize: 19,
@@ -8600,7 +8719,9 @@ class App extends Component {
     }, this.t('kids.wisdom')), st.liveKidsQuotes.map((q, i) => /*#__PURE__*/React.createElement("div", {
       key: i,
       style: {
-        marginTop: 12
+        marginTop: i > 0 ? 18 : 12,
+        paddingTop: i > 0 ? 18 : 0,
+        borderTop: i > 0 ? '1px solid rgba(216,184,99,.28)' : 'none'
       }
     }, /*#__PURE__*/React.createElement("div", {
       style: {
@@ -9088,7 +9209,7 @@ class App extends Component {
         fontWeight: 700,
         color: '#d8b863'
       }
-    }, "Hero video", hHeroV.cat ? ' · ' + hHeroV.cat : ''), /*#__PURE__*/React.createElement("div", {
+    }, hHeroV.cat || ''), /*#__PURE__*/React.createElement("div", {
       style: {
         fontFamily: 'Spectral,serif',
         fontSize: 19,
