@@ -2298,15 +2298,18 @@ class App extends Component {
       }
     }, st.livePinned.text)), /*#__PURE__*/React.createElement("div", {
       style: {
-        padding: '10px 0 18px'
+        padding: '10px 0 18px',
+        display: 'flex',
+        justifyContent: 'center'
       }
     }, /*#__PURE__*/React.createElement("img", {
-      src: "./App_title_icon.svg",
+      src: "./app-title-logo.png",
       alt: "Ahlul Bayt Ireland",
       style: {
-        width: 64,
-        height: 64,
-        borderRadius: 16,
+        height: 82,
+        width: 'auto',
+        maxWidth: '86%',
+        objectFit: 'contain',
         display: 'block'
       }
     })), /*#__PURE__*/React.createElement("div", {
