@@ -1502,6 +1502,7 @@ class App extends Component {
       textSize: lsGet('textSize', 1),
       story: null,
       storyProg: 0,
+      storyPreview: null,
       quizPick: null,
       classCat: 'All',
       libCat: 'All',
@@ -1753,10 +1754,13 @@ class App extends Component {
         ...draft
       }
     }));
-    _defineProperty(this, "cancelEdit", () => this.setState({
+    _defineProperty(this, "cancelEdit", () => this.setState(s => ({
       adminEditIdx: null,
-      adminEditDraft: {}
-    }));
+      // keep the sub-tab (_sub) so Kids/Health admin stays on the same tab after Save/Cancel
+      adminEditDraft: s.adminEditDraft && s.adminEditDraft._sub ? {
+        _sub: s.adminEditDraft._sub
+      } : {}
+    })));
     _defineProperty(this, "setDraft", patch => this.setState(s => ({
       adminEditDraft: {
         ...s.adminEditDraft,
@@ -3977,39 +3981,36 @@ class App extends Component {
         fontSize: 13.5,
         fontWeight: 700,
         cursor: 'pointer',
-        fontFamily: k === 'ar' ? 'Amiri,serif' : 'inherit',
+        fontFamily: k === 'ar' ? "'Noto Naskh Arabic','Amiri',serif" : 'inherit',
         background: lang === k ? readAccent : rd.surf,
         color: lang === k ? '#fffdf9' : rd.muted,
         border: `1px solid ${lang === k ? readAccent : rd.border}`
       }
     }, label);
-    const actionRow = React.createElement("div", {
-      style: { display: 'flex', gap: 10 }
-    }, React.createElement("div", {
+    const miniBtn = {
+      width: 30, height: 30, borderRadius: 9, display: 'flex', alignItems: 'center',
+      justifyContent: 'center', border: `1px solid ${rd.border}`, background: rd.surf,
+      cursor: 'pointer', flexShrink: 0
+    };
+    const shareBtn = React.createElement("div", {
       onClick: this.handleShare,
-      style: {
-        flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7,
-        padding: '9px 14px', borderRadius: 12, background: readAccent, color: '#fffdf9',
-        fontSize: 13, fontWeight: 600, cursor: 'pointer'
-      }
+      title: this.t('lib.share'),
+      style: miniBtn
     }, React.createElement("svg", {
-      width: "14", height: "14", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor",
+      width: "14", height: "14", viewBox: "0 0 24 24", fill: "none", stroke: readAccent,
       strokeWidth: "1.9", strokeLinecap: "round", strokeLinejoin: "round"
     }, React.createElement("circle", { cx: "18", cy: "5", r: "2.6" }),
       React.createElement("circle", { cx: "6", cy: "12", r: "2.6" }),
       React.createElement("circle", { cx: "18", cy: "19", r: "2.6" }),
-      React.createElement("path", { d: "M8.3 10.7l7.4-4.4M8.3 13.3l7.4 4.4" })), this.t('lib.share')),
-    React.createElement("div", {
+      React.createElement("path", { d: "M8.3 10.7l7.4-4.4M8.3 13.3l7.4 4.4" })));
+    const bookmarkBtn = React.createElement("div", {
       onClick: this.handleBookmark,
-      style: {
-        width: 46, display: 'flex', alignItems: 'center', justifyContent: 'center',
-        borderRadius: 12, border: `1px solid ${rd.border}`, background: rd.surf, cursor: 'pointer'
-      }
+      style: miniBtn
     }, React.createElement("svg", {
-      width: "18", height: "18", viewBox: "0 0 24 24",
+      width: "15", height: "15", viewBox: "0 0 24 24",
       fill: isBookmarked ? readAccent : 'none', stroke: readAccent,
       strokeWidth: "1.8", strokeLinecap: "round", strokeLinejoin: "round"
-    }, React.createElement("path", { d: "M6 4h12v16l-6-4-6 4z" }))));
+    }, React.createElement("path", { d: "M6 4h12v16l-6-4-6 4z" })));
     return React.createElement("div", {
       style: { height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: rd.bg }
     }, React.createElement("div", {
@@ -4047,18 +4048,21 @@ class App extends Component {
         alt: "Ahlul Bayt Ireland",
         style: { width: 34, height: 34, borderRadius: 10, objectFit: 'cover', flexShrink: 0 }
       }))),
-    React.createElement("div", { style: { flexShrink: 0, padding: '6px 22px 7px', background: rd.bg, borderBottom: `1px solid ${rd.border}` } },
-      React.createElement("div", { style: { fontSize: 8.5, letterSpacing: 1, textTransform: 'uppercase', fontWeight: 700, color: readAccent } }, kicker),
-      React.createElement("div", { style: { fontFamily: 'Spectral,serif', fontSize: 15, fontWeight: 600, color: rd.text, marginTop: 1, lineHeight: 1.2 } }, r.title),
-      r.note && React.createElement("div", { style: { fontSize: 10.5, color: rd.muted, marginTop: 2, fontStyle: 'italic' } }, r.note),
-      tabs.length > 1 && React.createElement("div", { style: { display: 'flex', gap: 8, marginTop: 7 } }, tabs.map(pill))),
     React.createElement("div", {
       className: "s",
-      style: { flex: '1 1 auto', overflowY: 'auto', padding: '12px 22px 18px' }
-    }, lang === 'ar' && hasAr && React.createElement("div", {
+      style: { flex: '1 1 auto', overflowY: 'auto', padding: '10px 22px 24px' }
+    }, React.createElement("div", { style: { padding: '0 0 12px' } },
+      React.createElement("div", { style: { display: 'flex', alignItems: 'flex-start', gap: 8 } },
+        React.createElement("div", { style: { flex: 1, minWidth: 0 } },
+          React.createElement("div", { style: { fontSize: 8.5, letterSpacing: 1, textTransform: 'uppercase', fontWeight: 700, color: readAccent } }, kicker),
+          React.createElement("div", { style: { fontFamily: 'Spectral,serif', fontSize: 15, fontWeight: 600, color: rd.text, marginTop: 1, lineHeight: 1.2 } }, r.title),
+          r.note && React.createElement("div", { style: { fontSize: 10.5, color: rd.muted, marginTop: 2, fontStyle: 'italic' } }, r.note)),
+        shareBtn, bookmarkBtn),
+      tabs.length > 1 && React.createElement("div", { style: { display: 'flex', gap: 8, marginTop: 8 } }, tabs.map(pill))),
+    lang === 'ar' && hasAr && React.createElement("div", {
       style: { background: rd.surf, border: `1px solid ${rd.border}`, borderRadius: 20, padding: '18px 16px' }
     }, React.createElement("div", {
-      style: { fontFamily: 'Amiri,serif', fontSize: arSize, lineHeight: 1.75, color: rd.arInk, textAlign: 'center', whiteSpace: 'pre-line' },
+      style: { fontFamily: "'Noto Naskh Arabic','Amiri',serif", fontSize: arSize, lineHeight: 1.9, color: rd.arInk, textAlign: 'center', whiteSpace: 'pre-line' },
       dir: "rtl"
     }, String(r.ar).replace(/\n\s*\n+/g, '\n').trim())),
     lang === 'en' && hasEn && React.createElement(React.Fragment, null,
@@ -4085,10 +4089,7 @@ class App extends Component {
           border: `1.5px solid ${readAccent}`, color: readAccent, background: rd.surf,
           fontSize: 13.5, fontWeight: 600, cursor: 'pointer'
         }
-      }, "Open PDF in browser \u2197"))),
-    lang !== 'pdf' && React.createElement("div", {
-      style: { flexShrink: 0, padding: '7px 22px 9px', background: rd.bg, borderTop: `1px solid ${rd.border}` }
-    }, actionRow));
+      }, "Open PDF in browser \u2197"))));
   }
 
   /* ── CLASSIFIEDS ── */
@@ -5153,30 +5154,35 @@ class App extends Component {
         const d = st.adminEditDraft;
         const isQuiz = d.kind === 'quiz';
         const isNew = st.adminEditIdx === -1;
+        const buildStoryItem = () => ({
+          kind: d.kind || 'announce',
+          title: d.title || '',
+          short: d.short || '',
+          initial: d.initial || 'م',
+          tag: d.tag || '',
+          color: d.color || '#6e2230',
+          img: `linear-gradient(150deg,${d.color || '#6e2230'}cc,${d.color || '#1c1a17'})`,
+          photo: d.photo || '',
+          created: isNew ? Date.now() : d.created,
+          from: d.from || '',
+          until: d.until || '',
+          ar: d.ar || '',
+          sub: d.sub || '',
+          body: d.body || '',
+          link: d.link || '',
+          ...(isQuiz ? {
+            question: d.question || '',
+            options: [d.opt0 || '', d.opt1 || '', d.opt2 || ''],
+            answer: parseInt(d.answer || 0)
+          } : {})
+        });
+        const previewStory = () => this.setState({
+          storyPreview: buildStoryItem(),
+          quizPick: null
+        });
         const saveStory = () => {
           const stories = [...st.liveStories];
-          const item = {
-            kind: d.kind || 'announce',
-            title: d.title || '',
-            short: d.short || '',
-            initial: d.initial || 'م',
-            tag: d.tag || '',
-            color: d.color || '#6e2230',
-            img: `linear-gradient(150deg,${d.color || '#6e2230'}cc,${d.color || '#1c1a17'})`,
-            photo: d.photo || '',
-            created: isNew ? Date.now() : d.created,
-            from: d.from || '',
-            until: d.until || '',
-            ar: d.ar || '',
-            sub: d.sub || '',
-            body: d.body || '',
-            link: d.link || '',
-            ...(isQuiz ? {
-              question: d.question || '',
-              options: [d.opt0 || '', d.opt1 || '', d.opt2 || ''],
-              answer: parseInt(d.answer || 0)
-            } : {})
-          };
+          const item = buildStoryItem();
           if (isNew) stories.unshift(item);else stories[st.adminEditIdx] = item;
           save('stories', 'liveStories', stories, isNew ? 'Story added!' : 'Story updated!');
         };
@@ -5433,6 +5439,11 @@ class App extends Component {
           flex: 1,
           background: '#1f5145',
           color: '#f3ead4'
+        }), btn('Preview', previewStory, {
+          flex: 1,
+          border: '1.5px solid #9a7a2c',
+          background: '#fffdf9',
+          color: '#9a7a2c'
         }), btn('Cancel', this.cancelEdit, {
           flex: 1,
           border: '1px solid #e6dcc8',
@@ -9906,15 +9917,22 @@ class App extends Component {
 
   /* ── STORY VIEWER ── */
   renderStoryViewer(st) {
-    const stories = activeStories(st.liveStories);
-    if (!stories[st.story]) {
+    // preview: admin draft shown standalone, no timer/navigation, closes back to the editor
+    const preview = st.storyPreview || null;
+    const stories = preview ? [preview] : activeStories(st.liveStories);
+    const idx = preview ? 0 : st.story;
+    if (!stories[idx]) {
       // index out of range (list shrank / empty) — close instead of a blank page
       setTimeout(this.closeStory, 0);
       return null;
     }
-    const cur = stories[st.story] || {};
+    const cur = stories[idx] || {};
+    const closePreview = () => this.setState({
+      storyPreview: null,
+      quizPick: null
+    });
     const bars = stories.map((_, i) => ({
-      fill: i < st.story ? 100 : i === st.story ? st.storyProg : 0
+      fill: preview ? 100 : i < st.story ? 100 : i === st.story ? st.storyProg : 0
     }));
     const isQuiz = cur.kind === 'quiz';
     const quizAnswered = st.quizPick !== null;
@@ -10011,8 +10029,19 @@ class App extends Component {
         fontSize: 11,
         color: 'rgba(255,255,255,.7)'
       }
-    }, cur.tag))), /*#__PURE__*/React.createElement("div", {
-      onClick: this.closeStory,
+    }, cur.tag))), preview && /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 10,
+        fontWeight: 700,
+        letterSpacing: 1.2,
+        color: '#fff',
+        background: 'rgba(0,0,0,.35)',
+        border: '1px solid rgba(255,255,255,.4)',
+        borderRadius: 20,
+        padding: '4px 10px'
+      }
+    }, "PREVIEW"), /*#__PURE__*/React.createElement("div", {
+      onClick: preview ? closePreview : this.closeStory,
       style: {
         width: 34,
         height: 34,
@@ -10025,7 +10054,7 @@ class App extends Component {
         lineHeight: 1
       }
     }, "×")), /*#__PURE__*/React.createElement("div", {
-      onClick: this.prevStory,
+      onClick: preview ? closePreview : this.prevStory,
       style: {
         position: 'absolute',
         left: 0,
@@ -10035,7 +10064,7 @@ class App extends Component {
         zIndex: 3
       }
     }), /*#__PURE__*/React.createElement("div", {
-      onClick: this.nextStory,
+      onClick: preview ? closePreview : this.nextStory,
       style: {
         position: 'absolute',
         right: 0,
@@ -10153,6 +10182,11 @@ class App extends Component {
     }, st.quizPick === cur.answer ? 'Correct — well done!' : 'Not quite. The answer is highlighted.')), cur.link && /*#__PURE__*/React.createElement("div", {
       onClick: e => {
         e.stopPropagation();
+        if (preview) {
+          // don't navigate away from the admin editor
+          closePreview();
+          return;
+        }
         this.closeStory();
         if (cur.kind === 'kids') this.go('kids');else if (cur.kind === 'classified') this.go('classifieds');else if (cur.kind === 'announce') this.go('calendar');else if (cur.kind === 'sermon') this.setState({
           screen: 'library',
@@ -10584,7 +10618,7 @@ class App extends Component {
         fontSize: 20,
         cursor: 'pointer'
       }
-    }, "×")), showNav && this.renderNav(st), st.story !== null && this.renderStoryViewer(st), st.ytPlayer && this.renderYtPlayer(st), st.toast && this.renderToast(st.toast));
+    }, "×")), showNav && this.renderNav(st), (st.story !== null || st.storyPreview) && this.renderStoryViewer(st), st.ytPlayer && this.renderYtPlayer(st), st.toast && this.renderToast(st.toast));
   }
 }
 ReactDOM.createRoot(document.getElementById('root')).render(/*#__PURE__*/React.createElement(App, null));
