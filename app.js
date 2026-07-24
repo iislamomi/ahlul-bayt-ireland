@@ -2182,8 +2182,9 @@ class App extends Component {
     const calY = now.getFullYear(),
       calM = now.getMonth();
     const todayStr = `${calY}-${String(calM + 1).padStart(2, '0')}-${String(todayD).padStart(2, '0')}`;
-    const todayEvent = (st.liveCalEvents || []).find(e => eventOnDate(e, now));
-    const showNotif = !!todayEvent && !st.notifDismissed;
+    const todayRems = (st.liveReminders || []).filter(r => r.date && eventOnDate(r, now));
+    const todayRem = todayRems[0];
+    const showNotif = !!todayRem && !st.notifDismissed;
     return /*#__PURE__*/React.createElement("div", {
       style: {
         padding: '8px 20px 100px'
@@ -2212,7 +2213,7 @@ class App extends Component {
         width: 40,
         height: 40,
         borderRadius: 12,
-        background: todayEvent.color,
+        background: todayRem.color || '#1f5145',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center'
@@ -2251,14 +2252,14 @@ class App extends Component {
         color: '#d8b863',
         fontWeight: 700
       }
-    }, "Today · ", todayEvent.type), /*#__PURE__*/React.createElement("div", {
+    }, "Today · ", todayRems.length > 1 ? todayRems.length + ' reminders' : todayRem.type || 'Reminder'), /*#__PURE__*/React.createElement("div", {
       style: {
         fontSize: 14,
         fontWeight: 600,
         color: '#f3ead4',
         marginTop: 2
       }
-    }, todayEvent.title)), /*#__PURE__*/React.createElement("div", {
+    }, todayRems.length > 1 ? todayRems.map(r => r.text).join(' · ') : todayRem.text)), /*#__PURE__*/React.createElement("div", {
       onClick: () => this.setState({
         notifDismissed: true
       }),
@@ -3955,15 +3956,24 @@ class App extends Component {
     const arSize = Math.round(30 * st.textSize) + 'px';
     const trSize = Math.round(17 * st.textSize) + 'px';
     const readAccent = rtype === 'ziyarah' ? '#6e2230' : rtype === 'nahj' ? '#2c5d52' : '#9a7a2c';
-    const kicker = rtype === 'dua' ? 'Supplication' : rtype === 'ziyarah' ? 'Salutation' : r.ref || 'Nahj al-Balāgha';
+    // per-language content: items may carry body_ur / body_fa / body_hi alongside the English body
+    const TR_CODES = { 'हिन्दी': 'hi', 'فارسی': 'fa', 'Urdu': 'ur' };
+    const trCode = TR_CODES[st.lang];
+    const KICKERS = {
+      dua: { English: 'Supplication', 'العربية': 'دعاء', 'हिन्दी': 'दुआ', 'فارسی': 'دعا', Urdu: 'دعا' },
+      ziyarah: { English: 'Salutation', 'العربية': 'زيارة', 'हिन्दी': 'ज़ियारत', 'فارسی': 'زیارت', Urdu: 'زیارت' }
+    };
+    const kicker = rtype === 'dua' || rtype === 'ziyarah' ? KICKERS[rtype][st.lang] || KICKERS[rtype].English : r.ref || 'Nahj al-Balāgha';
     const isBookmarked = st.bookmarks.some(b => b.title === r.title);
-    const enBody = r.body || r.tr || '';
+    const localBody = trCode ? r['body_' + trCode] || '' : '';
+    const trRtl = !!localBody && (trCode === 'fa' || trCode === 'ur');
+    const enBody = localBody || r.body || r.tr || '';
     const hasEn = !!(enBody || r.sum);
     const hasAr = !!r.ar;
     const hasPdf = !!r.pdf;
     const tabs = [];
     if (hasAr) tabs.push(['ar', '\u0627\u0644\u0639\u0631\u0628\u064a\u0629']);
-    if (hasEn) tabs.push(['en', 'English']);
+    if (hasEn) tabs.push(['en', localBody ? st.lang : 'English']);
     if (hasPdf) tabs.push(['pdf', 'PDF']);
     const lang = tabs.some(t => t[0] === st.readingLang) ? st.readingLang : hasAr ? 'ar' : tabs.length ? tabs[0][0] : 'en';
     const pill = ([k, label]) => React.createElement("div", {
@@ -4067,7 +4077,14 @@ class App extends Component {
     }, String(r.ar).replace(/\n\s*\n+/g, '\n').trim())),
     lang === 'en' && hasEn && React.createElement(React.Fragment, null,
       enBody && React.createElement("div", {
-        style: { fontFamily: 'Spectral,serif', fontSize: trSize, lineHeight: 1.6, color: rd.text, whiteSpace: 'pre-line' }
+        dir: trRtl ? 'rtl' : undefined,
+        style: {
+          fontFamily: trRtl ? "'Noto Naskh Arabic','Amiri',serif" : 'Spectral,serif',
+          fontSize: trSize,
+          lineHeight: trRtl ? 1.9 : 1.6,
+          color: rd.text,
+          whiteSpace: 'pre-line'
+        }
       }, String(enBody).replace(/\n\s*\n+/g, '\n').trim()),
       r.sum && React.createElement("div", {
         style: { background: rd.surf, border: `1px solid ${rd.border}`, borderRadius: 16, padding: '15px 17px', marginTop: enBody ? 20 : 0 }
@@ -5746,8 +5763,9 @@ class App extends Component {
     };
 
     /* ─ EVENTS ─ */
-    const renderEventsSection = () => {
-      if (editing) {
+    // shared by the Events section and the Reminders section (which embeds the full events UI)
+    const renderEventEditor = () => {
+      {
         const d = st.adminEditDraft;
         const isNew = st.adminEditIdx === -1;
         const type = d.type || 'Community';
@@ -5868,15 +5886,17 @@ class App extends Component {
           color: '#3f3a32'
         })));
       }
-      return /*#__PURE__*/React.createElement("div", null, btn('+ Add Event', () => this.startEdit(-1, {
-        type: 'Community',
-        date: ''
-      }), {
-        background: '#1f5145',
-        color: '#f3ead4',
-        marginBottom: 14,
-        width: '100%'
-      }), (st.liveCalEvents || []).map((e, i) => /*#__PURE__*/React.createElement("div", {
+    };
+    const eventListEls = (extraDraft = {}) => [btn('+ Add Event', () => this.startEdit(-1, {
+      type: 'Community',
+      date: '',
+      ...extraDraft
+    }), {
+      background: '#1f5145',
+      color: '#f3ead4',
+      marginBottom: 14,
+      width: '100%'
+    }), ...(st.liveCalEvents || []).map((e, i) => /*#__PURE__*/React.createElement("div", {
         key: i,
         style: {
           display: 'flex',
@@ -5915,8 +5935,9 @@ class App extends Component {
           fontSize: 11,
           color: '#9a8f7c'
         }
-      }, e.type, " · ", e.date || 'No date')), btn('Edit', () => this.startEdit(i, {
-        ...e
+      }, e.type, " · ", e.date || 'No date', e.recurring ? ' · ↻ yearly' : '')), btn('Edit', () => this.startEdit(i, {
+        ...e,
+        ...extraDraft
       }), {
         background: '#e6efe9',
         color: '#1f5145',
@@ -5931,14 +5952,17 @@ class App extends Component {
         color: '#6e2230',
         fontSize: 12,
         padding: '6px 10px'
-      }))));
-    };
+      })))];
+    const renderEventsSection = () => editing ? renderEventEditor() : /*#__PURE__*/React.createElement("div", null, ...eventListEls());
 
     /* ─ REMINDERS ─ */
     const renderRemindersSection = () => {
+      const d = st.adminEditDraft;
+      // _ev flag: an event being added/edited from within the Reminders page
+      if (editing && d._ev) return renderEventEditor();
       if (editing) {
-        const d = st.adminEditDraft;
         const isNew = st.adminEditIdx === -1;
+        const type = d.type || 'Community';
         const saveItem = () => {
           if (!(d.text || '').trim()) {
             this.showToast('Reminder text is required');
@@ -5951,7 +5975,11 @@ class App extends Component {
           const list = [...(st.liveReminders || [])];
           const item = {
             text: (d.text || '').trim(),
-            date: d.date || ''
+            date: d.date || '',
+            type,
+            color: EVENT_COLORS[type],
+            tint: EVENT_TINTS[type],
+            recurring: !!d.recurring
           };
           if (isNew) list.push(item);else list[st.adminEditIdx] = item;
           save('reminders', 'liveReminders', list, isNew ? 'Reminder added!' : 'Reminder updated!');
@@ -5979,7 +6007,19 @@ class App extends Component {
             minHeight: 60,
             resize: 'none'
           }
-        }), /*#__PURE__*/React.createElement("input", {
+        }), /*#__PURE__*/React.createElement("select", {
+          value: type,
+          onChange: e => this.setDraft({
+            type: e.target.value
+          }),
+          style: {
+            ...inp,
+            cursor: 'pointer'
+          }
+        }, EVENT_TYPES.map(t => /*#__PURE__*/React.createElement("option", {
+          key: t,
+          value: t
+        }, t))), /*#__PURE__*/React.createElement("input", {
           value: d.date || '',
           onChange: e => this.setDraft({
             date: e.target.value
@@ -5989,6 +6029,45 @@ class App extends Component {
           max: "2036-12-31",
           style: inp
         }), /*#__PURE__*/React.createElement("div", {
+          style: {
+            fontSize: 11.5,
+            color: '#8d8574',
+            margin: '2px 2px 7px'
+          }
+        }, "Repeats"), /*#__PURE__*/React.createElement("div", {
+          style: {
+            display: 'flex',
+            gap: 8,
+            marginBottom: 8
+          }
+        }, [['One-off', false], ['Every year', true]].map(([lbl, val]) => {
+          const on = !!d.recurring === val;
+          return /*#__PURE__*/React.createElement("div", {
+            key: lbl,
+            onClick: () => this.setDraft({
+              recurring: val
+            }),
+            style: {
+              flex: 1,
+              textAlign: 'center',
+              padding: '10px 4px',
+              borderRadius: 10,
+              fontSize: 13,
+              fontWeight: 700,
+              cursor: 'pointer',
+              background: on ? '#1f5145' : '#fffdf9',
+              color: on ? '#f3ead4' : '#6f675a',
+              border: `1.5px solid ${on ? '#1f5145' : '#e6dcc8'}`
+            }
+          }, lbl);
+        })), /*#__PURE__*/React.createElement("div", {
+          style: {
+            fontSize: 11,
+            color: '#9a8f7c',
+            margin: '0 2px 14px',
+            lineHeight: 1.45
+          }
+        }, d.recurring ? (gregToDate(d.date) ? `Returns every year on ${toHijri(gregToDate(d.date)).split(' ').slice(0, 2).join(' ')} (Islamic calendar).` : 'Returns on the same Islamic-calendar date every year.') : 'Shows on this date only.'), /*#__PURE__*/React.createElement("div", {
           style: {
             display: 'flex',
             gap: 10
@@ -6006,7 +6085,8 @@ class App extends Component {
       }
       const rem = [...(st.liveReminders || [])].map((r, i) => ({ r, i })).sort((a, b) => (a.r.date || '').localeCompare(b.r.date || ''));
       return /*#__PURE__*/React.createElement("div", null, btn('+ Add Reminder', () => this.startEdit(-1, {
-        date: ''
+        date: '',
+        type: 'Community'
       }), {
         background: '#1f5145',
         color: '#f3ead4',
@@ -6033,6 +6113,14 @@ class App extends Component {
         }
       }, /*#__PURE__*/React.createElement("div", {
         style: {
+          width: 10,
+          height: 10,
+          borderRadius: '50%',
+          background: r.color || EVENT_COLORS[r.type] || '#1f5145',
+          flexShrink: 0
+        }
+      }), /*#__PURE__*/React.createElement("div", {
+        style: {
           flex: 1,
           minWidth: 0
         }
@@ -6048,11 +6136,11 @@ class App extends Component {
           color: '#9a8f7c',
           marginTop: 2
         }
-      }, r.date ? new Date(r.date + 'T00:00:00').toLocaleDateString('en-IE', {
+      }, (r.type ? r.type + ' · ' : '') + (r.date ? new Date(r.date + 'T00:00:00').toLocaleDateString('en-IE', {
         weekday: 'short',
         day: 'numeric',
         month: 'short'
-      }) : 'No date')), btn('Edit', () => this.startEdit(i, {
+      }) : 'No date') + (r.recurring ? ' · ↻ yearly' : ''))), btn('Edit', () => this.startEdit(i, {
         ...r
       }), {
         background: '#e6efe9',
@@ -6068,7 +6156,18 @@ class App extends Component {
         color: '#6e2230',
         fontSize: 12,
         padding: '6px 10px'
-      }))));
+      }))), /*#__PURE__*/React.createElement("div", {
+        style: {
+          fontSize: 12,
+          fontWeight: 700,
+          letterSpacing: .6,
+          textTransform: 'uppercase',
+          color: '#8c8270',
+          margin: '18px 2px 10px'
+        }
+      }, "Calendar Events"), ...eventListEls({
+        _ev: true
+      }));
     };
 
     /* ─ PRAYER TIMES ─ */
@@ -7528,6 +7627,9 @@ class App extends Component {
               tr: d.tr || '',
               note: d.note || '',
               body: d.body || '',
+              body_ur: d.body_ur || '',
+              body_fa: d.body_fa || '',
+              body_hi: d.body_hi || '',
               pdf: (d.pdf || '').trim()
             };
             if (isNew) a.unshift(item);else a[st.adminEditIdx] = item;
@@ -7596,6 +7698,53 @@ class App extends Component {
               ...inp,
               height: 240,
               minHeight: 140,
+              overflowY: 'auto',
+              resize: 'vertical'
+            }
+          }), /*#__PURE__*/React.createElement("div", {
+            style: {
+              fontSize: 11.5,
+              color: '#8d8574',
+              margin: '2px 2px 7px'
+            }
+          }, "Translations (optional — shown when the app language is switched; English is used as fallback)"), /*#__PURE__*/React.createElement("textarea", {
+            value: d.body_ur || '',
+            onChange: e => this.setDraft({
+              body_ur: e.target.value
+            }),
+            placeholder: "Full text — Urdu / اردو",
+            dir: "rtl",
+            style: {
+              ...inp,
+              height: 120,
+              minHeight: 80,
+              overflowY: 'auto',
+              resize: 'vertical'
+            }
+          }), /*#__PURE__*/React.createElement("textarea", {
+            value: d.body_fa || '',
+            onChange: e => this.setDraft({
+              body_fa: e.target.value
+            }),
+            placeholder: "Full text — Farsi / فارسی",
+            dir: "rtl",
+            style: {
+              ...inp,
+              height: 120,
+              minHeight: 80,
+              overflowY: 'auto',
+              resize: 'vertical'
+            }
+          }), /*#__PURE__*/React.createElement("textarea", {
+            value: d.body_hi || '',
+            onChange: e => this.setDraft({
+              body_hi: e.target.value
+            }),
+            placeholder: "Full text — Hindi / हिन्दी",
+            style: {
+              ...inp,
+              height: 120,
+              minHeight: 80,
               overflowY: 'auto',
               resize: 'vertical'
             }
@@ -8090,7 +8239,7 @@ class App extends Component {
     const selHijri = toHijri(selDayDate);
     const selDayStr = `${calY}-${String(calM + 1).padStart(2, '0')}-${String(selDay).padStart(2, '0')}`;
     const selIsToday = isCurrentMonth && selDay === todayD;
-    const dayReminders = (st.liveReminders || []).filter(r => r.date === selDayStr);
+    const dayReminders = (st.liveReminders || []).filter(r => r.date && eventOnDate(r, selDayDate));
     const dayLabelShort = selIsToday ? 'Today' : selDayDate.toLocaleDateString('en-IE', { weekday: 'short', day: 'numeric', month: 'short' });
     const todayStart = new Date(todayY, todayM, todayD).getTime();
     const calEventList = Object.keys(eventsByDay).map(d => +d).filter(d => new Date(calY, calM, d).getTime() >= todayStart).sort((a, b) => a - b).flatMap(d => eventsByDay[d].map(ev => ({
