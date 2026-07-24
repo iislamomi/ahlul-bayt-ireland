@@ -2182,9 +2182,11 @@ class App extends Component {
     const calY = now.getFullYear(),
       calM = now.getMonth();
     const todayStr = `${calY}-${String(calM + 1).padStart(2, '0')}-${String(todayD).padStart(2, '0')}`;
-    const todayRems = (st.liveReminders || []).filter(r => r.date && eventOnDate(r, now));
+    // events marked "Reminder" pop up as the banner; events marked "On this day" get the inline green banner
+    const todayRems = (st.liveCalEvents || []).filter(e => e.notice === 'reminder' && e.date && eventOnDate(e, now));
     const todayRem = todayRems[0];
     const showNotif = !!todayRem && !st.notifDismissed;
+    const onThisDay = (st.liveCalEvents || []).filter(e => (e.notice || 'day') === 'day' && e.date && eventOnDate(e, now));
     return /*#__PURE__*/React.createElement("div", {
       style: {
         padding: '8px 20px 100px'
@@ -2259,7 +2261,7 @@ class App extends Component {
         color: '#f3ead4',
         marginTop: 2
       }
-    }, todayRems.length > 1 ? todayRems.map(r => r.text).join(' · ') : todayRem.text)), /*#__PURE__*/React.createElement("div", {
+    }, todayRems.length > 1 ? todayRems.map(r => r.title).join(' · ') : todayRem.title)), /*#__PURE__*/React.createElement("div", {
       onClick: () => this.setState({
         notifDismissed: true
       }),
@@ -2373,7 +2375,45 @@ class App extends Component {
         fontWeight: 600,
         marginTop: 4
       }
-    }, hijri))), announcementActive(st.liveAnnouncement) && /*#__PURE__*/React.createElement("div", {
+    }, hijri))), onThisDay.length > 0 && /*#__PURE__*/React.createElement("div", {
+      onClick: () => this.go('calendar'),
+      style: {
+        background: '#1f5145',
+        borderRadius: 18,
+        padding: '14px 16px',
+        marginBottom: 16,
+        cursor: 'pointer',
+        boxShadow: '0 8px 22px -12px rgba(31,81,69,.7)'
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 10,
+        letterSpacing: 1.3,
+        textTransform: 'uppercase',
+        fontWeight: 800,
+        color: '#d8b863',
+        marginBottom: 6
+      }
+    }, "On this day"), onThisDay.map((ev, i) => /*#__PURE__*/React.createElement("div", {
+      key: i,
+      style: {
+        marginTop: i > 0 ? 8 : 0
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 14,
+        fontWeight: 700,
+        color: '#f3ead4',
+        lineHeight: 1.35
+      }
+    }, ev.title), ev.desc && /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 12,
+        color: 'rgba(243,234,212,.75)',
+        marginTop: 2,
+        lineHeight: 1.4
+      }
+    }, ev.desc)))), announcementActive(st.liveAnnouncement) && /*#__PURE__*/React.createElement("div", {
       onClick: st.liveAnnouncement.yt ? () => this.playYt(st.liveAnnouncement.yt) : undefined,
       style: {
         display: 'flex',
@@ -5112,9 +5152,6 @@ class App extends Component {
       id: 'events',
       label: 'Events'
     }, {
-      id: 'reminders',
-      label: 'Reminders'
-    }, {
       id: 'prayers',
       label: 'Prayer Times'
     }, {
@@ -5763,13 +5800,16 @@ class App extends Component {
     };
 
     /* ─ EVENTS ─ */
-    // shared by the Events section and the Reminders section (which embeds the full events UI)
     const renderEventEditor = () => {
       {
         const d = st.adminEditDraft;
         const isNew = st.adminEditIdx === -1;
         const type = d.type || 'Community';
         const saveItem = () => {
+          if (d.notice !== 'day' && d.notice !== 'reminder') {
+            this.showToast('Please choose: On this day or Reminder');
+            return;
+          }
           const list = [...(st.liveCalEvents || [])];
           const item = {
             title: d.title || '',
@@ -5778,6 +5818,7 @@ class App extends Component {
             tint: EVENT_TINTS[type],
             desc: d.desc || '',
             date: d.date || '',
+            notice: d.notice,
             recurring: !!d.recurring
           };
           if (isNew) list.push(item);else list[st.adminEditIdx] = item;
@@ -5814,7 +5855,32 @@ class App extends Component {
         }, EVENT_TYPES.map(t => /*#__PURE__*/React.createElement("option", {
           key: t,
           value: t
-        }, t))), /*#__PURE__*/React.createElement("input", {
+        }, t))), /*#__PURE__*/React.createElement("select", {
+          value: d.notice || '',
+          onChange: e => this.setDraft({
+            notice: e.target.value
+          }),
+          style: {
+            ...inp,
+            cursor: 'pointer',
+            color: d.notice ? '#2c2823' : '#9a8f7c',
+            border: d.notice ? inp.border : '1.5px solid #c2a35a'
+          }
+        }, /*#__PURE__*/React.createElement("option", {
+          value: "",
+          disabled: true
+        }, "Show as… (required)"), /*#__PURE__*/React.createElement("option", {
+          value: "day"
+        }, "On this day"), /*#__PURE__*/React.createElement("option", {
+          value: "reminder"
+        }, "Reminder")), /*#__PURE__*/React.createElement("div", {
+          style: {
+            fontSize: 11,
+            color: '#9a8f7c',
+            margin: '-4px 2px 10px',
+            lineHeight: 1.45
+          }
+        }, d.notice === 'reminder' ? 'Reminder: pops up as a banner on the home page and appears in the Reminder card on the calendar, on the day.' : d.notice === 'day' ? 'On this day: a green banner on the home page for 24 hours on the day.' : 'Choose how this entry is announced on the day.'), /*#__PURE__*/React.createElement("input", {
           value: d.desc || '',
           onChange: e => this.setDraft({
             desc: e.target.value
@@ -5935,7 +6001,7 @@ class App extends Component {
           fontSize: 11,
           color: '#9a8f7c'
         }
-      }, e.type, " · ", e.date || 'No date', e.recurring ? ' · ↻ yearly' : '')), btn('Edit', () => this.startEdit(i, {
+      }, e.type, " · ", e.date || 'No date', e.notice === 'reminder' ? ' · 🔔 Reminder' : ' · On this day', e.recurring ? ' · ↻ yearly' : '')), btn('Edit', () => this.startEdit(i, {
         ...e,
         ...extraDraft
       }), {
@@ -5956,220 +6022,6 @@ class App extends Component {
     const renderEventsSection = () => editing ? renderEventEditor() : /*#__PURE__*/React.createElement("div", null, ...eventListEls());
 
     /* ─ REMINDERS ─ */
-    const renderRemindersSection = () => {
-      const d = st.adminEditDraft;
-      // _ev flag: an event being added/edited from within the Reminders page
-      if (editing && d._ev) return renderEventEditor();
-      if (editing) {
-        const isNew = st.adminEditIdx === -1;
-        const type = d.type || 'Community';
-        const saveItem = () => {
-          if (!(d.text || '').trim()) {
-            this.showToast('Reminder text is required');
-            return;
-          }
-          if (!(d.date || '').trim()) {
-            this.showToast('Please pick a date');
-            return;
-          }
-          const list = [...(st.liveReminders || [])];
-          const item = {
-            text: (d.text || '').trim(),
-            date: d.date || '',
-            type,
-            color: EVENT_COLORS[type],
-            tint: EVENT_TINTS[type],
-            recurring: !!d.recurring
-          };
-          if (isNew) list.push(item);else list[st.adminEditIdx] = item;
-          save('reminders', 'liveReminders', list, isNew ? 'Reminder added!' : 'Reminder updated!');
-        };
-        return /*#__PURE__*/React.createElement("div", {
-          style: {
-            padding: '0 0 20px'
-          }
-        }, /*#__PURE__*/React.createElement("div", {
-          style: {
-            fontSize: 13,
-            fontWeight: 700,
-            color: '#27241f',
-            marginBottom: 14
-          }
-        }, isNew ? 'Add Reminder' : 'Edit Reminder'), /*#__PURE__*/React.createElement("textarea", {
-          value: d.text || '',
-          onChange: e => this.setDraft({
-            text: e.target.value
-          }),
-          placeholder: "Reminder (e.g. Dua Kumayl tonight after Isha)",
-          maxLength: 160,
-          style: {
-            ...inp,
-            minHeight: 60,
-            resize: 'none'
-          }
-        }), /*#__PURE__*/React.createElement("select", {
-          value: type,
-          onChange: e => this.setDraft({
-            type: e.target.value
-          }),
-          style: {
-            ...inp,
-            cursor: 'pointer'
-          }
-        }, EVENT_TYPES.map(t => /*#__PURE__*/React.createElement("option", {
-          key: t,
-          value: t
-        }, t))), /*#__PURE__*/React.createElement("input", {
-          value: d.date || '',
-          onChange: e => this.setDraft({
-            date: e.target.value
-          }),
-          type: "date",
-          min: "2024-01-01",
-          max: "2036-12-31",
-          style: inp
-        }), /*#__PURE__*/React.createElement("div", {
-          style: {
-            fontSize: 11.5,
-            color: '#8d8574',
-            margin: '2px 2px 7px'
-          }
-        }, "Repeats"), /*#__PURE__*/React.createElement("div", {
-          style: {
-            display: 'flex',
-            gap: 8,
-            marginBottom: 8
-          }
-        }, [['One-off', false], ['Every year', true]].map(([lbl, val]) => {
-          const on = !!d.recurring === val;
-          return /*#__PURE__*/React.createElement("div", {
-            key: lbl,
-            onClick: () => this.setDraft({
-              recurring: val
-            }),
-            style: {
-              flex: 1,
-              textAlign: 'center',
-              padding: '10px 4px',
-              borderRadius: 10,
-              fontSize: 13,
-              fontWeight: 700,
-              cursor: 'pointer',
-              background: on ? '#1f5145' : '#fffdf9',
-              color: on ? '#f3ead4' : '#6f675a',
-              border: `1.5px solid ${on ? '#1f5145' : '#e6dcc8'}`
-            }
-          }, lbl);
-        })), /*#__PURE__*/React.createElement("div", {
-          style: {
-            fontSize: 11,
-            color: '#9a8f7c',
-            margin: '0 2px 14px',
-            lineHeight: 1.45
-          }
-        }, d.recurring ? (gregToDate(d.date) ? `Returns every year on ${toHijri(gregToDate(d.date)).split(' ').slice(0, 2).join(' ')} (Islamic calendar).` : 'Returns on the same Islamic-calendar date every year.') : 'Shows on this date only.'), /*#__PURE__*/React.createElement("div", {
-          style: {
-            display: 'flex',
-            gap: 10
-          }
-        }, btn('Save', saveItem, {
-          flex: 1,
-          background: '#1f5145',
-          color: '#f3ead4'
-        }), btn('Cancel', this.cancelEdit, {
-          flex: 1,
-          border: '1px solid #e6dcc8',
-          background: '#fffdf9',
-          color: '#3f3a32'
-        })));
-      }
-      const rem = [...(st.liveReminders || [])].map((r, i) => ({ r, i })).sort((a, b) => (a.r.date || '').localeCompare(b.r.date || ''));
-      return /*#__PURE__*/React.createElement("div", null, btn('+ Add Reminder', () => this.startEdit(-1, {
-        date: '',
-        type: 'Community'
-      }), {
-        background: '#1f5145',
-        color: '#f3ead4',
-        marginBottom: 14,
-        width: '100%'
-      }), rem.length === 0 ? /*#__PURE__*/React.createElement("div", {
-        style: {
-          textAlign: 'center',
-          fontSize: 13,
-          color: '#9a8f7c',
-          padding: '18px 0'
-        }
-      }, "No reminders yet.") : rem.map(({ r, i }) => /*#__PURE__*/React.createElement("div", {
-        key: i,
-        style: {
-          display: 'flex',
-          alignItems: 'center',
-          gap: 12,
-          background: '#fffdf9',
-          border: '1px solid #ece4d4',
-          borderRadius: 14,
-          padding: '12px 14px',
-          marginBottom: 8
-        }
-      }, /*#__PURE__*/React.createElement("div", {
-        style: {
-          width: 10,
-          height: 10,
-          borderRadius: '50%',
-          background: r.color || EVENT_COLORS[r.type] || '#1f5145',
-          flexShrink: 0
-        }
-      }), /*#__PURE__*/React.createElement("div", {
-        style: {
-          flex: 1,
-          minWidth: 0
-        }
-      }, /*#__PURE__*/React.createElement("div", {
-        style: {
-          fontSize: 13.5,
-          fontWeight: 600,
-          color: '#2c2823'
-        }
-      }, r.text), /*#__PURE__*/React.createElement("div", {
-        style: {
-          fontSize: 11,
-          color: '#9a8f7c',
-          marginTop: 2
-        }
-      }, (r.type ? r.type + ' · ' : '') + (r.date ? new Date(r.date + 'T00:00:00').toLocaleDateString('en-IE', {
-        weekday: 'short',
-        day: 'numeric',
-        month: 'short'
-      }) : 'No date') + (r.recurring ? ' · ↻ yearly' : ''))), btn('Edit', () => this.startEdit(i, {
-        ...r
-      }), {
-        background: '#e6efe9',
-        color: '#1f5145',
-        fontSize: 12,
-        padding: '6px 12px'
-      }), btn('✕', () => {
-        const a = [...(st.liveReminders || [])];
-        a.splice(i, 1);
-        save('reminders', 'liveReminders', a, 'Deleted');
-      }, {
-        background: '#fdf0f2',
-        color: '#6e2230',
-        fontSize: 12,
-        padding: '6px 10px'
-      }))), /*#__PURE__*/React.createElement("div", {
-        style: {
-          fontSize: 12,
-          fontWeight: 700,
-          letterSpacing: .6,
-          textTransform: 'uppercase',
-          color: '#8c8270',
-          margin: '18px 2px 10px'
-        }
-      }, "Calendar Events"), ...eventListEls({
-        _ev: true
-      }));
-    };
-
     /* ─ PRAYER TIMES ─ */
     const renderPrayersSection = () => {
       const presets = abiPresets(st.livePrayerPresets);
@@ -7990,7 +7842,6 @@ class App extends Component {
       library: renderLibrarySection,
       classifieds: renderClassifiedsSection,
       events: renderEventsSection,
-      reminders: renderRemindersSection,
       prayers: renderPrayersSection,
       announcement: renderAnnouncementSection,
       pinned: renderPinnedSection,
@@ -8222,7 +8073,7 @@ class App extends Component {
     });
     // Match events to each day by Hijri anchor (one-off = exact Hijri date; yearly = Hijri day+month).
     const eventsByDay = {};
-    const evList = st.liveCalEvents || [];
+    const evList = (st.liveCalEvents || []).filter(e => e.notice !== 'reminder');
     for (let d = 1; d <= daysInMonth; d++) {
       const dayDate = new Date(calY, calM, d);
       const hits = evList.filter(e => eventOnDate(e, dayDate));
@@ -8239,7 +8090,7 @@ class App extends Component {
     const selHijri = toHijri(selDayDate);
     const selDayStr = `${calY}-${String(calM + 1).padStart(2, '0')}-${String(selDay).padStart(2, '0')}`;
     const selIsToday = isCurrentMonth && selDay === todayD;
-    const dayReminders = (st.liveReminders || []).filter(r => r.date && eventOnDate(r, selDayDate));
+    const dayReminders = (st.liveCalEvents || []).filter(e => e.notice === 'reminder' && e.date && eventOnDate(e, selDayDate));
     const dayLabelShort = selIsToday ? 'Today' : selDayDate.toLocaleDateString('en-IE', { weekday: 'short', day: 'numeric', month: 'short' });
     const todayStart = new Date(todayY, todayM, todayD).getTime();
     const calEventList = Object.keys(eventsByDay).map(d => +d).filter(d => new Date(calY, calM, d).getTime() >= todayStart).sort((a, b) => a - b).flatMap(d => eventsByDay[d].map(ev => ({
@@ -8404,11 +8255,15 @@ class App extends Component {
       style: { flexShrink: 0, marginTop: 5, width: 7, height: 7, borderRadius: '50%', background: '#1f5145' }
     }), /*#__PURE__*/React.createElement("div", {
       style: { flex: 1, fontSize: 13.5, color: '#2c2823', lineHeight: 1.45 }
-    }, rm.text), st.adminLoggedIn && /*#__PURE__*/React.createElement("span", {
-      onClick: () => this.setState({ screen: 'admin', adminSection: 'reminders', adminEditIdx: (st.liveReminders || []).indexOf(rm), adminEditDraft: { ...rm } }),
+    }, /*#__PURE__*/React.createElement("span", {
+      style: { fontWeight: 600 }
+    }, rm.title), rm.desc && /*#__PURE__*/React.createElement("div", {
+      style: { fontSize: 12, color: '#8c8270', marginTop: 1 }
+    }, rm.desc)), st.adminLoggedIn && /*#__PURE__*/React.createElement("span", {
+      onClick: () => this.setState({ screen: 'admin', adminSection: 'events', adminEditIdx: (st.liveCalEvents || []).indexOf(rm), adminEditDraft: { ...rm } }),
       style: { flexShrink: 0, fontSize: 11, color: '#1f5145', fontWeight: 600, cursor: 'pointer' }
     }, "Edit")))), st.adminLoggedIn ? /*#__PURE__*/React.createElement("div", {
-      onClick: () => this.setState({ screen: 'admin', adminSection: 'reminders', adminEditIdx: -1, adminEditDraft: { date: selDayStr } }),
+      onClick: () => this.setState({ screen: 'admin', adminSection: 'events', adminEditIdx: -1, adminEditDraft: { date: selDayStr, type: 'Community', notice: 'reminder' } }),
       style: { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, padding: '11px', borderRadius: 12, border: '1px dashed #c4ddd7', background: '#f4fbf8', color: '#1f5145', fontSize: 13.5, fontWeight: 600, cursor: 'pointer' }
     }, "+ Add A Reminder") : dayReminders.length === 0 && /*#__PURE__*/React.createElement("div", {
       style: { fontSize: 13, color: '#b1a690', textAlign: 'center', padding: '4px 0' }
