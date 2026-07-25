@@ -2199,6 +2199,13 @@ class App extends Component {
 
   /* ── HOME ── */
   renderHome(st, next, cd, greg, hijri, salaam) {
+    // the home tile is narrow, so it takes the short form: Sat 25 Jul 2026
+    const gregShort = st.now.toLocaleDateString('en-IE', {
+      weekday: 'short',
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric'
+    });
     const activePrayers = this.getActivePrayers();
     const prayers = activePrayers.map((p, i) => ({
       ...p,
@@ -2411,7 +2418,7 @@ class App extends Component {
         gap: 8,
         marginBottom: 10
       }
-    }, [['Gregorian', '#b1a690', greg], ['Hijri', '#c2a35a', hijri]].map(([label, tone, value]) => /*#__PURE__*/React.createElement("div", {
+    }, [['Gregorian', '#b1a690', gregShort], ['Hijri', '#c2a35a', hijri]].map(([label, tone, value]) => /*#__PURE__*/React.createElement("div", {
       key: label,
       onClick: () => this.go('calendar'),
       style: {
