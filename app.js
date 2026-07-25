@@ -65,6 +65,12 @@ function toHijriParts(date) {
   return null;
 }
 
+/* Alphabetising key for transliterated titles: drops diacritics and the ayn / hamza
+   marks, so a title opening with those still files under its plain letter. */
+function sortKey(t) {
+  return String(t || '').normalize('NFD').replace(/[\u0300-\u036f\u02b0-\u02ff\u2018\u2019']/g, '').trim();
+}
+
 /* Parse an admin 'YYYY-MM-DD' string to a local Date (midnight), matching the calendar grid convention. */
 function gregToDate(s) {
   const [y, m, d] = String(s || '').split('-').map(Number);
@@ -77,6 +83,14 @@ function gregToDate(s) {
    Falls back to exact Gregorian match if the Islamic calendar is unavailable. */
 function eventOnDate(ev, date) {
   if (!ev) return false;
+  // Entries authored on the Islamic calendar carry their Hijri day/month/year outright,
+  // so they never drift through a Gregorian round-trip.
+  if (ev.hd && ev.hm) {
+    const h = toHijriParts(date);
+    if (!h) return false;
+    if (h.hd !== ev.hd || h.hm !== ev.hm) return false;
+    return ev.recurring || !ev.hy || h.hy === ev.hy;
+  }
   const src = gregToDate(ev.date);
   if (!src) return false;
   const a = toHijriParts(date),
@@ -86,6 +100,52 @@ function eventOnDate(ev, date) {
   }
   if (ev.recurring) return a.hm === b.hm && a.hd === b.hd;
   return a.hy === b.hy && a.hm === b.hm && a.hd === b.hd;
+}
+
+/* Format a Date as the 'YYYY-MM-DD' string the admin fields and calendar grid use. */
+function dateToGregStr(d) {
+  return d ? `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}` : '';
+}
+
+/* Gregorian date for an exact Hijri day/month/year, or null when that day does not exist
+   in that Hijri year (a 30th of a 29-day month). Seeds from the mean Hijri year length,
+   then walks onto the exact day using the browser's Umm al-Qura calendar. */
+function hijriToGreg(hy, hm, hd) {
+  if (!hy || !hm || !hd) return null;
+  let cur = new Date(Math.floor(hy * 0.970224 + 621.5774), 0, 15);
+  for (let i = 0; i < 10; i++) {
+    const p = toHijriParts(cur);
+    if (!p) return null;
+    if (p.hy === hy && p.hm === hm && p.hd === hd) return cur;
+    const step = Math.round(((hy - p.hy) * 354.367 + (hm - p.hm) * 29.53 + (hd - p.hd)));
+    if (!step) break;
+    cur = new Date(cur.getFullYear(), cur.getMonth(), cur.getDate() + step);
+  }
+  for (let off = -25; off <= 25; off++) {
+    const t = new Date(cur.getFullYear(), cur.getMonth(), cur.getDate() + off);
+    const p = toHijriParts(t);
+    if (p && p.hy === hy && p.hm === hm && p.hd === hd) return t;
+  }
+  return null;
+}
+
+/* The next Gregorian date on or after `from` that falls on Hijri day `hd` of month `hm`. */
+function nextHijriOccurrence(hm, hd, from) {
+  if (!hm || !hd) return null;
+  const s = from || new Date();
+  for (let i = 0; i < 400; i++) {
+    const t = new Date(s.getFullYear(), s.getMonth(), s.getDate() + i);
+    const p = toHijriParts(t);
+    if (p && p.hm === hm && p.hd === hd) return t;
+  }
+  return null;
+}
+
+/* Human label for an event's own anchor date, on the calendar it was authored in. */
+function eventDateLabel(ev) {
+  if (!ev) return '';
+  if (ev.hd && ev.hm) return `${ev.hd} ${HIJRI_MONTHS[ev.hm - 1]}${ev.recurring || !ev.hy ? '' : ' ' + ev.hy} AH`;
+  return ev.date || 'No date';
 }
 
 /* ── PRAYER PRESETS ── */
@@ -1619,7 +1679,7 @@ class App extends Component {
       });
     });
     _defineProperty(this, "setTextSize", v => {
-      const tv = Math.round(Math.min(1.5, Math.max(.85, v)) * 100) / 100;
+      const tv = Math.round(Math.min(1.5, Math.max(.6, v)) * 100) / 100;
       lsSet('textSize', tv);
       this.setState({
         textSize: tv
@@ -2187,6 +2247,11 @@ class App extends Component {
     const todayRem = todayRems[0];
     const showNotif = !!todayRem && !st.notifDismissed;
     const onThisDay = (st.liveCalEvents || []).filter(e => (e.notice || 'day') === 'day' && e.date && eventOnDate(e, now));
+    // frosted-pane treatment shared by the slim home ribbons
+    const glass = {
+      backdropFilter: 'blur(16px) saturate(170%)',
+      WebkitBackdropFilter: 'blur(16px) saturate(170%)'
+    };
     return /*#__PURE__*/React.createElement("div", {
       style: {
         padding: '8px 20px 100px'
@@ -2322,116 +2387,105 @@ class App extends Component {
     })), /*#__PURE__*/React.createElement("div", {
       style: {
         display: 'flex',
-        gap: 10,
-        marginBottom: 16
+        gap: 8,
+        marginBottom: 10
       }
-    }, /*#__PURE__*/React.createElement("div", {
+    }, [['Gregorian', '#b1a690', greg], ['Hijri', '#c2a35a', hijri]].map(([label, tone, value]) => /*#__PURE__*/React.createElement("div", {
+      key: label,
       onClick: () => this.go('calendar'),
       style: {
+        ...glass,
         flex: 1,
-        background: '#fffdf9',
-        border: '1px solid #ece4d4',
-        borderRadius: 16,
-        padding: '13px 15px',
-        cursor: 'pointer'
-      }
-    }, /*#__PURE__*/React.createElement("div", {
-      style: {
-        fontSize: 10.5,
-        letterSpacing: 1.2,
-        textTransform: 'uppercase',
-        color: '#b1a690',
-        fontWeight: 600
-      }
-    }, "Gregorian"), /*#__PURE__*/React.createElement("div", {
-      style: {
-        fontSize: 14.5,
-        color: '#2f2b25',
-        fontWeight: 600,
-        marginTop: 4
-      }
-    }, greg)), /*#__PURE__*/React.createElement("div", {
-      onClick: () => this.go('calendar'),
-      style: {
-        flex: 1,
-        background: '#fffdf9',
-        border: '1px solid #ece4d4',
-        borderRadius: 16,
-        padding: '13px 15px',
-        cursor: 'pointer'
-      }
-    }, /*#__PURE__*/React.createElement("div", {
-      style: {
-        fontSize: 10.5,
-        letterSpacing: 1.2,
-        textTransform: 'uppercase',
-        color: '#c2a35a',
-        fontWeight: 600
-      }
-    }, "Hijri"), /*#__PURE__*/React.createElement("div", {
-      style: {
-        fontSize: 14.5,
-        color: '#2f2b25',
-        fontWeight: 600,
-        marginTop: 4
-      }
-    }, hijri))), onThisDay.length > 0 && /*#__PURE__*/React.createElement("div", {
-      onClick: () => this.go('calendar'),
-      style: {
-        background: '#1f5145',
-        borderRadius: 18,
-        padding: '14px 16px',
-        marginBottom: 16,
+        minWidth: 0,
+        display: 'flex',
+        alignItems: 'baseline',
+        gap: 7,
+        background: 'linear-gradient(135deg,rgba(255,253,249,.72),rgba(255,253,249,.42))',
+        border: '1px solid rgba(255,255,255,.7)',
+        borderRadius: 13,
+        padding: '7px 11px',
         cursor: 'pointer',
-        boxShadow: '0 8px 22px -12px rgba(31,81,69,.7)'
+        boxShadow: '0 4px 14px -10px rgba(60,50,30,.5), inset 0 1px 0 rgba(255,255,255,.75)'
       }
     }, /*#__PURE__*/React.createElement("div", {
       style: {
-        fontSize: 10,
-        letterSpacing: 1.3,
+        fontSize: 8,
+        letterSpacing: 1,
+        textTransform: 'uppercase',
+        color: tone,
+        fontWeight: 700,
+        flexShrink: 0
+      }
+    }, label), /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 11.5,
+        color: '#2f2b25',
+        fontWeight: 600,
+        whiteSpace: 'nowrap',
+        overflow: 'hidden',
+        textOverflow: 'ellipsis'
+      }
+    }, value)))), onThisDay.length > 0 && /*#__PURE__*/React.createElement("div", {
+      onClick: () => this.go('calendar'),
+      style: {
+        ...glass,
+        background: 'linear-gradient(135deg,rgba(31,81,69,.86),rgba(22,59,48,.74))',
+        border: '1px solid rgba(216,184,99,.3)',
+        borderRadius: 13,
+        padding: '8px 12px',
+        marginBottom: 10,
+        cursor: 'pointer',
+        boxShadow: '0 6px 18px -12px rgba(31,81,69,.8), inset 0 1px 0 rgba(255,255,255,.14)'
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 8,
+        letterSpacing: 1.1,
         textTransform: 'uppercase',
         fontWeight: 800,
         color: '#d8b863',
-        marginBottom: 6
+        marginBottom: 2
       }
     }, "On this day"), onThisDay.map((ev, i) => /*#__PURE__*/React.createElement("div", {
       key: i,
       style: {
-        marginTop: i > 0 ? 8 : 0
+        marginTop: i > 0 ? 5 : 0
       }
     }, /*#__PURE__*/React.createElement("div", {
       style: {
-        fontSize: 14,
+        fontSize: 12.5,
         fontWeight: 700,
         color: '#f3ead4',
-        lineHeight: 1.35
+        lineHeight: 1.3
       }
     }, ev.title), ev.desc && /*#__PURE__*/React.createElement("div", {
       style: {
-        fontSize: 12,
+        fontSize: 10.5,
         color: 'rgba(243,234,212,.75)',
-        marginTop: 2,
-        lineHeight: 1.4
+        marginTop: 1,
+        lineHeight: 1.35
       }
     }, ev.desc)))), announcementActive(st.liveAnnouncement) && /*#__PURE__*/React.createElement("div", {
       onClick: st.liveAnnouncement.yt ? () => this.playYt(st.liveAnnouncement.yt) : undefined,
       style: {
+        ...glass,
         display: 'flex',
-        gap: 13,
-        alignItems: 'flex-start',
-        background: 'linear-gradient(120deg,#faf4e6,#f6efe0)',
-        border: '1px solid #ecdfc2',
-        borderRadius: 18,
-        padding: '15px 16px',
-        marginBottom: 16,
+        gap: 10,
+        alignItems: 'center',
+        background: 'linear-gradient(135deg,rgba(250,244,230,.78),rgba(246,239,224,.5))',
+        border: '1px solid rgba(255,255,255,.65)',
+        borderRadius: 13,
+        padding: '7px 12px',
+        marginBottom: 10,
+        boxShadow: '0 4px 14px -10px rgba(90,72,30,.55), inset 0 1px 0 rgba(255,255,255,.75)',
         cursor: st.liveAnnouncement.yt ? 'pointer' : 'default'
       }
     }, /*#__PURE__*/React.createElement("div", {
       style: {
         flexShrink: 0,
-        width: 34,
-        height: 34,
-        borderRadius: 10,
+        width: 24,
+        height: 24,
+        borderRadius: 8,
         background: st.liveAnnouncement.yt ? '#6e2230' : '#e8d39a',
         display: 'flex',
         alignItems: 'center',
@@ -2439,46 +2493,51 @@ class App extends Component {
         color: st.liveAnnouncement.yt ? '#f6e7d7' : '#7a5d18',
         fontWeight: 700,
         fontFamily: 'Spectral,serif',
-        fontSize: st.liveAnnouncement.yt ? 12 : 15
+        fontSize: st.liveAnnouncement.yt ? 9 : 12
       }
-    }, st.liveAnnouncement.yt ? '▶' : '!'), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+    }, st.liveAnnouncement.yt ? '▶' : '!'), /*#__PURE__*/React.createElement("div", {
       style: {
-        fontSize: 10,
-        letterSpacing: 1.1,
+        minWidth: 0
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 8,
+        letterSpacing: 1,
         textTransform: 'uppercase',
         fontWeight: 800,
         color: '#a03a3a',
-        marginBottom: 3,
+        marginBottom: 1,
         display: 'flex',
         alignItems: 'center',
-        gap: 5
+        gap: 4
       }
     }, /*#__PURE__*/React.createElement("span", {
       style: {
-        width: 6,
-        height: 6,
+        width: 5,
+        height: 5,
         borderRadius: '50%',
         background: '#c0392b',
         display: 'inline-block'
       }
     }), "Majlis Live"), /*#__PURE__*/React.createElement("div", {
       style: {
-        fontSize: 13.5,
-        fontWeight: 600,
-        color: '#5e4d22'
-      }
-    }, st.liveAnnouncement.title), /*#__PURE__*/React.createElement("div", {
-      style: {
         fontSize: 12,
+        fontWeight: 600,
+        color: '#5e4d22',
+        lineHeight: 1.3
+      }
+    }, st.liveAnnouncement.title), st.liveAnnouncement.body && /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 10.5,
         color: '#8a7846',
-        marginTop: 3,
-        lineHeight: 1.4
+        marginTop: 1,
+        lineHeight: 1.35
       }
     }, st.liveAnnouncement.body), (st.liveAnnouncement.date || st.liveAnnouncement.yt) && /*#__PURE__*/React.createElement("div", {
       style: {
-        fontSize: 11,
+        fontSize: 9.5,
         color: '#a08c55',
-        marginTop: 5,
+        marginTop: 2,
         fontWeight: 600
       }
     }, [st.liveAnnouncement.date ? new Date(st.liveAnnouncement.date + 'T12:00').toLocaleDateString('en-IE', {
@@ -2523,15 +2582,15 @@ class App extends Component {
       onClick: () => this.openStory(i),
       style: {
         flexShrink: 0,
-        width: 70,
+        width: 66,
         textAlign: 'center',
         cursor: 'pointer'
       }
     }, /*#__PURE__*/React.createElement("div", {
       style: {
-        width: 70,
-        height: 70,
-        borderRadius: '50%',
+        width: 66,
+        height: 92,
+        borderRadius: 18,
         padding: 2.5,
         background: 'conic-gradient(from 210deg,#d8b863,#1f5145,#6e2230,#d8b863)'
       }
@@ -2539,12 +2598,12 @@ class App extends Component {
       style: {
         width: '100%',
         height: '100%',
-        borderRadius: '50%',
+        borderRadius: 15.5,
         background: s.photo ? `url(${s.photo}) center/cover` : s.img || s.color,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        border: '3px solid #f6f1e7',
+        border: '2.5px solid #f6f1e7',
         position: 'relative',
         overflow: 'hidden'
       }
@@ -2565,23 +2624,25 @@ class App extends Component {
     }, s.short)))), /*#__PURE__*/React.createElement("div", {
       onClick: () => this.go('prayer'),
       style: {
+        ...glass,
         position: 'relative',
         overflow: 'hidden',
-        background: 'linear-gradient(155deg,#1f5145 0%,#163b30 100%)',
-        borderRadius: 22,
-        padding: '20px 22px',
+        background: 'linear-gradient(150deg,rgba(31,81,69,.9) 0%,rgba(22,59,48,.8) 100%)',
+        border: '1px solid rgba(216,184,99,.24)',
+        borderRadius: 16,
+        padding: '11px 15px',
         color: '#f3ead4',
-        boxShadow: '0 18px 34px -18px rgba(22,59,48,.7)',
+        boxShadow: '0 10px 24px -18px rgba(22,59,48,.9), inset 0 1px 0 rgba(255,255,255,.14)',
         cursor: 'pointer',
-        marginBottom: 20
+        marginBottom: 14
       }
     }, /*#__PURE__*/React.createElement("div", {
       style: {
         position: 'absolute',
         right: -30,
-        top: -30,
-        width: 140,
-        height: 140,
+        top: -34,
+        width: 104,
+        height: 104,
         borderRadius: '50%',
         border: '1px solid rgba(216,184,99,.22)'
       }
@@ -2589,11 +2650,11 @@ class App extends Component {
       style: {
         position: 'absolute',
         right: 6,
-        bottom: -46,
-        width: 96,
-        height: 96,
+        bottom: -42,
+        width: 76,
+        height: 76,
         borderRadius: '50%',
-        boxShadow: 'inset -22px 0 0 0 rgba(216,184,99,.16)'
+        boxShadow: 'inset -18px 0 0 0 rgba(216,184,99,.16)'
       }
     }), /*#__PURE__*/React.createElement("div", {
       style: {
@@ -2603,41 +2664,46 @@ class App extends Component {
       style: {
         display: 'flex',
         alignItems: 'center',
-        gap: 8,
-        fontSize: 11,
-        letterSpacing: 1.5,
+        gap: 6,
+        fontSize: 8.5,
+        letterSpacing: 1.3,
         textTransform: 'uppercase',
         color: '#d8b863',
-        fontWeight: 600
+        fontWeight: 700
       }
     }, /*#__PURE__*/React.createElement("span", {
       style: {
-        width: 6,
-        height: 6,
+        width: 5,
+        height: 5,
         borderRadius: '50%',
         background: '#d8b863',
-        boxShadow: '0 0 0 4px rgba(216,184,99,.2)'
+        boxShadow: '0 0 0 3px rgba(216,184,99,.2)'
       }
     }), " ", this.t('home.nextPrayer')), /*#__PURE__*/React.createElement("div", {
       style: {
         display: 'flex',
         alignItems: 'flex-end',
         justifyContent: 'space-between',
-        marginTop: 10
+        marginTop: 5
       }
-    }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: 'flex',
+        alignItems: 'baseline',
+        gap: 8
+      }
+    }, /*#__PURE__*/React.createElement("div", {
       style: {
         fontFamily: 'Spectral,serif',
-        fontSize: 30,
+        fontSize: 20,
         fontWeight: 600,
         lineHeight: 1
       }
     }, next.name), /*#__PURE__*/React.createElement("div", {
       style: {
         fontFamily: 'Amiri,serif',
-        fontSize: 19,
-        color: '#cdbf9e',
-        marginTop: 4
+        fontSize: 14,
+        color: '#cdbf9e'
       },
       dir: "rtl"
     }, next.ar)), /*#__PURE__*/React.createElement("div", {
@@ -2646,16 +2712,16 @@ class App extends Component {
       }
     }, /*#__PURE__*/React.createElement("div", {
       style: {
-        fontSize: 30,
+        fontSize: 20,
         fontWeight: 700,
         fontVariantNumeric: 'tabular-nums',
         lineHeight: 1
       }
     }, next.time), /*#__PURE__*/React.createElement("div", {
       style: {
-        fontSize: 12.5,
+        fontSize: 10,
         color: '#bcae8d',
-        marginTop: 5
+        marginTop: 3
       }
     }, this.t('home.in'), " ", cd))))), /*#__PURE__*/React.createElement("div", {
       style: {
@@ -3696,7 +3762,7 @@ class App extends Component {
         const catOk = st.libCat === 'All' || it.cat === st.libCat;
         const qOk = !q || (it.title || '').toLowerCase().includes(q) || (it.tr || '').toLowerCase().includes(q);
         return catOk && qOk;
-      });
+      }).sort((a, b) => sortKey(a.title).localeCompare(sortKey(b.title), 'en', { sensitivity: 'base', numeric: true }));
     }
     let nahjCards = [];
     if (st.libTab === 'nahj') {
@@ -4111,10 +4177,22 @@ class App extends Component {
       tabs.length > 1 && React.createElement("div", { style: { display: 'flex', gap: 8, marginTop: 8 } }, tabs.map(pill))),
     lang === 'ar' && hasAr && React.createElement("div", {
       style: { background: rd.surf, border: `1px solid ${rd.border}`, borderRadius: 20, padding: '18px 16px' }
-    }, React.createElement("div", {
-      style: { fontFamily: "'Noto Naskh Arabic','Amiri',serif", fontSize: arSize, lineHeight: 1.9, color: rd.arInk, textAlign: 'center', whiteSpace: 'pre-line' },
-      dir: "rtl"
-    }, String(r.ar).replace(/\n\s*\n+/g, '\n').trim())),
+    }, String(r.ar).replace(/\n\s*\n+/g, '\n').trim().split('\n').map((ln, i) => {
+      // Latin lines inside an Arabic text (sub-headings, recitation instructions) must not
+      // inherit the much larger Arabic size — they get the Latin face at translation size.
+      const latin = /[A-Za-z]/.test(ln) && !/[\u0600-\u06FF\u0750-\u077F\uFB50-\uFDFF\uFE70-\uFEFF]/.test(ln);
+      return React.createElement("div", {
+        key: i,
+        dir: latin ? 'ltr' : 'rtl',
+        style: latin ? {
+          fontFamily: 'Spectral,serif', fontSize: trSize, lineHeight: 1.5,
+          color: rd.muted, textAlign: 'center', fontStyle: 'italic', margin: '12px 0'
+        } : {
+          fontFamily: "'Noto Naskh Arabic','Amiri',serif", fontSize: arSize,
+          lineHeight: 1.9, color: rd.arInk, textAlign: 'center'
+        }
+      }, ln);
+    })),
     lang === 'en' && hasEn && React.createElement(React.Fragment, null,
       enBody && React.createElement("div", {
         dir: trRtl ? 'rtl' : undefined,
@@ -5805,9 +5883,30 @@ class App extends Component {
         const d = st.adminEditDraft;
         const isNew = st.adminEditIdx === -1;
         const type = d.type || 'Community';
+        const hijriMode = d.dateMode ? d.dateMode === 'hijri' : !!d.hd;
+        const hd = +d.hd || 0,
+          hm = +d.hm || 0,
+          hy = +d.hy || 0;
+        // Gregorian day this Hijri date lands on: the exact year for a one-off, the next
+        // occurrence for a yearly event (which is only ever matched on day + month).
+        const hijriGreg = hijriMode ? d.recurring || !hy ? nextHijriOccurrence(hm, hd) : hijriToGreg(hy, hm, hd) : null;
+        const switchMode = mode => {
+          if (mode === 'hijri' && !d.hd) {
+            const p = toHijriParts(gregToDate(d.date) || new Date());
+            this.setDraft(p ? { dateMode: mode, hd: p.hd, hm: p.hm, hy: p.hy } : { dateMode: mode });
+          } else this.setDraft({ dateMode: mode });
+        };
         const saveItem = () => {
           if (d.notice !== 'day' && d.notice !== 'reminder') {
             this.showToast('Please choose: On this day or Reminder');
+            return;
+          }
+          if (hijriMode && (!hd || !hm)) {
+            this.showToast('Pick an Islamic day and month');
+            return;
+          }
+          if (hijriMode && !hijriGreg) {
+            this.showToast('That Islamic date does not occur in that year');
             return;
           }
           const list = [...(st.liveCalEvents || [])];
@@ -5817,10 +5916,15 @@ class App extends Component {
             color: EVENT_COLORS[type],
             tint: EVENT_TINTS[type],
             desc: d.desc || '',
-            date: d.date || '',
+            date: hijriMode ? dateToGregStr(hijriGreg) : d.date || '',
             notice: d.notice,
             recurring: !!d.recurring
           };
+          if (hijriMode) {
+            item.hd = hd;
+            item.hm = hm;
+            if (!d.recurring && hy) item.hy = hy;
+          }
           if (isNew) list.push(item);else list[st.adminEditIdx] = item;
           save('calEvents', 'liveCalEvents', list, isNew ? 'Event added!' : 'Event updated!');
         };
@@ -5888,7 +5992,99 @@ class App extends Component {
           placeholder: "Description",
           maxLength: 300,
           style: inp
-        }), /*#__PURE__*/React.createElement("input", {
+        }), /*#__PURE__*/React.createElement("div", {
+          style: {
+            fontSize: 11.5,
+            color: '#8d8574',
+            margin: '2px 2px 7px'
+          }
+        }, "Date entered on"), /*#__PURE__*/React.createElement("div", {
+          style: {
+            display: 'flex',
+            gap: 8,
+            marginBottom: 8
+          }
+        }, [['Gregorian', 'greg'], ['Islamic (Hijri)', 'hijri']].map(([lbl, mode]) => {
+          const on = hijriMode === (mode === 'hijri');
+          return /*#__PURE__*/React.createElement("div", {
+            key: mode,
+            onClick: () => switchMode(mode),
+            style: {
+              flex: 1,
+              textAlign: 'center',
+              padding: '10px 4px',
+              borderRadius: 10,
+              fontSize: 13,
+              fontWeight: 700,
+              cursor: 'pointer',
+              background: on ? '#1f5145' : '#fffdf9',
+              color: on ? '#f3ead4' : '#6f675a',
+              border: `1.5px solid ${on ? '#1f5145' : '#e6dcc8'}`
+            }
+          }, lbl);
+        })), hijriMode ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+          style: {
+            display: 'flex',
+            gap: 8
+          }
+        }, /*#__PURE__*/React.createElement("select", {
+          value: hd || '',
+          onChange: e => this.setDraft({
+            hd: +e.target.value
+          }),
+          style: {
+            ...inp,
+            width: 92,
+            cursor: 'pointer'
+          }
+        }, /*#__PURE__*/React.createElement("option", {
+          value: "",
+          disabled: true
+        }, "Day"), Array.from({
+          length: 30
+        }, (_, i) => /*#__PURE__*/React.createElement("option", {
+          key: i + 1,
+          value: i + 1
+        }, i + 1))), /*#__PURE__*/React.createElement("select", {
+          value: hm || '',
+          onChange: e => this.setDraft({
+            hm: +e.target.value
+          }),
+          style: {
+            ...inp,
+            flex: 1,
+            cursor: 'pointer'
+          }
+        }, /*#__PURE__*/React.createElement("option", {
+          value: "",
+          disabled: true
+        }, "Islamic month"), HIJRI_MONTHS.map((mn, i) => /*#__PURE__*/React.createElement("option", {
+          key: mn,
+          value: i + 1
+        }, mn))), !d.recurring && /*#__PURE__*/React.createElement("input", {
+          value: d.hy || '',
+          onChange: e => this.setDraft({
+            hy: e.target.value.replace(/\D/g, '').slice(0, 4)
+          }),
+          placeholder: "Year AH",
+          inputMode: "numeric",
+          style: {
+            ...inp,
+            width: 96
+          }
+        })), /*#__PURE__*/React.createElement("div", {
+          style: {
+            fontSize: 11,
+            color: hijriGreg ? '#9a8f7c' : '#a03a3a',
+            margin: '-4px 2px 10px',
+            lineHeight: 1.45
+          }
+        }, hd && hm ? hijriGreg ? (d.recurring ? 'Next falls on ' : 'Falls on ') + hijriGreg.toLocaleDateString('en-IE', {
+          weekday: 'short',
+          day: 'numeric',
+          month: 'long',
+          year: 'numeric'
+        }) : 'That Islamic date does not occur in that year.' : 'Pick the Islamic day and month this event belongs to.')) : /*#__PURE__*/React.createElement("input", {
           value: d.date || '',
           onChange: e => this.setDraft({
             date: e.target.value
@@ -5913,9 +6109,13 @@ class App extends Component {
           const on = !!d.recurring === val;
           return /*#__PURE__*/React.createElement("div", {
             key: lbl,
-            onClick: () => this.setDraft({
-              recurring: val
-            }),
+            onClick: () => {
+              this.setDraft({
+                recurring: val
+              });
+              // a yearly event returns on its Islamic date, so author it on that calendar
+              if (val && !d.dateMode && !d.hd) switchMode('hijri');
+            },
             style: {
               flex: 1,
               textAlign: 'center',
@@ -5936,7 +6136,7 @@ class App extends Component {
             margin: '0 2px 14px',
             lineHeight: 1.45
           }
-        }, d.recurring ? (gregToDate(d.date) ? `Returns every year on ${toHijri(gregToDate(d.date)).split(' ').slice(0, 2).join(' ')} (Islamic calendar).` : 'Returns on the same Islamic-calendar date every year.') : 'Shows on this date only.'), /*#__PURE__*/React.createElement("div", {
+        }, d.recurring ? hijriMode ? hd && hm ? `Returns every year on ${hd} ${HIJRI_MONTHS[hm - 1]} (Islamic calendar).` : 'Returns on the same Islamic date every year.' : gregToDate(d.date) ? `Returns every year on ${toHijri(gregToDate(d.date)).split(' ').slice(0, 2).join(' ')} (Islamic calendar).` : 'Returns on the same Islamic-calendar date every year.' : 'Shows on this date only.'), /*#__PURE__*/React.createElement("div", {
           style: {
             display: 'flex',
             gap: 10
@@ -6001,7 +6201,7 @@ class App extends Component {
           fontSize: 11,
           color: '#9a8f7c'
         }
-      }, e.type, " · ", e.date || 'No date', e.notice === 'reminder' ? ' · 🔔 Reminder' : ' · On this day', e.recurring ? ' · ↻ yearly' : '')), btn('Edit', () => this.startEdit(i, {
+      }, e.type, " · ", eventDateLabel(e), e.notice === 'reminder' ? ' · 🔔 Reminder' : ' · On this day', e.recurring ? ' · ↻ yearly' : '')), btn('Edit', () => this.startEdit(i, {
         ...e,
         ...extraDraft
       }), {
