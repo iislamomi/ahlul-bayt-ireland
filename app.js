@@ -799,6 +799,13 @@ const STRINGS = {
     'فارسی': 'کسب‌وکارهای جامعه',
     'Urdu': 'کمیونٹی کاروبار'
   },
+  'home.sponsored': {
+    English: 'Sponsored',
+    'العربية': 'إعلان',
+    'हिन्दी': 'प्रायोजित',
+    'فارسی': 'حامی',
+    'Urdu': 'اشتہار'
+  },
   'home.installTitle': {
     English: 'Install the app',
     'العربية': 'تثبيت التطبيق',
@@ -1367,6 +1374,7 @@ const PUSH_MSG = {
   stories: 'New story or article has been published',
   pinned: 'Featured message has been updated',
   classifieds: 'New listing in community classifieds',
+  ads: null, // billboard changes are not worth a notification
   calEvents: 'Islamic calendar updated',
   reminders: 'A new reminder has been added',
   prayerPresets: 'Prayer times updated',
@@ -1434,8 +1442,13 @@ const SB_KEY_MAP = {
   prayerPresets: 'livePrayerPresets', calEvents: 'liveCalEvents',
   healthTips: 'liveHealthTips', healthVideos: 'liveHealthVideos',
   duas: 'liveDuas', ziyarat: 'liveZiyarat', nahj: 'liveNahj',
-  reminders: 'liveReminders'
+  reminders: 'liveReminders', ads: 'liveAds'
 };
+
+/* Billboard slides that are switched on and actually carry an image. */
+function activeAds(ads) {
+  return (ads || []).filter(a => a && a.img && a.on !== false);
+}
 
 function announcementActive(a) {
   if (!a || !a.title) return false;
@@ -1633,6 +1646,8 @@ class App extends Component {
       liveNahj: lsGet('nahj', NAHJ),
       liveKidsQuizzes: lsGet('kidsQuizzes', KIDS_QUIZZES),
       liveAskImam: lsGet('askImam', []),
+      liveAds: lsGet('ads', []),
+      adIdx: 0,
       liveAutoTimes: lsGet('autoTimes', null),
       kidsQuizPicks: {},
       kidsVidCat: 'All',
@@ -1759,7 +1774,7 @@ class App extends Component {
       lsSet(key, data);
       sbSave(key, data);
       this.setState({ [stateKey]: data });
-      sendPush('Ahlul Bayt Ireland', PUSH_MSG[key] || 'Community content updated', '/');
+      if (PUSH_MSG[key] !== null) sendPush('Ahlul Bayt Ireland', PUSH_MSG[key] || 'Community content updated', '/');
     });
     _defineProperty(this, "revertAll", async () => {
       const data = await sbLoadAll();
@@ -2142,12 +2157,18 @@ class App extends Component {
       const pruned = pruneExpiredStories(this.state.liveStories);
       if (pruned.length !== this.state.liveStories.length) this.setState({ liveStories: pruned });
     }, 10 * 60 * 1000);
+    // Billboard rotation
+    this.adTimer = setInterval(() => {
+      const n = activeAds(this.state.liveAds).length;
+      if (n > 1) this.setState(s => ({ adIdx: (s.adIdx + 1) % n }));
+    }, 5000);
   }
   componentWillUnmount() {
     clearInterval(this.clockTimer);
     clearInterval(this.storyTimer);
     clearInterval(this.refreshTimer);
     clearInterval(this.pruneTimer);
+    clearInterval(this.adTimer);
     this.stopAdhan();
   }
   toMin(t) {
@@ -2952,7 +2973,88 @@ class App extends Component {
         fontWeight: 700,
         cursor: 'pointer'
       }
-    }, "Ask")))));
+    }, "Ask")))), this.renderAdBoard(st));
+  }
+
+  /* ── BILLBOARD ──
+     Sponsor slides under Ask Your Maulana. One image at a time, cross-faded every
+     5 seconds by the adTimer; tapping opens the advertiser's link. */
+  renderAdBoard(st) {
+    const ads = activeAds(st.liveAds);
+    if (!ads.length) return null;
+    const idx = st.adIdx % ads.length;
+    const openAd = a => {
+      const url = String(a.link || '').trim();
+      if (!url) return;
+      window.open(/^https?:\/\//i.test(url) ? url : 'https://' + url, '_blank', 'noopener');
+    };
+    return /*#__PURE__*/React.createElement("div", {
+      style: {
+        marginTop: 14
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 8.5,
+        letterSpacing: 1.2,
+        textTransform: 'uppercase',
+        fontWeight: 700,
+        color: '#b1a690',
+        marginBottom: 5,
+        paddingLeft: 2
+      }
+    }, this.t('home.sponsored')), /*#__PURE__*/React.createElement("div", {
+      style: {
+        position: 'relative',
+        width: '100%',
+        aspectRatio: '16 / 7',
+        borderRadius: 16,
+        overflow: 'hidden',
+        background: '#efe7d6',
+        border: '1px solid #ece4d4',
+        boxShadow: '0 8px 22px -14px rgba(60,50,30,.6)'
+      }
+    }, ads.map((a, i) => /*#__PURE__*/React.createElement("img", {
+      key: i,
+      src: a.img,
+      alt: a.name || 'Advertisement',
+      onClick: () => openAd(a),
+      style: {
+        position: 'absolute',
+        inset: 0,
+        width: '100%',
+        height: '100%',
+        objectFit: 'cover',
+        display: 'block',
+        opacity: i === idx ? 1 : 0,
+        transition: 'opacity .6s ease',
+        pointerEvents: i === idx ? 'auto' : 'none',
+        cursor: a.link ? 'pointer' : 'default'
+      }
+    })), ads.length > 1 && /*#__PURE__*/React.createElement("div", {
+      style: {
+        position: 'absolute',
+        left: 0,
+        right: 0,
+        bottom: 8,
+        display: 'flex',
+        justifyContent: 'center',
+        gap: 5
+      }
+    }, ads.map((a, i) => /*#__PURE__*/React.createElement("div", {
+      key: i,
+      onClick: () => this.setState({
+        adIdx: i
+      }),
+      style: {
+        width: i === idx ? 16 : 6,
+        height: 6,
+        borderRadius: 3,
+        cursor: 'pointer',
+        background: i === idx ? '#f6f1e7' : 'rgba(246,241,231,.55)',
+        boxShadow: '0 1px 3px rgba(0,0,0,.35)',
+        transition: 'width .3s ease'
+      }
+    })))));
   }
 
   /* ── PRAYER ── */
@@ -5242,6 +5344,9 @@ class App extends Component {
       id: 'askImam',
       label: 'Ask Maulana'
     }, {
+      id: 'ads',
+      label: 'Billboard'
+    }, {
       id: 'kids',
       label: 'Kids'
     }, {
@@ -6646,6 +6751,278 @@ class App extends Component {
       }, "No maulana added — the Ask Your Maulana card is hidden."));
     };
 
+    /* ─ BILLBOARD ADS ─ */
+    const renderAdsSection = () => {
+      const d = st.adminEditDraft;
+      const list = st.liveAds || [];
+      const businesses = [PINNED_CLASSIFIED, ...(st.liveClassifieds || []).filter(c => c.name !== PINNED_CLASSIFIED.name)];
+      if (editing) {
+        const isNew = st.adminEditIdx === -1;
+        const saveAd = () => {
+          if (!d.img) {
+            this.showToast('Upload an ad image first');
+            return;
+          }
+          const item = {
+            name: (d.name || '').trim(),
+            link: (d.link || '').trim(),
+            img: d.img,
+            on: d.on !== false
+          };
+          const a = [...list];
+          if (isNew) a.push(item);else a[st.adminEditIdx] = item;
+          save('ads', 'liveAds', a, isNew ? 'Ad added!' : 'Ad updated!');
+        };
+        return /*#__PURE__*/React.createElement("div", {
+          style: {
+            padding: '0 0 20px'
+          }
+        }, /*#__PURE__*/React.createElement("div", {
+          style: {
+            fontSize: 13,
+            fontWeight: 700,
+            color: '#27241f',
+            marginBottom: 14
+          }
+        }, isNew ? 'Add Billboard Ad' : 'Edit Billboard Ad'), /*#__PURE__*/React.createElement("select", {
+          value: "",
+          onChange: e => {
+            const b = businesses[+e.target.value];
+            if (b) this.setDraft({
+              name: b.name,
+              link: b.web || d.link || ''
+            });
+          },
+          style: {
+            ...inp,
+            cursor: 'pointer',
+            color: '#6f675a'
+          }
+        }, /*#__PURE__*/React.createElement("option", {
+          value: ""
+        }, "Fill from a classifieds business…"), businesses.map((b, i) => /*#__PURE__*/React.createElement("option", {
+          key: i,
+          value: i
+        }, b.name))), /*#__PURE__*/React.createElement("input", {
+          value: d.name || '',
+          onChange: e => this.setDraft({
+            name: e.target.value
+          }),
+          placeholder: "Advertiser name (for your reference)",
+          maxLength: 60,
+          style: inp
+        }), /*#__PURE__*/React.createElement("input", {
+          value: d.link || '',
+          onChange: e => this.setDraft({
+            link: e.target.value
+          }),
+          placeholder: "Link opened when tapped (e.g. https://business.ie)",
+          maxLength: 300,
+          inputMode: "url",
+          style: inp
+        }), /*#__PURE__*/React.createElement("div", {
+          style: {
+            fontSize: 11.5,
+            color: '#8d8574',
+            margin: '-4px 2px 12px',
+            lineHeight: 1.45
+          }
+        }, "Leave the link empty for a non-clickable ad. A wide banner works best — the slide is shown at roughly 16:7."), /*#__PURE__*/React.createElement("div", {
+          style: {
+            fontSize: 12.5,
+            fontWeight: 600,
+            color: '#5d564a',
+            marginBottom: 6
+          }
+        }, "Ad image"), d.img && /*#__PURE__*/React.createElement("div", {
+          style: {
+            marginBottom: 8
+          }
+        }, /*#__PURE__*/React.createElement("img", {
+          src: d.img,
+          alt: "",
+          style: {
+            width: '100%',
+            aspectRatio: '16 / 7',
+            objectFit: 'cover',
+            borderRadius: 12,
+            display: 'block',
+            marginBottom: 8
+          }
+        }), btn('Remove image', () => this.setDraft({
+          img: ''
+        }), {
+          background: '#f3e6e8',
+          color: '#6e2230',
+          fontSize: 12,
+          padding: '6px 12px'
+        })), /*#__PURE__*/React.createElement("input", {
+          type: "file",
+          accept: "image/*",
+          onChange: async e => {
+            const f = e.target.files && e.target.files[0];
+            e.target.value = '';
+            if (!f) return;
+            try {
+              const url = await resizeImageFile(f, 1200, 0.8);
+              this.setDraft({
+                img: url
+              });
+            } catch (_) {
+              this.showToast('Could not read that image');
+            }
+          },
+          style: {
+            width: '100%',
+            fontSize: 12.5,
+            color: '#6f675a',
+            marginBottom: 14
+          }
+        }), /*#__PURE__*/React.createElement("div", {
+          onClick: () => this.setDraft({
+            on: d.on === false
+          }),
+          style: {
+            display: 'flex',
+            alignItems: 'center',
+            gap: 10,
+            marginBottom: 14,
+            cursor: 'pointer'
+          }
+        }, /*#__PURE__*/React.createElement("div", {
+          style: {
+            width: 42,
+            height: 24,
+            borderRadius: 12,
+            padding: 3,
+            background: d.on === false ? '#ddd3bf' : '#1f5145',
+            display: 'flex',
+            justifyContent: d.on === false ? 'flex-start' : 'flex-end'
+          }
+        }, /*#__PURE__*/React.createElement("div", {
+          style: {
+            width: 18,
+            height: 18,
+            borderRadius: '50%',
+            background: '#fffdf9'
+          }
+        })), /*#__PURE__*/React.createElement("div", {
+          style: {
+            fontSize: 13,
+            color: '#3f3a32',
+            fontWeight: 600
+          }
+        }, d.on === false ? 'Paused — not shown on the home page' : 'Live — shown in the billboard')), /*#__PURE__*/React.createElement("div", {
+          style: {
+            display: 'flex',
+            gap: 10
+          }
+        }, btn('Save', saveAd, {
+          flex: 1,
+          background: '#1f5145',
+          color: '#f3ead4'
+        }), btn('Cancel', this.cancelEdit, {
+          flex: 1,
+          border: '1px solid #e6dcc8',
+          background: '#fffdf9',
+          color: '#3f3a32'
+        })));
+      }
+      const liveCount = activeAds(list).length;
+      return /*#__PURE__*/React.createElement("div", null, btn('+ Add Ad', () => this.startEdit(-1, {
+        name: '',
+        link: '',
+        img: '',
+        on: true
+      }), {
+        background: '#1f5145',
+        color: '#f3ead4',
+        marginBottom: 14,
+        width: '100%'
+      }), list.map((a, i) => /*#__PURE__*/React.createElement("div", {
+        key: i,
+        style: {
+          display: 'flex',
+          alignItems: 'center',
+          gap: 12,
+          background: '#fffdf9',
+          border: '1px solid #ece4d4',
+          borderRadius: 14,
+          padding: '10px 12px',
+          marginBottom: 8
+        }
+      }, /*#__PURE__*/React.createElement("img", {
+        src: a.img,
+        alt: "",
+        style: {
+          width: 58,
+          height: 34,
+          objectFit: 'cover',
+          borderRadius: 8,
+          flexShrink: 0,
+          opacity: a.on === false ? .4 : 1
+        }
+      }), /*#__PURE__*/React.createElement("div", {
+        style: {
+          flex: 1,
+          minWidth: 0
+        }
+      }, /*#__PURE__*/React.createElement("div", {
+        style: {
+          fontSize: 13,
+          fontWeight: 600,
+          color: '#2c2823',
+          whiteSpace: 'nowrap',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis'
+        }
+      }, a.name || 'Untitled ad'), /*#__PURE__*/React.createElement("div", {
+        style: {
+          fontSize: 10.5,
+          color: a.on === false ? '#a03a3a' : '#9a8f7c',
+          whiteSpace: 'nowrap',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis'
+        }
+      }, (a.on === false ? 'Paused' : 'Live') + ' · ' + (a.link || 'No link'))), btn(a.on === false ? 'Show' : 'Pause', () => {
+        const arr = [...list];
+        arr[i] = {
+          ...a,
+          on: a.on === false
+        };
+        save('ads', 'liveAds', arr, a.on === false ? 'Ad is live' : 'Ad paused');
+      }, {
+        background: '#f3ecd9',
+        color: '#9a7a2c',
+        fontSize: 12,
+        padding: '6px 10px'
+      }), btn('Edit', () => this.startEdit(i, {
+        ...a
+      }), {
+        background: '#e6efe9',
+        color: '#1f5145',
+        fontSize: 12,
+        padding: '6px 12px'
+      }), btn('✕', () => {
+        const arr = [...list];
+        arr.splice(i, 1);
+        save('ads', 'liveAds', arr, 'Ad removed');
+      }, {
+        background: '#fdf0f2',
+        color: '#6e2230',
+        fontSize: 12,
+        padding: '6px 10px'
+      }))), /*#__PURE__*/React.createElement("div", {
+        style: {
+          fontSize: 12,
+          color: liveCount ? '#1f5145' : '#8d8574',
+          fontWeight: liveCount ? 700 : 400,
+          fontStyle: liveCount ? 'normal' : 'italic',
+          marginTop: 4
+        }
+      }, liveCount ? `● Live — ${liveCount} ad${liveCount > 1 ? 's' : ''} rotating every 5 seconds under Ask Your Maulana` : 'No live ads — the billboard is hidden on the home page.'));
+    };
+
     /* ─ PINNED MESSAGE ─ */
     const renderPinnedSection = () => {
       const d = st.adminEditDraft;
@@ -8046,6 +8423,7 @@ class App extends Component {
       announcement: renderAnnouncementSection,
       pinned: renderPinnedSection,
       askImam: renderAskImamSection,
+      ads: renderAdsSection,
       kids: renderKidsSection,
       health: renderHealthSection
     };
