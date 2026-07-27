@@ -1645,6 +1645,7 @@ class App extends Component {
       liveZiyarat: lsGet('ziyarat', ZIYARAT),
       liveNahj: lsGet('nahj', NAHJ),
       liveKidsQuizzes: lsGet('kidsQuizzes', KIDS_QUIZZES),
+      quizRun: null,
       liveAskImam: lsGet('askImam', []),
       liveAds: lsGet('ads', []),
       adIdx: 0,
@@ -1657,6 +1658,7 @@ class App extends Component {
     _defineProperty(this, "go", s => {
       // Refresh every page on navigation: reset transient view state so each
       // screen opens fresh, and scroll the content area back to the top.
+      this.clearQuizTimers();
       this.setState({
         screen: s,
         story: null,
@@ -1667,6 +1669,7 @@ class App extends Component {
         kidsTab: 'videos',
         kidsVidCat: 'All',
         kidsQuizPicks: {},
+        quizRun: null,
         healthTab: 'videos',
         healthVidCat: 'All',
         calViewY: null,
@@ -1675,6 +1678,67 @@ class App extends Component {
       });
       const sc = document.querySelector('.app > .s');
       if (sc) sc.scrollTop = 0;
+    });
+    /* ── QUIZ GAME ──
+       A run is 10 random questions from the chosen level, 10 seconds each.
+       The countdown pauses while the player is off the quiz tab, a timeout
+       counts as a wrong answer, and each question auto-advances after reveal. */
+    _defineProperty(this, "clearQuizTimers", () => {
+      clearInterval(this.quizTick);
+      clearTimeout(this.quizNext);
+    });
+    _defineProperty(this, "startQuizRun", lvl => {
+      this.clearQuizTimers();
+      const pool = (this.state.liveKidsQuizzes || []).filter(q => quizLevel(q) === lvl);
+      const arr = [...pool];
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      this.setState({
+        quizRun: { lvl, qs: arr.slice(0, 10), pos: 0, score: 0, pick: null, timeLeft: 10, done: false }
+      });
+      this.quizTick = setInterval(this.quizTickFn, 1000);
+    });
+    _defineProperty(this, "quizTickFn", () => {
+      this.setState(s => {
+        const r = s.quizRun;
+        if (!r || r.done || r.pick !== null) return null;
+        if (s.screen !== 'kids' || s.kidsTab !== 'quiz') return null; // pause while away
+        if (r.timeLeft <= 1) {
+          clearInterval(this.quizTick);
+          this.quizNext = setTimeout(this.quizAdvance, 2000);
+          return { quizRun: { ...r, timeLeft: 0, pick: -1 } };
+        }
+        return { quizRun: { ...r, timeLeft: r.timeLeft - 1 } };
+      });
+    });
+    _defineProperty(this, "answerQuizRun", oi => {
+      const r = this.state.quizRun;
+      if (!r || r.done || r.pick !== null) return;
+      clearInterval(this.quizTick);
+      this.setState({
+        quizRun: { ...r, pick: oi, score: r.score + (oi === r.qs[r.pos].answer ? 1 : 0) }
+      });
+      this.quizNext = setTimeout(this.quizAdvance, 1600);
+    });
+    _defineProperty(this, "quizAdvance", () => {
+      this.setState(s => {
+        const r = s.quizRun;
+        if (!r || r.done) return null;
+        if (r.pos >= r.qs.length - 1) return { quizRun: { ...r, done: true } };
+        return { quizRun: { ...r, pos: r.pos + 1, pick: null, timeLeft: 10 } };
+      }, () => {
+        const r = this.state.quizRun;
+        if (r && !r.done) {
+          clearInterval(this.quizTick);
+          this.quizTick = setInterval(this.quizTickFn, 1000);
+        }
+      });
+    });
+    _defineProperty(this, "quitQuiz", () => {
+      this.clearQuizTimers();
+      this.setState({ quizRun: null });
     });
     _defineProperty(this, "toggleAdhanMute", name => {
       const m = {
@@ -2169,6 +2233,7 @@ class App extends Component {
     clearInterval(this.refreshTimer);
     clearInterval(this.pruneTimer);
     clearInterval(this.adTimer);
+    this.clearQuizTimers();
     this.stopAdhan();
   }
   toMin(t) {
@@ -3871,7 +3936,16 @@ class App extends Component {
         const catOk = st.libCat === 'All' || it.cat === st.libCat;
         const qOk = !q || (it.title || '').toLowerCase().includes(q) || (it.tr || '').toLowerCase().includes(q);
         return catOk && qOk;
-      }).sort((a, b) => sortKey(a.title).localeCompare(sortKey(b.title), 'en', { sensitivity: 'base', numeric: true }));
+      }).sort((a, b) => {
+        // nearly every ziyārah title starts with a variant spelling of the word
+        // itself, so ordering only reads properly by what comes after it
+        const key = t => {
+          let k = sortKey(t);
+          if (st.libTab === 'ziyarah') k = k.replace(/^(ziyarat|ziyarah|ziarat|ziarah)\s+(of\s+)?/i, '');
+          return k;
+        };
+        return key(a.title).localeCompare(key(b.title), 'en', { sensitivity: 'base', numeric: true });
+      });
     }
     let nahjCards = [];
     if (st.libTab === 'nahj') {
@@ -4294,8 +4368,8 @@ class App extends Component {
         key: i,
         dir: latin ? 'ltr' : 'rtl',
         style: latin ? {
-          fontFamily: 'Spectral,serif', fontSize: trSize, lineHeight: 1.5,
-          color: rd.muted, textAlign: 'center', fontStyle: 'italic', margin: '12px 0'
+          fontFamily: 'Spectral,serif', fontSize: arSize, lineHeight: 1.4,
+          color: rd.muted, textAlign: 'center', fontStyle: 'italic', margin: '14px 0'
         } : {
           fontFamily: "'Noto Naskh Arabic','Amiri',serif", fontSize: arSize,
           lineHeight: 1.9, color: rd.arInk, textAlign: 'center'
@@ -9406,9 +9480,13 @@ class App extends Component {
       const n = (st.liveKidsQuizzes || []).filter(q => quizLevel(q) === L.key).length;
       return /*#__PURE__*/React.createElement("div", {
         key: L.key,
-        onClick: () => this.setState({
-          kidsQuizLevel: L.key
-        }),
+        onClick: () => {
+          this.clearQuizTimers();
+          this.setState({
+            kidsQuizLevel: L.key,
+            quizRun: null
+          });
+        },
         style: {
           flex: 1,
           textAlign: 'center',
@@ -9429,8 +9507,9 @@ class App extends Component {
       }, " · ", n) : null);
     })), (() => {
       const lvl = st.kidsQuizLevel || 'beginner';
-      const picked = (st.liveKidsQuizzes || []).map((qz, qi) => ({ qz, qi })).filter(x => quizLevel(x.qz) === lvl);
-      if (!picked.length) return /*#__PURE__*/React.createElement("div", {
+      const lvlMeta = QUIZ_LEVELS.find(l => l.key === lvl) || QUIZ_LEVELS[0];
+      const pool = (st.liveKidsQuizzes || []).filter(q => quizLevel(q) === lvl);
+      if (!pool.length) return /*#__PURE__*/React.createElement("div", {
         style: {
           background: '#fffdf9',
           border: '1px dashed #e6dcc8',
@@ -9441,12 +9520,139 @@ class App extends Component {
           color: '#8c8270',
           marginBottom: 14
         }
-      }, "No ", (QUIZ_LEVELS.find(l => l.key === lvl) || {}).label.toLowerCase(), " quizzes yet — check back soon.");
-      return picked.map(({ qz, qi }, pos) => {
-      const pick = (st.kidsQuizPicks || {})[qi];
-      const answered = pick !== undefined;
+      }, "No ", lvlMeta.label.toLowerCase(), " quizzes yet — check back soon.");
+      const r = st.quizRun && st.quizRun.lvl === lvl ? st.quizRun : null;
+
+      /* start card */
+      if (!r) return /*#__PURE__*/React.createElement("div", {
+        style: {
+          background: '#fffdf9',
+          border: '1px solid #ece4d4',
+          borderRadius: 18,
+          padding: '24px 20px',
+          textAlign: 'center',
+          marginBottom: 14
+        }
+      }, /*#__PURE__*/React.createElement("div", {
+        style: {
+          fontSize: 40,
+          marginBottom: 8
+        }
+      }, "🎯"), /*#__PURE__*/React.createElement("div", {
+        style: {
+          fontFamily: 'Spectral,serif',
+          fontSize: 19,
+          fontWeight: 600,
+          color: '#2c2823'
+        }
+      }, "Ready to play?"), /*#__PURE__*/React.createElement("div", {
+        style: {
+          fontSize: 13,
+          color: '#8c8270',
+          marginTop: 6,
+          lineHeight: 1.5
+        }
+      }, Math.min(10, pool.length), " random question", Math.min(10, pool.length) > 1 ? 's' : '', " · 10 seconds each", /*#__PURE__*/React.createElement("br", null), "Answer before the clock runs out!"), /*#__PURE__*/React.createElement("div", {
+        onClick: () => this.startQuizRun(lvl),
+        style: {
+          marginTop: 16,
+          padding: '13px 0',
+          borderRadius: 13,
+          background: lvlMeta.color,
+          color: '#fffdf9',
+          fontSize: 15,
+          fontWeight: 800,
+          cursor: 'pointer'
+        }
+      }, "Start Quiz ▶"));
+
+      /* results card */
+      if (r.done) {
+        const total = r.qs.length;
+        const pct = r.score / total;
+        const stars = Math.max(1, Math.round(pct * 5));
+        const cheer = pct === 1 ? ['🏆', 'Mashallah — a perfect score!', 'You answered every single question right. Outstanding!'] : pct >= .7 ? ['🌟', 'Amazing job!', 'You really know your stuff — keep it up!'] : pct >= .4 ? ['👍', 'Well done!', 'Great effort — a little more practice and you will ace it!'] : ['💪', 'Good try!', 'Every champion starts somewhere — play again and watch your score grow!'];
+        return /*#__PURE__*/React.createElement("div", {
+          className: "apo",
+          style: {
+            background: 'linear-gradient(150deg,#1f5145,#163b30)',
+            borderRadius: 18,
+            padding: '26px 20px',
+            textAlign: 'center',
+            marginBottom: 14,
+            color: '#f3ead4'
+          }
+        }, /*#__PURE__*/React.createElement("div", {
+          style: {
+            fontSize: 44
+          }
+        }, cheer[0]), /*#__PURE__*/React.createElement("div", {
+          style: {
+            fontFamily: 'Spectral,serif',
+            fontSize: 21,
+            fontWeight: 600,
+            marginTop: 6
+          }
+        }, cheer[1]), /*#__PURE__*/React.createElement("div", {
+          style: {
+            fontSize: 15,
+            marginTop: 10,
+            fontWeight: 700,
+            color: '#d8b863'
+          }
+        }, "You scored ", r.score, " out of ", total), /*#__PURE__*/React.createElement("div", {
+          style: {
+            fontSize: 20,
+            letterSpacing: 3,
+            marginTop: 6
+          }
+        }, '★'.repeat(stars) + '☆'.repeat(5 - stars)), /*#__PURE__*/React.createElement("div", {
+          style: {
+            fontSize: 12.5,
+            color: 'rgba(243,234,212,.8)',
+            marginTop: 8,
+            lineHeight: 1.5
+          }
+        }, cheer[2]), /*#__PURE__*/React.createElement("div", {
+          style: {
+            display: 'flex',
+            gap: 10,
+            marginTop: 18
+          }
+        }, /*#__PURE__*/React.createElement("div", {
+          onClick: () => this.startQuizRun(lvl),
+          style: {
+            flex: 1,
+            padding: '12px 0',
+            borderRadius: 12,
+            background: '#d8b863',
+            color: '#163b30',
+            fontSize: 14,
+            fontWeight: 800,
+            cursor: 'pointer'
+          }
+        }, "Play Again"), /*#__PURE__*/React.createElement("div", {
+          onClick: this.quitQuiz,
+          style: {
+            flex: 1,
+            padding: '12px 0',
+            borderRadius: 12,
+            border: '1.5px solid rgba(243,234,212,.4)',
+            color: '#f3ead4',
+            fontSize: 14,
+            fontWeight: 700,
+            cursor: 'pointer'
+          }
+        }, "Done")));
+      }
+
+      /* live question */
+      const qz = r.qs[r.pos];
+      const answered = r.pick !== null;
+      const urgent = !answered && r.timeLeft <= 3;
       return /*#__PURE__*/React.createElement("div", {
-        key: qi,
+        key: r.pos,
+        className: "apo",
         style: {
           background: '#fffdf9',
           border: '1px solid #ece4d4',
@@ -9456,14 +9662,57 @@ class App extends Component {
         }
       }, /*#__PURE__*/React.createElement("div", {
         style: {
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          marginBottom: 8
+        }
+      }, /*#__PURE__*/React.createElement("div", {
+        style: {
           fontSize: 10.5,
           letterSpacing: .8,
           textTransform: 'uppercase',
           fontWeight: 700,
-          color: '#6e2230',
-          marginBottom: 8
+          color: '#6e2230'
         }
-      }, "Question ", pos + 1), /*#__PURE__*/React.createElement("div", {
+      }, "Question ", r.pos + 1, " of ", r.qs.length), /*#__PURE__*/React.createElement("div", {
+        style: {
+          fontSize: 10.5,
+          fontWeight: 700,
+          color: '#9a7a2c'
+        }
+      }, "Score ", r.score), /*#__PURE__*/React.createElement("div", {
+        style: {
+          width: 34,
+          height: 34,
+          borderRadius: '50%',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontSize: 14,
+          fontWeight: 800,
+          fontVariantNumeric: 'tabular-nums',
+          color: urgent ? '#fffdf9' : '#1f5145',
+          background: urgent ? '#c0392b' : '#e6efe9',
+          transition: 'background .3s'
+        }
+      }, answered ? '·' : r.timeLeft)), /*#__PURE__*/React.createElement("div", {
+        style: {
+          height: 5,
+          borderRadius: 3,
+          background: '#f0e9d9',
+          overflow: 'hidden',
+          marginBottom: 12
+        }
+      }, /*#__PURE__*/React.createElement("div", {
+        style: {
+          height: '100%',
+          width: (answered ? 0 : r.timeLeft * 10) + '%',
+          borderRadius: 3,
+          background: urgent ? '#c0392b' : lvlMeta.color,
+          transition: 'width 1s linear, background .3s'
+        }
+      })), /*#__PURE__*/React.createElement("div", {
         style: {
           fontFamily: 'Spectral,serif',
           fontSize: 16.5,
@@ -9479,21 +9728,14 @@ class App extends Component {
           gap: 9
         }
       }, (qz.options || []).map((opt, oi) => {
-        const picked = pick === oi;
+        const picked = r.pick === oi;
         const correct = oi === qz.answer;
         const bg = answered ? correct ? '#e4f3e7' : picked ? '#fbe9e9' : '#faf7f0' : '#faf7f0';
         const bd = answered && correct ? '#7cc38f' : answered && picked ? '#e0a0a0' : '#e6dcc8';
         const mark = answered ? correct ? '✓' : picked ? '✕' : '' : String.fromCharCode(65 + oi);
         return /*#__PURE__*/React.createElement("div", {
           key: oi,
-          onClick: () => {
-            if (!answered) this.setState({
-              kidsQuizPicks: {
-                ...(st.kidsQuizPicks || {}),
-                [qi]: oi
-              }
-            });
-          },
+          onClick: () => this.answerQuizRun(oi),
           style: {
             display: 'flex',
             alignItems: 'center',
@@ -9519,28 +9761,9 @@ class App extends Component {
           marginTop: 11,
           fontSize: 13,
           fontWeight: 600,
-          color: pick === qz.answer ? '#1f5145' : '#6e2230'
+          color: r.pick === qz.answer ? '#1f5145' : '#6e2230'
         }
-      }, pick === qz.answer ? 'Correct — well done!' : 'Not quite — the correct answer is highlighted.'), answered && /*#__PURE__*/React.createElement("div", {
-        onClick: () => {
-          const p = {
-            ...(st.kidsQuizPicks || {})
-          };
-          delete p[qi];
-          this.setState({
-            kidsQuizPicks: p
-          });
-        },
-        style: {
-          marginTop: 8,
-          fontSize: 12,
-          fontWeight: 600,
-          color: '#8c8270',
-          cursor: 'pointer',
-          textDecoration: 'underline'
-        }
-      }, "Try again"));
-    });
+      }, r.pick === qz.answer ? 'Correct — well done! 🎉' : r.pick === -1 ? "Time's up! The answer is highlighted." : 'Not quite — the correct answer is highlighted.'));
     })()), kt === 'quiz' && /*#__PURE__*/React.createElement("div", {
       onClick: () => this.openStory(STORIES.findIndex(s => s.kind === 'quiz')),
       style: {
