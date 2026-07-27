@@ -1094,11 +1094,11 @@ const STRINGS = {
     'Urdu': 'آج کوئی تقریب نہیں'
   },
   'cal.upcoming': {
-    English: 'Upcoming Events',
-    'العربية': 'الفعاليات القادمة',
-    'हिन्दी': 'आगामी कार्यक्रम',
-    'فارسی': 'رویدادهای آینده',
-    'Urdu': 'آنے والی تقاریب'
+    English: 'Upcoming Reminders',
+    'العربية': 'التذكيرات القادمة',
+    'हिन्दी': 'आगामी रिमाइंडर',
+    'فارسی': 'یادآوری‌های آینده',
+    'Urdu': 'آنے والی یاد دہانیاں'
   },
   'kids.title': {
     English: 'Kids Corner',
@@ -1351,6 +1351,72 @@ const quizLevel = q => {
   const k = String((q && q.level) || 'beginner').toLowerCase();
   return QUIZ_LEVELS.some(l => l.key === k) ? k : 'beginner';
 };
+
+/* ── TASBEEH ── */
+const DHIKRS = [
+  { ar: 'سُبْحَانَ ٱللَّٰه', tr: 'Subḥān Allāh', en: 'Glory be to Allah', target: 33 },
+  { ar: 'ٱلْحَمْدُ لِلَّٰه', tr: 'Al-ḥamdu lillāh', en: 'All praise is for Allah', target: 33 },
+  { ar: 'ٱللَّٰهُ أَكْبَر', tr: 'Allāhu akbar', en: 'Allah is the Greatest', target: 34 },
+  { ar: 'لَا إِلَٰهَ إِلَّا ٱللَّٰه', tr: 'Lā ilāha illā Allāh', en: 'There is no god but Allah', target: 100 },
+  { ar: 'أَسْتَغْفِرُ ٱللَّٰه', tr: 'Astaghfirullāh', en: 'I seek forgiveness from Allah', target: 100 },
+  { ar: 'ٱللَّٰهُمَّ صَلِّ عَلَىٰ مُحَمَّدٍ وَآلِ مُحَمَّد', tr: 'Ṣalawāt', en: 'Blessings upon Muhammad and his family', target: 100 }
+];
+
+/* ── ISLAMIC WALLPAPERS ──
+   Photos hosted by Unsplash and fetched live from unsplash.com on every view; nothing
+   is bundled with the app. Ten are shown each day, picked by a date-seeded shuffle of
+   the pool, so the selection changes at midnight and is the same for everyone.
+   Attribution is required by the Unsplash licence, so each photo keeps its author. */
+const WALLPAPERS = [
+  { id: 'I-1L8cYkle0', f: 'photo-1736536475480-8f4e8bafeddd', by: 'Hossein Nasr' },
+  { id: '2lMK4dgqwFM', f: 'photo-1584551246679-0daf3d275d0f', by: 'Daniel Olah' },
+  { id: '6Aa4EeZTdqw', f: 'photo-1627728734379-a5f8c099763e', by: 'Untung Bekti Nugroho' },
+  { id: 'DyE0L2C4GiI', f: 'photo-1732831627964-f6fc7157aebd', by: "Marco D'Abramo" },
+  { id: 'c1QVYdg5_io', f: 'photo-1724191078796-8a997b989f43', by: 'Vincent Marcini' },
+  { id: 'ZcBY_mxVBCE', f: 'photo-1590075865003-e48277faa558', by: 'Nick Fewings' },
+  { id: '_k0r8ebPzp8', f: 'photo-1728046421058-1e1e28e57193', by: 'Alim' },
+  { id: 'onh-FdFUyeM', f: 'photo-1537181534458-45dcee76ae90', by: 'Izuddin Helmi Adnan' },
+  { id: '7blIFp0kFP4', f: 'photo-1542816417-0983c9c9ad53', by: 'Ashkan Forouzani' },
+  { id: 'kNSREmtaGOE', f: 'photo-1527838832700-5059252407fa', by: 'Fatih Yürür' },
+  { id: 'kZ1zThg6G40', f: 'photo-1512632578888-169bbbc64f33', by: 'David Rodrigo' },
+  { id: 'ztA6v1IRtq0', f: 'photo-1713463975229-f45c82ac5b5c', by: 'AmirHadi Manavi Moghadam' },
+  { id: 'U2eUlPEKIgU', f: 'photo-1548438294-1ad5d5f4f063', by: 'Randy Tarampi' },
+  { id: 'wuc-KEIBrdE', f: 'photo-1516617442634-75371039cb3a', by: 'Annie Spratt' },
+  { id: 'ITQKDvNdkl4', f: 'photo-1725007995235-6979cb34ff8e', by: 'M u h t e l i f' },
+  { id: '6Ppkk8rIhvk', f: 'photo-1531804308561-b6438d25a810', by: 'Nouman Younas' },
+  { id: 'r-cy77rA0J0', f: 'photo-1590273089302-ebbc53986b6e', by: 'Alessa Ciraulo' },
+  { id: 'EwcvNe53bdM', f: 'photo-1567712595315-545da0d341b2', by: 'David Billings' },
+  { id: 'MDzJF3o8Ajk', f: 'photo-1554110838-816383ce7956', by: 'Mike Yukhtenko' },
+  { id: 'FFhJCVaFuO0', f: 'photo-1623241087673-632acaa0e995', by: 'Ahmet Kağan Hançer' },
+  { id: 'YtVsAUt5ubs', f: 'photo-1528862973381-9bc5ad6d4227', by: 'Rachelle Magpayo' },
+  { id: 'R6rh5ttDO-4', f: 'photo-1551041777-ed277b8dd348', by: 'Yasmine Arfaoui' },
+  { id: 'k8oak9BhX7M', f: 'photo-1589002213012-6ec134d3f8ae', by: 'Mayur' },
+  { id: 'eeI0al-Qx8k', f: 'photo-1535117423468-de0ff056882e', by: 'HAMEED ULLAH' },
+  { id: 'uouvblwaQs4', f: 'photo-1627790497727-41fb43f961be', by: 'Mosquegrapher' },
+  { id: 'QEcvxkXWp0c', f: 'photo-1635016288720-c52507b9a717', by: 'Muhammad Irfan Baloch' },
+  { id: '8M7xXeeyFZQ', f: 'photo-1720609813911-5d431512424e', by: 'Tahmeed Ahmad' },
+  { id: 'rEH8hG7wUgw', f: 'photo-1711202675843-ccdb194d2b7d', by: 'Aldin Nasrun' }
+];
+const wallUrl = (w, px) => `https://images.unsplash.com/${w.f}?auto=format&fit=crop&q=80&w=${px}`;
+const wallPage = w => `https://unsplash.com/photos/${w.id}`;
+
+/* The ten wallpapers for a given day: a shuffle seeded by the date, so it is stable
+   for the whole day and different tomorrow. */
+function wallpapersFor(date) {
+  const seedStr = `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
+  let seed = 0;
+  for (let i = 0; i < seedStr.length; i++) seed = (seed * 31 + seedStr.charCodeAt(i)) >>> 0;
+  const rnd = () => {
+    seed = (seed * 1664525 + 1013904223) >>> 0;
+    return seed / 4294967296;
+  };
+  const pool = [...WALLPAPERS];
+  for (let i = pool.length - 1; i > 0; i--) {
+    const j = Math.floor(rnd() * (i + 1));
+    [pool[i], pool[j]] = [pool[j], pool[i]];
+  }
+  return pool.slice(0, 10);
+}
 
 /* ── ADHAN SOUNDS ── */
 const ADHAN_SOUNDS = [
@@ -1606,6 +1672,12 @@ class App extends Component {
       qiblaLng: null,
       /* ── KHUMS & ZAKAT ── */
       khumsTab: 'khums',
+      tasbeehCount: lsGet('tasbeehCount', 0),
+      tasbeehIdx: lsGet('tasbeehIdx', 0),
+      tasbeehRounds: lsGet('tasbeehRounds', 0),
+      tasbeehPulse: 0,
+      wallOpen: null,
+      wallSaving: false,
       khumsCalc: { cash: '', goods: '', receivables: '', other: '', debts: '', paid: '' },
       zakatCalc: { cash: '', gold: '', silver: '', business: '', receivables: '', investments: '', debts: '', nisab: '600' },
       /* ── ADMIN ── */
@@ -1674,7 +1746,8 @@ class App extends Component {
         healthVidCat: 'All',
         calViewY: null,
         calViewM: undefined,
-        calDay: null
+        calDay: null,
+        wallOpen: null
       });
       const sc = document.querySelector('.app > .s');
       if (sc) sc.scrollTop = 0;
@@ -1739,6 +1812,55 @@ class App extends Component {
     _defineProperty(this, "quitQuiz", () => {
       this.clearQuizTimers();
       this.setState({ quizRun: null });
+    });
+    /* ── TASBEEH ──
+       Count persists across navigation and restarts; a completed round buzzes
+       twice and rolls the counter back to zero so dhikr can continue. */
+    _defineProperty(this, "tasbeehTap", () => {
+      this.setState(s => {
+        const d = DHIKRS[s.tasbeehIdx] || DHIKRS[0];
+        const next = s.tasbeehCount + 1;
+        const done = next >= d.target;
+        const count = done ? 0 : next;
+        const rounds = done ? s.tasbeehRounds + 1 : s.tasbeehRounds;
+        lsSet('tasbeehCount', count);
+        lsSet('tasbeehRounds', rounds);
+        if (navigator.vibrate) navigator.vibrate(done ? [30, 60, 30] : 14);
+        return { tasbeehCount: count, tasbeehRounds: rounds, tasbeehPulse: s.tasbeehPulse + 1 };
+      });
+    });
+    _defineProperty(this, "tasbeehReset", () => {
+      lsSet('tasbeehCount', 0);
+      lsSet('tasbeehRounds', 0);
+      this.setState({ tasbeehCount: 0, tasbeehRounds: 0 });
+    });
+    _defineProperty(this, "setDhikr", i => {
+      lsSet('tasbeehIdx', i);
+      lsSet('tasbeehCount', 0);
+      this.setState({ tasbeehIdx: i, tasbeehCount: 0 });
+    });
+    /* Save a wallpaper: Unsplash serves these with an open CORS header, so the
+       bytes can be pulled into a blob and handed to a real download. */
+    _defineProperty(this, "saveWallpaper", async w => {
+      this.setState({ wallSaving: true });
+      try {
+        const res = await fetch(wallUrl(w, 1400));
+        if (!res.ok) throw new Error('http ' + res.status);
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `abi-wallpaper-${w.id}.jpg`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 4000);
+        this.showToast('Wallpaper saved');
+      } catch (e) {
+        window.open(wallUrl(w, 1400), '_blank', 'noopener');
+        this.showToast('Opened in a new tab - press and hold to save');
+      }
+      this.setState({ wallSaving: false });
     });
     _defineProperty(this, "toggleAdhanMute", name => {
       const m = {
@@ -2321,6 +2443,14 @@ class App extends Component {
       title: this.t('home.classTitle'),
       icon: '🏪',
       go: () => this.go('classifieds')
+    }, {
+      title: 'Tasbeeh',
+      icon: '📿',
+      go: () => this.go('tasbeeh')
+    }, {
+      title: 'Wallpapers',
+      icon: '🖼️',
+      go: () => this.go('wallpaper')
     }, {
       title: 'Khums & Zakat',
       icon: '🧮',
@@ -8762,14 +8892,23 @@ class App extends Component {
     const dayReminders = (st.liveCalEvents || []).filter(e => e.notice === 'reminder' && e.date && eventOnDate(e, selDayDate));
     const dayLabelShort = selIsToday ? 'Today' : selDayDate.toLocaleDateString('en-IE', { weekday: 'short', day: 'numeric', month: 'short' });
     const todayStart = new Date(todayY, todayM, todayD).getTime();
-    const calEventList = Object.keys(eventsByDay).map(d => +d).filter(d => new Date(calY, calM, d).getTime() >= todayStart).sort((a, b) => a - b).flatMap(d => eventsByDay[d].map(ev => ({
-      day: d,
-      ...ev,
-      dateLabel: new Date(calY, calM, d).toLocaleDateString('en-IE', {
-        day: 'numeric',
-        month: 'short'
-      })
-    })));
+    // The list below the calendar is reminders only ("On this day" entries live in their
+    // own card), and it looks 60 days ahead so it does not stop at the month boundary.
+    const remList = (st.liveCalEvents || []).filter(e => e.notice === 'reminder' && e.date);
+    const calEventList = [];
+    for (let i = 0; i < 60 && calEventList.length < 12; i++) {
+      const dd = new Date(todayY, todayM, todayD + i);
+      remList.filter(e => eventOnDate(e, dd)).forEach(ev => calEventList.push({
+        y: dd.getFullYear(),
+        m: dd.getMonth(),
+        day: dd.getDate(),
+        ...ev,
+        dateLabel: dd.toLocaleDateString('en-IE', {
+          day: 'numeric',
+          month: 'short'
+        })
+      }));
+    }
     const weekHead = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
     const hijriMonthYear = toHijri(new Date(calY, calM, 15)).split(' ').slice(1).join(' ');
     const cells = [];
@@ -8876,10 +9015,9 @@ class App extends Component {
       style: { display: 'flex', alignItems: 'center', gap: 9 }
     }, calIcon, /*#__PURE__*/React.createElement("div", {
       style: { fontSize: 15, fontWeight: 700, color: '#1f5145' }
-    }, "On this day")), calEventList.length > 0 && /*#__PURE__*/React.createElement("div", {
-      onClick: () => { const el = document.getElementById('cal-upcoming'); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); },
-      style: { fontSize: 12.5, fontWeight: 600, color: '#1f5145', cursor: 'pointer' }
-    }, "See all ›")), /*#__PURE__*/React.createElement("div", {
+    }, "On this day")), /*#__PURE__*/React.createElement("div", {
+      style: { fontSize: 12.5, fontWeight: 600, color: '#1f5145' }
+    }, dayLabelShort)), /*#__PURE__*/React.createElement("div", {
       style: { padding: '2px 16px 12px' }
     }, selEvents.length > 0 ? selEvents.map((ev, si) => /*#__PURE__*/React.createElement("div", {
       key: si,
@@ -8936,7 +9074,7 @@ class App extends Component {
       style: { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, padding: '11px', borderRadius: 12, border: '1px dashed #c4ddd7', background: '#f4fbf8', color: '#1f5145', fontSize: 13.5, fontWeight: 600, cursor: 'pointer' }
     }, "+ Add A Reminder") : dayReminders.length === 0 && /*#__PURE__*/React.createElement("div", {
       style: { fontSize: 13, color: '#b1a690', textAlign: 'center', padding: '4px 0' }
-    }, "No reminders for this day.")),
+    }, "No reminders for this day."))),
     st.adminLoggedIn && /*#__PURE__*/React.createElement("div", {
       onClick: () => this.setState({ screen: 'admin', adminSection: 'events', adminEditIdx: null, adminEditDraft: {} }),
       style: { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginTop: 16, padding: '12px', borderRadius: 14, border: '1px dashed #c4ddd7', background: '#f4fbf8', cursor: 'pointer' }
@@ -8944,14 +9082,15 @@ class App extends Component {
       style: { color: '#1f5145', fontSize: 14, fontWeight: 600 }
     }, "⚙ Manage Events & Reminders")),
     calEventList.length > 0 && /*#__PURE__*/React.createElement("div", {
-      id: 'cal-upcoming'
+      id: 'cal-upcoming',
+      style: { marginTop: 26 }
     }, /*#__PURE__*/React.createElement("div", {
-      style: { fontSize: 11, letterSpacing: 1.2, textTransform: 'uppercase', fontWeight: 700, color: '#b1a690', margin: '22px 0 12px' }
+      style: { fontSize: 11, letterSpacing: 1.2, textTransform: 'uppercase', fontWeight: 700, color: '#b1a690', marginBottom: 12 }
     }, this.t('cal.upcoming')), /*#__PURE__*/React.createElement("div", {
       style: { display: 'flex', flexDirection: 'column', gap: 10 }
     }, calEventList.map((e, i) => /*#__PURE__*/React.createElement("div", {
       key: i,
-      onClick: () => this.setState({ calDay: e.day }),
+      onClick: () => this.setState({ calViewY: e.y, calViewM: e.m, calDay: e.day }),
       style: { display: 'flex', gap: 13, alignItems: 'center', background: '#fffdf9', border: '1px solid #ece4d4', borderRadius: 15, padding: '13px 15px', cursor: 'pointer' }
     }, /*#__PURE__*/React.createElement("div", {
       style: { flexShrink: 0, width: 46, textAlign: 'center', borderRight: '1px solid #f1ebdd', paddingRight: 11 }
@@ -8963,11 +9102,11 @@ class App extends Component {
       style: { flex: 1 }
     }, /*#__PURE__*/React.createElement("div", {
       style: { fontSize: 10, letterSpacing: .6, textTransform: 'uppercase', fontWeight: 700, color: e.color }
-    }, e.type), /*#__PURE__*/React.createElement("div", {
+    }, "🔔 ", e.type), /*#__PURE__*/React.createElement("div", {
       style: { fontSize: 14.5, fontWeight: 600, color: '#2c2823', marginTop: 1 }
-    }, e.title))))))),
+    }, e.title)))))),
     /*#__PURE__*/React.createElement("div", {
-      style: { textAlign: 'center', fontSize: 11.5, color: '#a89d88', lineHeight: 1.5, padding: '18px 24px 0' }
+      style: { textAlign: 'center', fontSize: 11.5, color: '#a89d88', lineHeight: 1.5, padding: '22px 24px 0' }
     }, "Events and reminders are managed by Ahlul Bayt Ireland."));
   }
 
@@ -11154,6 +11293,381 @@ class App extends Component {
     }, "›")))));
   }
 
+  /* ── TASBEEH COUNTER ── */
+  renderTasbeeh(st) {
+    const idx = st.tasbeehIdx || 0;
+    const d = DHIKRS[idx] || DHIKRS[0];
+    const count = st.tasbeehCount || 0;
+    const rounds = st.tasbeehRounds || 0;
+    const pct = Math.min(1, count / d.target);
+    const R = 86,
+      C = 2 * Math.PI * R;
+    return /*#__PURE__*/React.createElement("div", {
+      style: {
+        minHeight: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+        padding: '8px 20px 100px'
+      },
+      className: "afu"
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        padding: '8px 56px 14px 0'
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 13,
+        color: '#9a8f7c',
+        fontWeight: 500
+      }
+    }, "Dhikr"), /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontFamily: 'Spectral,serif',
+        fontSize: 26,
+        fontWeight: 600,
+        color: '#27241f',
+        marginTop: 2
+      }
+    }, "Tasbeeh Counter")),
+    /*#__PURE__*/React.createElement("div", {
+      className: "s",
+      style: {
+        display: 'flex',
+        gap: 8,
+        overflowX: 'auto',
+        margin: '0 -20px 16px',
+        padding: '0 20px 2px'
+      }
+    }, DHIKRS.map((dk, i) => /*#__PURE__*/React.createElement("div", {
+      key: i,
+      onClick: () => this.setDhikr(i),
+      style: {
+        flexShrink: 0,
+        padding: '8px 14px',
+        borderRadius: 20,
+        fontSize: 12.5,
+        fontWeight: 600,
+        cursor: 'pointer',
+        background: i === idx ? '#1f5145' : '#fffdf9',
+        color: i === idx ? '#f3ead4' : '#6f675a',
+        border: `1px solid ${i === idx ? '#1f5145' : '#e6dcc8'}`
+      }
+    }, dk.tr))),
+    /*#__PURE__*/React.createElement("div", {
+      onClick: this.tasbeehTap,
+      role: "button",
+      "aria-label": `Count ${d.tr}. Currently ${count} of ${d.target}`,
+      style: {
+        flex: 1,
+        minHeight: 340,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 14,
+        background: 'linear-gradient(160deg,#fffdf9,#f7f2e6)',
+        border: '1px solid #ece4d4',
+        borderRadius: 26,
+        padding: '26px 18px',
+        cursor: 'pointer',
+        userSelect: 'none',
+        WebkitTapHighlightColor: 'transparent',
+        boxShadow: '0 14px 30px -22px rgba(60,50,30,.6)'
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontFamily: "'Noto Naskh Arabic','Amiri',serif",
+        fontSize: 26,
+        color: '#1f5145',
+        textAlign: 'center',
+        lineHeight: 1.7
+      },
+      dir: "rtl"
+    }, d.ar), /*#__PURE__*/React.createElement("div", {
+      style: {
+        position: 'relative',
+        width: 200,
+        height: 200,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center'
+      }
+    }, /*#__PURE__*/React.createElement("svg", {
+      width: "200",
+      height: "200",
+      viewBox: "0 0 200 200",
+      style: {
+        position: 'absolute',
+        inset: 0,
+        transform: 'rotate(-90deg)'
+      }
+    }, /*#__PURE__*/React.createElement("circle", {
+      cx: "100",
+      cy: "100",
+      r: R,
+      fill: "none",
+      stroke: "#ece4d4",
+      strokeWidth: "10"
+    }), /*#__PURE__*/React.createElement("circle", {
+      cx: "100",
+      cy: "100",
+      r: R,
+      fill: "none",
+      stroke: "#1f5145",
+      strokeWidth: "10",
+      strokeLinecap: "round",
+      strokeDasharray: C,
+      strokeDashoffset: C * (1 - pct),
+      style: {
+        transition: 'stroke-dashoffset .25s cubic-bezier(.2,.9,.2,1)'
+      }
+    })), /*#__PURE__*/React.createElement("div", {
+      key: count,
+      className: "apo",
+      style: {
+        fontSize: 62,
+        fontWeight: 700,
+        color: '#27241f',
+        fontVariantNumeric: 'tabular-nums',
+        lineHeight: 1
+      }
+    }, count), /*#__PURE__*/React.createElement("div", {
+      style: {
+        position: 'absolute',
+        bottom: 34,
+        fontSize: 12,
+        color: '#9a8f7c',
+        fontWeight: 600
+      }
+    }, "of ", d.target)), /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 13,
+        color: '#8c8270',
+        textAlign: 'center',
+        lineHeight: 1.5
+      }
+    }, d.tr, /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 11.5,
+        color: '#b1a690',
+        marginTop: 2
+      }
+    }, d.en)), /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 11.5,
+        color: '#b1a690',
+        fontWeight: 600
+      }
+    }, "Tap anywhere in this card to count")),
+    /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        gap: 12,
+        marginTop: 14
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 12.5,
+        color: '#6f675a',
+        fontWeight: 600
+      }
+    }, "Rounds completed: ", /*#__PURE__*/React.createElement("span", {
+      style: {
+        color: '#1f5145',
+        fontWeight: 700
+      }
+    }, rounds)), /*#__PURE__*/React.createElement("div", {
+      onClick: this.tasbeehReset,
+      style: {
+        padding: '9px 16px',
+        borderRadius: 11,
+        border: '1px solid #e6dcc8',
+        background: '#fffdf9',
+        color: '#6e2230',
+        fontSize: 13,
+        fontWeight: 600,
+        cursor: 'pointer'
+      }
+    }, "Reset")));
+  }
+
+  /* ── ISLAMIC WALLPAPERS ── */
+  renderWallpaper(st) {
+    const list = wallpapersFor(st.now);
+    const open = st.wallOpen != null ? list[st.wallOpen] : null;
+    return /*#__PURE__*/React.createElement("div", {
+      style: {
+        padding: '8px 20px 100px'
+      },
+      className: "afu"
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        padding: '8px 56px 14px 0'
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 13,
+        color: '#9a8f7c',
+        fontWeight: 500
+      }
+    }, "Ten new picks every day"), /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontFamily: 'Spectral,serif',
+        fontSize: 26,
+        fontWeight: 600,
+        color: '#27241f',
+        marginTop: 2
+      }
+    }, "Islamic Wallpapers")),
+    /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: 'grid',
+        gridTemplateColumns: 'repeat(2, 1fr)',
+        gap: 12
+      }
+    }, list.map((w, i) => /*#__PURE__*/React.createElement("div", {
+      key: w.id,
+      onClick: () => this.setState({
+        wallOpen: i
+      }),
+      style: {
+        position: 'relative',
+        aspectRatio: '3 / 4',
+        borderRadius: 16,
+        overflow: 'hidden',
+        background: '#efe7d7',
+        border: '1px solid #ece4d4',
+        cursor: 'pointer'
+      }
+    }, /*#__PURE__*/React.createElement("img", {
+      src: wallUrl(w, 600),
+      alt: `Islamic wallpaper by ${w.by}`,
+      loading: i < 4 ? 'eager' : 'lazy',
+      style: {
+        width: '100%',
+        height: '100%',
+        objectFit: 'cover',
+        display: 'block'
+      }
+    }), /*#__PURE__*/React.createElement("div", {
+      style: {
+        position: 'absolute',
+        left: 0,
+        right: 0,
+        bottom: 0,
+        padding: '18px 10px 8px',
+        background: 'linear-gradient(transparent,rgba(20,18,14,.72))',
+        color: 'rgba(255,253,249,.92)',
+        fontSize: 10.5,
+        fontWeight: 600,
+        whiteSpace: 'nowrap',
+        overflow: 'hidden',
+        textOverflow: 'ellipsis'
+      }
+    }, w.by)))),
+    /*#__PURE__*/React.createElement("div", {
+      style: {
+        textAlign: 'center',
+        fontSize: 11.5,
+        color: '#a89d88',
+        lineHeight: 1.5,
+        padding: '20px 20px 0'
+      }
+    }, "Photos from Unsplash, free to use. A fresh set appears each day."),
+    open && /*#__PURE__*/React.createElement("div", {
+      onClick: () => this.setState({
+        wallOpen: null
+      }),
+      style: {
+        position: 'fixed',
+        inset: 0,
+        zIndex: 90,
+        background: 'rgba(18,16,13,.94)',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: 18,
+        animation: 'po .25s ease both'
+      }
+    }, /*#__PURE__*/React.createElement("img", {
+      src: wallUrl(open, 1200),
+      alt: `Islamic wallpaper by ${open.by}`,
+      onClick: e => e.stopPropagation(),
+      style: {
+        maxWidth: '100%',
+        maxHeight: '70vh',
+        borderRadius: 18,
+        objectFit: 'contain',
+        boxShadow: '0 24px 60px -20px rgba(0,0,0,.8)'
+      }
+    }), /*#__PURE__*/React.createElement("div", {
+      onClick: e => e.stopPropagation(),
+      style: {
+        marginTop: 16,
+        display: 'flex',
+        alignItems: 'center',
+        gap: 10,
+        width: '100%',
+        maxWidth: 360
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      onClick: () => this.saveWallpaper(open),
+      style: {
+        flex: 1,
+        textAlign: 'center',
+        padding: '13px 0',
+        borderRadius: 13,
+        background: '#d8b863',
+        color: '#163b30',
+        fontSize: 14.5,
+        fontWeight: 700,
+        cursor: 'pointer'
+      }
+    }, st.wallSaving ? 'Saving…' : 'Download'), /*#__PURE__*/React.createElement("a", {
+      href: wallPage(open),
+      target: "_blank",
+      rel: "noopener noreferrer",
+      style: {
+        padding: '13px 16px',
+        borderRadius: 13,
+        border: '1px solid rgba(243,234,212,.35)',
+        color: '#f3ead4',
+        fontSize: 13,
+        fontWeight: 600,
+        cursor: 'pointer',
+        textDecoration: 'none'
+      }
+    }, "Unsplash ↗")), /*#__PURE__*/React.createElement("div", {
+      style: {
+        marginTop: 12,
+        fontSize: 12,
+        color: 'rgba(243,234,212,.6)'
+      }
+    }, "Photo by ", open.by), /*#__PURE__*/React.createElement("div", {
+      onClick: () => this.setState({
+        wallOpen: null
+      }),
+      style: {
+        position: 'absolute',
+        top: 16,
+        right: 18,
+        width: 36,
+        height: 36,
+        borderRadius: '50%',
+        background: 'rgba(255,253,249,.14)',
+        color: '#f3ead4',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        fontSize: 20,
+        cursor: 'pointer'
+      }
+    }, "×")));
+  }
+
   /* ── BOTTOM NAV ── */
   renderNav(st) {
     const items = [{
@@ -11386,7 +11900,7 @@ class App extends Component {
         position: 'relative',
         background: st.dark ? '#16191a' : '#f6f1e7'
       }
-    }, showBrand && this.renderBrandMark(), st.screen === 'home' && this.renderHome(st, next, cd, greg, hijri, salaam), st.screen === 'prayer' && this.renderPrayer(st, next, cd, greg), st.screen === 'library' && this.renderLibrary(st), st.screen === 'reading' && this.renderReading(st), st.screen === 'classifieds' && this.renderClassifieds(st), st.screen === 'more' && this.renderMore(st), st.screen === 'about' && this.renderAbout(), st.screen === 'offline' && this.renderOffline(), st.screen === 'admin' && this.renderAdmin(st), st.screen === 'calendar' && this.renderCalendar(st), st.screen === 'kids' && this.renderKids(st), st.screen === 'health' && this.renderHealth(st), st.screen === 'qibla' && this.renderQibla(st), st.screen === 'khums' && this.renderKhums(st), st.screen === 'stories' && this.renderStories(st)), showNav && /*#__PURE__*/React.createElement("div", {
+    }, showBrand && this.renderBrandMark(), st.screen === 'home' && this.renderHome(st, next, cd, greg, hijri, salaam), st.screen === 'prayer' && this.renderPrayer(st, next, cd, greg), st.screen === 'library' && this.renderLibrary(st), st.screen === 'reading' && this.renderReading(st), st.screen === 'classifieds' && this.renderClassifieds(st), st.screen === 'more' && this.renderMore(st), st.screen === 'about' && this.renderAbout(), st.screen === 'offline' && this.renderOffline(), st.screen === 'admin' && this.renderAdmin(st), st.screen === 'calendar' && this.renderCalendar(st), st.screen === 'kids' && this.renderKids(st), st.screen === 'health' && this.renderHealth(st), st.screen === 'qibla' && this.renderQibla(st), st.screen === 'khums' && this.renderKhums(st), st.screen === 'tasbeeh' && this.renderTasbeeh(st), st.screen === 'wallpaper' && this.renderWallpaper(st), st.screen === 'stories' && this.renderStories(st)), showNav && /*#__PURE__*/React.createElement("div", {
       style: {
         flexShrink: 0,
         textAlign: 'center',
