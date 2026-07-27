@@ -2294,7 +2294,7 @@ class App extends Component {
         libCat: 'All'
       })
     }, {
-      title: 'Nahj al-Balāgha',
+      title: 'Books',
       icon: '📖',
       go: () => this.setState({
         screen: 'library',
@@ -2305,6 +2305,14 @@ class App extends Component {
       title: this.t('kids.title'),
       icon: '🧸',
       go: () => this.go('kids')
+    }, {
+      title: 'Quiz',
+      icon: '🎯',
+      go: () => this.setState({
+        screen: 'kids',
+        kidsTab: 'quiz',
+        quizRun: null
+      })
     }, {
       title: this.t('more.health'),
       icon: '🌿',
@@ -2877,8 +2885,8 @@ class App extends Component {
     }, this.t('home.explore')), /*#__PURE__*/React.createElement("div", {
       style: {
         display: 'grid',
-        gridTemplateColumns: 'repeat(3, 1fr)',
-        gap: 10,
+        gridTemplateColumns: 'repeat(4, 1fr)',
+        gap: 8,
         marginBottom: 14
       }
     }, quickCards.map((q, i) => /*#__PURE__*/React.createElement("div", {
@@ -2887,28 +2895,28 @@ class App extends Component {
       style: {
         background: '#fffdf9',
         border: '1px solid #ece4d4',
-        borderRadius: 18,
-        padding: '16px 6px 13px',
+        borderRadius: 14,
+        padding: '10px 3px 8px',
         cursor: 'pointer',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        gap: 9,
-        minHeight: 100,
+        gap: 5,
+        minHeight: 68,
         textAlign: 'center'
       }
     }, /*#__PURE__*/React.createElement("span", {
       style: {
-        fontSize: 28,
+        fontSize: 19,
         lineHeight: 1
       }
     }, q.icon), /*#__PURE__*/React.createElement("div", {
       style: {
-        fontSize: 12.5,
+        fontSize: 9.5,
         fontWeight: 600,
         color: '#2c2823',
-        lineHeight: 1.25
+        lineHeight: 1.2
       }
     }, q.title)))), st.install && /*#__PURE__*/React.createElement("div", {
       style: {
@@ -3895,7 +3903,7 @@ class App extends Component {
         cats: ['All', ...new Set(ziyList.map(it => it.cat).filter(Boolean))]
       },
       nahj: {
-        title: 'Nahj al-Balāgha',
+        title: 'Books',
         accent: '#2c5d52',
         tint: '#e6efe9',
         list: [],
@@ -3997,7 +4005,7 @@ class App extends Component {
         display: 'flex',
         gap: 8
       }
-    }, [['dua', "Duʿāʾ"], ['ziyarah', 'Ziyārah'], ['nahj', 'Nahj']].map(([k, label]) => /*#__PURE__*/React.createElement("div", {
+    }, [['dua', "Duʿāʾ"], ['ziyarah', 'Ziyārah'], ['nahj', 'Books']].map(([k, label]) => /*#__PURE__*/React.createElement("div", {
       key: k,
       onClick: () => this.setState({
         libTab: k,
@@ -5369,14 +5377,15 @@ class App extends Component {
       '#b8923f': 'Amber'
     };
     const STORY_KINDS = ['verse', 'sermon', 'kids', 'quiz', 'classified', 'announce'];
-    const EVENT_TYPES = ['Community', 'Majlis', 'Class', 'Programme', 'Dua e Kumail', 'Friday Prayer'];
+    const EVENT_TYPES = ['Community', 'Majlis', 'Class', 'Programme', 'Dua e Kumail', 'Friday Prayer', 'Historical Event'];
     const EVENT_COLORS = {
       'Community': '#1f5145',
       'Majlis': '#6e2230',
       'Class': '#9a7a2c',
       'Programme': '#2c5d52',
       'Dua e Kumail': '#3a4a78',
-      'Friday Prayer': '#8a4b2c'
+      'Friday Prayer': '#8a4b2c',
+      'Historical Event': '#7a5c9e'
     };
     const EVENT_TINTS = {
       'Community': '#e6efe9',
@@ -5384,7 +5393,8 @@ class App extends Component {
       'Class': '#f3ecd9',
       'Programme': '#e6efe9',
       'Dua e Kumail': '#e8ebf4',
-      'Friday Prayer': '#f6ebe4'
+      'Friday Prayer': '#f6ebe4',
+      'Historical Event': '#eee8f5'
     };
     const CAT_COLORS = {
       'Food': '#1f5145',
@@ -8066,7 +8076,7 @@ class App extends Component {
           padding: 4,
           marginBottom: 14
         }
-      }, [['dua', 'Duʿāʾ'], ['ziyarah', 'Ziyārah'], ['nahj', 'Nahj']].map(([k, label]) => /*#__PURE__*/React.createElement("div", {
+      }, [['dua', 'Duʿāʾ'], ['ziyarah', 'Ziyārah'], ['nahj', 'Books']].map(([k, label]) => /*#__PURE__*/React.createElement("div", {
         key: k,
         onClick: () => this.setState({
           adminLibTab: k,
@@ -8866,7 +8876,7 @@ class App extends Component {
       style: { display: 'flex', alignItems: 'center', gap: 9 }
     }, calIcon, /*#__PURE__*/React.createElement("div", {
       style: { fontSize: 15, fontWeight: 700, color: '#1f5145' }
-    }, selIsToday ? "Today's Events" : "Events")), calEventList.length > 0 && /*#__PURE__*/React.createElement("div", {
+    }, "On this day")), calEventList.length > 0 && /*#__PURE__*/React.createElement("div", {
       onClick: () => { const el = document.getElementById('cal-upcoming'); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); },
       style: { fontSize: 12.5, fontWeight: 600, color: '#1f5145', cursor: 'pointer' }
     }, "See all ›")), /*#__PURE__*/React.createElement("div", {
@@ -8890,7 +8900,7 @@ class App extends Component {
     }, /*#__PURE__*/React.createElement("div", {
       style: { display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: '#9a8f7c', fontWeight: 600 }
     }, clockIcon, dayLabelShort), st.adminLoggedIn && /*#__PURE__*/React.createElement("div", {
-      onClick: () => this.setState({ screen: 'admin', adminSection: 'events', adminEditIdx: -1, adminEditDraft: { date: selDayStr, type: 'Community' } }),
+      onClick: () => this.setState({ screen: 'admin', adminSection: 'events', adminEditIdx: -1, adminEditDraft: { date: selDayStr, type: 'Community', notice: 'day' } }),
       style: { fontSize: 11, color: '#1f5145', fontWeight: 600, cursor: 'pointer', padding: '5px 10px', border: '1px solid #c4ddd7', borderRadius: 8, background: '#eef7f4' }
     }, "+ Add event")))),
     /*#__PURE__*/React.createElement("div", {
@@ -9064,19 +9074,52 @@ class App extends Component {
     }, heroV.title))), /*#__PURE__*/React.createElement("div", {
       style: {
         display: 'flex',
-        gap: 6,
-        background: '#efe7d7',
-        borderRadius: 14,
-        padding: 4,
+        gap: 9,
         marginBottom: 18
       }
-    }, [['videos', this.t('kids.videos')], ['books', this.t('kids.books')], ['wisdom', this.t('kids.wisdom')], ['quiz', 'Quiz']].map(([k, label]) => /*#__PURE__*/React.createElement("div", {
-      key: k,
-      onClick: () => this.setState({
-        kidsTab: k
-      }),
-      style: tabStyle(k)
-    }, label))), kt === 'videos' && /*#__PURE__*/React.createElement(React.Fragment, null, !heroV && /*#__PURE__*/React.createElement("div", {
+    }, [['videos', this.t('kids.videos'), '🎬', '#3a4a78', '#e8ebf4'], ['books', this.t('kids.books'), '📚', '#8a4b2c', '#f6ebe4'], ['wisdom', this.t('kids.wisdom'), '💡', '#9a7a2c', '#f7f0dc'], ['quiz', 'Quiz', '🎯', '#6e2230', '#f7e7ea']].map(([k, label, icon, ink, tint]) => {
+      const on = kt === k;
+      return /*#__PURE__*/React.createElement("div", {
+        key: k,
+        onClick: () => this.setState({
+          kidsTab: k
+        }),
+        style: {
+          flex: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: 5,
+          padding: '11px 3px 9px',
+          borderRadius: 16,
+          cursor: 'pointer',
+          background: on ? tint : '#fffdf9',
+          border: `1.5px solid ${on ? ink : '#ece4d4'}`,
+          boxShadow: on ? `0 6px 14px -8px ${ink}` : 'none',
+          transform: on ? 'translateY(-1px)' : 'none',
+          transition: 'background .15s, transform .15s'
+        }
+      }, /*#__PURE__*/React.createElement("div", {
+        style: {
+          width: 34,
+          height: 34,
+          borderRadius: '50%',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontSize: 18,
+          background: on ? '#fffdf9' : tint
+        }
+      }, icon), /*#__PURE__*/React.createElement("div", {
+        style: {
+          fontSize: 10.5,
+          fontWeight: 700,
+          color: on ? ink : '#8c8270',
+          lineHeight: 1.1,
+          textAlign: 'center'
+        }
+      }, label));
+    })), kt === 'videos' && /*#__PURE__*/React.createElement(React.Fragment, null, !heroV && /*#__PURE__*/React.createElement("div", {
       style: {
         position: 'relative',
         overflow: 'hidden',
