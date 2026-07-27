@@ -202,8 +202,8 @@ const STORIES = [{
   short: 'Verse',
   initial: 'ق',
   tag: 'Verse of the day',
-  color: '#1f5145',
-  img: 'linear-gradient(150deg,#2a6a58,#143b2f)',
+  color: '#334a5e',
+  img: 'linear-gradient(150deg,#41586d,#22333f)',
   ar: 'إِنَّ مَعَ الْعُسْرِ يُسْرًا',
   sub: 'Sūrat al-Sharḥ · 94:6',
   body: 'Indeed, with hardship comes ease.',
@@ -214,8 +214,8 @@ const STORIES = [{
   short: 'Sermon',
   initial: 'ن',
   tag: 'Nahj al-Balāgha',
-  color: '#2c5d52',
-  img: 'linear-gradient(150deg,#347063,#1d4d42)',
+  color: '#476478',
+  img: 'linear-gradient(150deg,#527189,#2f4557)',
   ar: '',
   sub: 'Saying 147 · On Knowledge',
   body: 'Knowledge is better than wealth. Knowledge guards you, while you must guard wealth. Wealth decreases by spending, while knowledge multiplies by it.',
@@ -226,8 +226,8 @@ const STORIES = [{
   short: 'Kids',
   initial: 'ك',
   tag: 'For children',
-  color: '#b8923f',
-  img: 'linear-gradient(150deg,#d2a651,#a87a2c)',
+  color: '#c9803f',
+  img: 'linear-gradient(150deg,#df9c55,#b0662e)',
   ar: '',
   sub: 'Good manners',
   body: 'The Prophet ﷺ said: "The best of you are those who are best to their families." Can you do one kind thing for your family today?',
@@ -238,8 +238,8 @@ const STORIES = [{
   short: 'Quiz',
   initial: '؟',
   tag: '1 question',
-  color: '#6e2230',
-  img: 'linear-gradient(150deg,#8a3243,#5e1d29)',
+  color: '#8f4126',
+  img: 'linear-gradient(150deg,#a55231,#7c3820)',
   sub: 'Tap your answer',
   question: 'How many obligatory daily prayers are there in Islam?',
   options: ['Three', 'Five', 'Seven'],
@@ -250,8 +250,8 @@ const STORIES = [{
   short: 'Business',
   initial: 'ت',
   tag: 'Classifieds',
-  color: '#3a4a78',
-  img: 'linear-gradient(150deg,#4a5d92,#2d3a64)',
+  color: '#4a5a74',
+  img: 'linear-gradient(150deg,#5c6f8c,#3a4a63)',
   sub: 'Karbala Travel',
   body: 'New Arbaʿīn ziyārat packages are now open for registration. Flights, visas and accommodation included.',
   link: 'View listing'
@@ -261,8 +261,8 @@ const STORIES = [{
   short: 'Muḥarram',
   initial: 'م',
   tag: 'Community',
-  color: '#6e2230',
-  img: 'linear-gradient(150deg,#7a2433,#52171f)',
+  color: '#8f4126',
+  img: 'linear-gradient(150deg,#9a4728,#6e301b)',
   sub: 'Nightly majālis',
   body: 'The annual Muḥarram programme begins Friday. Nightly gatherings after Maghrib throughout the first ten nights.',
   link: 'Full schedule'
@@ -271,131 +271,131 @@ const EVENT_DEFS = [{
   offset: 0,
   title: 'Community Iftar',
   type: 'Community',
-  color: '#1f5145',
-  tint: '#e6efe9',
+  color: '#334a5e',
+  tint: '#e7ecf1',
   desc: 'Shared community meal after Maghrib in the main hall. All families warmly welcome.'
 }, {
   offset: 2,
   title: 'Wafāt Commemoration',
   type: 'Majlis',
-  color: '#6e2230',
-  tint: '#f3e6e8',
+  color: '#8f4126',
+  tint: '#f7e9e0',
   desc: 'Evening majlis with recitation and lecture, beginning after ʿIshāʾ.'
 }, {
   offset: 5,
   title: 'Youth Qurʾān Class',
   type: 'Class',
-  color: '#9a7a2c',
-  tint: '#f3ecd9',
+  color: '#b26b35',
+  tint: '#f6e8d8',
   desc: 'Weekly tajwīd session for youth, 11:00 AM in the learning room.'
 }, {
   offset: 9,
   title: 'Muḥarram Begins',
   type: 'Programme',
-  color: '#2c5d52',
-  tint: '#e6efe9',
+  color: '#476478',
+  tint: '#e7ecf1',
   desc: 'First night of the annual Muḥarram programme. Nightly majālis after Maghrib.'
 }];
 const CAL_EVENTS_DEFAULT = [{
   date: '2026-06-26',
   title: 'Community Iftar',
   type: 'Community',
-  color: '#1f5145',
-  tint: '#e6efe9',
+  color: '#334a5e',
+  tint: '#e7ecf1',
   desc: 'Shared community meal after Maghrib in the main hall. All families warmly welcome.'
 }, {
   date: '2026-06-28',
   title: 'Wafāt Commemoration',
   type: 'Majlis',
-  color: '#6e2230',
-  tint: '#f3e6e8',
+  color: '#8f4126',
+  tint: '#f7e9e0',
   desc: 'Evening majlis with recitation and lecture, beginning after ʿIshāʾ.'
 }, {
   date: '2026-07-01',
   title: 'Youth Qurʾān Class',
   type: 'Class',
-  color: '#9a7a2c',
-  tint: '#f3ecd9',
+  color: '#b26b35',
+  tint: '#f6e8d8',
   desc: 'Weekly tajwīd session for youth, 11:00 AM in the learning room.'
 }, {
   date: '2026-07-05',
   title: 'Muḥarram Begins',
   type: 'Programme',
-  color: '#2c5d52',
-  tint: '#e6efe9',
+  color: '#476478',
+  tint: '#e7ecf1',
   desc: 'First night of the annual Muḥarram programme. Nightly majālis after Maghrib.'
 }];
 const HEALTH_TIPS = [{
   title: 'Drink More Water',
   body: 'Aim for 8 glasses daily. Hydration improves focus, digestion, and energy levels.',
   tag: 'Hydration',
-  color: '#2c5d52',
-  tint: '#e6efe9'
+  color: '#476478',
+  tint: '#e7ecf1'
 }, {
   title: 'Walk After Meals',
   body: 'A 10-minute walk after meals aids digestion and helps regulate blood sugar.',
   tag: 'Exercise',
-  color: '#1f5145',
-  tint: '#e6efe9'
+  color: '#334a5e',
+  tint: '#e7ecf1'
 }, {
   title: 'Sleep 7–8 Hours',
   body: 'Quality sleep strengthens immunity, improves mood, and sharpens mental clarity.',
   tag: 'Sleep',
-  color: '#6e2230',
-  tint: '#f3e6e8'
+  color: '#8f4126',
+  tint: '#f7e9e0'
 }, {
   title: 'Reduce Sugar Intake',
   body: 'Choose dates, fruit, or honey as natural sweeteners over processed sugar.',
   tag: 'Nutrition',
-  color: '#9a7a2c',
-  tint: '#f3ecd9'
+  color: '#b26b35',
+  tint: '#f6e8d8'
 }];
 const HEALTH_VIDEOS = [{
   title: 'Benefits of Morning Exercise',
   meta: 'Wellness · 3 min',
-  color: '#1f5145'
+  color: '#334a5e'
 }, {
   title: 'Healthy Halal Meal Planning',
   meta: 'Nutrition · 5 min',
-  color: '#6e2230'
+  color: '#8f4126'
 }, {
   title: 'Managing Stress with Faith',
   meta: 'Mental Health · 4 min',
-  color: '#2c5d52'
+  color: '#476478'
 }];
 const KIDS_LEARN = [{
   title: 'Who are the Ahlul Bayt?',
   meta: 'Animated · 4 min',
-  color: '#1f5145'
+  color: '#334a5e'
 }, {
   title: 'The Story of Ghadīr',
   meta: 'Animated · 6 min',
-  color: '#6e2230'
+  color: '#8f4126'
 }, {
   title: 'Learning Wuḍūʾ step by step',
   meta: 'How-to · 3 min',
-  color: '#9a7a2c'
+  color: '#b26b35'
 }];
 const KIDS_BOOKS = [{
   title: "My First Duʿāʾ Book",
   meta: 'Picture book · Ages 3–6',
-  color: '#e6efe9',
-  ink: '#1f5145'
+  color: '#e7ecf1',
+  ink: '#334a5e'
 }, {
   title: 'Stories of the Imams',
   meta: 'Illustrated · Ages 6–9',
-  color: '#f3e6e8',
-  ink: '#6e2230'
+  color: '#f7e9e0',
+  ink: '#8f4126'
 }, {
   title: 'The 14 Infallibles',
   meta: 'Activity book · Ages 7–10',
-  color: '#f3ecd9',
-  ink: '#9a7a2c'
+  color: '#f6e8d8',
+  ink: '#b26b35'
 }, {
   title: 'Good Manners (Akhlāq)',
   meta: 'Picture book · Ages 4–7',
-  color: '#e8ebf4',
-  ink: '#3a4a78'
+  color: '#e8ecf2',
+  ink: '#4a5a74'
 }];
 /* ═══════════════════════════════════════════════════════════════════════
    ANCHOR: MADRASA_CONTENT
@@ -566,8 +566,8 @@ const PINNED_CLASSIFIED = {
   web: 'https://www.softeire.com',
   phone: '+353892703646',
   wa: '353892281688',
-  ink: '#3a4a78',
-  tint: '#e8ebf4'
+  ink: '#4a5a74',
+  tint: '#e8ecf2'
 };
 
 const CLASSIFIEDS = [{
@@ -578,8 +578,8 @@ const CLASSIFIEDS = [{
   web: 'https://example.com',
   phone: '+353 1 234 5678',
   wa: '35312345678',
-  ink: '#1f5145',
-  tint: '#e6efe9'
+  ink: '#334a5e',
+  tint: '#e7ecf1'
 }, {
   name: 'Dublin Halal Meats',
   cat: 'Butcher',
@@ -587,8 +587,8 @@ const CLASSIFIEDS = [{
   loc: 'Clondalkin, Dublin 22',
   phone: '+353 1 567 8901',
   wa: '35315678901',
-  ink: '#6e2230',
-  tint: '#f3e6e8'
+  ink: '#8f4126',
+  tint: '#f7e9e0'
 }, {
   name: 'Karbala Travel',
   cat: 'Travel',
@@ -597,8 +597,8 @@ const CLASSIFIEDS = [{
   web: 'https://example.com',
   phone: '+353 1 890 1234',
   wa: '35318901234',
-  ink: '#9a7a2c',
-  tint: '#f3ecd9'
+  ink: '#b26b35',
+  tint: '#f6e8d8'
 }, {
   name: 'Zahrā Tutoring',
   cat: 'Education',
@@ -606,8 +606,8 @@ const CLASSIFIEDS = [{
   loc: 'Cork',
   phone: '+353 21 234 5678',
   wa: '353212345678',
-  ink: '#2c5d52',
-  tint: '#e6efe9'
+  ink: '#476478',
+  tint: '#e7ecf1'
 }, {
   name: 'Crescent Accounting',
   cat: 'Services',
@@ -616,8 +616,8 @@ const CLASSIFIEDS = [{
   web: 'https://example.com',
   phone: '+353 61 234 5678',
   wa: '353612345678',
-  ink: '#3a4a78',
-  tint: '#e8ebf4'
+  ink: '#4a5a74',
+  tint: '#e8ecf2'
 }];
 
 /* ── ICONS ── */
@@ -667,7 +667,7 @@ class CustomSelect extends Component {
         open: !s.open
       })),
       style: {
-        border: `1px solid ${open ? '#1f5145' : '#e6dcc8'}`,
+        border: `1px solid ${open ? '#334a5e' : '#e6dcc8'}`,
         background: '#fffdf9',
         borderRadius: 13,
         padding: '13px 15px',
@@ -711,9 +711,9 @@ class CustomSelect extends Component {
       style: {
         padding: '12px 15px',
         fontSize: 14.5,
-        color: opt === value ? '#1f5145' : '#2c2823',
+        color: opt === value ? '#334a5e' : '#2c2823',
         fontWeight: opt === value ? 600 : 400,
-        background: opt === value ? '#f3f7f4' : 'transparent',
+        background: opt === value ? '#f2f5f8' : 'transparent',
         cursor: 'pointer'
       }
     }, opt))));
@@ -1343,9 +1343,9 @@ function lsSet(key, val) {
 
 /* ── QUIZ DIFFICULTY ── */
 const QUIZ_LEVELS = [
-  { key: 'beginner', label: 'Beginner', color: '#2c5d52' },
-  { key: 'intermediate', label: 'Intermediate', color: '#9a7a2c' },
-  { key: 'advanced', label: 'Advanced', color: '#6e2230' }
+  { key: 'beginner', label: 'Beginner', color: '#476478' },
+  { key: 'intermediate', label: 'Intermediate', color: '#b26b35' },
+  { key: 'advanced', label: 'Advanced', color: '#8f4126' }
 ];
 const quizLevel = q => {
   const k = String((q && q.level) || 'beginner').toLowerCase();
@@ -1631,7 +1631,7 @@ class App extends Component {
       livePinned: lsGet('pinned', {
         on: false,
         text: '',
-        color: '#6e2230'
+        color: '#8f4126'
       }),
       liveKidsVideos: lsGet('kidsVideos', KIDS_LEARN),
       liveKidsBooks: lsGet('kidsBooks', KIDS_BOOKS),
@@ -2381,7 +2381,7 @@ class App extends Component {
         width: 40,
         height: 40,
         borderRadius: 12,
-        background: todayRem.color || '#1f5145',
+        background: todayRem.color || '#334a5e',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center'
@@ -2417,7 +2417,7 @@ class App extends Component {
         fontSize: 10,
         letterSpacing: 1,
         textTransform: 'uppercase',
-        color: '#d8b863',
+        color: '#e8a765',
         fontWeight: 700
       }
     }, "Today · ", todayRems.length > 1 ? todayRems.length + ' reminders' : todayRem.type || 'Reminder'), /*#__PURE__*/React.createElement("div", {
@@ -2491,7 +2491,7 @@ class App extends Component {
         gap: 8,
         marginBottom: 10
       }
-    }, [['Gregorian', '#b1a690', gregShort], ['Hijri', '#c2a35a', hijri]].map(([label, tone, value]) => /*#__PURE__*/React.createElement("div", {
+    }, [['Gregorian', '#b1a690', gregShort], ['Hijri', '#d99a5e', hijri]].map(([label, tone, value]) => /*#__PURE__*/React.createElement("div", {
       key: label,
       onClick: () => this.go('calendar'),
       style: {
@@ -2530,13 +2530,13 @@ class App extends Component {
       onClick: () => this.go('calendar'),
       style: {
         ...glass,
-        background: 'linear-gradient(135deg,rgba(31,81,69,.86),rgba(22,59,48,.74))',
-        border: '1px solid rgba(216,184,99,.3)',
+        background: 'linear-gradient(135deg,rgba(51,74,94,.86),rgba(36,54,70,.74))',
+        border: '1px solid rgba(232,167,101,.3)',
         borderRadius: 13,
         padding: '8px 12px',
         marginBottom: 10,
         cursor: 'pointer',
-        boxShadow: '0 6px 18px -12px rgba(31,81,69,.8), inset 0 1px 0 rgba(255,255,255,.14)'
+        boxShadow: '0 6px 18px -12px rgba(51,74,94,.8), inset 0 1px 0 rgba(255,255,255,.14)'
       }
     }, /*#__PURE__*/React.createElement("div", {
       style: {
@@ -2544,7 +2544,7 @@ class App extends Component {
         letterSpacing: 1.1,
         textTransform: 'uppercase',
         fontWeight: 800,
-        color: '#d8b863',
+        color: '#e8a765',
         marginBottom: 2
       }
     }, "On this day"), onThisDay.map((ev, i) => /*#__PURE__*/React.createElement("div", {
@@ -2587,11 +2587,11 @@ class App extends Component {
         width: 24,
         height: 24,
         borderRadius: 8,
-        background: st.liveAnnouncement.yt ? '#6e2230' : '#e8d39a',
+        background: st.liveAnnouncement.yt ? '#8f4126' : '#f0c49a',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        color: st.liveAnnouncement.yt ? '#f6e7d7' : '#7a5d18',
+        color: st.liveAnnouncement.yt ? '#f6e7d7' : '#8a4f22',
         fontWeight: 700,
         fontFamily: 'Spectral,serif',
         fontSize: st.liveAnnouncement.yt ? 9 : 12
@@ -2624,13 +2624,13 @@ class App extends Component {
       style: {
         fontSize: 12,
         fontWeight: 600,
-        color: '#5e4d22',
+        color: '#6b4a2a',
         lineHeight: 1.3
       }
     }, st.liveAnnouncement.title), st.liveAnnouncement.body && /*#__PURE__*/React.createElement("div", {
       style: {
         fontSize: 10.5,
-        color: '#8a7846',
+        color: '#a3714a',
         marginTop: 1,
         lineHeight: 1.35
       }
@@ -2663,7 +2663,7 @@ class App extends Component {
       onClick: () => { if (activeStories(this.state.liveStories).length) this.openStory(0); },
       style: {
         fontSize: 12,
-        color: '#1f5145',
+        color: '#334a5e',
         fontWeight: 600,
         cursor: 'pointer'
       }
@@ -2693,7 +2693,7 @@ class App extends Component {
         height: 92,
         borderRadius: 18,
         padding: 2.5,
-        background: 'conic-gradient(from 210deg,#d8b863,#1f5145,#6e2230,#d8b863)'
+        background: 'conic-gradient(from 210deg,#e8a765,#334a5e,#8f4126,#e8a765)'
       }
     }, /*#__PURE__*/React.createElement("div", {
       style: {
@@ -2728,16 +2728,24 @@ class App extends Component {
         ...glass,
         position: 'relative',
         overflow: 'hidden',
-        background: 'linear-gradient(150deg,rgba(31,81,69,.9) 0%,rgba(22,59,48,.8) 100%)',
-        border: '1px solid rgba(216,184,99,.24)',
+        // slim dusk ribbon: slate up top, a thin sunset band along the base
+        background: 'linear-gradient(176deg,rgba(38,55,74,.94) 0%,rgba(51,74,94,.88) 52%,rgba(122,84,74,.85) 82%,rgba(201,124,78,.9) 100%)',
+        border: '1px solid rgba(232,167,101,.24)',
         borderRadius: 16,
         padding: '11px 15px',
         color: '#f3ead4',
-        boxShadow: '0 10px 24px -18px rgba(22,59,48,.9), inset 0 1px 0 rgba(255,255,255,.14)',
+        boxShadow: '0 10px 24px -18px rgba(36,54,70,.9), inset 0 1px 0 rgba(255,255,255,.14)',
         cursor: 'pointer',
         marginBottom: 14
       }
-    }, /*#__PURE__*/React.createElement("div", {
+    }, /*#__PURE__*/React.createElement("svg", {
+      viewBox: "0 0 400 30",
+      preserveAspectRatio: "none",
+      style: { position: 'absolute', left: 0, right: 0, bottom: 0, width: '100%', height: 20, display: 'block', pointerEvents: 'none', opacity: .8 }
+    }, /*#__PURE__*/React.createElement("path", {
+      d: "M0 26 L64 10 L128 22 L204 6 L282 20 L338 12 L400 24 L400 30 L0 30 Z",
+      fill: "rgba(30,43,58,.8)"
+    })), /*#__PURE__*/React.createElement("div", {
       style: {
         position: 'absolute',
         right: -30,
@@ -2745,7 +2753,7 @@ class App extends Component {
         width: 104,
         height: 104,
         borderRadius: '50%',
-        border: '1px solid rgba(216,184,99,.22)'
+        border: '1px solid rgba(232,167,101,.22)'
       }
     }), /*#__PURE__*/React.createElement("div", {
       style: {
@@ -2755,7 +2763,7 @@ class App extends Component {
         width: 76,
         height: 76,
         borderRadius: '50%',
-        boxShadow: 'inset -18px 0 0 0 rgba(216,184,99,.16)'
+        boxShadow: 'inset -18px 0 0 0 rgba(232,167,101,.16)'
       }
     }), /*#__PURE__*/React.createElement("div", {
       style: {
@@ -2769,7 +2777,7 @@ class App extends Component {
         fontSize: 8.5,
         letterSpacing: 1.3,
         textTransform: 'uppercase',
-        color: '#d8b863',
+        color: '#e8a765',
         fontWeight: 700
       }
     }, /*#__PURE__*/React.createElement("span", {
@@ -2777,8 +2785,8 @@ class App extends Component {
         width: 5,
         height: 5,
         borderRadius: '50%',
-        background: '#d8b863',
-        boxShadow: '0 0 0 3px rgba(216,184,99,.2)'
+        background: '#e8a765',
+        boxShadow: '0 0 0 3px rgba(232,167,101,.2)'
       }
     }), " ", this.t('home.nextPrayer')), /*#__PURE__*/React.createElement("div", {
       style: {
@@ -2804,7 +2812,7 @@ class App extends Component {
       style: {
         fontFamily: 'Amiri,serif',
         fontSize: 14,
-        color: '#cdbf9e'
+        color: '#d9b493'
       },
       dir: "rtl"
     }, next.ar)), /*#__PURE__*/React.createElement("div", {
@@ -2821,7 +2829,7 @@ class App extends Component {
     }, next.time), /*#__PURE__*/React.createElement("div", {
       style: {
         fontSize: 10,
-        color: '#bcae8d',
+        color: '#c9a98c',
         marginTop: 3
       }
     }, this.t('home.in'), " ", cd))))), /*#__PURE__*/React.createElement("div", {
@@ -2856,7 +2864,7 @@ class App extends Component {
       style: {
         fontFamily: 'Amiri,serif',
         fontSize: 14.5,
-        color: '#bba35f',
+        color: '#d59a62',
         width: 19,
         textAlign: 'center'
       },
@@ -2864,13 +2872,13 @@ class App extends Component {
     }, p.glyph), /*#__PURE__*/React.createElement("span", {
       style: {
         fontSize: 13.5,
-        color: p.isNext ? '#1f5145' : '#3f3a32',
+        color: p.isNext ? '#334a5e' : '#3f3a32',
         fontWeight: p.isNext ? 700 : 500
       }
     }, p.name)), /*#__PURE__*/React.createElement("span", {
       style: {
         fontSize: 13.5,
-        color: p.isNext ? '#1f5145' : '#3f3a32',
+        color: p.isNext ? '#334a5e' : '#3f3a32',
         fontWeight: p.isNext ? 700 : 500,
         fontVariantNumeric: 'tabular-nums'
       }
@@ -2934,7 +2942,7 @@ class App extends Component {
         width: 40,
         height: 40,
         borderRadius: 12,
-        background: 'linear-gradient(150deg,#23564a,#16463a)',
+        background: 'linear-gradient(150deg,#354c60,#2a4052)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center'
@@ -2944,7 +2952,7 @@ class App extends Component {
         width: 18,
         height: 18,
         borderRadius: '50%',
-        boxShadow: 'inset -5px 0 0 0 #d8b863'
+        boxShadow: 'inset -5px 0 0 0 #e8a765'
       }
     })), /*#__PURE__*/React.createElement("div", {
       style: {
@@ -2966,20 +2974,20 @@ class App extends Component {
       onClick: this.handleInstall,
       style: {
         fontSize: 12.5,
-        color: '#1f5145',
+        color: '#334a5e',
         fontWeight: 600,
-        background: '#d8b863',
+        background: '#e8a765',
         padding: '8px 13px',
         borderRadius: 11,
         cursor: 'pointer'
       }
     }, this.t('home.add'))), maulanas.length > 0 && /*#__PURE__*/React.createElement("div", {
       style: {
-        background: 'linear-gradient(120deg,#1f5145,#163b30)',
+        background: 'linear-gradient(120deg,#334a5e,#243646)',
         borderRadius: 16,
         padding: '12px 14px',
         marginTop: 14,
-        boxShadow: '0 8px 22px -10px rgba(22,59,48,.55)'
+        boxShadow: '0 8px 22px -10px rgba(36,54,70,.55)'
       }
     }, /*#__PURE__*/React.createElement("div", {
       style: {
@@ -2993,13 +3001,13 @@ class App extends Component {
         width: 30,
         height: 30,
         borderRadius: 9,
-        background: 'rgba(216,184,99,.18)',
+        background: 'rgba(232,167,101,.18)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         fontFamily: 'Amiri,serif',
         fontSize: 16,
-        color: '#d8b863'
+        color: '#e8a765'
       }
     }, "؟"), /*#__PURE__*/React.createElement("div", {
       style: {
@@ -3016,7 +3024,7 @@ class App extends Component {
     }, "Ask Your Maulana"), /*#__PURE__*/React.createElement("div", {
       style: {
         fontSize: 10.5,
-        color: '#bcd3ca',
+        color: '#bccbd8',
         marginTop: 1,
         lineHeight: 1.3
       }
@@ -3047,8 +3055,8 @@ class App extends Component {
         flexShrink: 0,
         padding: '6px 13px',
         borderRadius: 9,
-        background: '#d8b863',
-        color: '#163b30',
+        background: '#e8a765',
+        color: '#243646',
         fontSize: 11.5,
         fontWeight: 700,
         cursor: 'pointer'
@@ -3218,7 +3226,7 @@ class App extends Component {
       fontWeight: 600,
       cursor: 'pointer',
       background: active ? '#fffdf9' : 'transparent',
-      color: active ? '#1f5145' : '#8c8270',
+      color: active ? '#334a5e' : '#8c8270',
       boxShadow: active ? '0 2px 6px rgba(40,30,10,.08)' : 'none'
     });
     const notifPerm = st.notifPermission;
@@ -3272,12 +3280,13 @@ class App extends Component {
       style: tabStyle(tab === 'settings')
     }, this.t('prayer.settings'))), tab === 'today' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
       style: {
-        background: 'linear-gradient(155deg,#1f5145,#163b30)',
+        // dusk sky: slate overhead falling to a warm sunset band at the horizon
+        background: 'linear-gradient(178deg,#26374a 0%,#334a5e 44%,#6d5450 68%,#c97c4e 88%,#e8a765 100%)',
         borderRadius: 22,
-        padding: 22,
+        padding: '22px 22px 46px',
         color: '#f3ead4',
         textAlign: 'center',
-        boxShadow: '0 18px 34px -18px rgba(22,59,48,.7)',
+        boxShadow: '0 18px 34px -18px rgba(36,54,70,.7)',
         marginBottom: 18,
         position: 'relative',
         overflow: 'hidden'
@@ -3286,14 +3295,24 @@ class App extends Component {
       style: {
         position: 'absolute',
         left: '50%',
-        top: -40,
+        bottom: 6,
         transform: 'translateX(-50%)',
-        width: 200,
-        height: 200,
+        width: 74,
+        height: 74,
         borderRadius: '50%',
-        border: '1px solid rgba(216,184,99,.16)'
+        background: 'radial-gradient(circle,rgba(243,224,190,.9) 0%,rgba(240,196,154,.45) 46%,transparent 70%)'
       }
-    }), /*#__PURE__*/React.createElement("div", {
+    }), /*#__PURE__*/React.createElement("svg", {
+      viewBox: "0 0 400 84",
+      preserveAspectRatio: "none",
+      style: { position: 'absolute', left: 0, right: 0, bottom: 0, width: '100%', height: 62, display: 'block', pointerEvents: 'none' }
+    }, /*#__PURE__*/React.createElement("path", {
+      d: "M0 62 L70 26 L130 52 L210 14 L288 50 L344 30 L400 54 L400 84 L0 84 Z",
+      fill: "rgba(38,55,74,.55)"
+    }), /*#__PURE__*/React.createElement("path", {
+      d: "M0 76 L56 48 L120 66 L196 38 L268 64 L330 46 L400 68 L400 84 L0 84 Z",
+      fill: "rgba(30,43,58,.85)"
+    })), /*#__PURE__*/React.createElement("div", {
       style: {
         position: 'relative'
       }
@@ -3302,7 +3321,7 @@ class App extends Component {
         fontSize: 11,
         letterSpacing: 1.5,
         textTransform: 'uppercase',
-        color: '#d8b863',
+        color: '#f0c49a',
         fontWeight: 600
       }
     }, next.name, " ", this.t('prayer.beginsIn')), /*#__PURE__*/React.createElement("div", {
@@ -3311,13 +3330,14 @@ class App extends Component {
         fontWeight: 700,
         fontVariantNumeric: 'tabular-nums',
         margin: '8px 0 4px',
-        letterSpacing: 1
+        letterSpacing: 1,
+        textShadow: '0 2px 12px rgba(20,30,40,.35)'
       }
     }, cd), /*#__PURE__*/React.createElement("div", {
       style: {
         fontFamily: 'Amiri,serif',
         fontSize: 20,
-        color: '#cdbf9e'
+        color: '#f0d9bc'
       },
       dir: "rtl"
     }, next.ar, " · ", next.time))), /*#__PURE__*/React.createElement("div", {
@@ -3336,7 +3356,7 @@ class App extends Component {
         justifyContent: 'space-between',
         padding: '16px 18px',
         borderBottom: p.last ? 'none' : '1px solid #f1ebdd',
-        background: p.isNext ? 'linear-gradient(90deg,#f3f7f4,#fffdf9)' : 'transparent'
+        background: p.isNext ? 'linear-gradient(90deg,#f2f5f8,#fffdf9)' : 'transparent'
       }
     }, /*#__PURE__*/React.createElement("div", {
       style: {
@@ -3348,7 +3368,7 @@ class App extends Component {
       style: {
         fontFamily: 'Amiri,serif',
         fontSize: 21,
-        color: p.isNext ? '#1f5145' : '#c2a86a',
+        color: p.isNext ? '#334a5e' : '#d3995f',
         width: 30,
         textAlign: 'center'
       },
@@ -3356,7 +3376,7 @@ class App extends Component {
     }, p.glyph), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
       style: {
         fontSize: 16.5,
-        color: p.isNext ? '#1f5145' : '#3f3a32',
+        color: p.isNext ? '#334a5e' : '#3f3a32',
         fontWeight: p.isNext ? 700 : 500
       }
     }, p.name), /*#__PURE__*/React.createElement("div", {
@@ -3374,7 +3394,7 @@ class App extends Component {
     }, /*#__PURE__*/React.createElement("span", {
       style: {
         fontSize: 18,
-        color: p.isNext ? '#1f5145' : '#3f3a32',
+        color: p.isNext ? '#334a5e' : '#3f3a32',
         fontWeight: p.isNext ? 700 : 500,
         fontVariantNumeric: 'tabular-nums'
       }
@@ -3385,8 +3405,8 @@ class App extends Component {
         width: 30,
         height: 30,
         borderRadius: 9,
-        border: `1px solid ${st.adhanMuted[p.name] ? '#e0c9ce' : '#dce8e3'}`,
-        background: st.adhanMuted[p.name] ? '#fdf0f2' : '#eef7f4',
+        border: `1px solid ${st.adhanMuted[p.name] ? '#e6d0c4' : '#dbe4eb'}`,
+        background: st.adhanMuted[p.name] ? '#fbeee6' : '#edf2f6',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -3442,14 +3462,14 @@ class App extends Component {
         fontSize: 13.5,
         color: '#4a443a',
         fontVariantNumeric: 'tabular-nums',
-        background: m.today ? '#f3f7f4' : 'transparent'
+        background: m.today ? '#f2f5f8' : 'transparent'
       }
     }, /*#__PURE__*/React.createElement("div", {
       style: {
         width: 56,
         flexShrink: 0,
         fontWeight: 600,
-        color: m.today ? '#1f5145' : '#4a443a'
+        color: m.today ? '#334a5e' : '#4a443a'
       }
     }, m.day), /*#__PURE__*/React.createElement("div", {
       style: {
@@ -3490,7 +3510,7 @@ class App extends Component {
       style: {
         fontSize: 12,
         fontWeight: 600,
-        color: autoLive ? '#1f5145' : '#9a7a2c',
+        color: autoLive ? '#334a5e' : '#b26b35',
         marginBottom: 10
       }
     }, autoLive ? '● Live — synced today with the Jaʿfarī (Leva, Qum) calculation for Dublin' : '○ Live sync unavailable — showing saved times'), (abiPresets(st.livePrayerPresets)).map(preset => {
@@ -3505,7 +3525,7 @@ class App extends Component {
           alignItems: 'center',
           gap: 14,
           background: '#fffdf9',
-          border: `2px solid ${active ? '#1f5145' : '#ece4d4'}`,
+          border: `2px solid ${active ? '#334a5e' : '#ece4d4'}`,
           borderRadius: 16,
           padding: '14px 16px',
           cursor: 'pointer',
@@ -3517,7 +3537,7 @@ class App extends Component {
           width: 22,
           height: 22,
           borderRadius: '50%',
-          border: `2px solid ${active ? '#1f5145' : '#c8bfa8'}`,
+          border: `2px solid ${active ? '#334a5e' : '#c8bfa8'}`,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -3528,7 +3548,7 @@ class App extends Component {
           width: 11,
           height: 11,
           borderRadius: '50%',
-          background: '#1f5145'
+          background: '#334a5e'
         }
       })), /*#__PURE__*/React.createElement("div", {
         style: {
@@ -3548,7 +3568,7 @@ class App extends Component {
         }
       }, preset.sub)), active && /*#__PURE__*/React.createElement("span", {
         style: {
-          color: '#1f5145',
+          color: '#334a5e',
           fontSize: 18
         }
       }, "✓"));
@@ -3572,7 +3592,7 @@ class App extends Component {
     }, /*#__PURE__*/React.createElement("div", {
       style: {
         padding: '16px',
-        borderBottom: '1px solid #f0e8d8'
+        borderBottom: '1px solid #f3e4d4'
       }
     }, /*#__PURE__*/React.createElement("div", {
       style: {
@@ -3616,7 +3636,7 @@ class App extends Component {
         width: 48,
         height: 26,
         borderRadius: 13,
-        background: st.adhanEnabled ? '#1f5145' : '#c8bfa8',
+        background: st.adhanEnabled ? '#334a5e' : '#c8bfa8',
         position: 'relative',
         cursor: 'pointer',
         transition: 'background .2s',
@@ -3662,8 +3682,8 @@ class App extends Component {
           padding: '9px 11px',
           borderRadius: 12,
           cursor: 'pointer',
-          background: on ? '#1f5145' : '#fffdf9',
-          border: `1.5px solid ${on ? '#1f5145' : '#e4dac2'}`
+          background: on ? '#334a5e' : '#fffdf9',
+          border: `1.5px solid ${on ? '#334a5e' : '#e4dac2'}`
         }
       }, /*#__PURE__*/React.createElement("div", {
         style: {
@@ -3691,11 +3711,11 @@ class App extends Component {
         textAlign: 'center',
         padding: '9px',
         borderRadius: 10,
-        background: '#eef7f4',
-        border: '1px solid #c4ddd7',
+        background: '#edf2f6',
+        border: '1px solid #c3d2de',
         fontSize: 13,
         fontWeight: 600,
-        color: '#1f5145',
+        color: '#334a5e',
         cursor: 'pointer'
       }
     }, this.t('prayer.testAdhan')) : /*#__PURE__*/React.createElement("div", {
@@ -3705,11 +3725,11 @@ class App extends Component {
         textAlign: 'center',
         padding: '9px',
         borderRadius: 10,
-        background: '#fdf0f2',
+        background: '#fbeee6',
         border: '1px solid #dfc4ca',
         fontSize: 13,
         fontWeight: 600,
-        color: '#6e2230',
+        color: '#8f4126',
         cursor: 'pointer'
       }
     }, this.t('prayer.stop')))), /*#__PURE__*/React.createElement("div", {
@@ -3762,7 +3782,7 @@ class App extends Component {
         width: 48,
         height: 26,
         borderRadius: 13,
-        background: st.notifEnabled ? '#1f5145' : '#c8bfa8',
+        background: st.notifEnabled ? '#334a5e' : '#c8bfa8',
         position: 'relative',
         cursor: 'pointer',
         transition: 'background .2s',
@@ -3807,11 +3827,11 @@ class App extends Component {
         textAlign: 'center',
         padding: '9px',
         borderRadius: 10,
-        background: '#eef7f4',
-        border: '1px solid #c4ddd7',
+        background: '#edf2f6',
+        border: '1px solid #c3d2de',
         fontSize: 13,
         fontWeight: 600,
-        color: '#1f5145',
+        color: '#334a5e',
         cursor: 'pointer'
       }
     }, this.t('prayer.allowNotif')), !notifSupported && /*#__PURE__*/React.createElement("div", {
@@ -3845,7 +3865,7 @@ class App extends Component {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        color: '#9a7a2c',
+        color: '#b26b35',
         fontWeight: 700,
         fontSize: 11
       }
@@ -3867,7 +3887,7 @@ class App extends Component {
       }
     }, this.t('prayer.pdfSub'))), /*#__PURE__*/React.createElement("span", {
       style: {
-        color: '#bba35f',
+        color: '#d59a62',
         fontSize: 20
       }
     }, "↓")), /*#__PURE__*/React.createElement("div", {
@@ -3890,22 +3910,22 @@ class App extends Component {
     const libMeta = {
       dua: {
         title: "Duʿāʾ",
-        accent: '#9a7a2c',
-        tint: '#f3ecd9',
+        accent: '#b26b35',
+        tint: '#f6e8d8',
         list: duaList,
         cats: ['All', ...new Set(duaList.map(it => it.cat).filter(Boolean))]
       },
       ziyarah: {
         title: 'Ziyārah',
-        accent: '#6e2230',
-        tint: '#f3e6e8',
+        accent: '#8f4126',
+        tint: '#f7e9e0',
         list: ziyList,
         cats: ['All', ...new Set(ziyList.map(it => it.cat).filter(Boolean))]
       },
       nahj: {
         title: 'Books',
-        accent: '#2c5d52',
-        tint: '#e6efe9',
+        accent: '#476478',
+        tint: '#e7ecf1',
         list: [],
         cats: []
       }
@@ -3965,8 +3985,8 @@ class App extends Component {
       cursor: 'pointer',
       marginBottom: -1,
       fontWeight: st.nahjTab === k ? 700 : 500,
-      color: st.nahjTab === k ? '#2c5d52' : '#8c8270',
-      borderBottom: st.nahjTab === k ? '2px solid #2c5d52' : '2px solid transparent'
+      color: st.nahjTab === k ? '#476478' : '#8c8270',
+      borderBottom: st.nahjTab === k ? '2px solid #476478' : '2px solid transparent'
     });
     return /*#__PURE__*/React.createElement("div", {
       style: {
@@ -4137,7 +4157,7 @@ class App extends Component {
     }, it2.title), /*#__PURE__*/React.createElement("span", {
       style: {
         flexShrink: 0,
-        color: '#cdbf9e',
+        color: '#d9b493',
         fontSize: 18,
         lineHeight: 1
       }
@@ -4173,8 +4193,8 @@ class App extends Component {
         letterSpacing: .7,
         textTransform: 'uppercase',
         fontWeight: 700,
-        color: '#2c5d52',
-        background: '#e6efe9',
+        color: '#476478',
+        background: '#e7ecf1',
         padding: '3px 7px',
         borderRadius: 6,
         whiteSpace: 'nowrap',
@@ -4183,7 +4203,7 @@ class App extends Component {
       }
     }, n.ref), /*#__PURE__*/React.createElement("span", {
       style: {
-        color: '#cdbf9e',
+        color: '#d9b493',
         fontSize: 14,
         flexShrink: 0
       }
@@ -4213,7 +4233,7 @@ class App extends Component {
       style: {
         fontSize: 10,
         fontWeight: 700,
-        color: '#2c5d52',
+        color: '#476478',
         letterSpacing: .5
       }
     }, "PDF · tap to read")))), libCards.length === 0 && nahjCards.length === 0 && (q || st.libCat !== 'All') && /*#__PURE__*/React.createElement("div", {
@@ -4238,7 +4258,7 @@ class App extends Component {
       muted: '#8e9490',
       border: '#2c3234',
       barBg: 'rgba(22,25,26,.9)',
-      accent: '#d8b863',
+      accent: '#e8a765',
       arInk: '#e9e1cd'
     } : {
       bg: '#f6f1e7',
@@ -4247,12 +4267,12 @@ class App extends Component {
       muted: '#9a8f7c',
       border: '#ece4d4',
       barBg: 'rgba(246,241,231,.92)',
-      accent: '#1f5145',
+      accent: '#334a5e',
       arInk: '#2c2823'
     };
     const arSize = Math.round(30 * st.textSize) + 'px';
     const trSize = Math.round(17 * st.textSize) + 'px';
-    const readAccent = rtype === 'ziyarah' ? '#6e2230' : rtype === 'nahj' ? '#2c5d52' : '#9a7a2c';
+    const readAccent = rtype === 'ziyarah' ? '#8f4126' : rtype === 'nahj' ? '#476478' : '#b26b35';
     // per-language content: items may carry body_ur / body_fa / body_hi alongside the English body
     const TR_CODES = { 'हिन्दी': 'hi', 'فارسی': 'fa', 'Urdu': 'ur' };
     const trCode = TR_CODES[st.lang];
@@ -4433,9 +4453,9 @@ class App extends Component {
         fontSize: 12.5,
         fontWeight: 600,
         cursor: 'pointer',
-        background: active ? '#1f5145' : '#fffdf9',
+        background: active ? '#334a5e' : '#fffdf9',
         color: active ? '#fffdf9' : '#6f675a',
-        border: `1px solid ${active ? '#1f5145' : '#e6dcc8'}`
+        border: `1px solid ${active ? '#334a5e' : '#e6dcc8'}`
       };
     };
     const btnBase = {
@@ -4646,7 +4666,7 @@ class App extends Component {
     }, /*#__PURE__*/React.createElement("div", {
       style: {
         ...btnBase,
-        background: '#1f5145',
+        background: '#334a5e',
         color: '#fffdf9'
       }
     }, /*#__PURE__*/React.createElement("svg", {
@@ -4698,7 +4718,7 @@ class App extends Component {
       height: "16",
       viewBox: "0 0 24 24",
       fill: "none",
-      stroke: "#9a7a2c",
+      stroke: "#b26b35",
       strokeWidth: "1.8"
     }, /*#__PURE__*/React.createElement("circle", {
       cx: "12",
@@ -4795,7 +4815,7 @@ class App extends Component {
         justifyContent: 'center',
         fontFamily: 'Amiri,serif',
         fontSize: 19,
-        color: '#1f5145'
+        color: '#334a5e'
       }
     }, m.glyph), /*#__PURE__*/React.createElement("div", {
       style: {
@@ -4815,7 +4835,7 @@ class App extends Component {
       }
     }, m.sub)), /*#__PURE__*/React.createElement("span", {
       style: {
-        color: '#cdbf9e',
+        color: '#d9b493',
         fontSize: 20
       }
     }, "›")))), /*#__PURE__*/React.createElement("div", {
@@ -4852,7 +4872,7 @@ class App extends Component {
     }, /*#__PURE__*/React.createElement("div", {
       style: {
         fontSize: 14.5,
-        color: st.lang === l ? '#1f5145' : '#3f3a32',
+        color: st.lang === l ? '#334a5e' : '#3f3a32',
         fontWeight: st.lang === l ? 700 : 400
       }
     }, l), st.lang === l && /*#__PURE__*/React.createElement("svg", {
@@ -4860,7 +4880,7 @@ class App extends Component {
       height: "18",
       viewBox: "0 0 24 24",
       fill: "none",
-      stroke: "#1f5145",
+      stroke: "#334a5e",
       strokeWidth: "2.2",
       strokeLinecap: "round",
       strokeLinejoin: "round"
@@ -4902,7 +4922,7 @@ class App extends Component {
         width: 48,
         height: 28,
         borderRadius: 16,
-        background: st.dark ? '#1f5145' : '#d8d0bf',
+        background: st.dark ? '#334a5e' : '#d8d0bf',
         position: 'relative',
         cursor: 'pointer',
         transition: 'background .2s'
@@ -5013,7 +5033,7 @@ class App extends Component {
       }
     }, b.title), /*#__PURE__*/React.createElement("span", {
       style: {
-        color: '#cdbf9e',
+        color: '#d9b493',
         fontSize: 18
       }
     }, "›"))))), /*#__PURE__*/React.createElement("div", {
@@ -5029,10 +5049,10 @@ class App extends Component {
       target: "_blank",
       rel: "noopener noreferrer",
       style: {
-        color: '#1f5145',
+        color: '#334a5e',
         fontWeight: 600,
         textDecoration: 'underline',
-        textDecorationColor: 'rgba(31,81,69,.3)'
+        textDecorationColor: 'rgba(51,74,94,.3)'
       }
     }, "SoftEire Technology Limited")));
   }
@@ -5050,7 +5070,7 @@ class App extends Component {
         display: 'inline-flex',
         alignItems: 'center',
         gap: 4,
-        color: '#1f5145',
+        color: '#334a5e',
         fontSize: 14,
         fontWeight: 600,
         cursor: 'pointer',
@@ -5069,12 +5089,12 @@ class App extends Component {
         width: 104,
         height: 104,
         borderRadius: 28,
-        background: 'linear-gradient(150deg,#23564a,#143b2f)',
+        background: 'linear-gradient(150deg,#354c60,#22333f)',
         margin: '24px auto 0',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        boxShadow: '0 22px 40px -16px rgba(20,59,47,.6)',
+        boxShadow: '0 22px 40px -16px rgba(34,51,63,.6)',
         position: 'relative',
         overflow: 'hidden'
       }
@@ -5082,14 +5102,14 @@ class App extends Component {
       style: {
         position: 'absolute',
         inset: 0,
-        boxShadow: 'inset 0 0 0 1px rgba(216,184,99,.25)'
+        boxShadow: 'inset 0 0 0 1px rgba(232,167,101,.25)'
       }
     }), /*#__PURE__*/React.createElement("div", {
       style: {
         width: 46,
         height: 46,
         borderRadius: '50%',
-        boxShadow: 'inset -13px 0 0 0 #d8b863'
+        boxShadow: 'inset -13px 0 0 0 #e8a765'
       }
     })), /*#__PURE__*/React.createElement("div", {
       style: {
@@ -5144,8 +5164,8 @@ class App extends Component {
         width: 22,
         height: 22,
         borderRadius: '50%',
-        background: '#e6efe9',
-        color: '#1f5145',
+        background: '#e7ecf1',
+        color: '#334a5e',
         fontSize: 12,
         fontWeight: 700,
         display: 'flex',
@@ -5168,7 +5188,7 @@ class App extends Component {
         padding: 15,
         borderRadius: 14,
         background: '#1c1a17',
-        color: '#d8b863',
+        color: '#e8a765',
         fontSize: 14,
         fontWeight: 600,
         cursor: 'pointer'
@@ -5195,7 +5215,7 @@ class App extends Component {
         position: 'absolute',
         top: 14,
         left: 20,
-        color: '#1f5145',
+        color: '#334a5e',
         fontSize: 14,
         fontWeight: 600,
         cursor: 'pointer'
@@ -5251,7 +5271,7 @@ class App extends Component {
         borderRadius: 13,
         border: '1px solid #e6dcc8',
         background: '#fffdf9',
-        color: '#1f5145',
+        color: '#334a5e',
         fontSize: 14,
         fontWeight: 600,
         cursor: 'pointer'
@@ -5335,7 +5355,7 @@ class App extends Component {
     }), st.adminLoginErr && /*#__PURE__*/React.createElement("div", {
       style: {
         fontSize: 12.5,
-        color: '#6e2230',
+        color: '#8f4126',
         marginBottom: 12,
         textAlign: 'center'
       }
@@ -5346,7 +5366,7 @@ class App extends Component {
         textAlign: 'center',
         padding: 14,
         borderRadius: 14,
-        background: '#1f5145',
+        background: '#334a5e',
         color: '#f3ead4',
         fontSize: 15,
         fontWeight: 700,
@@ -5367,48 +5387,48 @@ class App extends Component {
     if (!st.adminLoggedIn) return this.renderAdminLogin(st);
     const sec = st.adminSection;
     const editing = st.adminEditIdx !== null;
-    const COLORS = ['#1f5145', '#2c5d52', '#6e2230', '#9a7a2c', '#3a4a78', '#b8923f'];
+    const COLORS = ['#334a5e', '#476478', '#8f4126', '#b26b35', '#4a5a74', '#c9803f'];
     const COLOR_NAMES = {
-      '#1f5145': 'Green',
-      '#2c5d52': 'Teal',
-      '#6e2230': 'Maroon',
-      '#9a7a2c': 'Gold',
-      '#3a4a78': 'Navy',
-      '#b8923f': 'Amber'
+      '#334a5e': 'Green',
+      '#476478': 'Teal',
+      '#8f4126': 'Maroon',
+      '#b26b35': 'Gold',
+      '#4a5a74': 'Navy',
+      '#c9803f': 'Amber'
     };
     const STORY_KINDS = ['verse', 'sermon', 'kids', 'quiz', 'classified', 'announce'];
     const EVENT_TYPES = ['Community', 'Majlis', 'Class', 'Programme', 'Dua e Kumail', 'Friday Prayer', 'Historical Event'];
     const EVENT_COLORS = {
-      'Community': '#1f5145',
-      'Majlis': '#6e2230',
-      'Class': '#9a7a2c',
-      'Programme': '#2c5d52',
-      'Dua e Kumail': '#3a4a78',
+      'Community': '#334a5e',
+      'Majlis': '#8f4126',
+      'Class': '#b26b35',
+      'Programme': '#476478',
+      'Dua e Kumail': '#4a5a74',
       'Friday Prayer': '#8a4b2c',
       'Historical Event': '#7a5c9e'
     };
     const EVENT_TINTS = {
-      'Community': '#e6efe9',
-      'Majlis': '#f3e6e8',
-      'Class': '#f3ecd9',
-      'Programme': '#e6efe9',
-      'Dua e Kumail': '#e8ebf4',
+      'Community': '#e7ecf1',
+      'Majlis': '#f7e9e0',
+      'Class': '#f6e8d8',
+      'Programme': '#e7ecf1',
+      'Dua e Kumail': '#e8ecf2',
       'Friday Prayer': '#f6ebe4',
       'Historical Event': '#eee8f5'
     };
     const CAT_COLORS = {
-      'Food': '#1f5145',
-      'Butcher': '#6e2230',
-      'Travel': '#9a7a2c',
-      'Education': '#2c5d52',
-      'Services': '#3a4a78'
+      'Food': '#334a5e',
+      'Butcher': '#8f4126',
+      'Travel': '#b26b35',
+      'Education': '#476478',
+      'Services': '#4a5a74'
     };
     const CAT_TINTS = {
-      'Food': '#e6efe9',
-      'Butcher': '#f3e6e8',
-      'Travel': '#f3ecd9',
-      'Education': '#e6efe9',
-      'Services': '#e8ebf4'
+      'Food': '#e7ecf1',
+      'Butcher': '#f7e9e0',
+      'Travel': '#f6e8d8',
+      'Education': '#e7ecf1',
+      'Services': '#e8ecf2'
     };
     const tabs = [{
       id: 'stories',
@@ -5488,8 +5508,8 @@ class App extends Component {
           short: d.short || '',
           initial: d.initial || 'م',
           tag: d.tag || '',
-          color: d.color || '#6e2230',
-          img: `linear-gradient(150deg,${d.color || '#6e2230'}cc,${d.color || '#1c1a17'})`,
+          color: d.color || '#8f4126',
+          img: `linear-gradient(150deg,${d.color || '#8f4126'}cc,${d.color || '#1c1a17'})`,
           photo: d.photo || '',
           created: isNew ? Date.now() : d.created,
           from: d.from || '',
@@ -5646,7 +5666,7 @@ class App extends Component {
           maxLength: 40,
           style: inp
         }), /*#__PURE__*/React.createElement("select", {
-          value: d.color || '#6e2230',
+          value: d.color || '#8f4126',
           onChange: e => this.setDraft({
             color: e.target.value
           }),
@@ -5686,8 +5706,8 @@ class App extends Component {
         }), btn('Remove image', () => this.setDraft({
           photo: ''
         }), {
-          background: '#f3e6e8',
-          color: '#6e2230',
+          background: '#f7e9e0',
+          color: '#8f4126',
           fontSize: 12,
           padding: '6px 12px'
         })), /*#__PURE__*/React.createElement("input", {
@@ -5765,13 +5785,13 @@ class App extends Component {
           }
         }, btn('Save', saveStory, {
           flex: 1,
-          background: '#1f5145',
+          background: '#334a5e',
           color: '#f3ead4'
         }), btn('Preview', previewStory, {
           flex: 1,
-          border: '1.5px solid #9a7a2c',
+          border: '1.5px solid #b26b35',
           background: '#fffdf9',
-          color: '#9a7a2c'
+          color: '#b26b35'
         }), btn('Cancel', this.cancelEdit, {
           flex: 1,
           border: '1px solid #e6dcc8',
@@ -5781,9 +5801,9 @@ class App extends Component {
       }
       return /*#__PURE__*/React.createElement("div", null, btn('+ Add Story', () => this.startEdit(-1, {
         kind: 'announce',
-        color: '#6e2230'
+        color: '#8f4126'
       }), {
-        background: '#1f5145',
+        background: '#334a5e',
         color: '#f3ead4',
         marginBottom: 14,
         width: '100%'
@@ -5835,8 +5855,8 @@ class App extends Component {
         opt1: s.options?.[1],
         opt2: s.options?.[2]
       }), {
-        background: '#e6efe9',
-        color: '#1f5145',
+        background: '#e7ecf1',
+        color: '#334a5e',
         fontSize: 12,
         padding: '6px 12px'
       }), btn('✕', () => {
@@ -5844,8 +5864,8 @@ class App extends Component {
         a.splice(i, 1);
         save('stories', 'liveStories', a, 'Deleted');
       }, {
-        background: '#fdf0f2',
-        color: '#6e2230',
+        background: '#fbeee6',
+        color: '#8f4126',
         fontSize: 12,
         padding: '6px 10px'
       }))));
@@ -5951,7 +5971,7 @@ class App extends Component {
           }
         }, btn('Save', saveItem, {
           flex: 1,
-          background: '#1f5145',
+          background: '#334a5e',
           color: '#f3ead4'
         }), btn('Cancel', this.cancelEdit, {
           flex: 1,
@@ -5963,7 +5983,7 @@ class App extends Component {
       return /*#__PURE__*/React.createElement("div", null, btn('+ Add Listing', () => this.startEdit(-1, {
         cat: 'Services'
       }), {
-        background: '#1f5145',
+        background: '#334a5e',
         color: '#f3ead4',
         marginBottom: 14,
         width: '100%'
@@ -5972,7 +5992,7 @@ class App extends Component {
           display: 'flex',
           alignItems: 'center',
           gap: 12,
-          background: '#edf2ee',
+          background: '#ecf1f5',
           border: '1px solid #c5d9cb',
           borderRadius: 14,
           padding: '12px 14px',
@@ -6009,7 +6029,7 @@ class App extends Component {
         style: {
           fontSize: 11,
           fontWeight: 700,
-          color: '#1f5145',
+          color: '#334a5e',
           background: '#c5d9cb',
           padding: '4px 9px',
           borderRadius: 7,
@@ -6057,8 +6077,8 @@ class App extends Component {
       }, c.cat, " · ", c.loc)), btn('Edit', () => this.startEdit(i, {
         ...c
       }), {
-        background: '#e6efe9',
-        color: '#1f5145',
+        background: '#e7ecf1',
+        color: '#334a5e',
         fontSize: 12,
         padding: '6px 12px'
       }), btn('✕', () => {
@@ -6066,8 +6086,8 @@ class App extends Component {
         a.splice(i, 1);
         save('classifieds', 'liveClassifieds', a, 'Deleted');
       }, {
-        background: '#fdf0f2',
-        color: '#6e2230',
+        background: '#fbeee6',
+        color: '#8f4126',
         fontSize: 12,
         padding: '6px 10px'
       }))));
@@ -6164,7 +6184,7 @@ class App extends Component {
             ...inp,
             cursor: 'pointer',
             color: d.notice ? '#2c2823' : '#9a8f7c',
-            border: d.notice ? inp.border : '1.5px solid #c2a35a'
+            border: d.notice ? inp.border : '1.5px solid #d99a5e'
           }
         }, /*#__PURE__*/React.createElement("option", {
           value: "",
@@ -6213,9 +6233,9 @@ class App extends Component {
               fontSize: 13,
               fontWeight: 700,
               cursor: 'pointer',
-              background: on ? '#1f5145' : '#fffdf9',
+              background: on ? '#334a5e' : '#fffdf9',
               color: on ? '#f3ead4' : '#6f675a',
-              border: `1.5px solid ${on ? '#1f5145' : '#e6dcc8'}`
+              border: `1.5px solid ${on ? '#334a5e' : '#e6dcc8'}`
             }
           }, lbl);
         })), hijriMode ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
@@ -6320,9 +6340,9 @@ class App extends Component {
               fontSize: 13,
               fontWeight: 700,
               cursor: 'pointer',
-              background: on ? '#1f5145' : '#fffdf9',
+              background: on ? '#334a5e' : '#fffdf9',
               color: on ? '#f3ead4' : '#6f675a',
-              border: `1.5px solid ${on ? '#1f5145' : '#e6dcc8'}`
+              border: `1.5px solid ${on ? '#334a5e' : '#e6dcc8'}`
             }
           }, lbl);
         })), /*#__PURE__*/React.createElement("div", {
@@ -6339,7 +6359,7 @@ class App extends Component {
           }
         }, btn('Save', saveItem, {
           flex: 1,
-          background: '#1f5145',
+          background: '#334a5e',
           color: '#f3ead4'
         }), btn('Cancel', this.cancelEdit, {
           flex: 1,
@@ -6354,7 +6374,7 @@ class App extends Component {
       date: '',
       ...extraDraft
     }), {
-      background: '#1f5145',
+      background: '#334a5e',
       color: '#f3ead4',
       marginBottom: 14,
       width: '100%'
@@ -6401,8 +6421,8 @@ class App extends Component {
         ...e,
         ...extraDraft
       }), {
-        background: '#e6efe9',
-        color: '#1f5145',
+        background: '#e7ecf1',
+        color: '#334a5e',
         fontSize: 12,
         padding: '6px 12px'
       }), btn('✕', () => {
@@ -6410,8 +6430,8 @@ class App extends Component {
         a.splice(i, 1);
         save('calEvents', 'liveCalEvents', a, 'Deleted');
       }, {
-        background: '#fdf0f2',
-        color: '#6e2230',
+        background: '#fbeee6',
+        color: '#8f4126',
         fontSize: 12,
         padding: '6px 10px'
       })))];
@@ -6492,7 +6512,7 @@ class App extends Component {
           }
         }, btn('Save Times', savePrayer, {
           flex: 1,
-          background: '#1f5145',
+          background: '#334a5e',
           color: '#f3ead4'
         }), btn('Cancel', this.cancelEdit, {
           flex: 1,
@@ -6539,7 +6559,7 @@ class App extends Component {
         }
       }, p.sub)), /*#__PURE__*/React.createElement("span", {
         style: {
-          color: '#bba35f',
+          color: '#d59a62',
           fontSize: 18
         }
       }, "›"))));
@@ -6618,7 +6638,7 @@ class App extends Component {
           }, 'Majlis Live saved!');
         }, {
           flex: 1,
-          background: '#1f5145',
+          background: '#334a5e',
           color: '#f3ead4'
         }), btn('Cancel', this.cancelEdit, {
           flex: 1,
@@ -6641,12 +6661,12 @@ class App extends Component {
         style: {
           fontSize: 14,
           fontWeight: 700,
-          color: '#5e4d22'
+          color: '#6b4a2a'
         }
       }, a.title), /*#__PURE__*/React.createElement("div", {
         style: {
           fontSize: 12.5,
-          color: '#8a7846',
+          color: '#a3714a',
           marginTop: 4,
           lineHeight: 1.5
         }
@@ -6668,7 +6688,7 @@ class App extends Component {
         style: {
           fontSize: 12,
           fontWeight: 700,
-          color: live ? '#1f5145' : '#8a3030',
+          color: live ? '#334a5e' : '#8a3030',
           marginBottom: 12
         }
       }, live ? a.date ? '● Live — expires 11:59 pm on ' + a.date : '● Live — no expiry date set' : '○ Expired — no longer shown to users'), /*#__PURE__*/React.createElement("div", {
@@ -6683,7 +6703,7 @@ class App extends Component {
         date: a.date || ''
       }), {
         flex: 1,
-        background: '#1f5145',
+        background: '#334a5e',
         color: '#f3ead4'
       }), a.title && btn('Remove', () => save('announcement', 'liveAnnouncement', {
         title: '',
@@ -6693,7 +6713,7 @@ class App extends Component {
       }, 'Majlis Live removed'), {
         flex: 1,
         background: '#faeeee',
-        border: '1px solid #e6c9c9',
+        border: '1px solid #ecd2c4',
         color: '#8a3030'
       })));
     };
@@ -6761,7 +6781,7 @@ class App extends Component {
           save('askImam', 'liveAskImam', a, isNew ? 'Maulana added!' : 'Maulana updated!');
         }, {
           flex: 1,
-          background: '#1f5145',
+          background: '#334a5e',
           color: '#f3ead4'
         }), btn('Cancel', this.cancelEdit, {
           flex: 1,
@@ -6774,7 +6794,7 @@ class App extends Component {
         name: '',
         number: ''
       }), {
-        background: '#1f5145',
+        background: '#334a5e',
         color: '#f3ead4',
         marginBottom: 14,
         width: '100%'
@@ -6813,8 +6833,8 @@ class App extends Component {
       }, m.number)), btn('Edit', () => this.startEdit(i, {
         ...m
       }), {
-        background: '#e6efe9',
-        color: '#1f5145',
+        background: '#e7ecf1',
+        color: '#334a5e',
         fontSize: 12,
         padding: '6px 12px'
       }), btn('✕', () => {
@@ -6822,15 +6842,15 @@ class App extends Component {
         a.splice(i, 1);
         save('askImam', 'liveAskImam', a, 'Maulana removed');
       }, {
-        background: '#fdf0f2',
-        color: '#6e2230',
+        background: '#fbeee6',
+        color: '#8f4126',
         fontSize: 12,
         padding: '6px 10px'
       }))), /*#__PURE__*/React.createElement("div", {
         style: {
           fontSize: 12,
           fontWeight: 700,
-          color: '#1f5145',
+          color: '#334a5e',
           marginTop: 4
         }
       }, "● Live — the Ask Your Maulana card is showing at the top of Explore")) : /*#__PURE__*/React.createElement("div", {
@@ -6943,8 +6963,8 @@ class App extends Component {
         }), btn('Remove image', () => this.setDraft({
           img: ''
         }), {
-          background: '#f3e6e8',
-          color: '#6e2230',
+          background: '#f7e9e0',
+          color: '#8f4126',
           fontSize: 12,
           padding: '6px 12px'
         })), /*#__PURE__*/React.createElement("input", {
@@ -6986,7 +7006,7 @@ class App extends Component {
             height: 24,
             borderRadius: 12,
             padding: 3,
-            background: d.on === false ? '#ddd3bf' : '#1f5145',
+            background: d.on === false ? '#ddd3bf' : '#334a5e',
             display: 'flex',
             justifyContent: d.on === false ? 'flex-start' : 'flex-end'
           }
@@ -7010,7 +7030,7 @@ class App extends Component {
           }
         }, btn('Save', saveAd, {
           flex: 1,
-          background: '#1f5145',
+          background: '#334a5e',
           color: '#f3ead4'
         }), btn('Cancel', this.cancelEdit, {
           flex: 1,
@@ -7026,7 +7046,7 @@ class App extends Component {
         img: '',
         on: true
       }), {
-        background: '#1f5145',
+        background: '#334a5e',
         color: '#f3ead4',
         marginBottom: 14,
         width: '100%'
@@ -7083,15 +7103,15 @@ class App extends Component {
         };
         save('ads', 'liveAds', arr, a.on === false ? 'Ad is live' : 'Ad paused');
       }, {
-        background: '#f3ecd9',
-        color: '#9a7a2c',
+        background: '#f6e8d8',
+        color: '#b26b35',
         fontSize: 12,
         padding: '6px 10px'
       }), btn('Edit', () => this.startEdit(i, {
         ...a
       }), {
-        background: '#e6efe9',
-        color: '#1f5145',
+        background: '#e7ecf1',
+        color: '#334a5e',
         fontSize: 12,
         padding: '6px 12px'
       }), btn('✕', () => {
@@ -7099,14 +7119,14 @@ class App extends Component {
         arr.splice(i, 1);
         save('ads', 'liveAds', arr, 'Ad removed');
       }, {
-        background: '#fdf0f2',
-        color: '#6e2230',
+        background: '#fbeee6',
+        color: '#8f4126',
         fontSize: 12,
         padding: '6px 10px'
       }))), /*#__PURE__*/React.createElement("div", {
         style: {
           fontSize: 12,
-          color: liveCount ? '#1f5145' : '#8d8574',
+          color: liveCount ? '#334a5e' : '#8d8574',
           fontWeight: liveCount ? 700 : 400,
           fontStyle: liveCount ? 'normal' : 'italic',
           marginTop: 4
@@ -7150,7 +7170,7 @@ class App extends Component {
             width: 48,
             height: 26,
             borderRadius: 13,
-            background: d.on ? '#1f5145' : '#c8bfa8',
+            background: d.on ? '#334a5e' : '#c8bfa8',
             position: 'relative',
             cursor: 'pointer',
             transition: 'background .2s',
@@ -7181,7 +7201,7 @@ class App extends Component {
             resize: 'none'
           }
         }), /*#__PURE__*/React.createElement("select", {
-          value: d.color || '#6e2230',
+          value: d.color || '#8f4126',
           onChange: e => this.setDraft({
             color: e.target.value
           }),
@@ -7200,10 +7220,10 @@ class App extends Component {
         }, btn('Save', () => save('pinned', 'livePinned', {
           on: !!d.on,
           text: d.text || '',
-          color: d.color || '#6e2230'
+          color: d.color || '#8f4126'
         }, 'Pinned message saved!'), {
           flex: 1,
-          background: '#1f5145',
+          background: '#334a5e',
           color: '#f3ead4'
         }), btn('Cancel', this.cancelEdit, {
           flex: 1,
@@ -7232,7 +7252,7 @@ class App extends Component {
       }, "No pinned message active."), btn('Edit Pinned Message', () => this.startEdit(0, {
         ...p
       }), {
-        background: '#1f5145',
+        background: '#334a5e',
         color: '#f3ead4',
         width: '100%'
       }));
@@ -7257,7 +7277,7 @@ class App extends Component {
             const it = {
               title: d.title || '',
               meta: d.meta || '',
-              color: d.color || '#1f5145',
+              color: d.color || '#334a5e',
               yt: d.yt || '',
               cat: catSel === '__other' ? (catCustom || '').trim() : catSel,
               hero: !!d.hero
@@ -7337,8 +7357,8 @@ class App extends Component {
               gap: 10,
               padding: '11px 13px',
               borderRadius: 12,
-              border: `1.5px solid ${d.hero ? '#1f5145' : '#e6dcc8'}`,
-              background: d.hero ? '#e6efe9' : '#fffdf9',
+              border: `1.5px solid ${d.hero ? '#334a5e' : '#e6dcc8'}`,
+              background: d.hero ? '#e7ecf1' : '#fffdf9',
               cursor: 'pointer',
               marginBottom: 10
             }
@@ -7347,8 +7367,8 @@ class App extends Component {
               width: 18,
               height: 18,
               borderRadius: 6,
-              border: `2px solid ${d.hero ? '#1f5145' : '#c9bfa9'}`,
-              background: d.hero ? '#1f5145' : 'transparent',
+              border: `2px solid ${d.hero ? '#334a5e' : '#c9bfa9'}`,
+              background: d.hero ? '#334a5e' : 'transparent',
               color: '#f3ead4',
               fontSize: 12,
               display: 'flex',
@@ -7363,7 +7383,7 @@ class App extends Component {
               color: '#3f3a32'
             }
           }, "Hero video — show at the top of Kids Corner")), /*#__PURE__*/React.createElement("select", {
-            value: d.color || '#1f5145',
+            value: d.color || '#334a5e',
             onChange: e => this.setDraft({
               color: e.target.value
             }),
@@ -7381,7 +7401,7 @@ class App extends Component {
             }
           }, btn('Save', save2, {
             flex: 1,
-            background: '#1f5145',
+            background: '#334a5e',
             color: '#f3ead4'
           }), btn('Cancel', this.cancelEdit, {
             flex: 1,
@@ -7396,8 +7416,8 @@ class App extends Component {
             const it = {
               title: d.title || '',
               meta: d.meta || '',
-              color: d.color || '#e6efe9',
-              ink: d.ink || '#1f5145'
+              color: d.color || '#e7ecf1',
+              ink: d.ink || '#334a5e'
             };
             if (isNew) a.push(it);else a[st.adminEditIdx] = it;
             save('kidsBooks', 'liveKidsBooks', a, isNew ? 'Book added!' : 'Updated!');
@@ -7436,7 +7456,7 @@ class App extends Component {
             }
           }, btn('Save', save2, {
             flex: 1,
-            background: '#1f5145',
+            background: '#334a5e',
             color: '#f3ead4'
           }), btn('Cancel', this.cancelEdit, {
             flex: 1,
@@ -7499,7 +7519,7 @@ class App extends Component {
             }
           }, btn('Save', save2, {
             flex: 1,
-            background: '#1f5145',
+            background: '#334a5e',
             color: '#f3ead4'
           }), btn('Cancel', this.cancelEdit, {
             flex: 1,
@@ -7627,7 +7647,7 @@ class App extends Component {
           }
         }, btn('Save', saveQuiz, {
           flex: 1,
-          background: '#1f5145',
+          background: '#334a5e',
           color: '#f3ead4'
         }), btn('Cancel', this.cancelEdit, {
           flex: 1,
@@ -7677,12 +7697,12 @@ class App extends Component {
           fontWeight: 600,
           cursor: 'pointer',
           background: ks === t.id ? '#fffdf9' : 'transparent',
-          color: ks === t.id ? '#1f5145' : '#8c8270'
+          color: ks === t.id ? '#334a5e' : '#8c8270'
         }
       }, t.label))), btn(`+ Add ${ks === 'quizzes' ? 'Quiz' : ks.slice(0, -1).charAt(0).toUpperCase() + ks.slice(0, -1).slice(1)}`, () => this.startEdit(-1, {
         _sub: ks
       }), {
-        background: '#1f5145',
+        background: '#334a5e',
         color: '#f3ead4',
         marginBottom: 12,
         width: '100%'
@@ -7712,8 +7732,8 @@ class App extends Component {
         ...it,
         _sub: ks
       }), {
-        background: '#e6efe9',
-        color: '#1f5145',
+        background: '#e7ecf1',
+        color: '#334a5e',
         fontSize: 12,
         padding: '6px 12px'
       }), btn('✕', () => {
@@ -7723,8 +7743,8 @@ class App extends Component {
         const sk = ks === 'videos' ? 'liveKidsVideos' : ks === 'books' ? 'liveKidsBooks' : ks === 'quizzes' ? 'liveKidsQuizzes' : 'liveKidsQuotes';
         save(kk, sk, a, 'Deleted');
       }, {
-        background: '#fdf0f2',
-        color: '#6e2230',
+        background: '#fbeee6',
+        color: '#8f4126',
         fontSize: 12,
         padding: '6px 10px'
       }))));
@@ -7736,20 +7756,20 @@ class App extends Component {
       const subSec = d._sub || 'tips';
       const HEALTH_TAGS = ['Hydration', 'Exercise', 'Sleep', 'Nutrition', 'Mental Health', 'General'];
       const TAG_COLORS = {
-        'Hydration': '#2c5d52',
-        'Exercise': '#1f5145',
-        'Sleep': '#6e2230',
-        'Nutrition': '#9a7a2c',
-        'Mental Health': '#3a4a78',
-        'General': '#b8923f'
+        'Hydration': '#476478',
+        'Exercise': '#334a5e',
+        'Sleep': '#8f4126',
+        'Nutrition': '#b26b35',
+        'Mental Health': '#4a5a74',
+        'General': '#c9803f'
       };
       const TAG_TINTS = {
-        'Hydration': '#e6efe9',
-        'Exercise': '#e6efe9',
-        'Sleep': '#f3e6e8',
-        'Nutrition': '#f3ecd9',
-        'Mental Health': '#e8ebf4',
-        'General': '#f3ecd9'
+        'Hydration': '#e7ecf1',
+        'Exercise': '#e7ecf1',
+        'Sleep': '#f7e9e0',
+        'Nutrition': '#f6e8d8',
+        'Mental Health': '#e8ecf2',
+        'General': '#f6e8d8'
       };
       if (editing) {
         const isNew = st.adminEditIdx === -1;
@@ -7766,7 +7786,7 @@ class App extends Component {
             const it = {
               title: d.title || '',
               meta: d.meta || '',
-              color: d.color || '#1f5145',
+              color: d.color || '#334a5e',
               yt: d.yt || '',
               cat: hCatSel === '__other' ? (hCatCustom || '').trim() : hCatSel,
               hero: !!d.hero
@@ -7846,8 +7866,8 @@ class App extends Component {
               gap: 10,
               padding: '11px 13px',
               borderRadius: 12,
-              border: `1.5px solid ${d.hero ? '#1f5145' : '#e6dcc8'}`,
-              background: d.hero ? '#e6efe9' : '#fffdf9',
+              border: `1.5px solid ${d.hero ? '#334a5e' : '#e6dcc8'}`,
+              background: d.hero ? '#e7ecf1' : '#fffdf9',
               cursor: 'pointer',
               marginBottom: 10
             }
@@ -7856,8 +7876,8 @@ class App extends Component {
               width: 18,
               height: 18,
               borderRadius: 6,
-              border: `2px solid ${d.hero ? '#1f5145' : '#c9bfa9'}`,
-              background: d.hero ? '#1f5145' : 'transparent',
+              border: `2px solid ${d.hero ? '#334a5e' : '#c9bfa9'}`,
+              background: d.hero ? '#334a5e' : 'transparent',
               color: '#f3ead4',
               fontSize: 12,
               display: 'flex',
@@ -7872,7 +7892,7 @@ class App extends Component {
               color: '#3f3a32'
             }
           }, "Hero video — show at the top of Health & Wellness")), /*#__PURE__*/React.createElement("select", {
-            value: d.color || '#1f5145',
+            value: d.color || '#334a5e',
             onChange: e => this.setDraft({
               color: e.target.value
             }),
@@ -7890,7 +7910,7 @@ class App extends Component {
             }
           }, btn('Save', save2, {
             flex: 1,
-            background: '#1f5145',
+            background: '#334a5e',
             color: '#f3ead4'
           }), btn('Cancel', this.cancelEdit, {
             flex: 1,
@@ -7907,8 +7927,8 @@ class App extends Component {
               title: d.title || '',
               body: d.body || '',
               tag,
-              color: TAG_COLORS[tag] || '#2c5d52',
-              tint: TAG_TINTS[tag] || '#e6efe9'
+              color: TAG_COLORS[tag] || '#476478',
+              tint: TAG_TINTS[tag] || '#e7ecf1'
             };
             if (isNew) a.push(it);else a[st.adminEditIdx] = it;
             save('healthTips', 'liveHealthTips', a, isNew ? 'Tip added!' : 'Updated!');
@@ -7950,8 +7970,8 @@ class App extends Component {
               const t = e.target.value;
               this.setDraft({
                 tag: t,
-                color: TAG_COLORS[t] || '#2c5d52',
-                tint: TAG_TINTS[t] || '#e6efe9'
+                color: TAG_COLORS[t] || '#476478',
+                tint: TAG_TINTS[t] || '#e7ecf1'
               });
             },
             style: {
@@ -7968,7 +7988,7 @@ class App extends Component {
             }
           }, btn('Save', save2, {
             flex: 1,
-            background: '#1f5145',
+            background: '#334a5e',
             color: '#f3ead4'
           }), btn('Cancel', this.cancelEdit, {
             flex: 1,
@@ -8012,12 +8032,12 @@ class App extends Component {
           fontWeight: 600,
           cursor: 'pointer',
           background: hs === t.id ? '#fffdf9' : 'transparent',
-          color: hs === t.id ? '#1f5145' : '#8c8270'
+          color: hs === t.id ? '#334a5e' : '#8c8270'
         }
       }, t.label))), btn(`+ Add ${hs === 'tips' ? 'Tip' : 'Video'}`, () => this.startEdit(-1, {
         _sub: hs
       }), {
-        background: '#1f5145',
+        background: '#334a5e',
         color: '#f3ead4',
         marginBottom: 12,
         width: '100%'
@@ -8047,8 +8067,8 @@ class App extends Component {
         ...it,
         _sub: hs
       }), {
-        background: '#e6efe9',
-        color: '#1f5145',
+        background: '#e7ecf1',
+        color: '#334a5e',
         fontSize: 12,
         padding: '6px 12px'
       }), btn('✕', () => {
@@ -8058,8 +8078,8 @@ class App extends Component {
         const sk = hs === 'tips' ? 'liveHealthTips' : 'liveHealthVideos';
         save(kk, sk, a, 'Deleted');
       }, {
-        background: '#fdf0f2',
-        color: '#6e2230',
+        background: '#fbeee6',
+        color: '#8f4126',
         fontSize: 12,
         padding: '6px 10px'
       }))));
@@ -8092,7 +8112,7 @@ class App extends Component {
           fontWeight: 600,
           cursor: 'pointer',
           background: lt === k ? '#fffdf9' : 'transparent',
-          color: lt === k ? '#1f5145' : '#8c8270'
+          color: lt === k ? '#334a5e' : '#8c8270'
         }
       }, label)));
       const rowStyle = {
@@ -8112,13 +8132,13 @@ class App extends Component {
           flexShrink: 0
         }
       }, btn('Edit', onEdit, {
-        background: '#e6efe9',
-        color: '#1f5145',
+        background: '#e7ecf1',
+        color: '#334a5e',
         padding: '6px 12px',
         fontSize: 12
       }), btn('Delete', onDelete, {
-        background: '#f3e6e8',
-        color: '#6e2230',
+        background: '#f7e9e0',
+        color: '#8f4126',
         padding: '6px 12px',
         fontSize: 12
       }));
@@ -8282,7 +8302,7 @@ class App extends Component {
             }
           }, btn('Save', saveItem, {
             flex: 1,
-            background: '#1f5145',
+            background: '#334a5e',
             color: '#f3ead4'
           }), btn('Cancel', this.cancelEdit, {
             flex: 1,
@@ -8292,7 +8312,7 @@ class App extends Component {
           })));
         }
         return /*#__PURE__*/React.createElement("div", null, pillBar, btn('+ Add ' + label, () => this.startEdit(-1, {}), {
-          background: '#1f5145',
+          background: '#334a5e',
           color: '#f3ead4',
           marginBottom: 14,
           width: '100%'
@@ -8445,7 +8465,7 @@ class App extends Component {
           }
         }, btn('Save', saveItem, {
           flex: 1,
-          background: '#1f5145',
+          background: '#334a5e',
           color: '#f3ead4'
         }), btn('Cancel', this.cancelEdit, {
           flex: 1,
@@ -8457,7 +8477,7 @@ class App extends Component {
       return /*#__PURE__*/React.createElement("div", null, pillBar, btn('+ Add Entry', () => this.startEdit(-1, {
         _group: 'sermons'
       }), {
-        background: '#1f5145',
+        background: '#334a5e',
         color: '#f3ead4',
         marginBottom: 14,
         width: '100%'
@@ -8521,23 +8541,23 @@ class App extends Component {
     const stats = [{
       label: 'Stories',
       val: st.liveStories.length,
-      ink: '#1f5145',
-      tint: '#e6efe9'
+      ink: '#334a5e',
+      tint: '#e7ecf1'
     }, {
       label: 'Classifieds',
       val: st.liveClassifieds.length,
-      ink: '#9a7a2c',
-      tint: '#f3ecd9'
+      ink: '#b26b35',
+      tint: '#f6e8d8'
     }, {
       label: 'Cal Events',
       val: (st.liveCalEvents || []).length,
-      ink: '#6e2230',
-      tint: '#f3e6e8'
+      ink: '#8f4126',
+      tint: '#f7e9e0'
     }, {
       label: 'Health',
       val: (st.liveHealthTips || []).length + (st.liveHealthVideos || []).length,
-      ink: '#2c5d52',
-      tint: '#e6efe9'
+      ink: '#476478',
+      tint: '#e7ecf1'
     }];
     return /*#__PURE__*/React.createElement("div", {
       style: {
@@ -8567,7 +8587,7 @@ class App extends Component {
         display: 'inline-flex',
         alignItems: 'center',
         gap: 4,
-        color: '#1f5145',
+        color: '#334a5e',
         fontSize: 14,
         fontWeight: 600,
         cursor: 'pointer'
@@ -8635,8 +8655,8 @@ class App extends Component {
         borderRadius: 11,
         fontSize: 13,
         fontWeight: 700,
-        background: '#e8f0ec',
-        color: '#1f5145'
+        background: '#e9eef3',
+        color: '#334a5e'
       }
     }, '✓ Changes publish instantly on Save'), /*#__PURE__*/React.createElement("div", {
       onClick: () => this.revertAll(),
@@ -8646,8 +8666,8 @@ class App extends Component {
         fontSize: 13,
         fontWeight: 700,
         cursor: 'pointer',
-        background: '#f3e6e8',
-        color: '#6e2230'
+        background: '#f7e9e0',
+        color: '#8f4126'
       }
     }, 'Cancel')), /*#__PURE__*/React.createElement("div", {
       className: "s",
@@ -8671,7 +8691,7 @@ class App extends Component {
         fontSize: 13,
         fontWeight: 600,
         cursor: 'pointer',
-        background: sec === t.id ? '#1f5145' : '#efe7d7',
+        background: sec === t.id ? '#334a5e' : '#efe7d7',
         color: sec === t.id ? '#f3ead4' : '#6f675a',
         transition: 'background .15s'
       }
@@ -8703,9 +8723,9 @@ class App extends Component {
         fontSize: 14,
         fontWeight: 700,
         cursor: 'pointer',
-        background: '#f3e6e8',
-        color: '#6e2230',
-        border: '1px solid #e6cdd2'
+        background: '#f7e9e0',
+        color: '#8f4126',
+        border: '1px solid #ecd5c8'
       }
     }, /*#__PURE__*/React.createElement("svg", {
       width: "15",
@@ -8814,11 +8834,11 @@ class App extends Component {
     const monthOnly = new Date(calY, calM, 1).toLocaleDateString('en-IE', { month: 'long' });
     const arrowBtn = (glyph, enabled, onClick) => /*#__PURE__*/React.createElement("div", {
       onClick,
-      style: { width: 34, height: 34, flexShrink: 0, borderRadius: 10, background: enabled ? '#f4faf7' : '#f5f0e8', border: '1px solid #e0ded4', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: enabled ? 'pointer' : 'default', color: enabled ? '#1f5145' : '#c9bfae', fontSize: 18, fontWeight: 700 }
+      style: { width: 34, height: 34, flexShrink: 0, borderRadius: 10, background: enabled ? '#f4f7fa' : '#f5f0e8', border: '1px solid #e0ded4', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: enabled ? 'pointer' : 'default', color: enabled ? '#334a5e' : '#c9bfae', fontSize: 18, fontWeight: 700 }
     }, glyph);
-    const calIcon = /*#__PURE__*/React.createElement("svg", { width: 16, height: 16, viewBox: "0 0 24 24", fill: 'none', stroke: '#1f5145', strokeWidth: 1.9, strokeLinecap: 'round', strokeLinejoin: 'round' }, /*#__PURE__*/React.createElement("rect", { x: 3, y: 4, width: 18, height: 18, rx: 3 }), /*#__PURE__*/React.createElement("path", { d: "M3 10h18M8 2v4M16 2v4" }));
+    const calIcon = /*#__PURE__*/React.createElement("svg", { width: 16, height: 16, viewBox: "0 0 24 24", fill: 'none', stroke: '#334a5e', strokeWidth: 1.9, strokeLinecap: 'round', strokeLinejoin: 'round' }, /*#__PURE__*/React.createElement("rect", { x: 3, y: 4, width: 18, height: 18, rx: 3 }), /*#__PURE__*/React.createElement("path", { d: "M3 10h18M8 2v4M16 2v4" }));
     const clockIcon = /*#__PURE__*/React.createElement("svg", { width: 13, height: 13, viewBox: "0 0 24 24", fill: 'none', stroke: '#9a8f7c', strokeWidth: 1.9, strokeLinecap: 'round', strokeLinejoin: 'round' }, /*#__PURE__*/React.createElement("circle", { cx: 12, cy: 12, r: 9 }), /*#__PURE__*/React.createElement("path", { d: "M12 7v5l3 2" }));
-    const bellIcon = /*#__PURE__*/React.createElement("svg", { width: 16, height: 16, viewBox: "0 0 24 24", fill: 'none', stroke: '#1f5145', strokeWidth: 1.9, strokeLinecap: 'round', strokeLinejoin: 'round' }, /*#__PURE__*/React.createElement("path", { d: "M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" }), /*#__PURE__*/React.createElement("path", { d: "M13.7 21a2 2 0 0 1-3.4 0" }));
+    const bellIcon = /*#__PURE__*/React.createElement("svg", { width: 16, height: 16, viewBox: "0 0 24 24", fill: 'none', stroke: '#334a5e', strokeWidth: 1.9, strokeLinecap: 'round', strokeLinejoin: 'round' }, /*#__PURE__*/React.createElement("path", { d: "M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" }), /*#__PURE__*/React.createElement("path", { d: "M13.7 21a2 2 0 0 1-3.4 0" }));
     return /*#__PURE__*/React.createElement("div", {
       style: { padding: '8px 20px 100px' },
       className: "afu"
@@ -8831,23 +8851,23 @@ class App extends Component {
       style: { fontFamily: 'Spectral,serif', fontSize: 26, fontWeight: 600, color: '#27241f', marginTop: 2 }
     }, this.t('cal.title'))),
     /*#__PURE__*/React.createElement("div", {
-      style: { background: '#fffdf9', border: '1px solid #ece4d4', borderRadius: 22, padding: '16px 14px', boxShadow: '0 10px 26px -20px rgba(31,81,69,.55)' }
+      style: { background: '#fffdf9', border: '1px solid #ece4d4', borderRadius: 22, padding: '16px 14px', boxShadow: '0 10px 26px -20px rgba(51,74,94,.55)' }
     },
       /*#__PURE__*/React.createElement("div", {
         style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6 }
       }, arrowBtn("‹", canPrev, () => canPrev && goMonth(0, -1)), /*#__PURE__*/React.createElement("div", {
         style: { flex: 1, textAlign: 'right', fontFamily: 'Spectral,serif', fontSize: 17, fontWeight: 600, color: '#2c2823' }
       }, monthOnly), /*#__PURE__*/React.createElement("div", {
-        style: { position: 'relative', width: 66, height: 66, flexShrink: 0, borderRadius: '50%', background: 'radial-gradient(circle,#ffffff 55%,#eef5f1 56%)', border: '2px solid #1f5145', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 14px -6px rgba(31,81,69,.55)' }
+        style: { position: 'relative', width: 66, height: 66, flexShrink: 0, borderRadius: '50%', background: 'radial-gradient(circle,#ffffff 55%,#edf2f6 56%)', border: '2px solid #334a5e', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 14px -6px rgba(51,74,94,.55)' }
       }, /*#__PURE__*/React.createElement("div", {
-        style: { position: 'absolute', inset: 5, borderRadius: '50%', border: '1.5px dashed #c2a35a' }
+        style: { position: 'absolute', inset: 5, borderRadius: '50%', border: '1.5px dashed #d99a5e' }
       }), /*#__PURE__*/React.createElement("div", {
-        style: { fontFamily: 'Spectral,serif', fontSize: 24, fontWeight: 700, color: '#1f5145' }
+        style: { fontFamily: 'Spectral,serif', fontSize: 24, fontWeight: 700, color: '#334a5e' }
       }, selDay)), /*#__PURE__*/React.createElement("div", {
         style: { flex: 1, textAlign: 'left', fontFamily: 'Spectral,serif', fontSize: 17, fontWeight: 600, color: '#2c2823' }
       }, String(calY)), arrowBtn("›", canNext, () => canNext && goMonth(0, 1))),
       /*#__PURE__*/React.createElement("div", {
-        style: { textAlign: 'center', fontSize: 12.5, color: '#9a7a2c', fontWeight: 600, marginTop: 7 }
+        style: { textAlign: 'center', fontSize: 12.5, color: '#b26b35', fontWeight: 600, marginTop: 7 }
       }, selHijri, " AH"),
       /*#__PURE__*/React.createElement("div", {
         style: { display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', marginTop: 12, marginBottom: 2 }
@@ -8860,25 +8880,25 @@ class App extends Component {
       }, cells.map(c => c.blank ? /*#__PURE__*/React.createElement("div", { key: c.key }) : /*#__PURE__*/React.createElement("div", {
         key: c.key,
         onClick: () => this.setState({ calDay: c.day }),
-        style: { aspectRatio: '0.82', borderRadius: 13, background: c.sel ? '#1f5145' : c.isToday ? '#e6efe9' : 'transparent', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', position: 'relative', gap: 2 }
+        style: { aspectRatio: '0.82', borderRadius: 13, background: c.sel ? '#334a5e' : c.isToday ? '#e7ecf1' : 'transparent', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', position: 'relative', gap: 2 }
       }, c.hasEvent && /*#__PURE__*/React.createElement("span", {
-        style: { position: 'absolute', top: 6, right: 7, width: 6, height: 6, borderRadius: '50%', background: c.sel ? '#f0c07a' : '#e08a3c' }
+        style: { position: 'absolute', top: 6, right: 7, width: 6, height: 6, borderRadius: '50%', background: c.sel ? '#f2b57d' : '#e08a3c' }
       }), /*#__PURE__*/React.createElement("span", {
-        style: { fontSize: 13.5, fontWeight: 600, color: c.sel ? '#fffdf9' : c.isToday ? '#1f5145' : '#3f3a32', lineHeight: 1 }
+        style: { fontSize: 13.5, fontWeight: 600, color: c.sel ? '#fffdf9' : c.isToday ? '#334a5e' : '#3f3a32', lineHeight: 1 }
       }, c.day), /*#__PURE__*/React.createElement("span", {
-        style: { fontSize: 9, fontWeight: 500, color: c.sel ? 'rgba(255,255,255,.6)' : '#c2a35a', lineHeight: 1 }
+        style: { fontSize: 9, fontWeight: 500, color: c.sel ? 'rgba(255,255,255,.6)' : '#d99a5e', lineHeight: 1 }
       }, c.hijriDay))))),
     /*#__PURE__*/React.createElement("div", {
       style: { background: '#fffdf9', border: '1px solid #ece4d4', borderRadius: 18, marginTop: 16, overflow: 'hidden' }
     }, /*#__PURE__*/React.createElement("div", {
-      style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '13px 16px', background: '#e8f0ec' }
+      style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '13px 16px', background: '#e9eef3' }
     }, /*#__PURE__*/React.createElement("div", {
       style: { display: 'flex', alignItems: 'center', gap: 9 }
     }, calIcon, /*#__PURE__*/React.createElement("div", {
-      style: { fontSize: 15, fontWeight: 700, color: '#1f5145' }
+      style: { fontSize: 15, fontWeight: 700, color: '#334a5e' }
     }, "On this day")), calEventList.length > 0 && /*#__PURE__*/React.createElement("div", {
       onClick: () => { const el = document.getElementById('cal-upcoming'); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); },
-      style: { fontSize: 12.5, fontWeight: 600, color: '#1f5145', cursor: 'pointer' }
+      style: { fontSize: 12.5, fontWeight: 600, color: '#334a5e', cursor: 'pointer' }
     }, "See all ›")), /*#__PURE__*/React.createElement("div", {
       style: { padding: '2px 16px 12px' }
     }, selEvents.length > 0 ? selEvents.map((ev, si) => /*#__PURE__*/React.createElement("div", {
@@ -8892,7 +8912,7 @@ class App extends Component {
       style: { fontSize: 12.5, color: '#7a7264', marginTop: 4, lineHeight: 1.5 }
     }, ev.desc), st.adminLoggedIn && /*#__PURE__*/React.createElement("div", {
       onClick: () => this.setState({ screen: 'admin', adminSection: 'events', adminEditIdx: (st.liveCalEvents || []).indexOf(ev), adminEditDraft: { ...ev } }),
-      style: { marginTop: 8, display: 'inline-block', fontSize: 11, color: '#1f5145', fontWeight: 600, cursor: 'pointer', padding: '4px 10px', border: '1px solid #c4ddd7', borderRadius: 8, background: '#eef7f4' }
+      style: { marginTop: 8, display: 'inline-block', fontSize: 11, color: '#334a5e', fontWeight: 600, cursor: 'pointer', padding: '4px 10px', border: '1px solid #c3d2de', borderRadius: 8, background: '#edf2f6' }
     }, "Edit"))) : /*#__PURE__*/React.createElement("div", {
       style: { fontSize: 13, color: '#b1a690', padding: '12px 0 4px' }
     }, this.t('cal.noEvent')), /*#__PURE__*/React.createElement("div", {
@@ -8901,18 +8921,18 @@ class App extends Component {
       style: { display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: '#9a8f7c', fontWeight: 600 }
     }, clockIcon, dayLabelShort), st.adminLoggedIn && /*#__PURE__*/React.createElement("div", {
       onClick: () => this.setState({ screen: 'admin', adminSection: 'events', adminEditIdx: -1, adminEditDraft: { date: selDayStr, type: 'Community', notice: 'day' } }),
-      style: { fontSize: 11, color: '#1f5145', fontWeight: 600, cursor: 'pointer', padding: '5px 10px', border: '1px solid #c4ddd7', borderRadius: 8, background: '#eef7f4' }
+      style: { fontSize: 11, color: '#334a5e', fontWeight: 600, cursor: 'pointer', padding: '5px 10px', border: '1px solid #c3d2de', borderRadius: 8, background: '#edf2f6' }
     }, "+ Add event")))),
     /*#__PURE__*/React.createElement("div", {
       style: { background: '#fffdf9', border: '1px solid #ece4d4', borderRadius: 18, marginTop: 14, overflow: 'hidden' }
     }, /*#__PURE__*/React.createElement("div", {
-      style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '13px 16px', background: '#e8f0ec' }
+      style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '13px 16px', background: '#e9eef3' }
     }, /*#__PURE__*/React.createElement("div", {
       style: { display: 'flex', alignItems: 'center', gap: 9 }
     }, bellIcon, /*#__PURE__*/React.createElement("div", {
-      style: { fontSize: 15, fontWeight: 700, color: '#1f5145' }
+      style: { fontSize: 15, fontWeight: 700, color: '#334a5e' }
     }, "Reminder (" + dayReminders.length + ")")), /*#__PURE__*/React.createElement("div", {
-      style: { fontSize: 12.5, fontWeight: 600, color: '#1f5145' }
+      style: { fontSize: 12.5, fontWeight: 600, color: '#334a5e' }
     }, dayLabelShort)), /*#__PURE__*/React.createElement("div", {
       style: { padding: '12px 16px 14px' }
     }, dayReminders.length > 0 && /*#__PURE__*/React.createElement("div", {
@@ -8921,7 +8941,7 @@ class App extends Component {
       key: ri,
       style: { display: 'flex', gap: 10, alignItems: 'flex-start' }
     }, /*#__PURE__*/React.createElement("span", {
-      style: { flexShrink: 0, marginTop: 5, width: 7, height: 7, borderRadius: '50%', background: '#1f5145' }
+      style: { flexShrink: 0, marginTop: 5, width: 7, height: 7, borderRadius: '50%', background: '#334a5e' }
     }), /*#__PURE__*/React.createElement("div", {
       style: { flex: 1, fontSize: 13.5, color: '#2c2823', lineHeight: 1.45 }
     }, /*#__PURE__*/React.createElement("span", {
@@ -8930,18 +8950,18 @@ class App extends Component {
       style: { fontSize: 12, color: '#8c8270', marginTop: 1 }
     }, rm.desc)), st.adminLoggedIn && /*#__PURE__*/React.createElement("span", {
       onClick: () => this.setState({ screen: 'admin', adminSection: 'events', adminEditIdx: (st.liveCalEvents || []).indexOf(rm), adminEditDraft: { ...rm } }),
-      style: { flexShrink: 0, fontSize: 11, color: '#1f5145', fontWeight: 600, cursor: 'pointer' }
+      style: { flexShrink: 0, fontSize: 11, color: '#334a5e', fontWeight: 600, cursor: 'pointer' }
     }, "Edit")))), st.adminLoggedIn ? /*#__PURE__*/React.createElement("div", {
       onClick: () => this.setState({ screen: 'admin', adminSection: 'events', adminEditIdx: -1, adminEditDraft: { date: selDayStr, type: 'Community', notice: 'reminder' } }),
-      style: { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, padding: '11px', borderRadius: 12, border: '1px dashed #c4ddd7', background: '#f4fbf8', color: '#1f5145', fontSize: 13.5, fontWeight: 600, cursor: 'pointer' }
+      style: { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, padding: '11px', borderRadius: 12, border: '1px dashed #c3d2de', background: '#f4fbf8', color: '#334a5e', fontSize: 13.5, fontWeight: 600, cursor: 'pointer' }
     }, "+ Add A Reminder") : dayReminders.length === 0 && /*#__PURE__*/React.createElement("div", {
       style: { fontSize: 13, color: '#b1a690', textAlign: 'center', padding: '4px 0' }
     }, "No reminders for this day.")),
     st.adminLoggedIn && /*#__PURE__*/React.createElement("div", {
       onClick: () => this.setState({ screen: 'admin', adminSection: 'events', adminEditIdx: null, adminEditDraft: {} }),
-      style: { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginTop: 16, padding: '12px', borderRadius: 14, border: '1px dashed #c4ddd7', background: '#f4fbf8', cursor: 'pointer' }
+      style: { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginTop: 16, padding: '12px', borderRadius: 14, border: '1px dashed #c3d2de', background: '#f4fbf8', cursor: 'pointer' }
     }, /*#__PURE__*/React.createElement("span", {
-      style: { color: '#1f5145', fontSize: 14, fontWeight: 600 }
+      style: { color: '#334a5e', fontSize: 14, fontWeight: 600 }
     }, "⚙ Manage Events & Reminders")),
     calEventList.length > 0 && /*#__PURE__*/React.createElement("div", {
       id: 'cal-upcoming'
@@ -8987,7 +9007,7 @@ class App extends Component {
       fontWeight: 600,
       cursor: 'pointer',
       background: kt === k ? '#fffdf9' : 'transparent',
-      color: kt === k ? '#1f5145' : '#8c8270',
+      color: kt === k ? '#334a5e' : '#8c8270',
       transition: 'background .15s'
     });
     return /*#__PURE__*/React.createElement("div", {
@@ -9046,7 +9066,7 @@ class App extends Component {
       style: {
         width: 0,
         height: 0,
-        borderLeft: '18px solid #1f5145',
+        borderLeft: '18px solid #334a5e',
         borderTop: '11px solid transparent',
         borderBottom: '11px solid transparent',
         marginLeft: 4
@@ -9062,7 +9082,7 @@ class App extends Component {
         letterSpacing: 1,
         textTransform: 'uppercase',
         fontWeight: 700,
-        color: '#d8b863'
+        color: '#e8a765'
       }
     }, heroV.cat || ''), /*#__PURE__*/React.createElement("div", {
       style: {
@@ -9077,7 +9097,7 @@ class App extends Component {
         gap: 9,
         marginBottom: 18
       }
-    }, [['videos', this.t('kids.videos'), '🎬', '#3a4a78', '#e8ebf4'], ['books', this.t('kids.books'), '📚', '#8a4b2c', '#f6ebe4'], ['wisdom', this.t('kids.wisdom'), '💡', '#9a7a2c', '#f7f0dc'], ['quiz', 'Quiz', '🎯', '#6e2230', '#f7e7ea']].map(([k, label, icon, ink, tint]) => {
+    }, [['videos', this.t('kids.videos'), '🎬', '#4a5a74', '#e8ecf2'], ['books', this.t('kids.books'), '📚', '#8a4b2c', '#f6ebe4'], ['wisdom', this.t('kids.wisdom'), '💡', '#b26b35', '#f8ecdc'], ['quiz', 'Quiz', '🎯', '#8f4126', '#f8e9e1']].map(([k, label, icon, ink, tint]) => {
       const on = kt === k;
       return /*#__PURE__*/React.createElement("div", {
         key: k,
@@ -9125,7 +9145,7 @@ class App extends Component {
         overflow: 'hidden',
         borderRadius: 20,
         aspectRatio: '16/10',
-        background: 'linear-gradient(150deg,#2a6a58,#143b2f)',
+        background: 'linear-gradient(150deg,#41586d,#22333f)',
         marginBottom: 10,
         display: 'flex',
         alignItems: 'flex-end',
@@ -9156,7 +9176,7 @@ class App extends Component {
       style: {
         width: 0,
         height: 0,
-        borderLeft: '18px solid #1f5145',
+        borderLeft: '18px solid #334a5e',
         borderTop: '11px solid transparent',
         borderBottom: '11px solid transparent',
         marginLeft: 4
@@ -9172,7 +9192,7 @@ class App extends Component {
         letterSpacing: 1,
         textTransform: 'uppercase',
         fontWeight: 700,
-        color: '#d8b863'
+        color: '#e8a765'
       }
     }, "Featured · Animated"), /*#__PURE__*/React.createElement("div", {
       style: {
@@ -9216,9 +9236,9 @@ class App extends Component {
         fontSize: 12,
         fontWeight: 600,
         cursor: 'pointer',
-        background: kvCat === c ? '#1f5145' : '#fffdf9',
+        background: kvCat === c ? '#334a5e' : '#fffdf9',
         color: kvCat === c ? '#fffdf9' : '#6f675a',
-        border: `1px solid ${kvCat === c ? '#1f5145' : '#e6dcc8'}`
+        border: `1px solid ${kvCat === c ? '#334a5e' : '#e6dcc8'}`
       }
     }, c))), /*#__PURE__*/React.createElement("div", {
       style: {
@@ -9274,7 +9294,7 @@ class App extends Component {
       style: {
         width: 0,
         height: 0,
-        borderLeft: '11px solid #1f5145',
+        borderLeft: '11px solid #334a5e',
         borderTop: '7px solid transparent',
         borderBottom: '7px solid transparent',
         marginLeft: 3
@@ -9299,7 +9319,7 @@ class App extends Component {
       }
     }, v.meta)))))), kt === 'wisdom' && /*#__PURE__*/React.createElement("div", {
       style: {
-        background: 'linear-gradient(150deg,#1f5145,#163b30)',
+        background: 'linear-gradient(150deg,#334a5e,#243646)',
         borderRadius: 20,
         padding: 22,
         color: '#f3ead4',
@@ -9315,7 +9335,7 @@ class App extends Component {
         width: 110,
         height: 110,
         borderRadius: '50%',
-        border: '1px solid rgba(216,184,99,.2)'
+        border: '1px solid rgba(232,167,101,.2)'
       }
     }), /*#__PURE__*/React.createElement("div", {
       style: {
@@ -9323,14 +9343,14 @@ class App extends Component {
         letterSpacing: 1.2,
         textTransform: 'uppercase',
         fontWeight: 700,
-        color: '#d8b863'
+        color: '#e8a765'
       }
     }, this.t('kids.wisdom')), st.liveKidsQuotes.map((q, i) => /*#__PURE__*/React.createElement("div", {
       key: i,
       style: {
         marginTop: i > 0 ? 18 : 12,
         paddingTop: i > 0 ? 18 : 0,
-        borderTop: i > 0 ? '1px solid rgba(216,184,99,.28)' : 'none'
+        borderTop: i > 0 ? '1px solid rgba(232,167,101,.28)' : 'none'
       }
     }, /*#__PURE__*/React.createElement("div", {
       style: {
@@ -9350,14 +9370,14 @@ class App extends Component {
     }, "\"", q.tr, "\""), /*#__PURE__*/React.createElement("div", {
       style: {
         fontSize: 12,
-        color: '#bcae8d',
+        color: '#c9a98c',
         marginTop: 6
       }
     }, "— ", q.who)))), kt === 'books' && /*#__PURE__*/React.createElement(React.Fragment, null,
     /* ANCHOR: MADRASA_CONTENT render — mirrors ahlulbait.ie/madrasa (data in MADRASA_INFO) */
     /*#__PURE__*/React.createElement("div", {
       style: {
-        background: 'linear-gradient(150deg,#1f5145,#163b30)',
+        background: 'linear-gradient(150deg,#334a5e,#243646)',
         borderRadius: 20,
         padding: '22px 20px',
         position: 'relative',
@@ -9372,7 +9392,7 @@ class App extends Component {
         width: 120,
         height: 120,
         borderRadius: '50%',
-        border: '1px solid rgba(216,184,99,.2)'
+        border: '1px solid rgba(232,167,101,.2)'
       }
     }), /*#__PURE__*/React.createElement("div", {
       style: {
@@ -9381,8 +9401,8 @@ class App extends Component {
         letterSpacing: 1,
         textTransform: 'uppercase',
         fontWeight: 700,
-        color: '#163b30',
-        background: '#d8b863',
+        color: '#243646',
+        background: '#e8a765',
         borderRadius: 20,
         padding: '4px 11px'
       }
@@ -9399,13 +9419,13 @@ class App extends Component {
         fontFamily: 'Spectral,serif',
         fontSize: 15,
         fontStyle: 'italic',
-        color: '#d8b863',
+        color: '#e8a765',
         marginTop: 2
       }
     }, MADRASA_INFO.tagline), /*#__PURE__*/React.createElement("div", {
       style: {
         fontSize: 12.5,
-        color: '#bcae8d',
+        color: '#c9a98c',
         marginTop: 8
       }
     }, MADRASA_INFO.place)), /*#__PURE__*/React.createElement("div", {
@@ -9472,7 +9492,7 @@ class App extends Component {
         fontFamily: 'Spectral,serif',
         fontSize: 15.5,
         fontWeight: 600,
-        color: st.dark ? '#d8b863' : '#1f5145',
+        color: st.dark ? '#e8a765' : '#334a5e',
         marginBottom: 3
       }
     }, s2.title), /*#__PURE__*/React.createElement("div", {
@@ -9484,9 +9504,9 @@ class App extends Component {
     }, s2.desc))))), /*#__PURE__*/React.createElement("div", {
       style: {
         fontSize: 12.5,
-        color: '#9a7a2c',
+        color: '#b26b35',
         background: st.dark ? '#2a2818' : '#f7f0dd',
-        border: `1px solid ${st.dark ? '#4a4224' : '#ecdfb8'}`,
+        border: `1px solid ${st.dark ? '#54402a' : '#f2d9b8'}`,
         borderRadius: 12,
         padding: '11px 14px',
         marginBottom: 16
@@ -9495,7 +9515,7 @@ class App extends Component {
       onClick: () => window.open(MADRASA_INFO.registerUrl, '_blank'),
       style: {
         textAlign: 'center',
-        background: '#1f5145',
+        background: '#334a5e',
         color: '#fffdf9',
         borderRadius: 14,
         padding: '15px',
@@ -9618,7 +9638,7 @@ class App extends Component {
         return /*#__PURE__*/React.createElement("div", {
           className: "apo",
           style: {
-            background: 'linear-gradient(150deg,#1f5145,#163b30)',
+            background: 'linear-gradient(150deg,#334a5e,#243646)',
             borderRadius: 18,
             padding: '26px 20px',
             textAlign: 'center',
@@ -9641,7 +9661,7 @@ class App extends Component {
             fontSize: 15,
             marginTop: 10,
             fontWeight: 700,
-            color: '#d8b863'
+            color: '#e8a765'
           }
         }, "You scored ", r.score, " out of ", total), /*#__PURE__*/React.createElement("div", {
           style: {
@@ -9668,8 +9688,8 @@ class App extends Component {
             flex: 1,
             padding: '12px 0',
             borderRadius: 12,
-            background: '#d8b863',
-            color: '#163b30',
+            background: '#e8a765',
+            color: '#243646',
             fontSize: 14,
             fontWeight: 800,
             cursor: 'pointer'
@@ -9716,13 +9736,13 @@ class App extends Component {
           letterSpacing: .8,
           textTransform: 'uppercase',
           fontWeight: 700,
-          color: '#6e2230'
+          color: '#8f4126'
         }
       }, "Question ", r.pos + 1, " of ", r.qs.length), /*#__PURE__*/React.createElement("div", {
         style: {
           fontSize: 10.5,
           fontWeight: 700,
-          color: '#9a7a2c'
+          color: '#b26b35'
         }
       }, "Score ", r.score), /*#__PURE__*/React.createElement("div", {
         style: {
@@ -9735,8 +9755,8 @@ class App extends Component {
           fontSize: 14,
           fontWeight: 800,
           fontVariantNumeric: 'tabular-nums',
-          color: urgent ? '#fffdf9' : '#1f5145',
-          background: urgent ? '#c0392b' : '#e6efe9',
+          color: urgent ? '#fffdf9' : '#334a5e',
+          background: urgent ? '#c0392b' : '#e7ecf1',
           transition: 'background .3s'
         }
       }, answered ? '·' : r.timeLeft)), /*#__PURE__*/React.createElement("div", {
@@ -9804,7 +9824,7 @@ class App extends Component {
           marginTop: 11,
           fontSize: 13,
           fontWeight: 600,
-          color: r.pick === qz.answer ? '#1f5145' : '#6e2230'
+          color: r.pick === qz.answer ? '#334a5e' : '#8f4126'
         }
       }, r.pick === qz.answer ? 'Correct — well done! 🎉' : r.pick === -1 ? "Time's up! The answer is highlighted." : 'Not quite — the correct answer is highlighted.'));
     })()), kt === 'quiz' && /*#__PURE__*/React.createElement("div", {
@@ -9825,7 +9845,7 @@ class App extends Component {
         width: 46,
         height: 46,
         borderRadius: 13,
-        background: '#6e2230',
+        background: '#8f4126',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -9841,17 +9861,17 @@ class App extends Component {
       style: {
         fontSize: 15,
         fontWeight: 600,
-        color: '#5e4d22'
+        color: '#6b4a2a'
       }
     }, "Today's Kids Quiz"), /*#__PURE__*/React.createElement("div", {
       style: {
         fontSize: 12,
-        color: '#8a7846',
+        color: '#a3714a',
         marginTop: 2
       }
     }, "One quick question — can you get it right?")), /*#__PURE__*/React.createElement("span", {
       style: {
-        color: '#bba35f',
+        color: '#d59a62',
         fontSize: 20
       }
     }, "→")));
@@ -9873,7 +9893,7 @@ class App extends Component {
       fontWeight: 600,
       cursor: 'pointer',
       background: ht === k ? '#fffdf9' : 'transparent',
-      color: ht === k ? '#1f5145' : '#8c8270',
+      color: ht === k ? '#334a5e' : '#8c8270',
       transition: 'background .15s'
     });
     return /*#__PURE__*/React.createElement("div", {
@@ -9910,9 +9930,9 @@ class App extends Component {
       style: {
         fontSize: 12,
         fontWeight: 700,
-        color: '#1f5145',
+        color: '#334a5e',
         cursor: 'pointer',
-        background: '#e6efe9',
+        background: '#e7ecf1',
         borderRadius: 10,
         padding: '6px 12px'
       }
@@ -9949,7 +9969,7 @@ class App extends Component {
       style: {
         width: 0,
         height: 0,
-        borderLeft: '18px solid #1f5145',
+        borderLeft: '18px solid #334a5e',
         borderTop: '11px solid transparent',
         borderBottom: '11px solid transparent',
         marginLeft: 4
@@ -9965,7 +9985,7 @@ class App extends Component {
         letterSpacing: 1,
         textTransform: 'uppercase',
         fontWeight: 700,
-        color: '#d8b863'
+        color: '#e8a765'
       }
     }, hHeroV.cat || ''), /*#__PURE__*/React.createElement("div", {
       style: {
@@ -10024,9 +10044,9 @@ class App extends Component {
         fontSize: 12,
         fontWeight: 600,
         cursor: 'pointer',
-        background: hvCat === c ? '#1f5145' : '#fffdf9',
+        background: hvCat === c ? '#334a5e' : '#fffdf9',
         color: hvCat === c ? '#fffdf9' : '#6f675a',
-        border: `1px solid ${hvCat === c ? '#1f5145' : '#e6dcc8'}`
+        border: `1px solid ${hvCat === c ? '#334a5e' : '#e6dcc8'}`
       }
     }, c))), /*#__PURE__*/React.createElement("div", {
       style: {
@@ -10082,7 +10102,7 @@ class App extends Component {
       style: {
         width: 0,
         height: 0,
-        borderLeft: '11px solid #1f5145',
+        borderLeft: '11px solid #334a5e',
         borderTop: '7px solid transparent',
         borderBottom: '7px solid transparent',
         marginLeft: 3
@@ -10115,7 +10135,7 @@ class App extends Component {
     }, (st.liveHealthTips || []).map((tip, i) => /*#__PURE__*/React.createElement("div", {
       key: i,
       style: {
-        background: tip.tint || '#e6efe9',
+        background: tip.tint || '#e7ecf1',
         borderRadius: 18,
         padding: '18px 20px',
         position: 'relative',
@@ -10178,7 +10198,7 @@ class App extends Component {
       fontWeight: 600,
       cursor: 'pointer',
       background: kt === k ? '#fffdf9' : 'transparent',
-      color: kt === k ? '#1f5145' : '#8c8270',
+      color: kt === k ? '#334a5e' : '#8c8270',
       transition: 'background .15s'
     });
     const field = (calcKey, key, label, hint) => /*#__PURE__*/React.createElement("div", {
@@ -10236,13 +10256,13 @@ class App extends Component {
       style: {
         fontSize: strong ? 14.5 : 12.5,
         fontWeight: strong ? 700 : 500,
-        color: strong ? '#f3ead4' : '#cdbf9e'
+        color: strong ? '#f3ead4' : '#d9b493'
       }
     }, label), /*#__PURE__*/React.createElement("span", {
       style: {
         fontSize: strong ? 18 : 13.5,
         fontWeight: strong ? 700 : 600,
-        color: strong ? '#e8d39a' : '#f3ead4',
+        color: strong ? '#f0c49a' : '#f3ead4',
         fontVariantNumeric: 'tabular-nums'
       }
     }, value));
@@ -10320,11 +10340,11 @@ class App extends Component {
       }
     }, "Khums is an annual obligation of one-fifth (20%) of the surplus income remaining after your yearly living expenses, calculated on your khums due date. Half is Sahm al-Imām (paid to your marjaʿ or his representative) and half is Sahm al-Sādāt (given to needy Sayyids)."), sectionLabel('What you own on your khums date'), field('khumsCalc', 'cash', 'Cash in hand & bank accounts'), field('khumsCalc', 'goods', 'Unused items & provisions', 'Value of goods bought this year but not used — food stock, unworn clothes, unused household items.'), field('khumsCalc', 'receivables', 'Money owed to you', 'Loans you gave and payments due that you expect to receive.'), field('khumsCalc', 'other', 'Other surplus assets', 'Investments, savings certificates or business profits acquired from surplus income.'), sectionLabel('Deductions'), field('khumsCalc', 'debts', 'Outstanding debts & unpaid bills', 'Debts taken for this year’s living expenses and bills currently due.'), field('khumsCalc', 'paid', 'Khums already paid in advance this year'), /*#__PURE__*/React.createElement("div", {
       style: {
-        background: 'linear-gradient(155deg,#1f5145 0%,#163b30 100%)',
+        background: 'linear-gradient(155deg,#334a5e 0%,#243646 100%)',
         borderRadius: 18,
         padding: '16px 18px',
         marginTop: 16,
-        boxShadow: '0 14px 28px -16px rgba(22,59,48,.7)'
+        boxShadow: '0 14px 28px -16px rgba(36,54,70,.7)'
       }
     }, resultRow('Total assets', fmt(kAssets)), resultRow('Deductions', '− ' + fmt(kDebts)), resultRow('Net surplus', fmt(kSurplus)), resultRow('Khums due (20%)', fmt(kDue), true), /*#__PURE__*/React.createElement("div", {
       style: {
@@ -10343,7 +10363,7 @@ class App extends Component {
     }, /*#__PURE__*/React.createElement("div", {
       style: {
         fontSize: 10.5,
-        color: '#cdbf9e',
+        color: '#d9b493',
         marginBottom: 3
       }
     }, l), /*#__PURE__*/React.createElement("div", {
@@ -10366,17 +10386,17 @@ class App extends Component {
       }
     }, "Zakat is 2.5% of your net zakatable wealth, due when it has remained at or above the nisab threshold for one lunar year. The nisab is the value of 87.48g of gold or 612.36g of silver — check current market prices."), sectionLabel('Zakatable assets'), field('zakatCalc', 'cash', 'Cash in hand & bank accounts'), field('zakatCalc', 'gold', 'Value of gold'), field('zakatCalc', 'silver', 'Value of silver'), field('zakatCalc', 'business', 'Business inventory & merchandise'), field('zakatCalc', 'receivables', 'Money owed to you'), field('zakatCalc', 'investments', 'Shares & investments'), sectionLabel('Deductions & threshold'), field('zakatCalc', 'debts', 'Debts & liabilities due'), field('zakatCalc', 'nisab', 'Nisab threshold', 'Default €600 ≈ value of 612.36g silver. Update with today’s silver or gold price.'), /*#__PURE__*/React.createElement("div", {
       style: {
-        background: 'linear-gradient(155deg,#1f5145 0%,#163b30 100%)',
+        background: 'linear-gradient(155deg,#334a5e 0%,#243646 100%)',
         borderRadius: 18,
         padding: '16px 18px',
         marginTop: 16,
-        boxShadow: '0 14px 28px -16px rgba(22,59,48,.7)'
+        boxShadow: '0 14px 28px -16px rgba(36,54,70,.7)'
       }
     }, resultRow('Zakatable wealth', fmt(zAssets)), resultRow('Liabilities', '− ' + fmt(num(zc.debts))), resultRow('Net wealth', fmt(zNet)), resultRow('Zakat due (2.5%)', fmt(zDue), true), !zAbove && zNet > 0 && /*#__PURE__*/React.createElement("div", {
       style: {
         marginTop: 8,
         fontSize: 11.5,
-        color: '#cdbf9e',
+        color: '#d9b493',
         lineHeight: 1.4
       }
     }, "Your net wealth is below the nisab threshold — no Zakat is due."))), /*#__PURE__*/React.createElement("div", {
@@ -10434,7 +10454,7 @@ class App extends Component {
         transform: 'translateX(-50%)',
         fontSize: 13,
         fontWeight: 700,
-        color: '#6e2230'
+        color: '#8f4126'
       }
     }, "N"), /*#__PURE__*/React.createElement("div", {
       style: {
@@ -10489,13 +10509,13 @@ class App extends Component {
         height: 0,
         borderLeft: '10px solid transparent',
         borderRight: '10px solid transparent',
-        borderBottom: '24px solid #1f5145'
+        borderBottom: '24px solid #334a5e'
       }
     }), /*#__PURE__*/React.createElement("div", {
       style: {
         width: 3,
         height: 80,
-        background: 'linear-gradient(#1f5145,#cdbf9e)'
+        background: 'linear-gradient(#334a5e,#d9b493)'
       }
     })), /*#__PURE__*/React.createElement("div", {
       style: {
@@ -10507,7 +10527,7 @@ class App extends Component {
         height: 28,
         borderRadius: 7,
         background: '#1c1a17',
-        border: '2px solid #d8b863',
+        border: '2px solid #e8a765',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center'
@@ -10516,7 +10536,7 @@ class App extends Component {
       style: {
         width: 13,
         height: 8,
-        border: '1.4px solid #d8b863',
+        border: '1.4px solid #e8a765',
         borderRadius: 1
       }
     }))), /*#__PURE__*/React.createElement("div", {
@@ -10528,7 +10548,7 @@ class App extends Component {
         width: 18,
         height: 18,
         borderRadius: '50%',
-        background: '#1f5145',
+        background: '#334a5e',
         boxShadow: '0 0 0 4px #fffdf9,0 0 0 5px #ece4d4'
       }
     }));
@@ -10574,13 +10594,13 @@ class App extends Component {
         fontFamily: 'Spectral,serif',
         fontSize: 38,
         fontWeight: 600,
-        color: '#1f5145',
+        color: '#334a5e',
         lineHeight: 1
       }
     }, bearing, "° ", /*#__PURE__*/React.createElement("span", {
       style: {
         fontSize: 20,
-        color: '#9a7a2c'
+        color: '#b26b35'
       }
     }, cardinal)), /*#__PURE__*/React.createElement("div", {
       style: {
@@ -10612,21 +10632,21 @@ class App extends Component {
         textAlign: 'center',
         padding: '14px',
         borderRadius: 16,
-        background: '#1f5145',
+        background: '#334a5e',
         color: '#f3ead4',
         fontSize: 15,
         fontWeight: 700,
         cursor: 'pointer',
         marginBottom: 16,
-        boxShadow: '0 8px 18px -8px rgba(22,59,48,.5)'
+        boxShadow: '0 8px 18px -8px rgba(36,54,70,.5)'
       }
     }, this.t('qibla.allow')), qiblaStatus === 'loading' && /*#__PURE__*/React.createElement("div", {
       style: {
         textAlign: 'center',
         padding: '14px',
         borderRadius: 16,
-        background: '#f0e8d6',
-        color: '#9a7a2c',
+        background: '#f3e4d2',
+        color: '#b26b35',
         fontSize: 14,
         fontWeight: 600,
         marginBottom: 16
@@ -10640,9 +10660,9 @@ class App extends Component {
         textAlign: 'center',
         padding: '12px',
         borderRadius: 14,
-        background: '#fdf0f2',
+        background: '#fbeee6',
         border: '1px solid #dfc4ca',
-        color: '#6e2230',
+        color: '#8f4126',
         fontSize: 13,
         fontWeight: 600,
         marginBottom: 8
@@ -10653,9 +10673,9 @@ class App extends Component {
         textAlign: 'center',
         padding: '11px',
         borderRadius: 14,
-        background: '#eef7f4',
-        border: '1px solid #c4ddd7',
-        color: '#1f5145',
+        background: '#edf2f6',
+        border: '1px solid #c3d2de',
+        color: '#334a5e',
         fontSize: 13,
         fontWeight: 600,
         cursor: 'pointer'
@@ -10666,7 +10686,7 @@ class App extends Component {
         padding: '12px',
         borderRadius: 14,
         background: '#f4ede0',
-        color: '#9a7a2c',
+        color: '#b26b35',
         fontSize: 13,
         marginBottom: 16
       }
@@ -10730,9 +10750,9 @@ class App extends Component {
         textAlign: 'center',
         padding: '10px',
         borderRadius: 13,
-        background: '#eef7f4',
-        border: '1px solid #c4ddd7',
-        color: '#1f5145',
+        background: '#edf2f6',
+        border: '1px solid #c3d2de',
+        color: '#334a5e',
         fontSize: 13,
         fontWeight: 600,
         cursor: 'pointer',
@@ -10754,17 +10774,17 @@ class App extends Component {
         width: 30,
         height: 30,
         borderRadius: 9,
-        background: '#e8d39a',
+        background: '#f0c49a',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        color: '#7a5d18',
+        color: '#8a4f22',
         fontWeight: 700
       }
     }, "i"), /*#__PURE__*/React.createElement("div", {
       style: {
         fontSize: 12.5,
-        color: '#8a7846',
+        color: '#a3714a',
         lineHeight: 1.5
       }
     }, "The bearing is calculated from your GPS coordinates to the Kaʿba in Makkah using the great-circle formula.")));
@@ -10796,7 +10816,7 @@ class App extends Component {
         position: 'fixed',
         inset: 0,
         zIndex: 100,
-        background: cur.color || '#1f5145',
+        background: cur.color || '#334a5e',
         display: 'flex',
         flexDirection: 'column'
       },
@@ -11183,7 +11203,7 @@ class App extends Component {
         flexShrink: 0,
         background: st.dark ? 'rgba(22,25,26,.95)' : 'rgba(255,253,249,.92)',
         backdropFilter: 'blur(14px)',
-        borderTop: `1px solid ${st.dark ? '#2c3234' : '#eadfca'}`,
+        borderTop: `1px solid ${st.dark ? '#2c3234' : '#eedcc8'}`,
         padding: '6px 14px 6px',
         display: 'flex',
         justifyContent: 'space-between',
@@ -11191,7 +11211,7 @@ class App extends Component {
       }
     }, items.map(n => {
       const active = n.key === st.screen || n.key === 'library' && st.screen === 'reading' || n.key === 'stories' && st.story !== null;
-      const color = active ? st.dark ? '#d8b863' : '#1f5145' : st.dark ? '#526060' : '#b3a890';
+      const color = active ? st.dark ? '#e8a765' : '#334a5e' : st.dark ? '#526060' : '#b3a890';
       return /*#__PURE__*/React.createElement("div", {
         key: n.key,
         onClick: () => {
@@ -11399,7 +11419,7 @@ class App extends Component {
     }, "For support please email us at ", /*#__PURE__*/React.createElement("a", {
       href: "mailto:info@softeire.com",
       style: {
-        color: st.dark ? '#d8b863' : '#1f5145',
+        color: st.dark ? '#e8a765' : '#334a5e',
         fontWeight: 600,
         textDecoration: 'none'
       }
@@ -11411,14 +11431,14 @@ class App extends Component {
         left: 16,
         right: 16,
         zIndex: 30,
-        background: 'linear-gradient(135deg,#1f5145,#163b30)',
+        background: 'linear-gradient(135deg,#334a5e,#243646)',
         borderRadius: 18,
         padding: '14px 18px',
         display: 'flex',
         alignItems: 'center',
         gap: 14,
         cursor: 'pointer',
-        boxShadow: '0 8px 28px -8px rgba(22,70,58,.55)',
+        boxShadow: '0 8px 28px -8px rgba(42,64,82,.55)',
         animation: 'notif-in .35s cubic-bezier(.2,.9,.2,1) both'
       }
     }, /*#__PURE__*/React.createElement("div", {
@@ -11443,7 +11463,7 @@ class App extends Component {
         letterSpacing: 1.1,
         textTransform: 'uppercase',
         fontWeight: 700,
-        color: '#d8b863'
+        color: '#e8a765'
       }
     }, "Prayer Time"), /*#__PURE__*/React.createElement("div", {
       style: {
