@@ -1407,14 +1407,15 @@ const quizLevel = q => {
 };
 
 /* ── TASBEEH ── */
-const DHIKRS = [
-  { ar: 'سُبْحَانَ ٱللَّٰه', tr: 'Subḥān Allāh', en: 'Glory be to Allah', target: 33 },
-  { ar: 'ٱلْحَمْدُ لِلَّٰه', tr: 'Al-ḥamdu lillāh', en: 'All praise is for Allah', target: 33 },
+/* Tasbīḥ of Fāṭima al-Zahrāʾ (a.s.), in its traditional order: the counter walks
+   the three stages itself and only calls a round complete after the third. */
+const ZEHRA = [
   { ar: 'ٱللَّٰهُ أَكْبَر', tr: 'Allāhu akbar', en: 'Allah is the Greatest', target: 34 },
-  { ar: 'لَا إِلَٰهَ إِلَّا ٱللَّٰه', tr: 'Lā ilāha illā Allāh', en: 'There is no god but Allah', target: 100 },
-  { ar: 'أَسْتَغْفِرُ ٱللَّٰه', tr: 'Astaghfirullāh', en: 'I seek forgiveness from Allah', target: 100 },
-  { ar: 'ٱللَّٰهُمَّ صَلِّ عَلَىٰ مُحَمَّدٍ وَآلِ مُحَمَّد', tr: 'Ṣalawāt', en: 'Blessings upon Muhammad and his family', target: 100 }
+  { ar: 'ٱلْحَمْدُ لِلَّٰه', tr: 'Al-ḥamdu lillāh', en: 'All praise is for Allah', target: 33 },
+  { ar: 'سُبْحَانَ ٱللَّٰه', tr: 'Subḥān Allāh', en: 'Glory be to Allah', target: 33 }
 ];
+/* Free counting keeps the same card, so it needs the same three fields. */
+const FREE_DHIKR = { ar: 'ذِكْر', tr: 'Dhikr', en: 'Count freely — no target' };
 
 /* ── ISLAMIC WALLPAPERS ──
    Photos hosted by Unsplash and fetched live from unsplash.com on every view; nothing
@@ -1726,8 +1727,10 @@ class App extends Component {
       qiblaLng: null,
       /* ── KHUMS & ZAKAT ── */
       khumsTab: 'khums',
+      tasbeehMode: lsGet('tasbeehMode', 'zehra'),
       tasbeehCount: lsGet('tasbeehCount', 0),
-      tasbeehIdx: lsGet('tasbeehIdx', 0),
+      tasbeehStage: lsGet('tasbeehStage', 0),
+      tasbeehFree: lsGet('tasbeehFree', 0),
       tasbeehRounds: lsGet('tasbeehRounds', 0),
       tasbeehPulse: 0,
       wallOpen: null,
@@ -1869,30 +1872,75 @@ class App extends Component {
       this.setState({ quizRun: null });
     });
     /* ── TASBEEH ──
-       Count persists across navigation and restarts; a completed round buzzes
-       twice and rolls the counter back to zero so dhikr can continue. */
+       Two independent counters, both persisted: the Zahrāʾ tasbīḥ walks its three
+       stages and buzzes longer at each stage end and longer again at a completed
+       round; the free counter just climbs. Minus 1 unwinds the same path it came
+       up, back across a stage and even across a round boundary, so an accidental
+       double tap can be taken back rather than leaving the count stranded. */
     _defineProperty(this, "tasbeehTap", () => {
       this.setState(s => {
-        const d = DHIKRS[s.tasbeehIdx] || DHIKRS[0];
+        if (s.tasbeehMode === 'free') {
+          const free = s.tasbeehFree + 1;
+          lsSet('tasbeehFree', free);
+          if (navigator.vibrate) navigator.vibrate(free % 100 === 0 ? [30, 60, 30] : 14);
+          return { tasbeehFree: free, tasbeehPulse: s.tasbeehPulse + 1 };
+        }
+        const stage = s.tasbeehStage % ZEHRA.length;
         const next = s.tasbeehCount + 1;
-        const done = next >= d.target;
-        const count = done ? 0 : next;
-        const rounds = done ? s.tasbeehRounds + 1 : s.tasbeehRounds;
+        const stageDone = next >= ZEHRA[stage].target;
+        const roundDone = stageDone && stage === ZEHRA.length - 1;
+        const count = stageDone ? 0 : next;
+        const nextStage = stageDone ? (stage + 1) % ZEHRA.length : stage;
+        const rounds = roundDone ? s.tasbeehRounds + 1 : s.tasbeehRounds;
         lsSet('tasbeehCount', count);
+        lsSet('tasbeehStage', nextStage);
         lsSet('tasbeehRounds', rounds);
-        if (navigator.vibrate) navigator.vibrate(done ? [30, 60, 30] : 14);
-        return { tasbeehCount: count, tasbeehRounds: rounds, tasbeehPulse: s.tasbeehPulse + 1 };
+        if (navigator.vibrate) navigator.vibrate(roundDone ? [30, 60, 30, 60, 30] : stageDone ? [30, 60, 30] : 14);
+        return { tasbeehCount: count, tasbeehStage: nextStage, tasbeehRounds: rounds, tasbeehPulse: s.tasbeehPulse + 1 };
       });
     });
-    _defineProperty(this, "tasbeehReset", () => {
-      lsSet('tasbeehCount', 0);
-      lsSet('tasbeehRounds', 0);
-      this.setState({ tasbeehCount: 0, tasbeehRounds: 0 });
+    _defineProperty(this, "tasbeehMinus", () => {
+      this.setState(s => {
+        if (s.tasbeehMode === 'free') {
+          const free = Math.max(0, s.tasbeehFree - 1);
+          lsSet('tasbeehFree', free);
+          return { tasbeehFree: free, tasbeehPulse: s.tasbeehPulse + 1 };
+        }
+        let stage = s.tasbeehStage % ZEHRA.length,
+          count = s.tasbeehCount,
+          rounds = s.tasbeehRounds;
+        if (count > 0) count--;
+        else if (stage > 0) {
+          stage--;
+          count = ZEHRA[stage].target - 1;
+        } else if (rounds > 0) {
+          rounds--;
+          stage = ZEHRA.length - 1;
+          count = ZEHRA[stage].target - 1;
+        } else return null;
+        lsSet('tasbeehCount', count);
+        lsSet('tasbeehStage', stage);
+        lsSet('tasbeehRounds', rounds);
+        if (navigator.vibrate) navigator.vibrate(10);
+        return { tasbeehCount: count, tasbeehStage: stage, tasbeehRounds: rounds, tasbeehPulse: s.tasbeehPulse + 1 };
+      });
     });
-    _defineProperty(this, "setDhikr", i => {
-      lsSet('tasbeehIdx', i);
-      lsSet('tasbeehCount', 0);
-      this.setState({ tasbeehIdx: i, tasbeehCount: 0 });
+    /* Reset clears the counter you are looking at, not the other one. */
+    _defineProperty(this, "tasbeehReset", () => {
+      this.setState(s => {
+        if (s.tasbeehMode === 'free') {
+          lsSet('tasbeehFree', 0);
+          return { tasbeehFree: 0 };
+        }
+        lsSet('tasbeehCount', 0);
+        lsSet('tasbeehStage', 0);
+        lsSet('tasbeehRounds', 0);
+        return { tasbeehCount: 0, tasbeehStage: 0, tasbeehRounds: 0 };
+      });
+    });
+    _defineProperty(this, "setTasbeehMode", m => {
+      lsSet('tasbeehMode', m);
+      this.setState({ tasbeehMode: m });
     });
     /* Save a wallpaper: Unsplash serves these with an open CORS header, so the
        bytes can be pulled into a blob and handed to a real download. */
@@ -11467,11 +11515,15 @@ class App extends Component {
 
   /* ── TASBEEH COUNTER ── */
   renderTasbeeh(st) {
-    const idx = st.tasbeehIdx || 0;
-    const d = DHIKRS[idx] || DHIKRS[0];
-    const count = st.tasbeehCount || 0;
+    const free = st.tasbeehMode === 'free';
+    const stage = (st.tasbeehStage || 0) % ZEHRA.length;
+    const d = free ? FREE_DHIKR : ZEHRA[stage];
+    const count = free ? st.tasbeehFree || 0 : st.tasbeehCount || 0;
     const rounds = st.tasbeehRounds || 0;
-    const pct = Math.min(1, count / d.target);
+    const target = free ? 100 : d.target;
+    // free counting has no end, so the ring simply fills once per hundred
+    const pct = free ? count % 100 / 100 : Math.min(1, count / target);
+    const canMinus = free ? count > 0 : count > 0 || stage > 0 || rounds > 0;
     const R = 86,
       C = 2 * Math.PI * R;
     return /*#__PURE__*/React.createElement("div", {
@@ -11510,28 +11562,32 @@ class App extends Component {
         margin: '0 -20px 16px',
         padding: '0 20px 2px'
       }
-    }, DHIKRS.map((dk, i) => /*#__PURE__*/React.createElement("div", {
-      key: i,
-      onClick: () => this.setDhikr(i),
-      style: {
-        flexShrink: 0,
-        padding: '8px 14px',
-        borderRadius: 20,
-        fontSize: 12.5,
-        fontWeight: 600,
-        cursor: 'pointer',
-        background: NEU.surf,
-        color: i === idx ? NEU.accent : NEU.muted,
-        border: NEU.edge,
-        boxShadow: i === idx ? neuIn(.55) : neuUp(.55),
-        transition: 'box-shadow .18s ease, color .18s ease'
-      }
-    }, dk.tr))),
+    }, [['zehra', 'Tasbeeh Zehra(s)'], ['free', 'Unlimited Count']].map(([m, label]) => {
+      const on = (st.tasbeehMode === 'free' ? 'free' : 'zehra') === m;
+      return /*#__PURE__*/React.createElement("div", {
+        key: m,
+        onClick: () => this.setTasbeehMode(m),
+        style: {
+          flex: 1,
+          textAlign: 'center',
+          padding: '9px 14px',
+          borderRadius: 20,
+          fontSize: 12.5,
+          fontWeight: 600,
+          cursor: 'pointer',
+          background: NEU.surf,
+          color: on ? NEU.accent : NEU.muted,
+          border: NEU.edge,
+          boxShadow: on ? neuIn(.55) : neuUp(.55),
+          transition: 'box-shadow .18s ease, color .18s ease'
+        }
+      }, label);
+    })),
     /*#__PURE__*/React.createElement("div", {
       onClick: this.tasbeehTap,
       className: "neu-tap",
       role: "button",
-      "aria-label": `Count ${d.tr}. Currently ${count} of ${d.target}`,
+      "aria-label": free ? `Count freely. Currently ${count}` : `Count ${d.tr}. Currently ${count} of ${target}`,
       style: {
         flex: 1,
         minHeight: 340,
@@ -11611,7 +11667,7 @@ class App extends Component {
         color: NEU.muted,
         fontWeight: 600
       }
-    }, "of ", d.target)), /*#__PURE__*/React.createElement("div", {
+    }, free ? 'no limit' : `of ${target}`)), /*#__PURE__*/React.createElement("div", {
       style: {
         fontSize: 13,
         color: '#8c8270',
@@ -11641,18 +11697,36 @@ class App extends Component {
       }
     }, /*#__PURE__*/React.createElement("div", {
       style: {
+        flex: 1,
+        minWidth: 0,
         fontSize: 12.5,
         color: '#6f675a',
         fontWeight: 600
       }
-    }, "Rounds completed: ", /*#__PURE__*/React.createElement("span", {
+    }, free ? 'Hundreds completed: ' : 'Rounds completed: ', /*#__PURE__*/React.createElement("span", {
       style: {
         color: '#1f5145',
         fontWeight: 700
       }
-    }, rounds)), /*#__PURE__*/React.createElement("div", {
+    }, free ? Math.floor(count / 100) : rounds)), /*#__PURE__*/React.createElement("div", {
+      onClick: () => canMinus && this.tasbeehMinus(),
+      style: {
+        flexShrink: 0,
+        padding: '9px 14px',
+        borderRadius: 11,
+        border: NEU.edge,
+        background: NEU.surf,
+        boxShadow: neuUp(),
+        color: NEU.ink,
+        fontSize: 13,
+        fontWeight: 600,
+        cursor: canMinus ? 'pointer' : 'default',
+        opacity: canMinus ? 1 : .45
+      }
+    }, "− 1"), /*#__PURE__*/React.createElement("div", {
       onClick: this.tasbeehReset,
       style: {
+        flexShrink: 0,
         padding: '9px 16px',
         borderRadius: 11,
         border: NEU.edge,
