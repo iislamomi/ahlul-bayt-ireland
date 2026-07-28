@@ -1541,7 +1541,8 @@ const PUSH_MSG = {
   prayerPresets: 'Prayer times updated',
   duas: 'Library updated — new duʿāʾ content',
   ziyarat: 'Library updated — new ziyārah content',
-  nahj: 'Library updated — Nahj al-Balāgha'
+  nahj: 'Library updated — Books',
+  aamals: 'Daily Aamals updated'
 };
 
 function urlBase64ToUint8Array(b64) {
@@ -1602,7 +1603,7 @@ const SB_KEY_MAP = {
   kidsQuizzes: 'liveKidsQuizzes', askImam: 'liveAskImam',
   prayerPresets: 'livePrayerPresets', calEvents: 'liveCalEvents',
   healthTips: 'liveHealthTips', healthVideos: 'liveHealthVideos',
-  duas: 'liveDuas', ziyarat: 'liveZiyarat', nahj: 'liveNahj',
+  duas: 'liveDuas', ziyarat: 'liveZiyarat', nahj: 'liveNahj', aamals: 'liveAamals',
   reminders: 'liveReminders', ads: 'liveAds'
 };
 
@@ -1618,6 +1619,86 @@ function announcementActive(a) {
     if (!isNaN(end.getTime()) && Date.now() > end.getTime()) return false;
   }
   return true;
+}
+
+/* ── NEXT PRAYER SCENE ──
+   The next prayer decides the weather. computeNext only ever returns Fajr,
+   Ẓuhr, Maghrib or Midnight: waiting for Ẓuhr or Maghrib means the sun is still
+   up, so the card carries a daylight horizon; Fajr and Midnight fall in the
+   dark and get a night sky. Drawn inline instead of loaded as an image — no
+   request, no licence, and it recolours with the palette. */
+const NIGHT_PRAYERS = ['Fajr', 'Midnight'];
+function prayerScene(name) {
+  return NIGHT_PRAYERS.includes(name) ? {
+    night: true, ink: '#f3ead4', sub: '#bcb098', accent: '#e2c67c',
+    scrim: 'linear-gradient(90deg,rgba(9,19,25,.82) 0%,rgba(9,19,25,.35) 55%,rgba(9,19,25,.1) 100%)',
+    shadowRgb: '12,24,30'
+  } : {
+    night: false, ink: '#3a3129', sub: '#7c6b56', accent: '#a96d24',
+    scrim: 'linear-gradient(90deg,rgba(253,246,236,.9) 0%,rgba(253,246,236,.45) 58%,rgba(253,246,236,.05) 100%)',
+    shadowRgb: '190,158,120'
+  };
+}
+function sceneArt(night) {
+  const svg = night ? `
+    <defs><linearGradient id="ps-n" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0b161d"/><stop offset=".42" stop-color="#1b3a44"/>
+      <stop offset=".72" stop-color="#4a6a5d"/><stop offset="1" stop-color="#c9a068"/>
+    </linearGradient></defs>
+    <rect width="400" height="120" fill="url(#ps-n)"/>
+    <g fill="#f3ead4" opacity=".8"><circle cx="42" cy="20" r="1"/><circle cx="96" cy="34" r=".8"/>
+      <circle cx="150" cy="16" r="1.1"/><circle cx="206" cy="30" r=".8"/><circle cx="262" cy="18" r="1"/>
+      <circle cx="330" cy="12" r=".9"/><circle cx="372" cy="32" r="1"/><circle cx="18" cy="44" r=".8"/></g>
+    <g transform="translate(292,20) scale(1.9) rotate(18)" fill="#f2e6c6">
+      <path d="M20.985 12.486a9 9 0 1 1-9.473-9.472c.405-.022.617.46.402.803a6 6 0 0 0 8.268 8.268c.344-.215.825-.004.803.401"/></g>
+    <path d="M0 92 Q70 68 140 84 T268 78 T400 66 L400 120 L0 120z" fill="#12262a" opacity=".9"/>
+    <path d="M0 106 Q96 88 190 102 T400 94 L400 120 L0 120z" fill="#091419"/>` : `
+    <defs><linearGradient id="ps-d" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#fdf6ec"/><stop offset=".5" stop-color="#f9e2ca"/>
+        <stop offset="1" stop-color="#f0c8a1"/></linearGradient>
+      <radialGradient id="ps-g"><stop offset="0" stop-color="#fff7e0"/>
+        <stop offset="1" stop-color="#fff7e0" stop-opacity="0"/></radialGradient></defs>
+    <rect width="400" height="120" fill="url(#ps-d)"/>
+    <circle cx="298" cy="64" r="52" fill="url(#ps-g)"/>
+    <circle cx="298" cy="64" r="13" fill="#fff4d6"/>
+    <path d="M0 78 Q76 52 156 74 T286 66 T400 56 L400 120 L0 120z" fill="#b9ab9c" opacity=".5"/>
+    <rect y="84" width="400" height="36" fill="#dde6e3" opacity=".65"/>
+    <rect x="292" y="84" width="12" height="36" fill="#fff4d6" opacity=".5"/>
+    <g fill="none" stroke="#6f6555" stroke-width="1.4" stroke-linecap="round" opacity=".65">
+      <path d="M44 26q5-5 10 0"/><path d="M64 34q5-5 10 0"/><path d="M84 22q5-5 10 0"/></g>`;
+  return React.createElement('svg', {
+    viewBox: '0 0 400 120',
+    preserveAspectRatio: 'xMidYMid slice',
+    style: { position: 'absolute', inset: 0, width: '100%', height: '100%' },
+    'aria-hidden': 'true',
+    dangerouslySetInnerHTML: { __html: svg }
+  });
+}
+
+/* Where a majlis sits relative to right now, so the card can speak in the
+   present tense. A majlis counts as live from its start time until LIVE_MINS
+   later; without a start time a dated majlis is simply "today". */
+const LIVE_MINS = 150;
+function majlisStatus(a, now) {
+  const t = now || new Date();
+  if (!a || !a.date) return { kind: a && a.yt ? 'watch' : 'notice' };
+  const start = new Date(a.date + 'T' + (a.time && /^\d{2}:\d{2}$/.test(a.time) ? a.time : '00:00'));
+  if (isNaN(start.getTime())) return { kind: 'notice' };
+  const mins = Math.round((start.getTime() - t.getTime()) / 60000);
+  const sameDay = start.toDateString() === t.toDateString();
+  if (a.time) {
+    if (mins <= 0 && mins > -LIVE_MINS) return { kind: 'live', start };
+    if (mins <= -LIVE_MINS) return { kind: sameDay ? 'ended' : 'notice', start };
+    if (mins < 60) return { kind: 'soon', start, label: `Starts in ${mins} min` };
+    if (sameDay) return { kind: 'today', start, label: `Today at ${a.time}` };
+  } else if (sameDay) {
+    return { kind: 'today', start, label: 'Today' };
+  }
+  // compare whole days, not elapsed hours, or an evening majlis tomorrow reads as two days out
+  const startDay = new Date(start.getFullYear(), start.getMonth(), start.getDate());
+  const today0 = new Date(t.getFullYear(), t.getMonth(), t.getDate());
+  const days = Math.round((startDay - today0) / 86400000);
+  return { kind: 'upcoming', start, label: days === 1 ? 'Tomorrow' : `In ${days} days` };
 }
 function pruneExpiredStories(list) {
   // Storage cleanup: drop blanks and expired stories, but KEEP future-scheduled ones.
@@ -1812,6 +1893,7 @@ class App extends Component {
       liveHealthTips: lsGet('healthTips', HEALTH_TIPS),
       liveHealthVideos: lsGet('healthVideos', HEALTH_VIDEOS),
       liveDuas: lsGet('duas', DUAS),
+      liveAamals: lsGet('aamals', []),
       liveZiyarat: lsGet('ziyarat', ZIYARAT),
       liveNahj: lsGet('nahj', NAHJ),
       liveKidsQuizzes: lsGet('kidsQuizzes', KIDS_QUIZZES),
@@ -2587,6 +2669,15 @@ class App extends Component {
       icon: '🏪',
       go: () => this.go('classifieds')
     }, {
+      title: 'Daily Aamals',
+      icon: '✨',
+      go: () => this.setState({
+        screen: 'library',
+        libTab: 'aamal',
+        libQuery: '',
+        libCat: 'All'
+      })
+    }, {
       title: 'Tasbeeh',
       icon: '📿',
       go: () => this.go('tasbeeh')
@@ -2621,6 +2712,7 @@ class App extends Component {
     const todayRem = todayRems[0];
     const showNotif = !!todayRem && !st.notifDismissed;
     const onThisDay = (st.liveCalEvents || []).filter(e => (e.notice || 'day') === 'day' && e.date && eventOnDate(e, now));
+    const sc = prayerScene(next.name);
     // frosted-pane treatment shared by the slim home ribbons
     return /*#__PURE__*/React.createElement("div", {
       style: {
@@ -2817,82 +2909,7 @@ class App extends Component {
         marginTop: 1,
         lineHeight: 1.35
       }
-    }, ev.desc)))), announcementActive(st.liveAnnouncement) && /*#__PURE__*/React.createElement("div", {
-      onClick: st.liveAnnouncement.yt ? () => this.playYt(st.liveAnnouncement.yt) : undefined,
-      style: {
-        ...neuCard(13, .7),
-        display: 'flex',
-        gap: 10,
-        alignItems: 'center',
-        padding: '7px 12px',
-        marginBottom: 10,
-        cursor: st.liveAnnouncement.yt ? 'pointer' : 'default'
-      }
-    }, /*#__PURE__*/React.createElement("div", {
-      style: {
-        flexShrink: 0,
-        width: 24,
-        height: 24,
-        borderRadius: 8,
-        background: st.liveAnnouncement.yt ? '#6e2230' : '#e8d39a',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        color: st.liveAnnouncement.yt ? '#f6e7d7' : '#7a5d18',
-        fontWeight: 700,
-        fontFamily: 'Spectral,serif',
-        fontSize: st.liveAnnouncement.yt ? 9 : 12
-      }
-    }, st.liveAnnouncement.yt ? '▶' : '!'), /*#__PURE__*/React.createElement("div", {
-      style: {
-        minWidth: 0
-      }
-    }, /*#__PURE__*/React.createElement("div", {
-      style: {
-        fontSize: 8,
-        letterSpacing: 1,
-        textTransform: 'uppercase',
-        fontWeight: 800,
-        color: '#a03a3a',
-        marginBottom: 1,
-        display: 'flex',
-        alignItems: 'center',
-        gap: 4
-      }
-    }, /*#__PURE__*/React.createElement("span", {
-      style: {
-        width: 5,
-        height: 5,
-        borderRadius: '50%',
-        background: '#c0392b',
-        display: 'inline-block'
-      }
-    }), "Majlis Live"), /*#__PURE__*/React.createElement("div", {
-      style: {
-        fontSize: 12,
-        fontWeight: 600,
-        color: '#5e4d22',
-        lineHeight: 1.3
-      }
-    }, st.liveAnnouncement.title), st.liveAnnouncement.body && /*#__PURE__*/React.createElement("div", {
-      style: {
-        fontSize: 10.5,
-        color: '#8a7846',
-        marginTop: 1,
-        lineHeight: 1.35
-      }
-    }, st.liveAnnouncement.body), (st.liveAnnouncement.date || st.liveAnnouncement.yt) && /*#__PURE__*/React.createElement("div", {
-      style: {
-        fontSize: 9.5,
-        color: '#a08c55',
-        marginTop: 2,
-        fontWeight: 600
-      }
-    }, [st.liveAnnouncement.date ? new Date(st.liveAnnouncement.date + 'T12:00').toLocaleDateString('en-IE', {
-      weekday: 'short',
-      day: 'numeric',
-      month: 'long'
-    }) : null, st.liveAnnouncement.yt ? 'Tap to watch ▶' : null].filter(Boolean).join(' · ')))), /*#__PURE__*/React.createElement("div", {
+    }, ev.desc)))), announcementActive(st.liveAnnouncement) && this.renderMajlisCard(st), /*#__PURE__*/React.createElement("div", {
       style: {
         display: 'flex',
         alignItems: 'baseline',
@@ -2974,34 +2991,19 @@ class App extends Component {
       style: {
         position: 'relative',
         overflow: 'hidden',
-        background: 'linear-gradient(150deg,#245f50 0%,#173f34 100%)',
-        border: '1px solid rgba(255,255,255,.07)',
+        border: sc.night ? '1px solid rgba(255,255,255,.08)' : '1px solid rgba(255,255,255,.6)',
         borderRadius: 16,
         padding: '11px 15px',
-        color: '#f3ead4',
-        boxShadow: neuUpOn('23,63,52', 1.05),
+        color: sc.ink,
+        boxShadow: neuUpOn(sc.shadowRgb, 1.05),
         cursor: 'pointer',
         marginBottom: 14
       }
-    }, /*#__PURE__*/React.createElement("div", {
+    }, sceneArt(sc.night), /*#__PURE__*/React.createElement("div", {
       style: {
         position: 'absolute',
-        right: -30,
-        top: -34,
-        width: 104,
-        height: 104,
-        borderRadius: '50%',
-        border: '1px solid rgba(216,184,99,.22)'
-      }
-    }), /*#__PURE__*/React.createElement("div", {
-      style: {
-        position: 'absolute',
-        right: 6,
-        bottom: -42,
-        width: 76,
-        height: 76,
-        borderRadius: '50%',
-        boxShadow: 'inset -18px 0 0 0 rgba(216,184,99,.16)'
+        inset: 0,
+        background: sc.scrim
       }
     }), /*#__PURE__*/React.createElement("div", {
       style: {
@@ -3015,16 +3017,16 @@ class App extends Component {
         fontSize: 8.5,
         letterSpacing: 1.3,
         textTransform: 'uppercase',
-        color: '#d8b863',
-        fontWeight: 700
+        color: sc.accent,
+        fontWeight: 800
       }
     }, /*#__PURE__*/React.createElement("span", {
       style: {
         width: 5,
         height: 5,
         borderRadius: '50%',
-        background: '#d8b863',
-        boxShadow: '0 0 0 3px rgba(216,184,99,.2)'
+        background: sc.accent,
+        boxShadow: `0 0 0 3px ${sc.night ? 'rgba(226,198,124,.2)' : 'rgba(169,109,36,.16)'}`
       }
     }), " ", this.t('home.nextPrayer')), /*#__PURE__*/React.createElement("div", {
       style: {
@@ -3050,7 +3052,7 @@ class App extends Component {
       style: {
         fontFamily: 'Amiri,serif',
         fontSize: 14,
-        color: '#cdbf9e'
+        color: sc.sub
       },
       dir: "rtl"
     }, next.ar)), /*#__PURE__*/React.createElement("div", {
@@ -3067,7 +3069,7 @@ class App extends Component {
     }, next.time), /*#__PURE__*/React.createElement("div", {
       style: {
         fontSize: 10,
-        color: '#bcae8d',
+        color: sc.sub,
         marginTop: 3
       }
     }, this.t('home.in'), " ", cd))))), /*#__PURE__*/React.createElement("div", {
@@ -3140,7 +3142,7 @@ class App extends Component {
       onClick: q.go,
       style: {
         ...neuCard(14, .8),
-        padding: '10px 3px 8px',
+        padding: '8px 3px 7px',
         cursor: 'pointer',
         display: 'flex',
         flexDirection: 'column',
@@ -3152,79 +3154,24 @@ class App extends Component {
       }
     }, /*#__PURE__*/React.createElement("span", {
       style: {
-        width: 30,
-        height: 30,
+        width: 36,
+        height: 36,
         borderRadius: '50%',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        fontSize: 21,
+        fontSize: 23,
         lineHeight: 1,
-        boxShadow: neuIn(.36)
+        boxShadow: neuIn(.4)
       }
     }, q.icon), /*#__PURE__*/React.createElement("div", {
       style: {
         fontSize: 9.5,
-        fontWeight: 600,
+        fontWeight: 700,
         color: '#2c2823',
         lineHeight: 1.2
       }
-    }, q.title)))), st.install && /*#__PURE__*/React.createElement("div", {
-      style: {
-        display: 'flex',
-        alignItems: 'center',
-        gap: 13,
-        background: '#1c1a17',
-        borderRadius: 18,
-        padding: '14px 16px',
-        animation: 'po .4s ease both'
-      }
-    }, /*#__PURE__*/React.createElement("div", {
-      style: {
-        flexShrink: 0,
-        width: 40,
-        height: 40,
-        borderRadius: 12,
-        background: 'linear-gradient(150deg,#23564a,#16463a)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center'
-      }
-    }, /*#__PURE__*/React.createElement("div", {
-      style: {
-        width: 18,
-        height: 18,
-        borderRadius: '50%',
-        boxShadow: 'inset -5px 0 0 0 #d8b863'
-      }
-    })), /*#__PURE__*/React.createElement("div", {
-      style: {
-        flex: 1
-      }
-    }, /*#__PURE__*/React.createElement("div", {
-      style: {
-        fontSize: 13.5,
-        fontWeight: 600,
-        color: '#f3ead4'
-      }
-    }, this.t('home.installTitle')), /*#__PURE__*/React.createElement("div", {
-      style: {
-        fontSize: 11.5,
-        color: '#a59c8a',
-        marginTop: 1
-      }
-    }, this.t('home.installSub'))), /*#__PURE__*/React.createElement("div", {
-      onClick: this.handleInstall,
-      style: {
-        fontSize: 12.5,
-        color: '#1f5145',
-        fontWeight: 600,
-        background: '#d8b863',
-        padding: '8px 13px',
-        borderRadius: 11,
-        cursor: 'pointer'
-      }
-    }, this.t('home.add'))), maulanas.length > 0 && /*#__PURE__*/React.createElement("div", {
+    }, q.title)))), maulanas.length > 0 && /*#__PURE__*/React.createElement("div", {
       style: {
         background: 'linear-gradient(120deg,#1f5145,#163b30)',
         borderRadius: 16,
@@ -4141,6 +4088,7 @@ class App extends Component {
     const duaList = st.liveDuas || DUAS;
     const ziyList = st.liveZiyarat || ZIYARAT;
     const nahjData = st.liveNahj || NAHJ;
+    const aamalList = st.liveAamals || [];
     const libMeta = {
       dua: {
         title: "Duʿāʾ",
@@ -4155,6 +4103,13 @@ class App extends Component {
         tint: '#f3e6e8',
         list: ziyList,
         cats: ['All', ...new Set(ziyList.map(it => it.cat).filter(Boolean))]
+      },
+      aamal: {
+        title: 'Daily Aamals',
+        accent: '#8a4b2c',
+        tint: '#f6ebe4',
+        list: aamalList,
+        cats: ['All', ...new Set(aamalList.map(it => it.cat).filter(Boolean))]
       },
       nahj: {
         title: 'Books',
@@ -4231,7 +4186,7 @@ class App extends Component {
       };
     };
     let libCards = [];
-    if (st.libTab === 'dua' || st.libTab === 'ziyarah') {
+    if (st.libTab === 'dua' || st.libTab === 'ziyarah' || st.libTab === 'aamal') {
       libCards = lm.list.filter(it => {
         const catOk = st.libCat === 'All' || it.cat === st.libCat;
         const qOk = !q || (it.title || '').toLowerCase().includes(q) || (it.tr || '').toLowerCase().includes(q);
@@ -4301,7 +4256,7 @@ class App extends Component {
         display: 'flex',
         gap: 8
       }
-    }, [['dua', "Duʿāʾ", '🤲'], ['ziyarah', 'Ziyārah', '🕌'], ['nahj', 'Books', '📖']].map(libTab))), /*#__PURE__*/React.createElement("div", {
+    }, [['dua', "Duʿāʾ", '🤲'], ['ziyarah', 'Ziyārah', '🕌'], ['aamal', 'Aamals', '✨'], ['nahj', 'Books', '📖']].map(libTab))), /*#__PURE__*/React.createElement("div", {
       style: {
         display: 'flex',
         alignItems: 'center',
@@ -4487,14 +4442,16 @@ class App extends Component {
         color: '#2c5d52',
         letterSpacing: .5
       }
-    }, "PDF · tap to read")))), libCards.length === 0 && nahjCards.length === 0 && (q || st.libCat !== 'All') && /*#__PURE__*/React.createElement("div", {
+    }, "PDF · tap to read")))), libCards.length === 0 && nahjCards.length === 0 && /*#__PURE__*/React.createElement("div", {
       style: {
         textAlign: 'center',
         padding: '40px 20px',
         color: NEU.muted,
         fontSize: 14
       }
-    }, q ? `No results for "${st.libQuery}"` : `No items in "${st.libCat}"`));
+    }, q ? `No results for "${st.libQuery}"`
+       : st.libCat !== 'All' ? `No items in "${st.libCat}"`
+       : `Nothing here yet — ${lm.title} is filled in from the admin dashboard.`));
   }
 
   /* ── READING ── */
@@ -4523,15 +4480,16 @@ class App extends Component {
     };
     const arSize = Math.round(30 * st.textSize) + 'px';
     const trSize = Math.round(17 * st.textSize) + 'px';
-    const readAccent = rtype === 'ziyarah' ? '#6e2230' : rtype === 'nahj' ? '#2c5d52' : '#9a7a2c';
+    const readAccent = rtype === 'ziyarah' ? '#6e2230' : rtype === 'nahj' ? '#2c5d52' : rtype === 'aamal' ? '#8a4b2c' : '#9a7a2c';
     // per-language content: items may carry body_ur / body_fa / body_hi alongside the English body
     const TR_CODES = { 'हिन्दी': 'hi', 'فارسی': 'fa', 'Urdu': 'ur' };
     const trCode = TR_CODES[st.lang];
     const KICKERS = {
       dua: { English: 'Supplication', 'العربية': 'دعاء', 'हिन्दी': 'दुआ', 'فارسی': 'دعا', Urdu: 'دعا' },
-      ziyarah: { English: 'Salutation', 'العربية': 'زيارة', 'हिन्दी': 'ज़ियारत', 'فارسی': 'زیارت', Urdu: 'زیارت' }
+      ziyarah: { English: 'Salutation', 'العربية': 'زيارة', 'हिन्दी': 'ज़ियारत', 'فارسی': 'زیارت', Urdu: 'زیارت' },
+      aamal: { English: 'Daily Aamal', 'العربية': 'عمل', 'हिन्दी': 'आमाल', 'فارسی': 'اعمال', Urdu: 'اعمال' }
     };
-    const kicker = rtype === 'dua' || rtype === 'ziyarah' ? KICKERS[rtype][st.lang] || KICKERS[rtype].English : r.ref || 'Nahj al-Balāgha';
+    const kicker = KICKERS[rtype] ? KICKERS[rtype][st.lang] || KICKERS[rtype].English : r.ref || 'Books';
     const isBookmarked = st.bookmarks.some(b => b.title === r.title);
     const localBody = trCode ? r['body_' + trCode] || '' : '';
     const trRtl = !!localBody && (trCode === 'fa' || trCode === 'ur');
@@ -6857,11 +6815,24 @@ class App extends Component {
             color: '#8d8574',
             margin: '2px 2px 7px'
           }
-        }, "Majlis date — the banner disappears at 11:59 pm on this date"), /*#__PURE__*/React.createElement("input", {
+        }, "Majlis date — the card disappears at 11:59 pm on this date"), /*#__PURE__*/React.createElement("input", {
           type: "date",
           value: d.date || '',
           onChange: e => this.setDraft({
             date: e.target.value
+          }),
+          style: inp
+        }), /*#__PURE__*/React.createElement("div", {
+          style: {
+            fontSize: 11.5,
+            color: '#8d8574',
+            margin: '2px 2px 7px'
+          }
+        }, "Start time (optional) — with a time set, the card counts down and then shows Live now for 2½ hours"), /*#__PURE__*/React.createElement("input", {
+          type: "time",
+          value: d.time || '',
+          onChange: e => this.setDraft({
+            time: e.target.value
           }),
           style: inp
         }), /*#__PURE__*/React.createElement("div", {
@@ -6878,7 +6849,8 @@ class App extends Component {
             title: d.title || '',
             body: d.body || '',
             yt: d.yt || '',
-            date: d.date || ''
+            date: d.date || '',
+            time: d.time || ''
           }, 'Majlis Live saved!');
         }, {
           flex: 1,
@@ -8344,7 +8316,7 @@ class App extends Component {
           padding: 4,
           marginBottom: 14
         }
-      }, [['dua', 'Duʿāʾ'], ['ziyarah', 'Ziyārah'], ['nahj', 'Books']].map(([k, label]) => /*#__PURE__*/React.createElement("div", {
+      }, [['dua', 'Duʿāʾ'], ['ziyarah', 'Ziyārah'], ['aamal', 'Aamals'], ['nahj', 'Books']].map(([k, label]) => /*#__PURE__*/React.createElement("div", {
         key: k,
         onClick: () => this.setState({
           adminLibTab: k,
@@ -8391,10 +8363,10 @@ class App extends Component {
         padding: '6px 12px',
         fontSize: 12
       }));
-      if (lt === 'dua' || lt === 'ziyarah') {
-        const key = lt === 'dua' ? 'duas' : 'ziyarat';
-        const stateKey = lt === 'dua' ? 'liveDuas' : 'liveZiyarat';
-        const label = lt === 'dua' ? 'Duʿāʾ' : 'Ziyārah';
+      if (lt === 'dua' || lt === 'ziyarah' || lt === 'aamal') {
+        const key = lt === 'dua' ? 'duas' : lt === 'ziyarah' ? 'ziyarat' : 'aamals';
+        const stateKey = lt === 'dua' ? 'liveDuas' : lt === 'ziyarah' ? 'liveZiyarat' : 'liveAamals';
+        const label = lt === 'dua' ? 'Duʿāʾ' : lt === 'ziyarah' ? 'Ziyārah' : 'Aamal';
         const list = st[stateKey] || [];
         if (editing) {
           const d = st.adminEditDraft;
@@ -8447,7 +8419,7 @@ class App extends Component {
             onChange: e => this.setDraft({
               cat: e.target.value
             }),
-            placeholder: lt === 'dua' ? 'Category (e.g. Daily, Weekly, Morning)' : 'Category (e.g. Imam Ḥusayn, General)',
+            placeholder: lt === 'dua' ? 'Category (e.g. Daily, Weekly, Morning)' : lt === 'aamal' ? 'Category (e.g. Daily, Ramaḍān, Muḥarram)' : 'Category (e.g. Imam Ḥusayn, General)',
             style: inp
           }), /*#__PURE__*/React.createElement("textarea", {
             value: d.ar || '',
@@ -11423,6 +11395,136 @@ class App extends Component {
         flexShrink: 0
       }
     }, "›")))));
+  }
+
+  /* ── MAJLIS LIVE ──
+     One card, four voices. It reads the clock rather than a stored flag, so the
+     same saved majlis counts down, goes live, and settles into a recording on
+     its own; st.now ticks every second, which is what moves it along. */
+  renderMajlisCard(st) {
+    const a = st.liveAnnouncement || {};
+    const s = majlisStatus(a, st.now);
+    const live = s.kind === 'live';
+    const ahead = s.kind === 'soon' || s.kind === 'today' || s.kind === 'upcoming';
+    const tone = live ? {
+      bg: 'linear-gradient(135deg,#7d2432 0%,#48111b 100%)',
+      shadow: neuUpOn('92,24,34', .95),
+      ink: '#f9ece7',
+      sub: 'rgba(249,236,231,.74)',
+      chip: '#ff7566',
+      kicker: 'Live now'
+    } : ahead ? {
+      bg: 'linear-gradient(135deg,#24604f 0%,#193f34 100%)',
+      shadow: neuUpOn('25,63,52', .9),
+      ink: '#f3ead4',
+      sub: 'rgba(243,234,212,.72)',
+      chip: '#d8b863',
+      kicker: s.label || 'Upcoming'
+    } : {
+      ...neuCard(16, .85),
+      ink: NEU.ink,
+      sub: NEU.muted,
+      chip: '#8a4b2c',
+      kicker: s.kind === 'ended' ? 'Recording' : 'Majlis Live'
+    };
+    const playable = !!a.yt;
+    const dateLine = [
+      a.date ? new Date(a.date + 'T12:00').toLocaleDateString('en-IE', { weekday: 'short', day: 'numeric', month: 'long' }) : null,
+      a.time || null
+    ].filter(Boolean).join(' · ');
+    return /*#__PURE__*/React.createElement("div", {
+      onClick: playable ? () => this.playYt(a.yt) : undefined,
+      style: {
+        position: 'relative',
+        overflow: 'hidden',
+        borderRadius: 16,
+        padding: '12px 14px',
+        marginBottom: 12,
+        cursor: playable ? 'pointer' : 'default',
+        ...(live || ahead ? {
+          background: tone.bg,
+          border: '1px solid rgba(255,255,255,.08)',
+          boxShadow: tone.shadow
+        } : tone)
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: 7,
+        fontSize: 8.5,
+        letterSpacing: 1.3,
+        textTransform: 'uppercase',
+        fontWeight: 800,
+        color: tone.chip
+      }
+    }, /*#__PURE__*/React.createElement("span", {
+      className: live ? "live-dot" : undefined,
+      style: {
+        width: 6,
+        height: 6,
+        borderRadius: '50%',
+        background: tone.chip,
+        flexShrink: 0
+      }
+    }), tone.kicker), /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: 12,
+        marginTop: 6
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        flex: 1,
+        minWidth: 0
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontFamily: 'Spectral,serif',
+        fontSize: 15.5,
+        fontWeight: 600,
+        color: tone.ink,
+        lineHeight: 1.25
+      }
+    }, a.title), a.body && /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 11.5,
+        color: tone.sub,
+        marginTop: 3,
+        lineHeight: 1.4
+      }
+    }, a.body), dateLine && /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 10.5,
+        color: tone.sub,
+        marginTop: 4,
+        fontWeight: 600
+      }
+    }, dateLine)), playable && /*#__PURE__*/React.createElement("div", {
+      className: live ? "live-ring" : undefined,
+      style: {
+        flexShrink: 0,
+        width: 42,
+        height: 42,
+        borderRadius: '50%',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: live || ahead ? 'rgba(255,255,255,.14)' : NEU.surf,
+        boxShadow: live || ahead ? 'inset 0 0 0 1px rgba(255,255,255,.22)' : neuUp(.55),
+        color: live || ahead ? tone.ink : tone.chip
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        width: 0,
+        height: 0,
+        borderLeft: `13px solid ${live || ahead ? tone.ink : tone.chip}`,
+        borderTop: '8px solid transparent',
+        borderBottom: '8px solid transparent',
+        marginLeft: 4
+      }
+    }))));
   }
 
   /* ── TASBEEH COUNTER ── */
