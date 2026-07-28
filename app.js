@@ -1622,12 +1622,12 @@ function announcementActive(a) {
 }
 
 /* ── NEXT PRAYER SCENE ──
-   The next prayer decides the weather. computeNext only ever returns Fajr,
-   Ẓuhr, Maghrib or Midnight: waiting for Ẓuhr or Maghrib means the sun is still
-   up, so the card carries a daylight horizon; Fajr and Midnight fall in the
-   dark and get a night sky. Drawn inline instead of loaded as an image — no
-   request, no licence, and it recolours with the palette. */
-const NIGHT_PRAYERS = ['Fajr', 'Midnight'];
+   The next prayer decides the weather, by which half of the day it belongs to:
+   Fajr, Sunrise and Ẓuhr open the light half and carry the daylight horizon;
+   Sunset, Maghrib and Midnight belong to the dark half and carry the night sky.
+   Anything else falls to daylight. Drawn inline rather than loaded as an image —
+   no request, no licence, and it recolours with the palette. */
+const NIGHT_PRAYERS = ['Sunset', 'Maghrib', 'Midnight'];
 function prayerScene(name) {
   return NIGHT_PRAYERS.includes(name) ? {
     night: true, ink: '#f3ead4', sub: '#bcb098', accent: '#e2c67c',
