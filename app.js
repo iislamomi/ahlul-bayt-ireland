@@ -2627,6 +2627,7 @@ class App extends Component {
     const quickCards = [{
       title: 'Duʿāʾ',
       icon: '🤲',
+      tone: ['#9a7a2c', '#f5eeda'],
       go: () => this.setState({
         screen: 'library',
         libTab: 'dua',
@@ -2635,6 +2636,7 @@ class App extends Component {
     }, {
       title: 'Ziyārah',
       icon: '🕌',
+      tone: ['#6e2230', '#f5e7e9'],
       go: () => this.setState({
         screen: 'library',
         libTab: 'ziyarah',
@@ -2643,6 +2645,7 @@ class App extends Component {
     }, {
       title: 'Books',
       icon: '📖',
+      tone: ['#2c5d52', '#e6f0eb'],
       go: () => this.setState({
         screen: 'library',
         libTab: 'nahj',
@@ -2651,10 +2654,12 @@ class App extends Component {
     }, {
       title: this.t('kids.title'),
       icon: '🧸',
+      tone: ['#c06014', '#fbe9dc'],
       go: () => this.go('kids')
     }, {
       title: 'Quiz',
       icon: '🎯',
+      tone: ['#8a2f52', '#f7e6ed'],
       go: () => this.setState({
         screen: 'kids',
         kidsTab: 'quiz',
@@ -2663,14 +2668,17 @@ class App extends Component {
     }, {
       title: this.t('more.health'),
       icon: '🌿',
+      tone: ['#3f7a45', '#e9f2e7'],
       go: () => this.go('health')
     }, {
       title: this.t('home.classTitle'),
       icon: '🏪',
+      tone: ['#7a5c9e', '#efe9f5'],
       go: () => this.go('classifieds')
     }, {
       title: 'Daily Aamals',
       icon: '✨',
+      tone: ['#8a4b2c', '#f7ebe2'],
       go: () => this.setState({
         screen: 'library',
         libTab: 'aamal',
@@ -2680,22 +2688,27 @@ class App extends Component {
     }, {
       title: 'Tasbeeh',
       icon: '📿',
+      tone: ['#3a4a78', '#e9ecf5'],
       go: () => this.go('tasbeeh')
     }, {
       title: 'Wallpapers',
       icon: '🖼️',
+      tone: ['#2f6f7a', '#e5f0f2'],
       go: () => this.go('wallpaper')
     }, {
       title: 'Khums & Zakat',
       icon: '🧮',
+      tone: ['#7a6a2c', '#f2eede'],
       go: () => this.go('khums')
     }, {
       title: this.t('qibla.title'),
       icon: '🧭',
+      tone: ['#1f5145', '#e4efe9'],
       go: () => this.go('qibla')
     }, {
       title: this.t('cal.title'),
       icon: '📅',
+      tone: ['#b8923f', '#f7efdd'],
       go: () => this.go('calendar')
     }];
     const maulanas = Array.isArray(st.liveAskImam) ? st.liveAskImam.filter(m => m && m.number) : st.liveAskImam && st.liveAskImam.number ? [{
@@ -3137,41 +3150,49 @@ class App extends Component {
         gap: 8,
         marginBottom: 14
       }
-    }, quickCards.map((q, i) => /*#__PURE__*/React.createElement("div", {
-      key: i,
-      onClick: q.go,
-      style: {
-        ...neuCard(14, .8),
-        padding: '8px 3px 7px',
-        cursor: 'pointer',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: 5,
-        minHeight: 68,
-        textAlign: 'center'
-      }
-    }, /*#__PURE__*/React.createElement("span", {
-      style: {
-        width: 36,
-        height: 36,
-        borderRadius: '50%',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        fontSize: 23,
-        lineHeight: 1,
-        boxShadow: neuIn(.4)
-      }
-    }, q.icon), /*#__PURE__*/React.createElement("div", {
-      style: {
-        fontSize: 9.5,
-        fontWeight: 700,
-        color: '#2c2823',
-        lineHeight: 1.2
-      }
-    }, q.title)))), maulanas.length > 0 && /*#__PURE__*/React.createElement("div", {
+    }, quickCards.map((q, i) => {
+      const [ink, tint] = q.tone || ['#6e6252', '#efe8db'];
+      return /*#__PURE__*/React.createElement("div", {
+        key: i,
+        onClick: q.go,
+        className: "neu-press",
+        style: {
+          ...neuCard(14, .8),
+          padding: '8px 3px 7px',
+          cursor: 'pointer',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 5,
+          minHeight: 68,
+          textAlign: 'center',
+          animation: 'fu .38s cubic-bezier(.2,.8,.2,1) both',
+          animationDelay: i * 26 + 'ms'
+        }
+      }, /*#__PURE__*/React.createElement("span", {
+        style: {
+          width: 36,
+          height: 36,
+          borderRadius: '50%',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontSize: 23,
+          lineHeight: 1,
+          background: `linear-gradient(145deg, ${tint}, ${ink}22)`,
+          boxShadow: `inset 2px 2px 5px ${ink}33, inset -2px -2px 5px ${NEU.hi}, 0 3px 8px -5px ${ink}`
+        }
+      }, q.icon), /*#__PURE__*/React.createElement("div", {
+        style: {
+          fontSize: 9.5,
+          fontWeight: 700,
+          // colour lives in the pebble; at 9.5px a tinted label drops under 4.5:1
+          color: NEU.ink,
+          lineHeight: 1.2
+        }
+      }, q.title));
+    })), maulanas.length > 0 && /*#__PURE__*/React.createElement("div", {
       style: {
         background: 'linear-gradient(120deg,#1f5145,#163b30)',
         borderRadius: 16,

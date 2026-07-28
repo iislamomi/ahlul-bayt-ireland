@@ -37,6 +37,12 @@
     .app [style*="cursor: pointer"] { transition: filter .16s ease, box-shadow .2s ease; }
     .app [style*="cursor: pointer"]:active { filter: brightness(.965); }
     .neu-tap:active { box-shadow: inset 9px 9px 20px var(--neu-lo), inset -8px -8px 18px var(--neu-hi) !important; }
+    /* Lighter press for small raised surfaces, where the -tap depth is too heavy. */
+    .neu-press:active { box-shadow: inset 4px 4px 9px var(--neu-lo), inset -3px -3px 8px var(--neu-hi) !important; }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: .01ms !important; animation-delay: 0ms !important;
+        animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+    }
     @keyframes live-dot { 0%,100% { opacity:1; transform:scale(1); } 50% { opacity:.3; transform:scale(.75); } }
     @keyframes live-ring { 0% { box-shadow:0 0 0 0 rgba(255,117,102,.5); } 100% { box-shadow:0 0 0 14px rgba(255,117,102,0); } }
     .live-dot { animation: live-dot 1.4s ease-in-out infinite; }
