@@ -675,13 +675,53 @@ const CLASSIFIEDS = [{
 }];
 
 /* ── ICONS ── */
+/* ── ICONS ──
+   Path data copied verbatim from github.com/lucide-icons/lucide (ISC licence),
+   kept as raw markup so swapping an icon later is a straight copy-paste from the
+   upstream file. icon() supplies Lucide's own drawing defaults: 24-unit box,
+   no fill, 2-unit round-capped stroke.
+   WhatsApp is not here — Lucide ships no brand marks, so that button keeps its
+   own glyph, which users need to recognise anyway. */
+const LUCIDE = {
+  'house': '<path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8" /><path d="M3 10a2 2 0 0 1 .709-1.528l7-6a2 2 0 0 1 2.582 0l7 6A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />',
+  'graduation-cap': '<path d="M21.42 10.922a1 1 0 0 0-.019-1.838L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.832l8.57 3.908a2 2 0 0 0 1.66 0z" /><path d="M22 10v6" /><path d="M6 12.5V16a6 3 0 0 0 12 0v-3.5" />',
+  'book-open': '<path d="M12 5v16" /><path d="M20.001 19A2 2 0 0022 17V5a2 2 0 00-1.999-2L16 3.002A5 5 0 0012 5a5 5 0 00-4-2H4a2 2 0 00-2 2v12a2 2 0 001.999 2H8a5 5 0 014 2 5 5 0 014-2z" />',
+  'circle-dot-dashed': '<path d="M10.1 2.18a9.93 9.93 0 0 1 3.8 0" /><path d="M17.6 3.71a9.95 9.95 0 0 1 2.69 2.7" /><path d="M21.82 10.1a9.93 9.93 0 0 1 0 3.8" /><path d="M20.29 17.6a9.95 9.95 0 0 1-2.7 2.69" /><path d="M13.9 21.82a9.94 9.94 0 0 1-3.8 0" /><path d="M6.4 20.29a9.95 9.95 0 0 1-2.69-2.7" /><path d="M2.18 13.9a9.93 9.93 0 0 1 0-3.8" /><path d="M3.71 6.4a9.95 9.95 0 0 1 2.7-2.69" /><circle cx="12" cy="12" r="1" />',
+  'ellipsis': '<circle cx="12" cy="12" r="1" /><circle cx="19" cy="12" r="1" /><circle cx="5" cy="12" r="1" />',
+  'moon': '<path d="M20.985 12.486a9 9 0 1 1-9.473-9.472c.405-.022.617.46.402.803a6 6 0 0 0 8.268 8.268c.344-.215.825-.004.803.401" />',
+  'bell': '<path d="M10.268 21a2 2 0 0 0 3.464 0" /><path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326" />',
+  'search': '<path d="m21 21-4.34-4.34" /><circle cx="11" cy="11" r="8" />',
+  'share-2': '<circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" /><line x1="8.59" x2="15.42" y1="13.51" y2="17.49" /><line x1="15.41" x2="8.59" y1="6.51" y2="10.49" />',
+  'bookmark': '<path d="M17 3a2 2 0 0 1 2 2v15a1 1 0 0 1-1.496.868l-4.512-2.578a2 2 0 0 0-1.984 0l-4.512 2.578A1 1 0 0 1 5 20V5a2 2 0 0 1 2-2z" />',
+  'map-pin': '<path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0" /><circle cx="12" cy="10" r="3" />',
+  'phone': '<path d="M13.832 16.568a1 1 0 0 0 1.213-.303l.355-.465A2 2 0 0 1 17 15h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2A18 18 0 0 1 2 4a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v3a2 2 0 0 1-.8 1.6l-.468.351a1 1 0 0 0-.292 1.233 14 14 0 0 0 6.392 6.384" />',
+  'globe': '<circle cx="12" cy="12" r="10" /><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20" /><path d="M2 12h20" />',
+  'check': '<path d="M20 6 9 17l-5-5" />',
+  'wifi-off': '<path d="M12 20h.01" /><path d="M8.5 16.429a5 5 0 0 1 7 0" /><path d="M5 12.859a10 10 0 0 1 5.17-2.69" /><path d="M19 12.859a10 10 0 0 0-2.007-1.523" /><path d="M2 8.82a15 15 0 0 1 4.177-2.643" /><path d="M22 8.82a15 15 0 0 0-11.288-3.764" /><path d="m2 2 20 20" />',
+  'log-out': '<path d="m16 17 5-5-5-5" /><path d="M21 12H9" /><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />',
+  'calendar': '<path d="M8 2v4" /><path d="M16 2v4" /><rect width="18" height="18" x="3" y="4" rx="2" /><path d="M3 10h18" />',
+  'clock': '<circle cx="12" cy="12" r="10" /><path d="M12 6v6l4 2" />'
+};
+const icon = (name, o = {}) => React.createElement('svg', {
+  width: o.size || 20,
+  height: o.size || 20,
+  viewBox: '0 0 24 24',
+  fill: o.fill || 'none',
+  stroke: o.stroke || 'currentColor',
+  strokeWidth: o.sw || 2,
+  strokeLinecap: 'round',
+  strokeLinejoin: 'round',
+  style: o.style,
+  dangerouslySetInnerHTML: { __html: LUCIDE[name] || '' }
+});
+
 const NAV_ICONS = {
-  home: '<path d="M4 11l8-6 8 6"/><path d="M6 10v9h12v-9"/>',
-  prayer: '<path d="M17 5a7 7 0 1 0 2 9 5.6 5.6 0 0 1-2-9z"/>',
-  madrasa: '<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>',
-  library: '<path d="M12 6c-1.6-1-4-1.4-6-1v12c2-.4 4.4 0 6 1 1.6-1 4-1.4 6-1V5c-2-.4-4.4 0-6 1z"/><path d="M12 6v13"/>',
-  stories: '<circle cx="12" cy="12" r="8" strokeDasharray="3 2.4"/><circle cx="12" cy="12" r="3.2"/>',
-  more: '<circle cx="5" cy="12" r="1.2" fill="currentColor"/><circle cx="12" cy="12" r="1.2" fill="currentColor"/><circle cx="19" cy="12" r="1.2" fill="currentColor"/>'
+  home: LUCIDE.house,
+  prayer: LUCIDE.moon,
+  madrasa: LUCIDE['graduation-cap'],
+  library: LUCIDE['book-open'],
+  stories: LUCIDE['circle-dot-dashed'],
+  more: LUCIDE.ellipsis
 };
 
 /* ── CUSTOM SELECT ── */
@@ -2615,20 +2655,7 @@ class App extends Component {
         alignItems: 'center',
         justifyContent: 'center'
       }
-    }, /*#__PURE__*/React.createElement("svg", {
-      width: "20",
-      height: "20",
-      viewBox: "0 0 24 24",
-      fill: "none",
-      stroke: "#f3ead4",
-      strokeWidth: "1.8",
-      strokeLinecap: "round",
-      strokeLinejoin: "round"
-    }, /*#__PURE__*/React.createElement("path", {
-      d: "M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"
-    }), /*#__PURE__*/React.createElement("path", {
-      d: "M13.7 21a2 2 0 0 1-3.4 0"
-    }))), /*#__PURE__*/React.createElement("div", {
+    }, icon('bell', { size: 20, stroke: '#f3ead4' })), /*#__PURE__*/React.createElement("div", {
       onClick: () => this.setState({
         screen: 'calendar',
         calViewY: null,
@@ -4284,21 +4311,7 @@ class App extends Component {
         padding: '11px 14px',
         marginBottom: 14
       }
-    }, /*#__PURE__*/React.createElement("svg", {
-      width: "17",
-      height: "17",
-      viewBox: "0 0 24 24",
-      fill: "none",
-      stroke: "#b3a890",
-      strokeWidth: "2",
-      strokeLinecap: "round"
-    }, /*#__PURE__*/React.createElement("circle", {
-      cx: "11",
-      cy: "11",
-      r: "7"
-    }), /*#__PURE__*/React.createElement("path", {
-      d: "M21 21l-4-4"
-    })), /*#__PURE__*/React.createElement("input", {
+    }, icon('search', { size: 17, stroke: '#a1977f' }), /*#__PURE__*/React.createElement("input", {
       value: st.libQuery,
       onChange: e => this.setState({
         libQuery: e.target.value
@@ -4563,21 +4576,11 @@ class App extends Component {
       onClick: this.handleShare,
       title: this.t('lib.share'),
       style: miniBtn
-    }, React.createElement("svg", {
-      width: "14", height: "14", viewBox: "0 0 24 24", fill: "none", stroke: readAccent,
-      strokeWidth: "1.9", strokeLinecap: "round", strokeLinejoin: "round"
-    }, React.createElement("circle", { cx: "18", cy: "5", r: "2.6" }),
-      React.createElement("circle", { cx: "6", cy: "12", r: "2.6" }),
-      React.createElement("circle", { cx: "18", cy: "19", r: "2.6" }),
-      React.createElement("path", { d: "M8.3 10.7l7.4-4.4M8.3 13.3l7.4 4.4" })));
+    }, icon('share-2', { size: 14, stroke: readAccent }));
     const bookmarkBtn = React.createElement("div", {
       onClick: this.handleBookmark,
       style: miniBtn
-    }, React.createElement("svg", {
-      width: "15", height: "15", viewBox: "0 0 24 24",
-      fill: isBookmarked ? readAccent : 'none', stroke: readAccent,
-      strokeWidth: "1.8", strokeLinecap: "round", strokeLinejoin: "round"
-    }, React.createElement("path", { d: "M6 4h12v16l-6-4-6 4z" })));
+    }, icon('bookmark', { size: 15, stroke: readAccent, fill: isBookmarked ? readAccent : 'none' }));
     return React.createElement("div", {
       style: { height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: rd.bg }
     }, React.createElement("div", {
@@ -4606,10 +4609,7 @@ class App extends Component {
       React.createElement("div", {
         onClick: () => this.setDark(!st.dark),
         style: { width: 34, height: 34, borderRadius: 10, border: `1px solid ${rd.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', background: rd.surf }
-      }, React.createElement("svg", {
-        width: "17", height: "17", viewBox: "0 0 24 24", fill: "none", stroke: rd.accent,
-        strokeWidth: "1.8", strokeLinecap: "round", strokeLinejoin: "round"
-      }, React.createElement("path", { d: "M20 14a8 8 0 1 1-9.8-9.6A6.5 6.5 0 0 0 20 14z" }))),
+      }, icon('moon', { size: 17, stroke: rd.accent })),
       React.createElement("img", {
         src: "./icon-192.png",
         alt: "Ahlul Bayt Ireland",
@@ -4745,21 +4745,7 @@ class App extends Component {
         padding: '11px 14px',
         marginBottom: 14
       }
-    }, /*#__PURE__*/React.createElement("svg", {
-      width: "17",
-      height: "17",
-      viewBox: "0 0 24 24",
-      fill: "none",
-      stroke: "#b3a890",
-      strokeWidth: "2",
-      strokeLinecap: "round"
-    }, /*#__PURE__*/React.createElement("circle", {
-      cx: "11",
-      cy: "11",
-      r: "7"
-    }), /*#__PURE__*/React.createElement("path", {
-      d: "M21 21l-4-4"
-    })), /*#__PURE__*/React.createElement("input", {
+    }, icon('search', { size: 17, stroke: '#a1977f' }), /*#__PURE__*/React.createElement("input", {
       value: st.classQuery,
       onChange: e => this.setState({
         classQuery: e.target.value
@@ -4878,20 +4864,7 @@ class App extends Component {
         color: NEU.muted,
         marginTop: 7
       }
-    }, /*#__PURE__*/React.createElement("svg", {
-      width: "13",
-      height: "13",
-      viewBox: "0 0 24 24",
-      fill: "none",
-      stroke: "currentColor",
-      strokeWidth: "2"
-    }, /*#__PURE__*/React.createElement("path", {
-      d: "M12 21s7-6.5 7-12a7 7 0 1 0-14 0c0 5.5 7 12 7 12z"
-    }), /*#__PURE__*/React.createElement("circle", {
-      cx: "12",
-      cy: "9",
-      r: "2.4"
-    })), b.loc))), /*#__PURE__*/React.createElement("div", {
+    }, icon('map-pin', { size: 13 }), b.loc))), /*#__PURE__*/React.createElement("div", {
       style: {
         display: 'flex',
         gap: 9,
@@ -4930,17 +4903,7 @@ class App extends Component {
         boxShadow: neuUp(.7),
         color: '#3f3a32'
       }
-    }, /*#__PURE__*/React.createElement("svg", {
-      width: "15",
-      height: "15",
-      viewBox: "0 0 24 24",
-      fill: "none",
-      stroke: "currentColor",
-      strokeWidth: "1.9",
-      strokeLinecap: "round"
-    }, /*#__PURE__*/React.createElement("path", {
-      d: "M5 4h3l2 5-2.5 1.5a11 11 0 0 0 5 5L19 13l2 5v3a16 16 0 0 1-16-16z"
-    })), this.t('class.call'))), b.web && /*#__PURE__*/React.createElement("a", {
+    }, icon('phone', { size: 15 }), this.t('class.call'))), b.web && /*#__PURE__*/React.createElement("a", {
       href: b.web,
       target: "_blank",
       rel: "noopener noreferrer",
@@ -4956,20 +4919,7 @@ class App extends Component {
         background: NEU.surf,
         boxShadow: neuUp(.7)
       }
-    }, /*#__PURE__*/React.createElement("svg", {
-      width: "16",
-      height: "16",
-      viewBox: "0 0 24 24",
-      fill: "none",
-      stroke: "#9a7a2c",
-      strokeWidth: "1.8"
-    }, /*#__PURE__*/React.createElement("circle", {
-      cx: "12",
-      cy: "12",
-      r: "9"
-    }), /*#__PURE__*/React.createElement("path", {
-      d: "M3 12h18M12 3c2.5 2.5 2.5 15 0 18M12 3c-2.5 2.5-2.5 15 0 18"
-    }))))))), cards.length === 0 && /*#__PURE__*/React.createElement("div", {
+    }, icon('globe', { size: 16, stroke: '#9a7a2c' })))))), cards.length === 0 && /*#__PURE__*/React.createElement("div", {
       style: {
         textAlign: 'center',
         padding: '40px 20px',
@@ -5118,18 +5068,7 @@ class App extends Component {
         color: st.lang === l ? '#1f5145' : '#3f3a32',
         fontWeight: st.lang === l ? 700 : 400
       }
-    }, l), st.lang === l && /*#__PURE__*/React.createElement("svg", {
-      width: "18",
-      height: "18",
-      viewBox: "0 0 24 24",
-      fill: "none",
-      stroke: "#1f5145",
-      strokeWidth: "2.2",
-      strokeLinecap: "round",
-      strokeLinejoin: "round"
-    }, /*#__PURE__*/React.createElement("path", {
-      d: "M5 12l5 5 9-11"
-    }))))), /*#__PURE__*/React.createElement("div", {
+    }, l), st.lang === l && icon('check', { size: 18, stroke: NEU.accent, sw: 2.4 })))), /*#__PURE__*/React.createElement("div", {
       style: {
         fontSize: 11,
         letterSpacing: 1.2,
@@ -5478,19 +5417,7 @@ class App extends Component {
         justifyContent: 'center',
         marginBottom: 22
       }
-    }, /*#__PURE__*/React.createElement("svg", {
-      width: "34",
-      height: "34",
-      viewBox: "0 0 24 24",
-      fill: "none",
-      stroke: "#b3a890",
-      strokeWidth: "1.6",
-      strokeLinecap: "round"
-    }, /*#__PURE__*/React.createElement("path", {
-      d: "M5 13a7 7 0 0 1 11-4M3 8c3-3 8-4 12-2M19 13a4 4 0 0 1 1 5"
-    }), /*#__PURE__*/React.createElement("path", {
-      d: "M2 2l20 20"
-    }))), /*#__PURE__*/React.createElement("div", {
+    }, icon('wifi-off', { size: 34, stroke: '#a1977f', sw: 1.7 })), /*#__PURE__*/React.createElement("div", {
       style: {
         fontFamily: 'Spectral,serif',
         fontSize: 21,
@@ -9049,22 +8976,7 @@ class App extends Component {
         color: '#6e2230',
         border: '1px solid #e6cdd2'
       }
-    }, /*#__PURE__*/React.createElement("svg", {
-      width: "15",
-      height: "15",
-      viewBox: "0 0 24 24",
-      fill: "none",
-      stroke: "currentColor",
-      strokeWidth: "2",
-      strokeLinecap: "round",
-      strokeLinejoin: "round"
-    }, /*#__PURE__*/React.createElement("path", {
-      d: "M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"
-    }), /*#__PURE__*/React.createElement("path", {
-      d: "M16 17l5-5-5-5"
-    }), /*#__PURE__*/React.createElement("path", {
-      d: "M21 12H9"
-    })), "Log out")));
+    }, icon('log-out', { size: 15 }), "Log out")));
   }
 
   /* ── CALENDAR ── */
@@ -9167,9 +9079,9 @@ class App extends Component {
       onClick,
       style: { width: 34, height: 34, flexShrink: 0, borderRadius: 10, background: enabled ? '#f4faf7' : '#f5f0e8', border: NEU.edge, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: enabled ? 'pointer' : 'default', color: enabled ? '#1f5145' : '#c9bfae', fontSize: 18, fontWeight: 700 }
     }, glyph);
-    const calIcon = /*#__PURE__*/React.createElement("svg", { width: 16, height: 16, viewBox: "0 0 24 24", fill: 'none', stroke: '#1f5145', strokeWidth: 1.9, strokeLinecap: 'round', strokeLinejoin: 'round' }, /*#__PURE__*/React.createElement("rect", { x: 3, y: 4, width: 18, height: 18, rx: 3 }), /*#__PURE__*/React.createElement("path", { d: "M3 10h18M8 2v4M16 2v4" }));
-    const clockIcon = /*#__PURE__*/React.createElement("svg", { width: 13, height: 13, viewBox: "0 0 24 24", fill: 'none', stroke: NEU.muted, strokeWidth: 1.9, strokeLinecap: 'round', strokeLinejoin: 'round' }, /*#__PURE__*/React.createElement("circle", { cx: 12, cy: 12, r: 9 }), /*#__PURE__*/React.createElement("path", { d: "M12 7v5l3 2" }));
-    const bellIcon = /*#__PURE__*/React.createElement("svg", { width: 16, height: 16, viewBox: "0 0 24 24", fill: 'none', stroke: '#1f5145', strokeWidth: 1.9, strokeLinecap: 'round', strokeLinejoin: 'round' }, /*#__PURE__*/React.createElement("path", { d: "M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" }), /*#__PURE__*/React.createElement("path", { d: "M13.7 21a2 2 0 0 1-3.4 0" }));
+    const calIcon = icon('calendar', { size: 16, stroke: NEU.accent });
+    const clockIcon = icon('clock', { size: 13, stroke: NEU.muted });
+    const bellIcon = icon('bell', { size: 16, stroke: NEU.accent });
     return /*#__PURE__*/React.createElement("div", {
       style: { padding: '8px 20px 100px' },
       className: "afu"
@@ -11987,7 +11899,7 @@ class App extends Component {
         viewBox: "0 0 24 24",
         fill: "none",
         stroke: "currentColor",
-        strokeWidth: "1.7",
+        strokeWidth: "2",
         strokeLinecap: "round",
         strokeLinejoin: "round",
         dangerouslySetInnerHTML: {
