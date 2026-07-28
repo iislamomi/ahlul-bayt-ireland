@@ -339,7 +339,7 @@ const EVENT_DEFS = [{
   offset: 5,
   title: 'Youth Qurʾān Class',
   type: 'Class',
-  color: '#9a7a2c',
+  color: '#7d6220',
   tint: '#f3ecd9',
   desc: 'Weekly tajwīd session for youth, 11:00 AM in the learning room.'
 }, {
@@ -368,7 +368,7 @@ const CAL_EVENTS_DEFAULT = [{
   date: '2026-07-01',
   title: 'Youth Qurʾān Class',
   type: 'Class',
-  color: '#9a7a2c',
+  color: '#7d6220',
   tint: '#f3ecd9',
   desc: 'Weekly tajwīd session for youth, 11:00 AM in the learning room.'
 }, {
@@ -401,7 +401,7 @@ const HEALTH_TIPS = [{
   title: 'Reduce Sugar Intake',
   body: 'Choose dates, fruit, or honey as natural sweeteners over processed sugar.',
   tag: 'Nutrition',
-  color: '#9a7a2c',
+  color: '#7d6220',
   tint: '#f3ecd9'
 }];
 const HEALTH_VIDEOS = [{
@@ -428,7 +428,7 @@ const KIDS_LEARN = [{
 }, {
   title: 'Learning Wuḍūʾ step by step',
   meta: 'How-to · 3 min',
-  color: '#9a7a2c'
+  color: '#7d6220'
 }];
 const KIDS_BOOKS = [{
   title: "My First Duʿāʾ Book",
@@ -444,7 +444,7 @@ const KIDS_BOOKS = [{
   title: 'The 14 Infallibles',
   meta: 'Activity book · Ages 7–10',
   color: '#f3ecd9',
-  ink: '#9a7a2c'
+  ink: '#7d6220'
 }, {
   title: 'Good Manners (Akhlāq)',
   meta: 'Picture book · Ages 4–7',
@@ -651,7 +651,7 @@ const CLASSIFIEDS = [{
   web: 'https://example.com',
   phone: '+353 1 890 1234',
   wa: '35318901234',
-  ink: '#9a7a2c',
+  ink: '#7d6220',
   tint: '#f3ecd9'
 }, {
   name: 'Zahrā Tutoring',
@@ -766,7 +766,7 @@ class CustomSelect extends Component {
         borderRadius: 13,
         padding: '13px 15px',
         fontSize: 15,
-        color: muted ? '#a89d88' : '#2c2823',
+        color: muted ? '#6b6252' : '#2c2823',
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
@@ -775,7 +775,7 @@ class CustomSelect extends Component {
       }
     }, /*#__PURE__*/React.createElement("span", null, value), /*#__PURE__*/React.createElement("span", {
       style: {
-        color: '#a1977f',
+        color: '#6b6252',
         fontSize: 11,
         marginLeft: 8,
         transform: open ? 'rotate(180deg)' : 'none',
@@ -1438,7 +1438,7 @@ function lsSet(key, val) {
 /* ── QUIZ DIFFICULTY ── */
 const QUIZ_LEVELS = [
   { key: 'beginner', label: 'Beginner', color: '#2c5d52' },
-  { key: 'intermediate', label: 'Intermediate', color: '#9a7a2c' },
+  { key: 'intermediate', label: 'Intermediate', color: '#7d6220' },
   { key: 'advanced', label: 'Advanced', color: '#6e2230' }
 ];
 const quizLevel = q => {
@@ -1607,6 +1607,14 @@ const SB_KEY_MAP = {
   reminders: 'liveReminders', ads: 'liveAds'
 };
 
+/* Category ink for classifieds badges. Listings store the colour they were saved
+   with, so older rows still carry values that fail contrast as text; this maps
+   them at render time instead of rewriting anyone's data. */
+const CAT_INK = {
+  'Food': '#1f5145', 'Butcher': '#6e2230', 'Travel': '#7d6220',
+  'Education': '#2c5d52', 'Services': '#3a4a78'
+};
+
 /* Billboard slides that are switched on and actually carry an image. */
 function activeAds(ads) {
   return (ads || []).filter(a => a && a.img && a.on !== false);
@@ -1619,6 +1627,57 @@ function announcementActive(a) {
     if (!isNaN(end.getTime()) && Date.now() > end.getTime()) return false;
   }
   return true;
+}
+
+/* ── KEYBOARD & SCREEN READER LAYER ──
+   Every control in this app is a tappable div, which works by touch and by
+   nothing else. Rather than thread role/tabindex/onKeyDown through twelve
+   thousand createElement calls, the DOM is enhanced after each render: anything
+   carrying an inline `cursor: pointer` becomes a real button to the browser.
+   A container that holds its own controls is skipped, so focus lands on the
+   thing you actually press. */
+const SYMBOL_LABELS = {
+  '×': 'Close', '✕': 'Remove', '‹': 'Previous', '›': 'Next',
+  '▾': 'Open list', '▴': 'Close list', '▶': 'Play', '−': 'Subtract one',
+  '−1': 'Subtract one', '− 1': 'Subtract one', '+': 'Add'
+};
+function enhanceTappables(root) {
+  if (!root) return;
+  root.querySelectorAll('[style*="cursor: pointer"]').forEach(el => {
+    // a container whose children are the real controls should not be focusable
+    if (el.querySelector('[style*="cursor: pointer"],a,button,input,select,textarea')) {
+      if (el.dataset.tap) {
+        delete el.dataset.tap;
+        el.removeAttribute('tabindex');
+        if (el.getAttribute('role') === 'button') el.removeAttribute('role');
+      }
+      return;
+    }
+    if (el.closest('a,button')) return; // already reachable through its own element
+    if (!el.dataset.tap) {
+      el.dataset.tap = '1';
+      el.setAttribute('tabindex', '0');
+      if (!el.getAttribute('role')) el.setAttribute('role', 'button');
+    }
+    // a control labelled only by a glyph announces as "times" or as nothing at all
+    if (!el.getAttribute('aria-label')) {
+      const t = (el.textContent || '').trim();
+      const label = SYMBOL_LABELS[t] || (t === '' ? null : undefined);
+      if (label) el.setAttribute('aria-label', label);
+    }
+  });
+}
+/* Enter and Space are what a keyboard user presses on a button. */
+function bindTapKeys() {
+  if (window.__abiTapKeys) return;
+  window.__abiTapKeys = true;
+  document.addEventListener('keydown', e => {
+    if (e.key !== 'Enter' && e.key !== ' ' && e.key !== 'Spacebar') return;
+    const el = document.activeElement;
+    if (!el || el.dataset.tap !== '1') return;
+    e.preventDefault();
+    el.click();
+  });
 }
 
 /* ── NEXT PRAYER SCENE ──
@@ -1634,7 +1693,7 @@ function prayerScene(name) {
     scrim: 'linear-gradient(90deg,rgba(9,19,25,.82) 0%,rgba(9,19,25,.35) 55%,rgba(9,19,25,.1) 100%)',
     shadowRgb: '12,24,30'
   } : {
-    night: false, ink: '#3a3129', sub: '#7c6b56', accent: '#a96d24',
+    night: false, ink: '#3a3129', sub: '#6b5b46', accent: '#a96d24',
     scrim: 'linear-gradient(90deg,rgba(253,246,236,.9) 0%,rgba(253,246,236,.45) 58%,rgba(253,246,236,.05) 100%)',
     shadowRgb: '190,158,120'
   };
@@ -2515,6 +2574,27 @@ class App extends Component {
   }
   componentDidMount() {
     this._lastAlertTime = '';
+    /* Re-enhance on structural change only — the clock ticks every second and
+       only rewrites text, which childList mutations ignore. */
+    bindTapKeys();
+    const app = document.querySelector('.app');
+    if (app && 'MutationObserver' in window) {
+      // setTimeout, not requestAnimationFrame: rAF is suspended in a background
+      // tab, which would leave the app unreachable by keyboard until it is looked
+      // at. Trailing debounce that always reschedules, so a slow timer can never
+      // swallow the mutations that arrive while it is pending.
+      this._a11yRun = () => {
+        clearTimeout(this._a11yFrame);
+        this._a11yFrame = setTimeout(() => {
+          this._a11yFrame = null;
+          enhanceTappables(app);
+        }, 16);
+      };
+      this._a11yObserver = new MutationObserver(this._a11yRun);
+      this._a11yObserver.observe(app, { childList: true, subtree: true });
+      this._a11yRun();
+    }
+    document.documentElement.dataset.theme = this.state.dark ? 'dark' : 'light';
     this.clockTimer = setInterval(() => {
       const now = new Date();
       this.setState({
@@ -2574,7 +2654,17 @@ class App extends Component {
       if (n > 1) this.setState(s => ({ adIdx: (s.adIdx + 1) % n }));
     }, 5000);
   }
+  componentDidUpdate(prevProps, prevState) {
+    if (prevState.dark !== this.state.dark) {
+      document.documentElement.dataset.theme = this.state.dark ? 'dark' : 'light';
+    }
+    // belt and braces: a render that somehow produces no childList mutation
+    // still gets its controls wired up. The call itself is debounced.
+    if (prevState.screen !== this.state.screen && this._a11yRun) this._a11yRun();
+  }
   componentWillUnmount() {
+    if (this._a11yObserver) this._a11yObserver.disconnect();
+    if (this._a11yFrame) clearTimeout(this._a11yFrame);
     clearInterval(this.clockTimer);
     clearInterval(this.storyTimer);
     clearInterval(this.refreshTimer);
@@ -2627,7 +2717,7 @@ class App extends Component {
     const quickCards = [{
       title: 'Duʿāʾ',
       icon: '🤲',
-      tone: ['#9a7a2c', '#f5eeda'],
+      tone: ['#7d6220', '#f5eeda'],
       go: () => this.setState({
         screen: 'library',
         libTab: 'dua',
@@ -2794,13 +2884,14 @@ class App extends Component {
       }),
       style: {
         flexShrink: 0,
-        width: 28,
-        height: 28,
+        width: 44,
+        height: 44,
+        margin: '-8px -8px -8px 0',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        color: '#a59c8a',
-        fontSize: 20,
+        color: '#cfc6b4',
+        fontSize: 22,
         cursor: 'pointer'
       }
     }, "×")), st.livePinned.on && st.livePinned.text && /*#__PURE__*/React.createElement("div", {
@@ -2852,7 +2943,7 @@ class App extends Component {
         gap: 8,
         marginBottom: 10
       }
-    }, [['Gregorian', '#b1a690', gregShort], ['Hijri', '#c2a35a', hijri]].map(([label, tone, value]) => /*#__PURE__*/React.createElement("div", {
+    }, [['Gregorian', '#6b6252', gregShort], ['Hijri', '#75601f', hijri]].map(([label, tone, value]) => /*#__PURE__*/React.createElement("div", {
       key: label,
       onClick: () => this.go('calendar'),
       style: {
@@ -2867,8 +2958,8 @@ class App extends Component {
       }
     }, /*#__PURE__*/React.createElement("div", {
       style: {
-        fontSize: 8,
-        letterSpacing: 1,
+        fontSize: 10,
+        letterSpacing: .8,
         textTransform: 'uppercase',
         color: tone,
         fontWeight: 700,
@@ -2896,8 +2987,8 @@ class App extends Component {
       }
     }, /*#__PURE__*/React.createElement("div", {
       style: {
-        fontSize: 8,
-        letterSpacing: 1.1,
+        fontSize: 10,
+        letterSpacing: .9,
         textTransform: 'uppercase',
         fontWeight: 800,
         color: '#d8b863',
@@ -2939,10 +3030,15 @@ class App extends Component {
     }, "Today's Updates"), /*#__PURE__*/React.createElement("div", {
       onClick: () => { if (activeStories(this.state.liveStories).length) this.openStory(0); },
       style: {
-        fontSize: 12,
+        fontSize: 12.5,
         color: '#1f5145',
         fontWeight: 600,
-        cursor: 'pointer'
+        cursor: 'pointer',
+        padding: '12px 10px',
+        margin: '-12px -10px',
+        minHeight: 44,
+        display: 'flex',
+        alignItems: 'center'
       }
     }, "View all")), /*#__PURE__*/React.createElement("div", {
       className: "s",
@@ -2994,7 +3090,7 @@ class App extends Component {
     }))), /*#__PURE__*/React.createElement("div", {
       style: {
         fontSize: 10.5,
-        color: '#6f675a',
+        color: '#6b6252',
         marginTop: 6,
         lineHeight: 1.2,
         fontWeight: 600
@@ -3027,8 +3123,8 @@ class App extends Component {
         display: 'flex',
         alignItems: 'center',
         gap: 6,
-        fontSize: 8.5,
-        letterSpacing: 1.3,
+        fontSize: 10,
+        letterSpacing: 1.1,
         textTransform: 'uppercase',
         color: sc.accent,
         fontWeight: 800
@@ -3117,7 +3213,7 @@ class App extends Component {
       style: {
         fontFamily: 'Amiri,serif',
         fontSize: 14.5,
-        color: '#bba35f',
+        color: '#75601f',
         width: 19,
         textAlign: 'center'
       },
@@ -3185,9 +3281,9 @@ class App extends Component {
         }
       }, q.icon), /*#__PURE__*/React.createElement("div", {
         style: {
-          fontSize: 9.5,
+          fontSize: 10.5,
           fontWeight: 700,
-          // colour lives in the pebble; at 9.5px a tinted label drops under 4.5:1
+          // colour lives in the pebble; a tinted label here drops under 4.5:1
           color: NEU.ink,
           lineHeight: 1.2
         }
@@ -3264,11 +3360,15 @@ class App extends Component {
       onClick: () => window.open('https://wa.me/' + String(m.number).replace(/[^\d]/g, ''), '_blank'),
       style: {
         flexShrink: 0,
-        padding: '6px 13px',
-        borderRadius: 9,
+        padding: '13px 16px',
+        minHeight: 44,
+        boxSizing: 'border-box',
+        display: 'flex',
+        alignItems: 'center',
+        borderRadius: 11,
         background: '#d8b863',
         color: '#163b30',
-        fontSize: 11.5,
+        fontSize: 12.5,
         fontWeight: 700,
         cursor: 'pointer'
       }
@@ -3293,11 +3393,11 @@ class App extends Component {
       }
     }, /*#__PURE__*/React.createElement("div", {
       style: {
-        fontSize: 8.5,
+        fontSize: 10,
         letterSpacing: 1.2,
         textTransform: 'uppercase',
         fontWeight: 700,
-        color: '#b1a690',
+        color: '#6b6252',
         marginBottom: 5,
         paddingLeft: 2
       }
@@ -3344,16 +3444,30 @@ class App extends Component {
       onClick: () => this.setState({
         adIdx: i
       }),
+      "aria-label": `Show advertisement ${i + 1} of ${ads.length}`,
+      "aria-current": i === idx ? 'true' : undefined,
+      style: {
+        width: 44,
+        height: 44,
+        margin: '-14px -10px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        cursor: 'pointer',
+      }
+    }, /*#__PURE__*/React.createElement("span", {
       style: {
         width: i === idx ? 16 : 6,
         height: 6,
         borderRadius: 3,
-        cursor: 'pointer',
+        display: 'block',
         background: i === idx ? NEU.hi : 'rgba(203,195,178,.6)',
         boxShadow: '0 1px 3px rgba(0,0,0,.35)',
+        // width, not scaleX: this pill grows 6px to 16px and scaling would
+        // stretch its rounded ends. The paint area is 16x6, so it costs nothing.
         transition: 'width .3s ease'
       }
-    })))));
+    }))))));
   }
 
   /* ── PRAYER ── */
@@ -3431,8 +3545,8 @@ class App extends Component {
     const tabStyle = active => ({
       flex: 1,
       textAlign: 'center',
-      padding: 9,
-      borderRadius: 10,
+      padding: 13,
+      borderRadius: 11,
       fontSize: 13.5,
       fontWeight: 600,
       cursor: 'pointer',
@@ -3567,7 +3681,7 @@ class App extends Component {
       style: {
         fontFamily: 'Amiri,serif',
         fontSize: 21,
-        color: p.isNext ? '#1f5145' : '#c2a86a',
+        color: p.isNext ? '#1f5145' : '#75601f',
         width: 30,
         textAlign: 'center'
       },
@@ -3581,7 +3695,7 @@ class App extends Component {
     }, p.name), /*#__PURE__*/React.createElement("div", {
       style: {
         fontSize: 11.5,
-        color: '#a89d88',
+        color: '#6b6252',
         marginTop: 1
       }
     }, p.en))), /*#__PURE__*/React.createElement("div", {
@@ -3600,10 +3714,13 @@ class App extends Component {
     }, p.time), ['Fajr', 'Dhuhr', 'Maghrib', 'Midnight'].includes(p.name) && /*#__PURE__*/React.createElement("div", {
       onClick: () => this.toggleAdhanMute(p.name),
       title: st.adhanMuted[p.name] ? 'Azan silenced — tap to unmute' : 'Azan on — tap to silence',
+      role: "switch",
+      "aria-checked": st.adhanMuted[p.name] ? 'false' : 'true',
+      "aria-label": `Azan for ${p.name}`,
       style: {
-        width: 30,
-        height: 30,
-        borderRadius: 9,
+        width: 44,
+        height: 44,
+        borderRadius: 13,
         border: `1px solid ${st.adhanMuted[p.name] ? '#e0c9ce' : '#dce8e3'}`,
         background: st.adhanMuted[p.name] ? '#fdf0f2' : '#eef7f4',
         display: 'flex',
@@ -3624,7 +3741,7 @@ class App extends Component {
     }, /*#__PURE__*/React.createElement("div", {
       style: {
         display: 'flex',
-        padding: '11px 16px',
+        padding: '13px 16px',
         background: '#f4eee0',
         fontSize: 10.5,
         letterSpacing: .6,
@@ -3687,7 +3804,7 @@ class App extends Component {
       }
     }, m.maghrib))), /*#__PURE__*/React.createElement("div", {
       style: {
-        padding: '11px 16px',
+        padding: '13px 16px',
         background: '#faf6ec',
         fontSize: 11,
         color: '#a2967f',
@@ -3709,7 +3826,7 @@ class App extends Component {
       style: {
         fontSize: 12,
         fontWeight: 600,
-        color: autoLive ? '#1f5145' : '#9a7a2c',
+        color: autoLive ? '#1f5145' : '#7d6220',
         marginBottom: 10
       }
     }, autoLive ? '● Live — synced today with the Jaʿfarī (Leva, Qum) calculation for Dublin' : '○ Live sync unavailable — showing saved times'), (abiPresets(st.livePrayerPresets)).map(preset => {
@@ -3831,10 +3948,17 @@ class App extends Component {
       onClick: () => this.setState(s => ({
         adhanEnabled: !s.adhanEnabled
       })),
+      role: "switch",
+      "aria-checked": st.adhanEnabled ? 'true' : 'false',
+      "aria-label": 'Adhan sound',
       style: {
         width: 48,
         height: 26,
         borderRadius: 13,
+        boxSizing: 'content-box',
+        padding: '9px 0',
+        margin: '-9px 0',
+        backgroundClip: 'content-box',
         background: st.adhanEnabled ? NEU.accent : NEU.sunk,
         boxShadow: st.adhanEnabled ? 'none' : neuIn(.3),
         position: 'relative',
@@ -3846,12 +3970,13 @@ class App extends Component {
       style: {
         position: 'absolute',
         top: 3,
-        left: st.adhanEnabled ? 24 : 3,
+        left: 3,
+        transform: st.adhanEnabled ? 'translateX(21px)' : 'none',
         width: 20,
         height: 20,
         borderRadius: '50%',
         background: NEU.hi,
-        transition: 'left .2s',
+        transition: 'transform .2s ease',
         boxShadow: neuUp(.35)
       }
     }))), st.adhanEnabled && ADHAN_SOUNDS.length > 1 && /*#__PURE__*/React.createElement("div", {
@@ -3979,10 +4104,17 @@ class App extends Component {
           notifEnabled: n
         };
       }),
+      role: "switch",
+      "aria-checked": st.notifEnabled ? 'true' : 'false',
+      "aria-label": 'Prayer notifications',
       style: {
         width: 48,
         height: 26,
         borderRadius: 13,
+        boxSizing: 'content-box',
+        padding: '9px 0',
+        margin: '-9px 0',
+        backgroundClip: 'content-box',
         background: st.notifEnabled ? NEU.accent : NEU.sunk,
         boxShadow: st.notifEnabled ? 'none' : neuIn(.3),
         position: 'relative',
@@ -3994,12 +4126,13 @@ class App extends Component {
       style: {
         position: 'absolute',
         top: 3,
-        left: st.notifEnabled ? 24 : 3,
+        left: 3,
+        transform: st.notifEnabled ? 'translateX(21px)' : 'none',
         width: 20,
         height: 20,
         borderRadius: '50%',
         background: NEU.hi,
-        transition: 'left .2s',
+        transition: 'transform .2s ease',
         boxShadow: neuUp(.35)
       }
     })) : /*#__PURE__*/React.createElement("div", {
@@ -4040,7 +4173,7 @@ class App extends Component {
       style: {
         marginTop: 8,
         fontSize: 11.5,
-        color: '#b0a492'
+        color: '#6b6252'
       }
     }, this.t('prayer.noNotif'))))), tab !== 'settings' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("a", {
       href: "https://ahlulbaytireland.com/prayer-calendar.pdf",
@@ -4067,7 +4200,7 @@ class App extends Component {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        color: '#9a7a2c',
+        color: '#7d6220',
         fontWeight: 700,
         fontSize: 11
       }
@@ -4089,14 +4222,14 @@ class App extends Component {
       }
     }, this.t('prayer.pdfSub'))), /*#__PURE__*/React.createElement("span", {
       style: {
-        color: '#bba35f',
+        color: '#75601f',
         fontSize: 20
       }
     }, "↓")), /*#__PURE__*/React.createElement("div", {
       style: {
         textAlign: 'center',
         fontSize: 11.5,
-        color: '#a89d88',
+        color: '#6b6252',
         lineHeight: 1.5,
         padding: '6px 20px'
       }
@@ -4113,7 +4246,7 @@ class App extends Component {
     const libMeta = {
       dua: {
         title: "Duʿāʾ",
-        accent: '#9a7a2c',
+        accent: '#7d6220',
         tint: '#f3ecd9',
         list: duaList,
         cats: ['All', ...new Set(duaList.map(it => it.cat).filter(Boolean))]
@@ -4194,9 +4327,9 @@ class App extends Component {
       const active = st.libCat === c;
       return {
         flexShrink: 0,
-        padding: '8px 15px',
+        padding: '13px 16px',
         borderRadius: 20,
-        fontSize: 12.5,
+        fontSize: 13,
         fontWeight: 600,
         cursor: 'pointer',
         transition: 'box-shadow .18s ease, color .18s ease',
@@ -4287,7 +4420,7 @@ class App extends Component {
         padding: '11px 14px',
         marginBottom: 14
       }
-    }, icon('search', { size: 17, stroke: '#a1977f' }), /*#__PURE__*/React.createElement("input", {
+    }, icon('search', { size: 17, stroke: '#6b6252' }), /*#__PURE__*/React.createElement("input", {
       value: st.libQuery,
       onChange: e => this.setState({
         libQuery: e.target.value
@@ -4306,10 +4439,17 @@ class App extends Component {
         libQuery: ''
       }),
       style: {
-        color: '#a1977f',
+        color: '#6b6252',
         cursor: 'pointer',
-        fontSize: 18,
-        lineHeight: 1
+        fontSize: 20,
+        lineHeight: 1,
+        width: 44,
+        height: 44,
+        margin: -12,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        flexShrink: 0
       }
     }, "×")), lm.cats.length > 0 && /*#__PURE__*/React.createElement("div", {
       className: "s",
@@ -4384,7 +4524,7 @@ class App extends Component {
     }, it2.title), /*#__PURE__*/React.createElement("span", {
       style: {
         flexShrink: 0,
-        color: '#cdbf9e',
+        color: '#6b6252',
         fontSize: 18,
         lineHeight: 1
       }
@@ -4416,7 +4556,7 @@ class App extends Component {
       }
     }, /*#__PURE__*/React.createElement("span", {
       style: {
-        fontSize: 9.5,
+        fontSize: 10,
         letterSpacing: .7,
         textTransform: 'uppercase',
         fontWeight: 700,
@@ -4430,7 +4570,7 @@ class App extends Component {
       }
     }, n.ref), /*#__PURE__*/React.createElement("span", {
       style: {
-        color: '#cdbf9e',
+        color: '#6b6252',
         fontSize: 14,
         flexShrink: 0
       }
@@ -4501,7 +4641,7 @@ class App extends Component {
     };
     const arSize = Math.round(30 * st.textSize) + 'px';
     const trSize = Math.round(17 * st.textSize) + 'px';
-    const readAccent = rtype === 'ziyarah' ? '#6e2230' : rtype === 'nahj' ? '#2c5d52' : rtype === 'aamal' ? '#8a4b2c' : '#9a7a2c';
+    const readAccent = rtype === 'ziyarah' ? '#6e2230' : rtype === 'nahj' ? '#2c5d52' : rtype === 'aamal' ? '#8a4b2c' : '#7d6220';
     // per-language content: items may carry body_ur / body_fa / body_hi alongside the English body
     const TR_CODES = { 'हिन्दी': 'hi', 'فارسی': 'fa', 'Urdu': 'ur' };
     const trCode = TR_CODES[st.lang];
@@ -4533,7 +4673,7 @@ class App extends Component {
       style: {
         flex: 1,
         textAlign: 'center',
-        padding: '9px 0',
+        padding: '13px 0',
         borderRadius: 12,
         fontSize: 13.5,
         fontWeight: 700,
@@ -4547,17 +4687,20 @@ class App extends Component {
       }
     }, label);
     const miniBtn = {
-      width: 30, height: 30, borderRadius: 9, display: 'flex', alignItems: 'center',
+      width: 44, height: 44, borderRadius: 13, display: 'flex', alignItems: 'center',
       justifyContent: 'center', border: dark ? NEU_D.edge : NEU.edge, background: rd.surf,
       boxShadow: neuUp(.5, dark), cursor: 'pointer', flexShrink: 0
     };
     const shareBtn = React.createElement("div", {
       onClick: this.handleShare,
       title: this.t('lib.share'),
+      "aria-label": this.t('lib.share'),
       style: miniBtn
     }, icon('share-2', { size: 14, stroke: readAccent }));
     const bookmarkBtn = React.createElement("div", {
       onClick: this.handleBookmark,
+      "aria-label": isBookmarked ? 'Remove bookmark' : 'Bookmark this',
+      "aria-pressed": isBookmarked ? 'true' : 'false',
       style: miniBtn
     }, icon('bookmark', { size: 15, stroke: readAccent, fill: isBookmarked ? readAccent : 'none' }));
     return React.createElement("div", {
@@ -4574,21 +4717,25 @@ class App extends Component {
         const sc = document.querySelector('.app > .s');
         if (sc) sc.scrollTop = 0;
       },
-      style: { display: 'flex', alignItems: 'center', gap: 5, cursor: 'pointer', color: rd.accent, fontSize: 14, fontWeight: 600 }
+      style: { display: 'flex', alignItems: 'center', gap: 5, cursor: 'pointer', color: rd.accent, fontSize: 14, fontWeight: 600, minHeight: 44, padding: '0 8px', margin: '0 -8px' }
     }, React.createElement("span", { style: { fontSize: 18 } }, "\u2039"), " ", this.t('lib.back')),
     React.createElement("div", { style: { display: 'flex', alignItems: 'center', gap: 8 } },
       React.createElement("div", {
         onClick: () => this.setTextSize(st.textSize - .12),
-        style: { width: 34, height: 34, borderRadius: 10, border: `1px solid ${rd.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: rd.text, fontSize: 13, cursor: 'pointer', background: rd.surf }
+        "aria-label": "Smaller text",
+        style: { width: 44, height: 44, borderRadius: 13, border: `1px solid ${rd.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: rd.text, fontSize: 14, cursor: 'pointer', background: rd.surf }
       }, "A\u2212"),
       React.createElement("div", {
         onClick: () => this.setTextSize(st.textSize + .12),
-        style: { width: 34, height: 34, borderRadius: 10, border: `1px solid ${rd.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: rd.text, fontSize: 17, cursor: 'pointer', background: rd.surf }
+        "aria-label": "Larger text",
+        style: { width: 44, height: 44, borderRadius: 13, border: `1px solid ${rd.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: rd.text, fontSize: 18, cursor: 'pointer', background: rd.surf }
       }, "A+"),
       React.createElement("div", {
         onClick: () => this.setDark(!st.dark),
-        style: { width: 34, height: 34, borderRadius: 10, border: `1px solid ${rd.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', background: rd.surf }
-      }, icon('moon', { size: 17, stroke: rd.accent })),
+        "aria-label": st.dark ? 'Switch to light reading' : 'Switch to dark reading',
+        "aria-pressed": st.dark ? 'true' : 'false',
+        style: { width: 44, height: 44, borderRadius: 13, border: `1px solid ${rd.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', background: rd.surf }
+      }, icon('moon', { size: 19, stroke: rd.accent })),
       React.createElement("img", {
         src: "./icon-192.png",
         alt: "Ahlul Bayt Ireland",
@@ -4600,7 +4747,7 @@ class App extends Component {
     }, React.createElement("div", { style: { padding: '0 0 12px' } },
       React.createElement("div", { style: { display: 'flex', alignItems: 'flex-start', gap: 8 } },
         React.createElement("div", { style: { flex: 1, minWidth: 0 } },
-          React.createElement("div", { style: { fontSize: 8.5, letterSpacing: 1, textTransform: 'uppercase', fontWeight: 700, color: readAccent } }, kicker),
+          React.createElement("div", { style: { fontSize: 10, letterSpacing: .9, textTransform: 'uppercase', fontWeight: 700, color: readAccent } }, kicker),
           React.createElement("div", { style: { fontFamily: 'Spectral,serif', fontSize: 15, fontWeight: 600, color: rd.text, marginTop: 1, lineHeight: 1.2 } }, r.title),
           r.note && React.createElement("div", { style: { fontSize: 10.5, color: rd.muted, marginTop: 2, fontStyle: 'italic' } }, r.note)),
         shareBtn, bookmarkBtn),
@@ -4667,9 +4814,9 @@ class App extends Component {
       const active = st.classCat === c;
       return {
         flexShrink: 0,
-        padding: '8px 15px',
+        padding: '13px 16px',
         borderRadius: 20,
-        fontSize: 12.5,
+        fontSize: 13,
         fontWeight: 600,
         cursor: 'pointer',
         background: NEU.surf,
@@ -4724,7 +4871,7 @@ class App extends Component {
         padding: '11px 14px',
         marginBottom: 14
       }
-    }, icon('search', { size: 17, stroke: '#a1977f' }), /*#__PURE__*/React.createElement("input", {
+    }, icon('search', { size: 17, stroke: '#6b6252' }), /*#__PURE__*/React.createElement("input", {
       value: st.classQuery,
       onChange: e => this.setState({
         classQuery: e.target.value
@@ -4743,10 +4890,17 @@ class App extends Component {
         classQuery: ''
       }),
       style: {
-        color: '#a1977f',
+        color: '#6b6252',
         cursor: 'pointer',
-        fontSize: 18,
-        lineHeight: 1
+        fontSize: 20,
+        lineHeight: 1,
+        width: 44,
+        height: 44,
+        margin: -12,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        flexShrink: 0
       }
     }, "×")), /*#__PURE__*/React.createElement("div", {
       className: "s",
@@ -4822,7 +4976,7 @@ class App extends Component {
         letterSpacing: .6,
         textTransform: 'uppercase',
         fontWeight: 700,
-        color: b.ink,
+        color: CAT_INK[b.cat] || b.ink,
         background: b.tint,
         padding: '3px 8px',
         borderRadius: 6
@@ -4830,7 +4984,7 @@ class App extends Component {
     }, b.cat)), /*#__PURE__*/React.createElement("div", {
       style: {
         fontSize: 13,
-        color: '#7a7264',
+        color: '#6b6252',
         marginTop: 4,
         lineHeight: 1.45
       }
@@ -4898,7 +5052,7 @@ class App extends Component {
         background: NEU.surf,
         boxShadow: neuUp(.7)
       }
-    }, icon('globe', { size: 16, stroke: '#9a7a2c' })))))), cards.length === 0 && /*#__PURE__*/React.createElement("div", {
+    }, icon('globe', { size: 16, stroke: '#7d6220' })))))), cards.length === 0 && /*#__PURE__*/React.createElement("div", {
       style: {
         textAlign: 'center',
         padding: '40px 20px',
@@ -4909,7 +5063,7 @@ class App extends Component {
       style: {
         textAlign: 'center',
         fontSize: 11.5,
-        color: '#a89d88',
+        color: '#6b6252',
         lineHeight: 1.5,
         padding: '18px 24px 0'
       }
@@ -5007,7 +5161,7 @@ class App extends Component {
       }
     }, m.sub)), /*#__PURE__*/React.createElement("span", {
       style: {
-        color: '#cdbf9e',
+        color: '#6b6252',
         fontSize: 20
       }
     }, "›")))), /*#__PURE__*/React.createElement("div", {
@@ -5016,7 +5170,7 @@ class App extends Component {
         letterSpacing: 1.2,
         textTransform: 'uppercase',
         fontWeight: 700,
-        color: '#b1a690',
+        color: '#6b6252',
         marginBottom: 12,
         paddingLeft: 2
       }
@@ -5053,7 +5207,7 @@ class App extends Component {
         letterSpacing: 1.2,
         textTransform: 'uppercase',
         fontWeight: 700,
-        color: '#b1a690',
+        color: '#6b6252',
         marginBottom: 12,
         paddingLeft: 2
       }
@@ -5079,7 +5233,14 @@ class App extends Component {
       }
     }, this.t('more.dark')), /*#__PURE__*/React.createElement("div", {
       onClick: () => this.setDark(!st.dark),
+      role: "switch",
+      "aria-checked": st.dark ? 'true' : 'false',
+      "aria-label": this.t('more.dark'),
       style: {
+        boxSizing: 'content-box',
+        padding: '8px 0',
+        margin: '-8px 0',
+        backgroundClip: 'content-box',
         width: 48,
         height: 28,
         borderRadius: 16,
@@ -5092,13 +5253,14 @@ class App extends Component {
       style: {
         position: 'absolute',
         top: 3,
-        left: st.dark ? 23 : 3,
+        left: 3,
+        transform: st.dark ? 'translateX(20px)' : 'none',
         width: 22,
         height: 22,
         borderRadius: '50%',
         background: '#fff',
         boxShadow: '0 1px 3px rgba(0,0,0,.2)',
-        transition: 'left .2s'
+        transition: 'transform .2s ease'
       }
     }))), /*#__PURE__*/React.createElement("div", {
       style: {
@@ -5129,8 +5291,10 @@ class App extends Component {
         alignItems: 'center',
         justifyContent: 'center',
         color: '#3f3a32',
-        fontSize: 13,
-        cursor: 'pointer'
+        fontSize: 14,
+        cursor: 'pointer',
+        minWidth: 44,
+        minHeight: 44
       }
     }, "A−"), /*#__PURE__*/React.createElement("span", {
       style: {
@@ -5151,8 +5315,10 @@ class App extends Component {
         alignItems: 'center',
         justifyContent: 'center',
         color: '#3f3a32',
-        fontSize: 16,
-        cursor: 'pointer'
+        fontSize: 17,
+        cursor: 'pointer',
+        minWidth: 44,
+        minHeight: 44
       }
     }, "A+")))), st.bookmarks.length > 0 && /*#__PURE__*/React.createElement("div", {
       style: {
@@ -5164,7 +5330,7 @@ class App extends Component {
         letterSpacing: 1.2,
         textTransform: 'uppercase',
         fontWeight: 700,
-        color: '#b1a690',
+        color: '#6b6252',
         marginBottom: 12
       }
     }, "Bookmarks"), /*#__PURE__*/React.createElement("div", {
@@ -5194,14 +5360,14 @@ class App extends Component {
       }
     }, b.title), /*#__PURE__*/React.createElement("span", {
       style: {
-        color: '#cdbf9e',
+        color: '#6b6252',
         fontSize: 18
       }
     }, "›"))))), /*#__PURE__*/React.createElement("div", {
       style: {
         textAlign: 'center',
         fontSize: 11.5,
-        color: '#b1a690',
+        color: '#6b6252',
         marginTop: 26,
         lineHeight: 1.6
       }
@@ -5235,7 +5401,10 @@ class App extends Component {
         fontSize: 14,
         fontWeight: 600,
         cursor: 'pointer',
-        padding: '8px 0 4px'
+        padding: '12px 10px',
+        margin: '0 -10px',
+        minHeight: 44,
+        boxSizing: 'border-box'
       }
     }, /*#__PURE__*/React.createElement("span", {
       style: {
@@ -5303,7 +5472,7 @@ class App extends Component {
         letterSpacing: 1.2,
         textTransform: 'uppercase',
         fontWeight: 700,
-        color: '#b1a690',
+        color: '#6b6252',
         marginBottom: 12
       }
     }, "Install as an app"), /*#__PURE__*/React.createElement("div", {
@@ -5374,12 +5543,17 @@ class App extends Component {
       onClick: () => this.go('more'),
       style: {
         position: 'absolute',
-        top: 14,
-        left: 20,
+        top: 8,
+        left: 12,
         color: '#1f5145',
         fontSize: 14,
         fontWeight: 600,
-        cursor: 'pointer'
+        cursor: 'pointer',
+        padding: '12px 10px',
+        minHeight: 44,
+        display: 'flex',
+        alignItems: 'center',
+        boxSizing: 'border-box'
       }
     }, /*#__PURE__*/React.createElement("span", {
       style: {
@@ -5396,7 +5570,7 @@ class App extends Component {
         justifyContent: 'center',
         marginBottom: 22
       }
-    }, icon('wifi-off', { size: 34, stroke: '#a1977f', sw: 1.7 })), /*#__PURE__*/React.createElement("div", {
+    }, icon('wifi-off', { size: 34, stroke: '#6b6252', sw: 1.7 })), /*#__PURE__*/React.createElement("div", {
       style: {
         fontFamily: 'Spectral,serif',
         fontSize: 21,
@@ -5526,7 +5700,7 @@ class App extends Component {
         marginTop: 14,
         textAlign: 'center',
         fontSize: 11.5,
-        color: '#b1a690'
+        color: '#6b6252'
       }
     }, "Contact community admin for access.")));
   }
@@ -5536,12 +5710,12 @@ class App extends Component {
     if (!st.adminLoggedIn) return this.renderAdminLogin(st);
     const sec = st.adminSection;
     const editing = st.adminEditIdx !== null;
-    const COLORS = ['#1f5145', '#2c5d52', '#6e2230', '#9a7a2c', '#3a4a78', '#b8923f'];
+    const COLORS = ['#1f5145', '#2c5d52', '#6e2230', '#7d6220', '#3a4a78', '#b8923f'];
     const COLOR_NAMES = {
       '#1f5145': 'Green',
       '#2c5d52': 'Teal',
       '#6e2230': 'Maroon',
-      '#9a7a2c': 'Gold',
+      '#7d6220': 'Gold',
       '#3a4a78': 'Navy',
       '#b8923f': 'Amber'
     };
@@ -5550,7 +5724,7 @@ class App extends Component {
     const EVENT_COLORS = {
       'Community': '#1f5145',
       'Majlis': '#6e2230',
-      'Class': '#9a7a2c',
+      'Class': '#7d6220',
       'Programme': '#2c5d52',
       'Dua e Kumail': '#3a4a78',
       'Friday Prayer': '#8a4b2c',
@@ -5568,7 +5742,7 @@ class App extends Component {
     const CAT_COLORS = {
       'Food': '#1f5145',
       'Butcher': '#6e2230',
-      'Travel': '#9a7a2c',
+      'Travel': '#7d6220',
       'Education': '#2c5d52',
       'Services': '#3a4a78'
     };
@@ -5631,11 +5805,12 @@ class App extends Component {
         display: 'inline-flex',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: '9px 16px',
-        borderRadius: 11,
-        fontSize: 13,
+        padding: '13px 18px',
+        borderRadius: 12,
+        fontSize: 13.5,
         fontWeight: 600,
         cursor: 'pointer',
+        minHeight: 44,
         background: NEU.surf,
         color: NEU.ink,
         boxShadow: neuUp(.65),
@@ -5881,7 +6056,7 @@ class App extends Component {
           style: {
             width: '100%',
             fontSize: 12.5,
-            color: '#6f675a'
+            color: '#6b6252'
           }
         })), isQuiz && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("input", {
           value: d.question || '',
@@ -5943,7 +6118,7 @@ class App extends Component {
           flex: 1,
           border: '1.5px solid #9a7a2c',
           background: NEU.surf, boxShadow: neuUp(),
-          color: '#9a7a2c'
+          color: '#7d6220'
         }), btn('Cancel', this.cancelEdit, {
           flex: 1,
           border: NEU.edge,
@@ -6336,7 +6511,7 @@ class App extends Component {
             ...inp,
             cursor: 'pointer',
             color: d.notice ? '#2c2823' : NEU.muted,
-            border: d.notice ? inp.border : '1.5px solid #c2a35a'
+            border: d.notice ? inp.border : '1.5px solid #75601f'
           }
         }, /*#__PURE__*/React.createElement("option", {
           value: "",
@@ -6567,9 +6742,9 @@ class App extends Component {
           display: 'flex',
           alignItems: 'center',
           gap: 6,
-          padding: '7px 13px',
+          padding: '11px 14px',
           borderRadius: 20,
-          fontSize: 12,
+          fontSize: 12.5,
           fontWeight: 600,
           cursor: 'pointer',
           background: NEU.surf,
@@ -6782,7 +6957,7 @@ class App extends Component {
         }
       }, p.sub)), /*#__PURE__*/React.createElement("span", {
         style: {
-          color: '#bba35f',
+          color: '#75601f',
           fontSize: 18
         }
       }, "›"))));
@@ -7144,7 +7319,7 @@ class App extends Component {
           style: {
             ...inp,
             cursor: 'pointer',
-            color: '#6f675a'
+            color: '#6b6252'
           }
         }, /*#__PURE__*/React.createElement("option", {
           value: ""
@@ -7223,7 +7398,7 @@ class App extends Component {
           style: {
             width: '100%',
             fontSize: 12.5,
-            color: '#6f675a',
+            color: '#6b6252',
             marginBottom: 14
           }
         }), /*#__PURE__*/React.createElement("div", {
@@ -7341,7 +7516,7 @@ class App extends Component {
         save('ads', 'liveAds', arr, a.on === false ? 'Ad is live' : 'Ad paused');
       }, {
         background: '#f3ecd9',
-        color: '#9a7a2c',
+        color: '#7d6220',
         fontSize: 12,
         padding: '6px 10px'
       }), btn('Edit', () => this.startEdit(i, {
@@ -7418,12 +7593,13 @@ class App extends Component {
           style: {
             position: 'absolute',
             top: 3,
-            left: d.on ? 24 : 3,
+            left: 3,
+            transform: d.on ? 'translateX(21px)' : 'none',
             width: 20,
             height: 20,
             borderRadius: '50%',
             background: '#fff',
-            transition: 'left .2s',
+            transition: 'transform .2s ease',
             boxShadow: '0 1px 4px rgba(0,0,0,.25)'
           }
         }))), /*#__PURE__*/React.createElement("textarea", {
@@ -7930,7 +8106,7 @@ class App extends Component {
         style: {
           flex: 1,
           textAlign: 'center',
-          padding: '7px 6px',
+          padding: '13px 6px',
           borderRadius: 9,
           fontSize: 13,
           fontWeight: 600,
@@ -7999,7 +8175,7 @@ class App extends Component {
         'Hydration': '#2c5d52',
         'Exercise': '#1f5145',
         'Sleep': '#6e2230',
-        'Nutrition': '#9a7a2c',
+        'Nutrition': '#7d6220',
         'Mental Health': '#3a4a78',
         'General': '#b8923f'
       };
@@ -8266,7 +8442,7 @@ class App extends Component {
         style: {
           flex: 1,
           textAlign: 'center',
-          padding: '7px 6px',
+          padding: '13px 6px',
           borderRadius: 9,
           fontSize: 13,
           fontWeight: 600,
@@ -8347,7 +8523,9 @@ class App extends Component {
         style: {
           flex: 1,
           textAlign: 'center',
-          padding: '7px 4px',
+          padding: '13px 4px',
+          minHeight: 44,
+          boxSizing: 'border-box',
           borderRadius: 9,
           fontSize: 12.5,
           fontWeight: 600,
@@ -8731,7 +8909,7 @@ class App extends Component {
           letterSpacing: 1.2,
           textTransform: 'uppercase',
           fontWeight: 700,
-          color: '#b1a690',
+          color: '#6b6252',
           margin: '14px 0 8px'
         }
       }, gl), (nahj[g] || []).map((it, i) => /*#__PURE__*/React.createElement("div", {
@@ -8788,7 +8966,7 @@ class App extends Component {
     }, {
       label: 'Classifieds',
       val: st.liveClassifieds.length,
-      ink: '#9a7a2c',
+      ink: '#7d6220',
       tint: '#f3ecd9'
     }, {
       label: 'Cal Events',
@@ -8832,7 +9010,11 @@ class App extends Component {
         color: '#1f5145',
         fontSize: 14,
         fontWeight: 600,
-        cursor: 'pointer'
+        cursor: 'pointer',
+        padding: '12px 10px',
+        margin: '-12px -10px',
+        minHeight: 44,
+        boxSizing: 'border-box'
       }
     }, /*#__PURE__*/React.createElement("span", {
       style: {
@@ -8862,7 +9044,7 @@ class App extends Component {
       style: {
         background: s.tint,
         borderRadius: 12,
-        padding: '8px 6px',
+        padding: '13px 6px',
         textAlign: 'center'
       }
     }, /*#__PURE__*/React.createElement("div", {
@@ -8875,11 +9057,11 @@ class App extends Component {
       }
     }, s.val), /*#__PURE__*/React.createElement("div", {
       style: {
-        fontSize: 9.5,
+        fontSize: 11,
         color: s.ink,
         fontWeight: 600,
         marginTop: 2,
-        opacity: .75
+        opacity: .9
       }
     }, s.label)))), /*#__PURE__*/React.createElement("div", {
       style: {
@@ -8903,8 +9085,12 @@ class App extends Component {
     }, '✓ Changes publish instantly on Save'), /*#__PURE__*/React.createElement("div", {
       onClick: () => this.revertAll(),
       style: {
-        padding: '9px 18px',
-        borderRadius: 11,
+        padding: '13px 18px',
+        minHeight: 44,
+        boxSizing: 'border-box',
+        display: 'flex',
+        alignItems: 'center',
+        borderRadius: 12,
         fontSize: 13,
         fontWeight: 700,
         cursor: 'pointer',
@@ -8928,13 +9114,17 @@ class App extends Component {
       }),
       style: {
         flexShrink: 0,
-        padding: '7px 14px',
+        padding: '13px 15px',
+        minHeight: 44,
+        boxSizing: 'border-box',
+        display: 'flex',
+        alignItems: 'center',
         borderRadius: 20,
         fontSize: 13,
         fontWeight: 600,
         cursor: 'pointer',
         background: sec === t.id ? '#1f5145' : '#efe7d7',
-        color: sec === t.id ? '#f3ead4' : '#6f675a',
+        color: sec === t.id ? '#f3ead4' : '#6b6252',
         transition: 'background .15s'
       }
     }, t.label)))), /*#__PURE__*/React.createElement("div", {
@@ -8960,7 +9150,9 @@ class App extends Component {
         alignItems: 'center',
         justifyContent: 'center',
         gap: 7,
-        padding: '11px 0',
+        padding: '13px 0',
+        minHeight: 44,
+        boxSizing: 'border-box',
         borderRadius: 12,
         fontSize: 14,
         fontWeight: 700,
@@ -9070,7 +9262,7 @@ class App extends Component {
     const monthOnly = new Date(calY, calM, 1).toLocaleDateString('en-IE', { month: 'long' });
     const arrowBtn = (glyph, enabled, onClick) => /*#__PURE__*/React.createElement("div", {
       onClick,
-      style: { width: 34, height: 34, flexShrink: 0, borderRadius: 10, background: enabled ? '#f4faf7' : '#f5f0e8', border: NEU.edge, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: enabled ? 'pointer' : 'default', color: enabled ? '#1f5145' : '#c9bfae', fontSize: 18, fontWeight: 700 }
+      style: { width: 44, height: 44, flexShrink: 0, borderRadius: 13, background: enabled ? '#f4faf7' : '#f5f0e8', border: NEU.edge, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: enabled ? 'pointer' : 'default', color: enabled ? '#1f5145' : '#c9bfae', fontSize: 18, fontWeight: 700 }
     }, glyph);
     const calIcon = icon('calendar', { size: 16, stroke: NEU.accent });
     const clockIcon = icon('clock', { size: 13, stroke: NEU.muted });
@@ -9096,20 +9288,20 @@ class App extends Component {
       }, monthOnly), /*#__PURE__*/React.createElement("div", {
         style: { position: 'relative', width: 66, height: 66, flexShrink: 0, borderRadius: '50%', background: 'radial-gradient(circle,#ffffff 55%,#eef5f1 56%)', border: '2px solid #1f5145', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 14px -6px rgba(31,81,69,.55)' }
       }, /*#__PURE__*/React.createElement("div", {
-        style: { position: 'absolute', inset: 5, borderRadius: '50%', border: '1.5px dashed #c2a35a' }
+        style: { position: 'absolute', inset: 5, borderRadius: '50%', border: '1.5px dashed #75601f' }
       }), /*#__PURE__*/React.createElement("div", {
         style: { fontFamily: 'Spectral,serif', fontSize: 24, fontWeight: 700, color: '#1f5145' }
       }, selDay)), /*#__PURE__*/React.createElement("div", {
         style: { flex: 1, textAlign: 'left', fontFamily: 'Spectral,serif', fontSize: 17, fontWeight: 600, color: '#2c2823' }
       }, String(calY)), arrowBtn("›", canNext, () => canNext && goMonth(0, 1))),
       /*#__PURE__*/React.createElement("div", {
-        style: { textAlign: 'center', fontSize: 12.5, color: '#9a7a2c', fontWeight: 600, marginTop: 7 }
+        style: { textAlign: 'center', fontSize: 12.5, color: '#7d6220', fontWeight: 600, marginTop: 7 }
       }, selHijri, " AH"),
       /*#__PURE__*/React.createElement("div", {
         style: { display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', marginTop: 12, marginBottom: 2 }
       }, weekHead.map((w, i) => /*#__PURE__*/React.createElement("div", {
         key: i,
-        style: { textAlign: 'center', fontSize: 11, fontWeight: 700, color: '#b1a690' }
+        style: { textAlign: 'center', fontSize: 11, fontWeight: 700, color: '#6b6252' }
       }, w))),
       /*#__PURE__*/React.createElement("div", {
         style: { display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', gap: 2 }
@@ -9122,7 +9314,7 @@ class App extends Component {
       }), /*#__PURE__*/React.createElement("span", {
         style: { fontSize: 13.5, fontWeight: 600, color: c.sel ? '#fffdf9' : c.isToday ? '#1f5145' : '#3f3a32', lineHeight: 1 }
       }, c.day), /*#__PURE__*/React.createElement("span", {
-        style: { fontSize: 9, fontWeight: 500, color: c.sel ? 'rgba(255,255,255,.6)' : '#c2a35a', lineHeight: 1 }
+        style: { fontSize: 10, fontWeight: 600, color: c.sel ? 'rgba(255,255,255,.75)' : '#7d6220', lineHeight: 1 }
       }, c.hijriDay))))),
     /*#__PURE__*/React.createElement("div", {
       style: { background: NEU.surf, boxShadow: neuUp(), border: NEU.edge, borderRadius: 18, marginTop: 16, overflow: 'hidden' }
@@ -9144,12 +9336,12 @@ class App extends Component {
     }, ev.type), /*#__PURE__*/React.createElement("div", {
       style: { fontSize: 15, fontWeight: 600, color: '#2c2823', marginTop: 2 }
     }, ev.title), ev.desc && /*#__PURE__*/React.createElement("div", {
-      style: { fontSize: 12.5, color: '#7a7264', marginTop: 4, lineHeight: 1.5 }
+      style: { fontSize: 12.5, color: '#6b6252', marginTop: 4, lineHeight: 1.5 }
     }, ev.desc), st.adminLoggedIn && /*#__PURE__*/React.createElement("div", {
       onClick: () => this.setState({ screen: 'admin', adminSection: 'events', adminEditIdx: (st.liveCalEvents || []).indexOf(ev), adminEditDraft: { ...ev } }),
       style: { marginTop: 8, display: 'inline-block', fontSize: 11, color: '#1f5145', fontWeight: 600, cursor: 'pointer', padding: '4px 10px', border: '1px solid #c4ddd7', borderRadius: 8, background: '#eef7f4' }
     }, "Edit"))) : /*#__PURE__*/React.createElement("div", {
-      style: { fontSize: 13, color: '#b1a690', padding: '12px 0 4px' }
+      style: { fontSize: 13, color: '#6b6252', padding: '12px 0 4px' }
     }, this.t('cal.noEvent')), /*#__PURE__*/React.createElement("div", {
       style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 4, paddingTop: 10, borderTop: '1px solid #f1ebdd' }
     }, /*#__PURE__*/React.createElement("div", {
@@ -9190,7 +9382,7 @@ class App extends Component {
       onClick: () => this.setState({ screen: 'admin', adminSection: 'events', adminEditIdx: -1, adminEditDraft: { date: selDayStr, type: 'Community', notice: 'reminder' } }),
       style: { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, padding: '11px', borderRadius: 12, border: '1px dashed #c4ddd7', background: '#f4fbf8', color: '#1f5145', fontSize: 13.5, fontWeight: 600, cursor: 'pointer' }
     }, "+ Add A Reminder") : dayReminders.length === 0 && /*#__PURE__*/React.createElement("div", {
-      style: { fontSize: 13, color: '#b1a690', textAlign: 'center', padding: '4px 0' }
+      style: { fontSize: 13, color: '#6b6252', textAlign: 'center', padding: '4px 0' }
     }, "No reminders for this day."))),
     st.adminLoggedIn && /*#__PURE__*/React.createElement("div", {
       onClick: () => this.setState({ screen: 'admin', adminSection: 'events', adminEditIdx: null, adminEditDraft: {} }),
@@ -9202,7 +9394,7 @@ class App extends Component {
       id: 'cal-upcoming',
       style: { marginTop: 26 }
     }, /*#__PURE__*/React.createElement("div", {
-      style: { fontSize: 11, letterSpacing: 1.2, textTransform: 'uppercase', fontWeight: 700, color: '#b1a690', marginBottom: 12 }
+      style: { fontSize: 11, letterSpacing: 1.2, textTransform: 'uppercase', fontWeight: 700, color: '#6b6252', marginBottom: 12 }
     }, this.t('cal.upcoming')), /*#__PURE__*/React.createElement("div", {
       style: { display: 'flex', flexDirection: 'column', gap: 10 }
     }, calEventList.map((e, i) => /*#__PURE__*/React.createElement("div", {
@@ -9214,7 +9406,7 @@ class App extends Component {
     }, /*#__PURE__*/React.createElement("div", {
       style: { fontSize: 18, fontWeight: 700, color: e.color, lineHeight: 1 }
     }, e.day), /*#__PURE__*/React.createElement("div", {
-      style: { fontSize: 10, color: '#a89d88', marginTop: 2 }
+      style: { fontSize: 10, color: '#6b6252', marginTop: 2 }
     }, e.dateLabel)), /*#__PURE__*/React.createElement("div", {
       style: { flex: 1 }
     }, /*#__PURE__*/React.createElement("div", {
@@ -9223,7 +9415,7 @@ class App extends Component {
       style: { fontSize: 14.5, fontWeight: 600, color: '#2c2823', marginTop: 1 }
     }, e.title)))))),
     /*#__PURE__*/React.createElement("div", {
-      style: { textAlign: 'center', fontSize: 11.5, color: '#a89d88', lineHeight: 1.5, padding: '22px 24px 0' }
+      style: { textAlign: 'center', fontSize: 11.5, color: '#6b6252', lineHeight: 1.5, padding: '22px 24px 0' }
     }, "Events and reminders are managed by Ahlul Bayt Ireland."));
   }
 
@@ -9237,8 +9429,9 @@ class App extends Component {
     const tabStyle = k => ({
       flex: 1,
       textAlign: 'center',
-      padding: '8px 6px',
-      borderRadius: 10,
+      padding: '13px 6px',
+      minHeight: 44,
+      borderRadius: 11,
       fontSize: 13,
       fontWeight: 600,
       cursor: 'pointer',
@@ -9334,7 +9527,7 @@ class App extends Component {
         gap: 9,
         marginBottom: 18
       }
-    }, [['videos', this.t('kids.videos'), '🎬', '#3a4a78', '#e8ebf4'], ['books', this.t('kids.books'), '📚', '#8a4b2c', '#f6ebe4'], ['wisdom', this.t('kids.wisdom'), '💡', '#9a7a2c', '#f7f0dc'], ['quiz', 'Quiz', '🎯', '#6e2230', '#f7e7ea']].map(([k, label, icon, ink, tint]) => {
+    }, [['videos', this.t('kids.videos'), '🎬', '#3a4a78', '#e8ebf4'], ['books', this.t('kids.books'), '📚', '#8a4b2c', '#f6ebe4'], ['wisdom', this.t('kids.wisdom'), '💡', '#7d6220', '#f7f0dc'], ['quiz', 'Quiz', '🎯', '#6e2230', '#f7e7ea']].map(([k, label, icon, ink, tint]) => {
       const on = kt === k;
       return /*#__PURE__*/React.createElement("div", {
         key: k,
@@ -9441,7 +9634,7 @@ class App extends Component {
     }, "The Story of the Two Brothers"))), /*#__PURE__*/React.createElement("div", {
       style: {
         fontSize: 11.5,
-        color: '#a89d88',
+        color: '#6b6252',
         marginBottom: 22
       }
     }, "Safe, ad-free Islamic videos chosen for the community."), /*#__PURE__*/React.createElement("div", {
@@ -9468,9 +9661,13 @@ class App extends Component {
       }),
       style: {
         flexShrink: 0,
-        padding: '7px 14px',
+        padding: '12px 15px',
+        minHeight: 44,
+        boxSizing: 'border-box',
+        display: 'flex',
+        alignItems: 'center',
         borderRadius: 20,
-        fontSize: 12,
+        fontSize: 12.5,
         fontWeight: 600,
         cursor: 'pointer',
         background: NEU.surf,
@@ -9739,12 +9936,12 @@ class App extends Component {
       style: {
         fontSize: 12.5,
         lineHeight: 1.5,
-        color: st.dark ? '#a7a091' : '#6f675a'
+        color: st.dark ? '#a7a091' : '#6b6252'
       }
     }, s2.desc))))), /*#__PURE__*/React.createElement("div", {
       style: {
         fontSize: 12.5,
-        color: '#9a7a2c',
+        color: '#7d6220',
         background: st.dark ? '#2a2818' : '#f7f0dd',
         border: `1px solid ${st.dark ? '#4a4224' : '#ecdfb8'}`,
         borderRadius: 12,
@@ -9983,7 +10180,7 @@ class App extends Component {
         style: {
           fontSize: 10.5,
           fontWeight: 700,
-          color: '#9a7a2c'
+          color: '#7d6220'
         }
       }, "Score ", r.score), /*#__PURE__*/React.createElement("div", {
         style: {
@@ -10011,10 +10208,12 @@ class App extends Component {
       }, /*#__PURE__*/React.createElement("div", {
         style: {
           height: '100%',
-          width: (answered ? 0 : r.timeLeft * 10) + '%',
+          width: '100%',
+          transform: `scaleX(${answered ? 0 : r.timeLeft / 10})`,
+          transformOrigin: 'left',
           borderRadius: 3,
           background: urgent ? '#c0392b' : lvlMeta.color,
-          transition: 'width 1s linear, background .3s'
+          transition: 'transform 1s linear, background .3s'
         }
       })), /*#__PURE__*/React.createElement("div", {
         style: {
@@ -10057,7 +10256,7 @@ class App extends Component {
           style: {
             fontSize: 13,
             fontWeight: 800,
-            color: answered ? correct ? '#2e7d43' : '#a33636' : '#a1977f'
+            color: answered ? correct ? '#2e7d43' : '#a33636' : '#6b6252'
           }
         }, mark));
       })), answered && /*#__PURE__*/React.createElement("div", {
@@ -10112,7 +10311,7 @@ class App extends Component {
       }
     }, "One quick question — can you get it right?")), /*#__PURE__*/React.createElement("span", {
       style: {
-        color: '#bba35f',
+        color: '#75601f',
         fontSize: 20
       }
     }, "→")));
@@ -10128,8 +10327,9 @@ class App extends Component {
     const tabStyle = k => ({
       flex: 1,
       textAlign: 'center',
-      padding: '8px 6px',
-      borderRadius: 10,
+      padding: '13px 6px',
+      minHeight: 44,
+      borderRadius: 11,
       fontSize: 13,
       fontWeight: 600,
       cursor: 'pointer',
@@ -10254,7 +10454,7 @@ class App extends Component {
     }, label))), ht === 'videos' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
       style: {
         fontSize: 11.5,
-        color: '#a89d88',
+        color: '#6b6252',
         marginBottom: 22
       }
     }, "Community health and wellness videos, handpicked for you."), /*#__PURE__*/React.createElement("div", {
@@ -10281,9 +10481,13 @@ class App extends Component {
       }),
       style: {
         flexShrink: 0,
-        padding: '7px 14px',
+        padding: '12px 15px',
+        minHeight: 44,
+        boxSizing: 'border-box',
+        display: 'flex',
+        alignItems: 'center',
         borderRadius: 20,
-        fontSize: 12,
+        fontSize: 12.5,
         fontWeight: 600,
         cursor: 'pointer',
         background: NEU.surf,
@@ -10435,8 +10639,9 @@ class App extends Component {
     const tabStyle = k => ({
       flex: 1,
       textAlign: 'center',
-      padding: '8px 6px',
-      borderRadius: 10,
+      padding: '13px 6px',
+      minHeight: 44,
+      borderRadius: 11,
       fontSize: 13,
       fontWeight: 600,
       cursor: 'pointer',
@@ -10516,7 +10721,7 @@ class App extends Component {
         letterSpacing: 1.2,
         textTransform: 'uppercase',
         fontWeight: 700,
-        color: '#b1a690',
+        color: '#6b6252',
         margin: '18px 0 10px'
       }
     }, txt);
@@ -10578,7 +10783,7 @@ class App extends Component {
         borderRadius: 16,
         padding: '13px 15px',
         fontSize: 12.5,
-        color: '#6f675a',
+        color: '#6b6252',
         lineHeight: 1.55,
         marginBottom: 4
       }
@@ -10607,7 +10812,7 @@ class App extends Component {
     }, /*#__PURE__*/React.createElement("div", {
       style: {
         fontSize: 10.5,
-        color: '#cdbf9e',
+        color: '#6b6252',
         marginBottom: 3
       }
     }, l), /*#__PURE__*/React.createElement("div", {
@@ -10624,7 +10829,7 @@ class App extends Component {
         borderRadius: 16,
         padding: '13px 15px',
         fontSize: 12.5,
-        color: '#6f675a',
+        color: '#6b6252',
         lineHeight: 1.55,
         marginBottom: 4
       }
@@ -10640,7 +10845,7 @@ class App extends Component {
       style: {
         marginTop: 8,
         fontSize: 11.5,
-        color: '#cdbf9e',
+        color: '#6b6252',
         lineHeight: 1.4
       }
     }, "Your net wealth is below the nisab threshold — no Zakat is due."))), /*#__PURE__*/React.createElement("div", {
@@ -10844,7 +11049,7 @@ class App extends Component {
     }, bearing, "° ", /*#__PURE__*/React.createElement("span", {
       style: {
         fontSize: 20,
-        color: '#9a7a2c'
+        color: '#7d6220'
       }
     }, cardinal)), /*#__PURE__*/React.createElement("div", {
       style: {
@@ -10867,7 +11072,7 @@ class App extends Component {
     }, "—°"), /*#__PURE__*/React.createElement("div", {
       style: {
         fontSize: 13,
-        color: '#b0a492',
+        color: '#6b6252',
         marginTop: 4
       }
     }, "Location needed to calculate bearing")), qiblaStatus === 'idle' && /*#__PURE__*/React.createElement("div", {
@@ -10890,7 +11095,7 @@ class App extends Component {
         padding: '14px',
         borderRadius: 16,
         background: '#f0e8d6',
-        color: '#9a7a2c',
+        color: '#7d6220',
         fontSize: 14,
         fontWeight: 600,
         marginBottom: 16
@@ -10930,7 +11135,7 @@ class App extends Component {
         padding: '12px',
         borderRadius: 14,
         background: '#f4ede0',
-        color: '#9a7a2c',
+        color: '#7d6220',
         fontSize: 13,
         marginBottom: 16
       }
@@ -10954,7 +11159,7 @@ class App extends Component {
         fontSize: 11,
         letterSpacing: .6,
         textTransform: 'uppercase',
-        color: '#b1a690',
+        color: '#6b6252',
         fontWeight: 700
       }
     }, this.t('qibla.distance')), /*#__PURE__*/React.createElement("div", {
@@ -10978,7 +11183,7 @@ class App extends Component {
         fontSize: 11,
         letterSpacing: .6,
         textTransform: 'uppercase',
-        color: '#b1a690',
+        color: '#6b6252',
         fontWeight: 700
       }
     }, "Holy site"), /*#__PURE__*/React.createElement("div", {
@@ -11109,10 +11314,12 @@ class App extends Component {
     }, /*#__PURE__*/React.createElement("div", {
       style: {
         height: '100%',
-        width: `${b.fill}%`,
+        width: '100%',
+        transform: `scaleX(${b.fill / 100})`,
+        transformOrigin: 'left',
         background: '#fff',
         borderRadius: 3,
-        transition: b.fill > 0 && b.fill < 100 ? 'width .06s linear' : 'none'
+        transition: b.fill > 0 && b.fill < 100 ? 'transform .06s linear' : 'none'
       }
     })))), /*#__PURE__*/React.createElement("div", {
       style: {
@@ -11473,8 +11680,8 @@ class App extends Component {
         display: 'flex',
         alignItems: 'center',
         gap: 7,
-        fontSize: 8.5,
-        letterSpacing: 1.3,
+        fontSize: 10,
+        letterSpacing: 1.1,
         textTransform: 'uppercase',
         fontWeight: 800,
         color: tone.chip
@@ -11605,9 +11812,9 @@ class App extends Component {
         style: {
           flex: 1,
           textAlign: 'center',
-          padding: '9px 14px',
+          padding: '13px 14px',
           borderRadius: 20,
-          fontSize: 12.5,
+          fontSize: 13,
           fontWeight: 600,
           cursor: 'pointer',
           background: NEU.surf,
@@ -11712,13 +11919,13 @@ class App extends Component {
     }, d.tr, /*#__PURE__*/React.createElement("div", {
       style: {
         fontSize: 11.5,
-        color: '#b1a690',
+        color: '#6b6252',
         marginTop: 2
       }
     }, d.en)), /*#__PURE__*/React.createElement("div", {
       style: {
         fontSize: 11.5,
-        color: '#b1a690',
+        color: '#6b6252',
         fontWeight: 600
       }
     }, "Tap anywhere in this card to count")),
@@ -11735,7 +11942,7 @@ class App extends Component {
         flex: 1,
         minWidth: 0,
         fontSize: 12.5,
-        color: '#6f675a',
+        color: '#6b6252',
         fontWeight: 600
       }
     }, free ? 'Hundreds completed: ' : 'Rounds completed: ', /*#__PURE__*/React.createElement("span", {
@@ -11747,8 +11954,8 @@ class App extends Component {
       onClick: () => canMinus && this.tasbeehMinus(),
       style: {
         flexShrink: 0,
-        padding: '9px 14px',
-        borderRadius: 11,
+        padding: '13px 16px',
+        borderRadius: 12,
         border: NEU.edge,
         background: NEU.surf,
         boxShadow: neuUp(),
@@ -11762,8 +11969,8 @@ class App extends Component {
       onClick: this.tasbeehReset,
       style: {
         flexShrink: 0,
-        padding: '9px 16px',
-        borderRadius: 11,
+        padding: '13px 16px',
+        borderRadius: 12,
         border: NEU.edge,
         background: NEU.surf, boxShadow: neuUp(),
         color: '#6e2230',
@@ -11853,7 +12060,7 @@ class App extends Component {
       style: {
         textAlign: 'center',
         fontSize: 11.5,
-        color: '#a89d88',
+        color: '#6b6252',
         lineHeight: 1.5,
         padding: '20px 20px 0'
       }
@@ -11973,8 +12180,9 @@ class App extends Component {
       label: this.t('nav.more'),
       d: NAV_ICONS.more
     }];
-    return /*#__PURE__*/React.createElement("div", {
+    return /*#__PURE__*/React.createElement("nav", {
       className: "abi-nav",
+      "aria-label": "Primary",
       style: {
         flexShrink: 0,
         background: st.dark ? NEU_D.bg : NEU.bg,
@@ -11986,7 +12194,7 @@ class App extends Component {
       }
     }, items.map(n => {
       const active = n.key === st.screen || n.key === 'library' && st.screen === 'reading' || n.key === 'stories' && st.story !== null;
-      const color = active ? st.dark ? '#d8b863' : '#1f5145' : st.dark ? '#526060' : '#a1977f';
+      const color = active ? st.dark ? '#d8b863' : '#1f5145' : st.dark ? '#526060' : '#6b6252';
       return /*#__PURE__*/React.createElement("div", {
         key: n.key,
         onClick: () => {
@@ -11995,14 +12203,17 @@ class App extends Component {
             kidsTab: 'books'
           });
         },
+        "aria-current": active ? 'page' : undefined,
         style: {
           flex: 1,
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
+          justifyContent: 'center',
           gap: 3,
           cursor: 'pointer',
-          padding: '2px 0'
+          padding: '2px 0',
+          minHeight: 48
         }
       }, /*#__PURE__*/React.createElement("div", {
         style: {
@@ -12176,7 +12387,11 @@ class App extends Component {
       style: {
         background: st.dark ? NEU_D.bg : NEU.bg
       }
-    }, /*#__PURE__*/React.createElement("div", {
+    }, /*#__PURE__*/React.createElement("a", {
+      href: "#abi-main",
+      className: "abi-skip"
+    }, "Skip to content"), /*#__PURE__*/React.createElement("main", {
+      id: "abi-main",
       className: "s",
       style: {
         flex: '1 1 auto',
@@ -12191,7 +12406,7 @@ class App extends Component {
         textAlign: 'center',
         padding: '5px 16px',
         fontSize: 10.5,
-        color: st.dark ? '#5a6060' : '#b1a690',
+        color: st.dark ? '#5a6060' : '#6b6252',
         background: st.dark ? NEU_D.bg : NEU.bg,
         borderTop: `1px solid ${st.dark ? '#2c3234' : 'rgba(234,223,202,.7)'}`
       }

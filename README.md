@@ -1,25 +1,66 @@
-# CODING AGENTS: READ THIS FIRST
+# Ahlul Bayt Ireland
 
-This is a **handoff bundle** from Claude Design (claude.ai/design).
+A calm companion for prayer, supplication and community life — the PWA for the
+Ahlul Bayt Ireland community in Dublin.
 
-A user mocked up designs in HTML/CSS/JS using an AI design tool, then exported this bundle so a coding agent can implement the designs for real.
+Prayer times and the Islamic date, the community calendar, a library of duʿāʾ,
+ziyārah, daily aamals and books, Kids Corner, classifieds, a tasbeeh counter and
+wallpapers. Everything is editable from an in-app admin dashboard that publishes
+straight to the community.
 
-## What you should do — IMPORTANT
+## Running it
 
-**Read the chat transcripts first.** There are 1 chat transcript(s) in `chats/`. The transcripts show the full back-and-forth between the user and the design assistant — they tell you **what the user actually wants** and **where they landed** after iterating. Don't skip them. The final HTML files are the output, but the chat is where the intent lives.
+There is **no build step**. Serve the directory over HTTP and open it:
 
-**Read `project/Ahlul Bayt Ireland.dc.html` in full.** The user had this file open when they triggered the handoff, so it's almost certainly the primary design they want built. Read it top to bottom — don't skim. Then **follow its imports**: open every file it pulls in (shared components, CSS, scripts) so you understand how the pieces fit together before you start implementing.
+```bash
+python -m http.server 8777
+```
 
-**If anything is ambiguous, ask the user to confirm before you start implementing.** It's much cheaper to clarify scope up front than to build the wrong thing.
+Then visit `http://localhost:8777`.
 
-## About the design files
+`file://` will not work — the service worker needs a real origin.
 
-The design medium is **HTML/CSS/JS** — these are prototypes, not production code. Your job is to **recreate them pixel-perfectly** in whatever technology makes sense for the target codebase (React, Vue, native, whatever fits). Match the visual output; don't copy the prototype's internal structure unless it happens to fit.
+## How it is put together
 
-**Don't render these files in a browser or take screenshots unless the user asks you to.** Everything you need — dimensions, colors, layout rules — is spelled out in the source. Read the HTML and CSS directly; a screenshot won't tell you anything they don't.
+| File | What it is |
+|---|---|
+| `index.html` | Shell, CSP, fonts, and all global CSS |
+| `app.js` | The entire application, ~12k lines |
+| `sw.js` | Service worker: caches the shell for offline use |
+| `manifest.json` | PWA manifest |
+| `vendor/` | React and ReactDOM, vendored — no npm install |
+| `PRODUCT.md` | Who this is for and what it is trying to be |
+| `DESIGN.md` | The visual system: tokens, type, components, motion |
 
-## Bundle contents
+**`app.js` is hand-edited, pre-transpiled `React.createElement` output.** There
+is no JSX source anywhere; this file *is* the source. Match the surrounding call
+style when editing, and run `node --check app.js` before committing.
 
-- `README.md` — this file
-- `chats/` — conversation transcripts (read these!)
-- `project/` — the `Scripture reading app design` project files (HTML prototypes, assets, components)
+All styling is inline style objects. Colours and shadows come from the `NEU` /
+`NEU_D` token blocks and the `neu*` helpers at the top of `app.js` — read
+`DESIGN.md` before hard-coding a value.
+
+## Two things that will catch you out
+
+**The service worker caches everything.** Bump `CACHE` in `sw.js` on every
+change or returning users keep the old build. To see local edits, unregister the
+worker and clear caches *before* reloading — a plain refresh serves the old
+`app.js`.
+
+**Admin saves are live.** The dashboard writes straight to Supabase and the
+whole community sees it immediately. There is no staging copy. When testing
+admin screens, inject state rather than pressing Save.
+
+## Content
+
+Live content syncs from Supabase and falls back to `localStorage`, then to the
+seed data in `app.js`. Prayer times come from the Aladhan API using the Jaʿfarī
+(Leva Institute, Qum) method for Dublin, with a bundled preset as fallback.
+Wallpapers are fetched from the Unsplash CDN; attribution is required by their
+licence and is shown in the viewer.
+
+## Deployment
+
+Pushing to `main` deploys to Vercel: <https://ahlul-bayt-ireland.vercel.app>.
+The `*.vercel.app` preview and branch URLs sit behind Vercel Authentication, so
+verify against the production URL above rather than a preview link.
