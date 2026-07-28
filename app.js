@@ -3083,7 +3083,7 @@ class App extends Component {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        fontSize: 16,
+        fontSize: 21,
         lineHeight: 1,
         boxShadow: neuIn(.36)
       }
