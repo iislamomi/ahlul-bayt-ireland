@@ -1740,6 +1740,7 @@ class App extends Component {
       adminInputPw: '',
       adminLoginErr: false,
       adminSection: 'stories',
+      adminEvType: 'All',
       adminEditIdx: null,
       adminEditDraft: {},
       adminAttempts: 0,
@@ -6568,6 +6569,18 @@ class App extends Component {
         })));
       }
     };
+    /* Only offer a tab for a type that actually has entries, so the row stays
+       short, and carry the original index through the filter — Edit and Delete
+       both address liveCalEvents by position. */
+    const evAll = st.liveCalEvents || [];
+    const evCounts = {};
+    evAll.forEach(e => {
+      const t = e.type || 'Other';
+      evCounts[t] = (evCounts[t] || 0) + 1;
+    });
+    const evTabs = ['All', ...EVENT_TYPES.filter(t => evCounts[t]), ...Object.keys(evCounts).filter(t => !EVENT_TYPES.includes(t)).sort()];
+    const evType = evTabs.includes(st.adminEvType) ? st.adminEvType : 'All';
+    const evRows = evAll.map((e, i) => [e, i]).filter(([e]) => evType === 'All' || (e.type || 'Other') === evType);
     const eventListEls = (extraDraft = {}) => [btn('+ Add Event', () => this.startEdit(-1, {
       type: 'Community',
       date: '',
@@ -6577,7 +6590,64 @@ class App extends Component {
       color: '#f3ead4',
       marginBottom: 14,
       width: '100%'
-    }), ...(st.liveCalEvents || []).map((e, i) => /*#__PURE__*/React.createElement("div", {
+    }), evTabs.length > 1 && /*#__PURE__*/React.createElement("div", {
+      key: "evtabs",
+      className: "s",
+      style: {
+        display: 'flex',
+        gap: 7,
+        overflowX: 'auto',
+        margin: '0 -20px 13px',
+        padding: '0 20px 3px'
+      }
+    }, evTabs.map(t => {
+      const on = evType === t;
+      const c = t === 'All' ? NEU.accent : EVENT_COLORS[t] || NEU.accent;
+      return /*#__PURE__*/React.createElement("div", {
+        key: t,
+        onClick: () => this.setState({
+          adminEvType: t
+        }),
+        style: {
+          flexShrink: 0,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 6,
+          padding: '7px 13px',
+          borderRadius: 20,
+          fontSize: 12,
+          fontWeight: 600,
+          cursor: 'pointer',
+          background: NEU.surf,
+          border: NEU.edge,
+          color: on ? c : NEU.muted,
+          boxShadow: on ? neuIn(.5) : neuUp(.5),
+          transition: 'box-shadow .18s ease, color .18s ease'
+        }
+      }, t !== 'All' && /*#__PURE__*/React.createElement("span", {
+        style: {
+          width: 7,
+          height: 7,
+          borderRadius: '50%',
+          background: c,
+          flexShrink: 0
+        }
+      }), t, /*#__PURE__*/React.createElement("span", {
+        style: {
+          fontSize: 10.5,
+          fontWeight: 700,
+          opacity: .6
+        }
+      }, t === 'All' ? evAll.length : evCounts[t]));
+    })), evRows.length === 0 && /*#__PURE__*/React.createElement("div", {
+      key: "evempty",
+      style: {
+        textAlign: 'center',
+        padding: '28px 20px',
+        color: NEU.muted,
+        fontSize: 13
+      }
+    }, evType === 'All' ? 'No events yet.' : `No ${evType} events yet.`), ...evRows.map(([e, i]) => /*#__PURE__*/React.createElement("div", {
         key: i,
         style: {
           display: 'flex',
