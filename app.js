@@ -707,7 +707,9 @@ const LUCIDE = {
   'moon-star': '<path d="M18 5h4" /><path d="M20 3v4" /><path d="M20.985 12.486a9 9 0 1 1-9.473-9.472c.405-.022.617.46.402.803a6 6 0 0 0 8.268 8.268c.344-.215.825-.004.803.401" />',
   'star': '<path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z" />',
   'book-heart': '<path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H19a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H6.5a1 1 0 0 1 0-5H20" /><path d="M8.62 9.8A2.25 2.25 0 1 1 12 6.836a2.25 2.25 0 1 1 3.38 2.966l-2.626 2.856a.998.998 0 0 1-1.507 0z" />',
-  'target': '<circle cx="12" cy="12" r="10" /><circle cx="12" cy="12" r="6" /><circle cx="12" cy="12" r="2" />'
+  'target': '<circle cx="12" cy="12" r="10" /><circle cx="12" cy="12" r="6" /><circle cx="12" cy="12" r="2" />',
+  'heart': '<path d="M2 9.5a5.5 5.5 0 0 1 9.591-3.676.56.56 0 0 0 .818 0A5.49 5.49 0 0 1 22 9.5c0 2.29-1.5 4-3 5.5l-5.492 5.313a2 2 0 0 1-3 .019L5 15c-1.5-1.5-3-3.2-3-5.5" />',
+  'trash-2': '<path d="M10 11v6" /><path d="M14 11v6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" /><path d="M3 6h18" /><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />'
 };
 const icon = (name, o = {}) => React.createElement('svg', {
   width: o.size || 20,
@@ -1442,6 +1444,76 @@ function lsSet(key, val) {
   } catch (e) {}
 }
 
+/* ── SAVED PASSAGES ──
+   Bookmarks and favourites go to IndexedDB rather than localStorage: they are a
+   growing structured collection, not a preference, and a heavy reader would eat
+   into the quota the rest of the app shares. localStorage keeps a mirror so the
+   first paint has rows to draw before IDB opens, and so the feature still works
+   where IDB is refused — private windows on older iOS. Records are flat and
+   self-describing, so a backup file is a JSON.stringify away. */
+const SAVED_DB = 'abi-saved';
+const SAVED_STORE = 'marks';
+let savedDbPromise = null;
+function savedDb() {
+  if (savedDbPromise) return savedDbPromise;
+  savedDbPromise = new Promise((resolve, reject) => {
+    if (typeof indexedDB === 'undefined') return reject(new Error('no indexeddb'));
+    const req = indexedDB.open(SAVED_DB, 1);
+    req.onupgradeneeded = () => {
+      const db = req.result;
+      if (!db.objectStoreNames.contains(SAVED_STORE)) {
+        const os = db.createObjectStore(SAVED_STORE, { keyPath: 'id' });
+        os.createIndex('kind', 'kind');
+        os.createIndex('contentId', 'contentId');
+      }
+    };
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+  savedDbPromise.catch(() => { savedDbPromise = null; });
+  return savedDbPromise;
+}
+function savedStore(mode) {
+  return savedDb().then(db => db.transaction(SAVED_STORE, mode).objectStore(SAVED_STORE));
+}
+function savedReadAll() {
+  return savedStore('readonly').then(os => new Promise((res, rej) => {
+    const r = os.getAll();
+    r.onsuccess = () => res(r.result || []);
+    r.onerror = () => rej(r.error);
+  }));
+}
+function savedPut(rec) {
+  return savedStore('readwrite').then(os => { os.put(rec); }).catch(() => {});
+}
+function savedDelete(ids) {
+  return savedStore('readwrite').then(os => { ids.forEach(id => os.delete(id)); }).catch(() => {});
+}
+/* A short stable hash of the text itself. Passage identity has to survive the
+   library being re-ordered or renumbered upstream, which an array index cannot:
+   a saved line must still be the same line after the admin edits the item. */
+function abiHash(v) {
+  const t = String(v == null ? '' : v).replace(/\s+/g, ' ').trim();
+  let h = 5381;
+  for (let i = 0; i < t.length; i++) h = (h * 33 ^ t.charCodeAt(i)) >>> 0;
+  return h.toString(36);
+}
+function contentKey(type, item) {
+  if (!item) return '';
+  const base = type || 'x';
+  return item.id != null && item.id !== '' ? base + ':i' + item.id : base + ':h' + abiHash(item.title);
+}
+const passageKey = abiHash;
+function markId(kind, contentId, lineId) {
+  return kind + '|' + contentId + '|' + (lineId || 'all');
+}
+const CONTENT_KIND = {
+  dua: 'Du\u02bf\u0101\u02be',
+  ziyarah: 'Ziy\u0101rah',
+  aamal: 'Daily Amaal',
+  nahj: 'Books'
+};
+
 /* ── QUIZ DIFFICULTY ── */
 const QUIZ_LEVELS = [
   { key: 'beginner', label: 'Beginner', color: '#2c5d52' },
@@ -1987,7 +2059,13 @@ class App extends Component {
       readingType: null,
       readingItem: null,
       toast: null,
-      bookmarks: [],
+      /* Mirror first, then IndexedDB replaces it once open — see loadSaved. */
+      saved: lsGet('saved', []),
+      savedTab: 'bookmark',
+      savedQuery: '',
+      savedConfirm: null,
+      activeLine: null,
+      jumpLine: null,
       calDay: null,
       calViewY: new Date().getFullYear(),
       calViewM: new Date().getMonth(),
@@ -2290,42 +2368,35 @@ class App extends Component {
       lsSet('lastRead', next);
       this.setState({ lastRead: next });
     });
-    _defineProperty(this, "openReading", (type, item) => {
+    _defineProperty(this, "openReading", (type, item, opts) => {
+      const o = opts || {};
       const prev = this.state.lastRead;
       const same = prev && prev.title === (item && item.title) && prev.type === type;
-      const mark = { type, title: (item && item.title) || '', pos: same ? prev.pos || 0 : 0, at: Date.now() };
+      // a jump to a saved passage wins over the remembered position
+      const mark = { type, title: (item && item.title) || '', pos: same && !o.jumpLine ? prev.pos || 0 : 0, at: Date.now() };
       lsSet('lastRead', mark);
       this.setState({
         screen: 'reading',
         readingType: type,
         readingItem: item,
-        readingLang: null,
-        lastRead: mark
+        readingLang: o.lang || null,
+        lastRead: mark,
+        activeLine: null,
+        jumpLine: o.jumpLine || null
       }, () => {
         // React may reuse the scroll node from a previous reading, so the offset
         // is always set explicitly — to where you left off, or to the top
         const inner = document.querySelector('.app > .s .s');
         if (inner) inner.scrollTop = mark.pos || 0;
+        if (o.jumpLine) this.jumpToLine(o.jumpLine);
       });
     });
     /* Reopen whatever Continue reading points at, from whichever list holds it. */
     _defineProperty(this, "resumeReading", () => {
       const lr = this.state.lastRead;
       if (!lr) return;
-      const pools = {
-        dua: this.state.liveDuas || DUAS,
-        ziyarah: this.state.liveZiyarat || ZIYARAT,
-        aamal: this.state.liveAamals || []
-      };
-      let item = (pools[lr.type] || []).find(x => x.title === lr.title);
-      if (!item) {
-        const nahj = this.state.liveNahj || NAHJ;
-        ['sermons', 'letters', 'sayings'].forEach(k => {
-          if (!item) item = (nahj[k] || []).find(x => x.title === lr.title);
-        });
-        if (item) return this.openReading('nahj', item);
-      }
-      if (item) this.openReading(lr.type, item);
+      const hit = this.findContent(lr.type, null, lr.title);
+      if (hit) this.openReading(hit[0], hit[1]);
       else this.showToast('That reading is no longer in the library');
     });
     _defineProperty(this, "t", key => {
@@ -2642,22 +2713,117 @@ class App extends Component {
         this.showToast('Share not available on this device');
       }
     });
-    _defineProperty(this, "handleBookmark", () => {
-      const r = this.state.readingItem;
-      if (!r) return;
-      const bm = this.state.bookmarks;
-      const exists = bm.some(b => b.title === r.title);
-      if (exists) {
-        this.setState({
-          bookmarks: bm.filter(b => b.title !== r.title)
-        });
-        this.showToast('Bookmark removed');
-      } else {
-        this.setState({
-          bookmarks: [...bm, r]
-        });
-        this.showToast('Bookmarked');
+    /* IndexedDB is the record; state and the localStorage mirror follow it.
+       _saved is the synchronous copy every writer reads and replaces. setState is
+       batched, so two saves in one tick would both start from the same stale
+       array and the second would drop the first — which is exactly what happens
+       when someone taps bookmark and favourite together. */
+    _defineProperty(this, "writeSaved", list => {
+      this._saved = list;
+      lsSet('saved', list);
+      this.setState({ saved: list });
+    });
+    _defineProperty(this, "loadSaved", () => {
+      savedReadAll().then(rows => {
+        if (!Array.isArray(rows)) return;
+        const list = rows.slice().sort((a, b) => (b.at || 0) - (a.at || 0));
+        this.writeSaved(list);
+      }).catch(() => {
+        // no IndexedDB here: the mirror already loaded, and writes keep updating it
+      });
+    });
+    _defineProperty(this, "isSaved", (kind, contentId, lineId) => {
+      const id = markId(kind, contentId, lineId);
+      return this.state.saved.some(m => m.id === id);
+    });
+    /* The id is derived from what is being saved, so saving twice is a no-op
+       rather than a duplicate row. */
+    _defineProperty(this, "toggleSaved", (kind, rec) => {
+      const id = markId(kind, rec.contentId, rec.lineId);
+      const cur = this._saved || this.state.saved;
+      const had = cur.some(m => m.id === id);
+      const row = { ...rec, id, kind, at: Date.now() };
+      this.writeSaved(had ? cur.filter(m => m.id !== id) : [row, ...cur]);
+      if (had) savedDelete([id]);else savedPut(row);
+      this.showToast(had ? kind === 'bookmark' ? 'Bookmark removed' : 'Removed from favourites' : kind === 'bookmark' ? 'Bookmarked' : 'Added to favourites');
+      return !had;
+    });
+    _defineProperty(this, "removeSaved", id => {
+      const cur = this._saved || this.state.saved;
+      const row = cur.find(m => m.id === id);
+      this.writeSaved(cur.filter(m => m.id !== id));
+      this.setState({ savedConfirm: null });
+      savedDelete([id]);
+      this.showToast(row && row.kind === 'favourite' ? 'Removed from favourites' : 'Bookmark removed');
+    });
+    _defineProperty(this, "clearSaved", kind => {
+      const cur = this._saved || this.state.saved;
+      const gone = cur.filter(m => m.kind === kind);
+      this.writeSaved(cur.filter(m => m.kind !== kind));
+      this.setState({ savedConfirm: null });
+      savedDelete(gone.map(m => m.id));
+      this.showToast(`Cleared ${gone.length} ${kind === 'bookmark' ? 'bookmark' : 'favourite'}${gone.length === 1 ? '' : 's'}`);
+    });
+    /* The shape a backup would write and read: a version, and rows that carry
+       everything needed to restore them without the rest of the app's state. */
+    _defineProperty(this, "serialiseSaved", () => ({
+      app: 'ahlul-bayt-ireland',
+      v: 1,
+      exportedAt: Date.now(),
+      saved: this.state.saved
+    }));
+    /* Find a library item from a saved mark. Identity first, title second, so a
+       bookmark survives an item being edited but not renamed, and vice versa. */
+    _defineProperty(this, "findContent", (type, contentId, title) => {
+      const st = this.state;
+      const pools = {
+        dua: st.liveDuas || DUAS,
+        ziyarah: st.liveZiyarat || ZIYARAT,
+        aamal: st.liveAamals || []
+      };
+      const nahj = st.liveNahj || NAHJ;
+      const all = [];
+      Object.keys(pools).forEach(k => (pools[k] || []).forEach(x => all.push([k, x])));
+      ['sermons', 'letters', 'sayings'].forEach(k => (nahj[k] || []).forEach(x => all.push(['nahj', x])));
+      return all.find(([k, x]) => contentKey(k, x) === contentId) || (title ? all.find(([k, x]) => x.title === title && k === type) || all.find(([, x]) => x.title === title) : null) || null;
+    });
+    _defineProperty(this, "openSaved", mark => {
+      const hit = this.findContent(mark.contentType, mark.contentId, mark.contentTitle);
+      if (!hit) return this.showToast('That passage is no longer in the library');
+      this.openReading(hit[0], hit[1], { lang: mark.lang, jumpLine: mark.lineId });
+    });
+    /* The reader may still be laying out when the jump is asked for, so this
+       retries briefly rather than failing on the first miss. */
+    _defineProperty(this, "jumpToLine", (lineId, tries) => {
+      const n = tries || 0;
+      const el = document.querySelector(`[data-line="${lineId}"]`);
+      if (!el) {
+        if (n < 10) return setTimeout(() => this.jumpToLine(lineId, n + 1), 70);
+        return this.showToast('Saved passage not found — the text may have changed');
       }
+      /* An explicit offset on the app's own scroller rather than scrollIntoView,
+         and instantly rather than smoothly. A smooth scroll is an animation, and
+         an animation that is refused (reduced motion) or starved (a backgrounded
+         tab) leaves the reader sitting at the top with no idea why. The flash is
+         what says "here", so the travel adds nothing. */
+      const sc = document.querySelector('.app > .s .s');
+      const centre = () => {
+        const r = el.getBoundingClientRect();
+        if (sc && sc.contains(el)) {
+          const box = sc.getBoundingClientRect();
+          const off = r.top + r.height / 2 - (box.top + box.height / 2);
+          if (n === 0 || Math.abs(off) > 24) sc.scrollTo({ top: Math.max(0, sc.scrollTop + off), behavior: 'auto' });
+        } else if (n === 0) {
+          el.scrollIntoView({ block: 'center', behavior: 'auto' });
+        }
+      };
+      centre();
+      /* Arabic at reading size reflows once its web font lands, which slides the
+         target out from under the scroll, so the position is re-asserted a few
+         times before the highlight is left alone to fade. */
+      if (n < 4) return setTimeout(() => this.jumpToLine(lineId, n + 1), 130);
+      clearTimeout(this._jumpTimer);
+      this._jumpTimer = setTimeout(() => this.setState({ jumpLine: null }), 2600);
     });
     _defineProperty(this, "handlePDF", () => {
       this.showToast('Opening prayer calendar…');
@@ -2716,6 +2882,7 @@ class App extends Component {
   }
   componentDidMount() {
     this._lastAlertTime = '';
+    this.loadSaved();
     /* Re-enhance on structural change only — the clock ticks every second and
        only rewrites text, which childList mutations ignore. */
     bindTapKeys();
@@ -4401,6 +4568,126 @@ class App extends Component {
   }
 
   /* ── LIBRARY ── */
+  /* \u2500\u2500 SAVED \u2500\u2500
+     Bookmarks and favourites live under one tab because they are the same act
+     with different intent; splitting them across two screens would hide half of
+     what a reader has kept. Removal is a two-step press rather than a dialog \u2014
+     the app has no modal, and an accidental tap on a phone is easy. */
+  renderSaved(st) {
+    const kind = st.savedTab;
+    const accent = kind === 'bookmark' ? '#3a4a78' : '#8a2f52';
+    const tint = kind === 'bookmark' ? '#e9ecf5' : '#f7e6ed';
+    const count = k => st.saved.filter(m => m.kind === k).length;
+    const all = st.saved.filter(m => m.kind === kind);
+    const q = st.savedQuery.trim().toLowerCase();
+    const rows = q ? all.filter(m => `${m.contentTitle || ''} ${m.preview || ''}`.toLowerCase().includes(q)) : all;
+    const clearKey = 'clear:' + kind;
+    const subTab = ([k, label]) => {
+      const on = kind === k;
+      const n = count(k);
+      return /*#__PURE__*/React.createElement("div", {
+        key: k,
+        onClick: () => this.setState({ savedTab: k, savedQuery: '', savedConfirm: null }),
+        style: {
+          flex: 1, textAlign: 'center', padding: '11px 0', fontSize: 13, cursor: 'pointer',
+          borderRadius: 12, fontWeight: on ? 700 : 500,
+          color: on ? k === 'bookmark' ? '#3a4a78' : '#8a2f52' : NEU.muted,
+          background: NEU.surf, border: NEU.edge,
+          boxShadow: on ? neuIn(.6) : neuUp(.6),
+          transition: 'box-shadow .18s ease, color .18s ease'
+        }
+      }, label, n > 0 ? ` \u00b7 ${n}` : '');
+    };
+    const removeBtn = m => st.savedConfirm === m.id ? /*#__PURE__*/React.createElement("div", {
+      onClick: e => { e.stopPropagation(); this.removeSaved(m.id); },
+      "aria-label": `Confirm removing ${m.contentTitle}`,
+      style: {
+        flexShrink: 0, padding: '9px 12px', borderRadius: 11, cursor: 'pointer',
+        background: '#6e2230', color: '#f7e8e6', fontSize: 12, fontWeight: 700, minHeight: 44,
+        display: 'flex', alignItems: 'center'
+      }
+    }, "Remove?") : /*#__PURE__*/React.createElement("div", {
+      onClick: e => { e.stopPropagation(); this.setState({ savedConfirm: m.id }); },
+      "aria-label": `Remove ${m.contentTitle}`,
+      style: {
+        flexShrink: 0, width: 44, height: 44, borderRadius: 12, cursor: 'pointer',
+        display: 'flex', alignItems: 'center', justifyContent: 'center'
+      }
+    }, icon('trash-2', { size: 15, stroke: NEU.muted }));
+    return /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+      style: { display: 'flex', gap: 8, marginBottom: 14 }
+    }, [['bookmark', 'Bookmarks'], ['favourite', 'Favourites']].map(subTab)),
+    all.length > 6 && /*#__PURE__*/React.createElement("div", {
+      style: { display: 'flex', alignItems: 'center', gap: 10, ...neuWell(14, .8), padding: '11px 14px', marginBottom: 14 }
+    }, icon('search', { size: 17, stroke: '#6b6252' }), /*#__PURE__*/React.createElement("input", {
+      value: st.savedQuery,
+      onChange: e => this.setState({ savedQuery: e.target.value }),
+      "aria-label": `Search ${kind === 'bookmark' ? 'bookmarks' : 'favourites'}`,
+      placeholder: 'Search titles and passages',
+      style: { border: 'none', outline: 'none', background: 'transparent', fontSize: 14, color: '#3f3a32', width: '100%' }
+    })),
+    rows.length === 0 && /*#__PURE__*/React.createElement("div", {
+      style: { ...neuCard(18, .85), padding: '30px 22px', textAlign: 'center' }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        width: 54, height: 54, borderRadius: '50%', margin: '0 auto 14px', display: 'flex',
+        alignItems: 'center', justifyContent: 'center', color: accent,
+        background: `linear-gradient(145deg, ${tint}, ${accent}22)`
+      }
+    }, icon(kind === 'bookmark' ? 'bookmark' : 'heart', { size: 24 })), /*#__PURE__*/React.createElement("div", {
+      style: { fontFamily: 'Spectral,serif', fontSize: 16, fontWeight: 600, color: NEU.ink }
+    }, q ? 'Nothing matches that search' : kind === 'bookmark' ? 'No bookmarks yet' : 'No favourites yet'), /*#__PURE__*/React.createElement("div", {
+      style: { fontSize: 12.5, color: NEU.muted, marginTop: 6, lineHeight: 1.5 }
+    }, q ? 'Try a word from the title or the passage.' : `Open any du\u02bf\u0101\u02be, ziy\u0101rah, amaal or book, tap the line you want to keep, and choose the ${kind === 'bookmark' ? 'bookmark' : 'heart'}.`)),
+    rows.length > 0 && /*#__PURE__*/React.createElement("div", {
+      style: { display: 'flex', flexDirection: 'column', gap: 10 }
+    }, rows.map(m => /*#__PURE__*/React.createElement("div", {
+      key: m.id,
+      style: { ...neuCard(16, .85), padding: '13px 8px 11px 15px' }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: { display: 'flex', alignItems: 'flex-start', gap: 8 }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: { flex: 1, minWidth: 0 }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: { fontSize: 10, letterSpacing: .9, textTransform: 'uppercase', fontWeight: 800, color: accent }
+    }, `${CONTENT_KIND[m.contentType] || 'Library'} \u00b7 ${m.lineId ? 'Passage ' + m.lineNo : 'Whole text'}`), /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontFamily: 'Spectral,serif', fontSize: 15.5, fontWeight: 600, color: NEU.ink,
+        marginTop: 2, lineHeight: 1.25
+      }
+    }, m.contentTitle)), removeBtn(m)), m.preview && /*#__PURE__*/React.createElement("div", {
+      dir: /[\u0600-\u06FF]/.test(m.preview) ? 'rtl' : undefined,
+      style: {
+        fontSize: 12.5, color: NEU.muted, marginTop: 7, lineHeight: 1.5,
+        paddingLeft: 10, borderLeft: `2px solid ${accent}44`, marginRight: 7
+      }
+    }, m.preview), /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        gap: 8, marginTop: 9, marginRight: 7
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: { fontSize: 11, color: NEU.muted }
+    }, 'Saved ' + new Date(m.at).toLocaleDateString('en-IE', { day: 'numeric', month: 'short', year: 'numeric' })), /*#__PURE__*/React.createElement("div", {
+      onClick: () => this.openSaved(m),
+      style: {
+        display: 'flex', alignItems: 'center', gap: 4, cursor: 'pointer', color: accent,
+        fontSize: 12.5, fontWeight: 700, minHeight: 44, padding: '0 4px'
+      }
+    }, 'Open in reader', /*#__PURE__*/React.createElement("span", { "aria-hidden": "true" }, "\u203a")))))),
+    all.length > 0 && /*#__PURE__*/React.createElement("div", {
+      onClick: () => st.savedConfirm === clearKey ? this.clearSaved(kind) : this.setState({ savedConfirm: clearKey }),
+      style: {
+        marginTop: 14, textAlign: 'center', padding: '13px 12px', borderRadius: 13, cursor: 'pointer',
+        border: `1.5px solid ${st.savedConfirm === clearKey ? '#6e2230' : 'rgba(110,34,48,.3)'}`,
+        color: '#6e2230', fontSize: 13, fontWeight: 700, minHeight: 44
+      }
+    }, st.savedConfirm === clearKey ? `Tap again to clear all ${all.length}` : `Clear all ${kind === 'bookmark' ? 'bookmarks' : 'favourites'}`),
+    /*#__PURE__*/React.createElement("div", {
+      style: { fontSize: 11.5, color: NEU.muted, marginTop: 18, lineHeight: 1.6, textAlign: 'center' }
+    }, 'Saved on this device. Clearing your browser or app data may remove your bookmarks and progress.'));
+  }
+
   renderLibrary(st) {
     const q = st.libQuery.trim().toLowerCase();
     const duaList = st.liveDuas || DUAS;
@@ -4433,6 +4720,13 @@ class App extends Component {
         title: 'Books',
         accent: '#2c5d52',
         tint: '#e6efe9',
+        list: [],
+        cats: []
+      },
+      saved: {
+        title: 'Saved',
+        accent: '#3a4a78',
+        tint: '#e9ecf5',
         list: [],
         cats: []
       }
@@ -4574,7 +4868,11 @@ class App extends Component {
         display: 'flex',
         gap: 8
       }
-    }, [['dua', "Duʿāʾ", '🤲'], ['ziyarah', 'Ziyārah', '🕌'], ['aamal', 'Amaals', '✨'], ['nahj', 'Books', '📖']].map(libTab))), /*#__PURE__*/React.createElement("div", {
+    }, [['dua', "Duʿāʾ", '🤲'], ['ziyarah', 'Ziyārah', '🕌'], ['aamal', 'Amaals', '✨'], ['nahj', 'Books', '📖'], ['saved', 'Saved', '🔖']].map(libTab))), st.libTab === 'saved' && /*#__PURE__*/React.createElement("div", {
+      style: {
+        marginTop: 16
+      }
+    }, this.renderSaved(st)), st.libTab !== 'saved' && /*#__PURE__*/React.createElement("div", {
       style: {
         display: 'flex',
         alignItems: 'center',
@@ -4767,7 +5065,7 @@ class App extends Component {
         color: '#2c5d52',
         letterSpacing: .5
       }
-    }, "PDF · tap to read")))), libCards.length === 0 && nahjCards.length === 0 && /*#__PURE__*/React.createElement("div", {
+    }, "PDF · tap to read")))), st.libTab !== 'saved' && libCards.length === 0 && nahjCards.length === 0 && /*#__PURE__*/React.createElement("div", {
       style: {
         textAlign: 'center',
         padding: '40px 20px',
@@ -4780,6 +5078,70 @@ class App extends Component {
   }
 
   /* ── READING ── */
+  /* One addressable passage. The two actions sit in a strip that stays collapsed
+     until the line is hovered, focused, tapped, or already saved, so a page of
+     scripture reads as scripture rather than as a list of controls.
+     The line takes its own tabindex and keeps its cursor in CSS: given an inline
+     one, enhanceTappables would label every verse "button", which is exactly what
+     a screen reader must not hear on a reading page. */
+  renderLine(st, o) {
+    const bm = this.isSaved('bookmark', o.contentId, o.lineId);
+    const fav = this.isSaved('favourite', o.contentId, o.lineId);
+    const lit = bm || fav || st.activeLine === o.lineId;
+    const rec = {
+      contentId: o.contentId,
+      contentType: o.contentType,
+      contentTitle: o.contentTitle,
+      lineId: o.lineId,
+      lineNo: o.lineNo,
+      lang: o.lang,
+      preview: o.text.length > 120 ? o.text.slice(0, 117) + '\u2026' : o.text
+    };
+    const act = (kind, name, on, label) => /*#__PURE__*/React.createElement("div", {
+      className: "abi-line-act",
+      role: "button",
+      tabIndex: 0,
+      "aria-label": label,
+      "aria-pressed": on ? 'true' : 'false',
+      onClick: e => {
+        e.stopPropagation();
+        this.toggleSaved(kind, rec);
+      },
+      onKeyDown: e => {
+        if (e.key !== 'Enter' && e.key !== ' ') return;
+        e.preventDefault();
+        e.stopPropagation();
+        this.toggleSaved(kind, rec);
+      },
+      style: {
+        background: on ? st.dark ? 'rgba(216,184,99,.16)' : o.accent + '1f' : 'transparent'
+      }
+    }, icon(name, {
+      size: 16,
+      stroke: on ? o.accent : o.rd.muted,
+      fill: on ? o.accent : 'none'
+    }));
+    return /*#__PURE__*/React.createElement("div", {
+      key: o.lineNo + '-' + o.lineId,
+      className: 'abi-line' + (lit ? ' on' : '') + (st.jumpLine === o.lineId ? ' abi-flash' : ''),
+      "data-line": o.lineId,
+      tabIndex: 0,
+      onClick: () => this.setState({
+        activeLine: st.activeLine === o.lineId ? null : o.lineId
+      }),
+      // focus reveals the same actions a tap does, so the keyboard route matches
+      onFocus: () => {
+        if (st.activeLine !== o.lineId) this.setState({ activeLine: o.lineId });
+      },
+      style: {
+        padding: '2px 6px',
+        margin: '0 -6px'
+      }
+    }, o.body, lit && /*#__PURE__*/React.createElement("div", {
+      className: "abi-line-acts"
+    }, act('bookmark', 'bookmark', bm, (bm ? 'Remove bookmark from passage ' : 'Bookmark passage ') + o.lineNo), act('favourite', 'heart', fav, fav ? 'Remove passage ' + o.lineNo + ' from favourites' : 'Add passage ' + o.lineNo + ' to favourites')));
+  }
+
   renderReading(st) {
     const dark = st.dark;
     const r = st.readingItem || {};
@@ -4815,7 +5177,17 @@ class App extends Component {
       aamal: { English: 'Daily Amaal', 'العربية': 'عمل', 'हिन्दी': 'आमाल', 'فارسی': 'اعمال', Urdu: 'اعمال' }
     };
     const kicker = KICKERS[rtype] ? KICKERS[rtype][st.lang] || KICKERS[rtype].English : r.ref || 'Books';
-    const isBookmarked = st.bookmarks.some(b => b.title === r.title);
+    const cId = contentKey(rtype, r);
+    /* Repeated refrains would otherwise share one id, so a second occurrence is
+       suffixed. Numbering still comes from position; identity does not. */
+    const mkLines = txt => {
+      const seen = {};
+      return String(txt).replace(/\n\s*\n+/g, '\n').split('\n').map(t => t.trim()).filter(Boolean).map((text, i) => {
+        const h = passageKey(text);
+        const n = seen[h] = (seen[h] || 0) + 1;
+        return { text, id: n > 1 ? h + '~' + n : h, no: i + 1 };
+      });
+    };
     const localBody = trCode ? r['body_' + trCode] || '' : '';
     const trRtl = !!localBody && (trCode === 'fa' || trCode === 'ur');
     const enBody = localBody || r.body || r.tr || '';
@@ -4861,12 +5233,27 @@ class App extends Component {
       "aria-label": this.t('lib.share'),
       style: miniBtn
     }, icon('share-2', { size: 14, stroke: readAccent }));
+    /* The header pair marks the whole item; the strips down the page mark a line.
+       Both land in the same store, so Saved shows them together. */
+    const wholeRec = {
+      contentId: cId, contentType: rtype, contentTitle: r.title || '',
+      lineId: null, lineNo: 0, lang,
+      preview: String(r.tr || r.sum || r.note || r.title || '').slice(0, 120)
+    };
+    const itemBookmarked = this.isSaved('bookmark', cId, null);
+    const itemFavourite = this.isSaved('favourite', cId, null);
     const bookmarkBtn = React.createElement("div", {
-      onClick: this.handleBookmark,
-      "aria-label": isBookmarked ? 'Remove bookmark' : 'Bookmark this',
-      "aria-pressed": isBookmarked ? 'true' : 'false',
+      onClick: () => this.toggleSaved('bookmark', wholeRec),
+      "aria-label": itemBookmarked ? 'Remove bookmark from this text' : 'Bookmark this text',
+      "aria-pressed": itemBookmarked ? 'true' : 'false',
       style: miniBtn
-    }, icon('bookmark', { size: 15, stroke: readAccent, fill: isBookmarked ? readAccent : 'none' }));
+    }, icon('bookmark', { size: 15, stroke: readAccent, fill: itemBookmarked ? readAccent : 'none' }));
+    const favouriteBtn = React.createElement("div", {
+      onClick: () => this.toggleSaved('favourite', wholeRec),
+      "aria-label": itemFavourite ? 'Remove this text from favourites' : 'Add this text to favourites',
+      "aria-pressed": itemFavourite ? 'true' : 'false',
+      style: miniBtn
+    }, icon('heart', { size: 15, stroke: readAccent, fill: itemFavourite ? readAccent : 'none' }));
     return React.createElement("div", {
       style: { height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: rd.bg }
     }, React.createElement("div", {
@@ -4915,37 +5302,43 @@ class App extends Component {
           React.createElement("div", { style: { fontSize: 10, letterSpacing: .9, textTransform: 'uppercase', fontWeight: 700, color: readAccent } }, kicker),
           React.createElement("div", { style: { fontFamily: 'Spectral,serif', fontSize: 15, fontWeight: 600, color: rd.text, marginTop: 1, lineHeight: 1.2 } }, r.title),
           r.note && React.createElement("div", { style: { fontSize: 10.5, color: rd.muted, marginTop: 2, fontStyle: 'italic' } }, r.note)),
-        shareBtn, bookmarkBtn),
+        shareBtn, bookmarkBtn, favouriteBtn),
       tabs.length > 1 && React.createElement("div", { style: { display: 'flex', gap: 8, marginTop: 8 } }, tabs.map(pill))),
     lang === 'ar' && hasAr && React.createElement("div", {
       style: { background: rd.surf, border: `1px solid ${rd.border}`, borderRadius: 20, padding: '18px 16px' }
-    }, String(r.ar).replace(/\n\s*\n+/g, '\n').trim().split('\n').map((ln, i) => {
+    }, mkLines(r.ar).map(L => {
       // Latin lines inside an Arabic text (sub-headings, recitation instructions) must not
       // inherit the much larger Arabic size — they get the Latin face at translation size.
-      const latin = /[A-Za-z]/.test(ln) && !/[\u0600-\u06FF\u0750-\u077F\uFB50-\uFDFF\uFE70-\uFEFF]/.test(ln);
-      return React.createElement("div", {
-        key: i,
-        dir: latin ? 'ltr' : 'rtl',
-        style: latin ? {
-          fontFamily: 'Spectral,serif', fontSize: arSize, lineHeight: 1.4,
-          color: rd.muted, textAlign: 'center', fontStyle: 'italic', margin: '14px 0'
-        } : {
-          fontFamily: "'Noto Naskh Arabic','Amiri',serif", fontSize: arSize,
-          lineHeight: 1.9, color: rd.arInk, textAlign: 'center'
-        }
-      }, ln);
+      const latin = /[A-Za-z]/.test(L.text) && !/[\u0600-\u06FF\u0750-\u077F\uFB50-\uFDFF\uFE70-\uFEFF]/.test(L.text);
+      return this.renderLine(st, {
+        rd, accent: readAccent, contentId: cId, contentType: rtype,
+        contentTitle: r.title || '', lineId: L.id, lineNo: L.no, text: L.text, lang: 'ar',
+        body: React.createElement("div", {
+          dir: latin ? 'ltr' : 'rtl',
+          style: latin ? {
+            fontFamily: 'Spectral,serif', fontSize: arSize, lineHeight: 1.4,
+            color: rd.muted, textAlign: 'center', fontStyle: 'italic', margin: '14px 0'
+          } : {
+            fontFamily: "'Noto Naskh Arabic','Amiri',serif", fontSize: arSize,
+            lineHeight: 1.9, color: rd.arInk, textAlign: 'center'
+          }
+        }, L.text)
+      });
     })),
     lang === 'en' && hasEn && React.createElement(React.Fragment, null,
-      enBody && React.createElement("div", {
-        dir: trRtl ? 'rtl' : undefined,
-        style: {
-          fontFamily: trRtl ? "'Noto Naskh Arabic','Amiri',serif" : 'Spectral,serif',
-          fontSize: trSize,
-          lineHeight: trRtl ? 1.9 : 1.6,
-          color: rd.text,
-          whiteSpace: 'pre-line'
-        }
-      }, String(enBody).replace(/\n\s*\n+/g, '\n').trim()),
+      enBody && React.createElement("div", null, mkLines(enBody).map(L => this.renderLine(st, {
+        rd, accent: readAccent, contentId: cId, contentType: rtype,
+        contentTitle: r.title || '', lineId: L.id, lineNo: L.no, text: L.text, lang: 'en',
+        body: React.createElement("div", {
+          dir: trRtl ? 'rtl' : undefined,
+          style: {
+            fontFamily: trRtl ? "'Noto Naskh Arabic','Amiri',serif" : 'Spectral,serif',
+            fontSize: trSize,
+            lineHeight: trRtl ? 1.9 : 1.6,
+            color: rd.text
+          }
+        }, L.text)
+      }))),
       r.sum && React.createElement("div", {
         style: { background: rd.surf, border: `1px solid ${rd.border}`, borderRadius: 16, padding: '15px 17px', marginTop: enBody ? 20 : 0 }
       }, React.createElement("div", {
@@ -5485,37 +5878,40 @@ class App extends Component {
         minWidth: 44,
         minHeight: 44
       }
-    }, "A+")))), st.bookmarks.length > 0 && /*#__PURE__*/React.createElement("div", {
+    }, "A+")))), st.saved.length > 0 && /*#__PURE__*/React.createElement("div", {
+      onClick: () => this.setState({
+        screen: 'library',
+        libTab: 'saved',
+        libQuery: '',
+        libCat: 'All'
+      }),
+      className: "neu-press",
       style: {
-        marginTop: 22
-      }
-    }, /*#__PURE__*/React.createElement("div", {
-      style: {
-        fontSize: 11,
-        letterSpacing: 1.2,
-        textTransform: 'uppercase',
-        fontWeight: 700,
-        color: '#6b6252',
-        marginBottom: 12
-      }
-    }, "Bookmarks"), /*#__PURE__*/React.createElement("div", {
-      style: {
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 8
-      }
-    }, st.bookmarks.map((b, i) => /*#__PURE__*/React.createElement("div", {
-      key: i,
-      onClick: () => this.openReading(null, b),
-      style: {
+        ...neuCard(14, .85),
+        marginTop: 22,
+        padding: '14px 15px',
         display: 'flex',
         alignItems: 'center',
-        justifyContent: 'space-between',
-        background: NEU.surf, boxShadow: neuUp(),
-        border: NEU.edge,
-        borderRadius: 13,
-        padding: '13px 15px',
+        gap: 12,
         cursor: 'pointer'
+      }
+    }, /*#__PURE__*/React.createElement("span", {
+      "aria-hidden": "true",
+      style: {
+        flexShrink: 0,
+        width: 38,
+        height: 38,
+        borderRadius: '50%',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        color: '#e9ecf5',
+        background: 'linear-gradient(145deg, #3a4a78e6, #3a4a78)'
+      }
+    }, icon('bookmark', { size: 17 })), /*#__PURE__*/React.createElement("div", {
+      style: {
+        flex: 1,
+        minWidth: 0
       }
     }, /*#__PURE__*/React.createElement("div", {
       style: {
@@ -5523,12 +5919,23 @@ class App extends Component {
         fontWeight: 600,
         color: '#2c2823'
       }
-    }, b.title), /*#__PURE__*/React.createElement("span", {
+    }, "Saved passages"), /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 11.5,
+        color: NEU.muted,
+        marginTop: 2
+      }
+    }, (() => {
+      const b = st.saved.filter(m => m.kind === 'bookmark').length;
+      const f = st.saved.length - b;
+      return `${b} bookmark${b === 1 ? '' : 's'} \u00b7 ${f} favourite${f === 1 ? '' : 's'}`;
+    })())), /*#__PURE__*/React.createElement("span", {
+      "aria-hidden": "true",
       style: {
         color: '#6b6252',
         fontSize: 18
       }
-    }, "›"))))), /*#__PURE__*/React.createElement("div", {
+    }, "\u203a")), /*#__PURE__*/React.createElement("div", {
       style: {
         textAlign: 'center',
         fontSize: 11.5,

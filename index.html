@@ -56,6 +56,24 @@
       border-radius: 12px; background: #1f5145; color: #f3ead4; font-size: 14px; font-weight: 600;
       transition: top .18s ease; }
     .abi-skip:focus { top: 12px; }
+    /* Readable passages. The cursor lives here rather than inline so enhanceTappables
+       leaves the line alone: a verse announced as "button" would make the whole reader
+       unusable with a screen reader. The line carries its own tabindex; tapping or
+       focusing it renders the action strip, which is then tabbable. The strip is only
+       in the DOM where it is wanted — Jawshan Kabeer is 1300 lines, and two buttons on
+       every one of them triples the reader's nodes for nothing. */
+    .abi-line { cursor: pointer; border-radius: 10px; transition: background .18s ease; }
+    .abi-line:hover { background: rgba(31,81,69,.05); }
+    :root[data-theme="dark"] .abi-line:hover { background: rgba(255,255,255,.05); }
+    .abi-line-acts { display: flex; gap: 6px; align-items: center; justify-content: flex-end; }
+    .abi-line-act { cursor: pointer; width: 40px; height: 40px; border-radius: 11px;
+      display: flex; align-items: center; justify-content: center; }
+    .abi-line:focus-visible, .abi-line-act:focus-visible {
+      outline: 3px solid #1f5145; outline-offset: 2px; }
+    :root[data-theme="dark"] .abi-line:focus-visible,
+    :root[data-theme="dark"] .abi-line-act:focus-visible { outline-color: #e2c67c; }
+    @keyframes abi-flash { 0%, 55% { background: rgba(216,184,99,.38); } 100% { background: transparent; } }
+    .abi-flash { animation: abi-flash 2.8s ease both; }
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after { animation-duration: .01ms !important; animation-delay: 0ms !important;
         animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
