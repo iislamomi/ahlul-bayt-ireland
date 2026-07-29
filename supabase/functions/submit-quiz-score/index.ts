@@ -158,14 +158,22 @@ Deno.serve(async (req: Request) => {
   const attemptId = String(body.attemptId ?? '').slice(0, 64);
   const quizId = String(body.quizId ?? '').slice(0, 64);
   const installId = String(body.installId ?? '').slice(0, 100);
-  const difficulty = normaliseDifficulty(body.difficulty);
+  /* A submitted difficulty is a claim, not content to be tidied up. Passing it
+   * through normaliseDifficulty() turned anything unrecognised into 'easy', so a
+   * junk value quietly landed on a real board instead of being refused — the one
+   * check in here that was letting a bad request through. Legacy names are still
+   * accepted, in case a client cached before the rename is still submitting. */
+  const rawDifficulty = String(body.difficulty ?? '').toLowerCase().trim();
+  const difficulty = DIFFICULTIES.includes(rawDifficulty)
+    ? rawDifficulty
+    : LEGACY_DIFFICULTY[rawDifficulty];
   const durationMs = Number(body.durationMs);
   const answers = Array.isArray(body.answers) ? body.answers.slice(0, 100) : null;
 
   if (!/^[A-Za-z0-9_-]{8,64}$/.test(attemptId)) return json({ error: 'bad_attempt_id' }, 400);
   if (!quizId) return json({ error: 'bad_quiz' }, 400);
   if (!installId) return json({ error: 'bad_install' }, 400);
-  if (!DIFFICULTIES.includes(difficulty as any)) return json({ error: 'bad_difficulty' }, 400);
+  if (!difficulty) return json({ error: 'bad_difficulty' }, 400);
   if (!answers || !answers.length) return json({ error: 'no_answers' }, 400);
   if (!Number.isFinite(durationMs) || durationMs < 0) return json({ error: 'bad_duration' }, 400);
 
