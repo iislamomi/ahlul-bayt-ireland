@@ -9,10 +9,97 @@
  * Deploy:  supabase functions deploy submit-quiz-score --no-verify-jwt
  * Env:     SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, ABI_INSTALL_PEPPER
  */
-import {
-  SCORING, computeScore, MIN_MS_PER_QUESTION, MAX_MS_PER_QUESTION,
-  validateDisplayName, DIFFICULTIES, normaliseDifficulty,
-} from '../_shared/quiz.ts';
+/* The rules live here rather than in a shared module on purpose: a relative
+ * import reaching outside the function's own directory is the usual reason an
+ * Edge Function boots to a 502, and a leaderboard that cannot accept a score is
+ * worse than a little duplication.
+ *
+ * The browser holds the matching copy in app.js (SCORING, computeScore,
+ * validateDisplayName, sanitiseName, quizLevel). Change one, change the other,
+ * or a participant sees one score and the board shows another. test/unit.js
+ * covers the browser copy; the two are compared by eye.
+ */
+
+/* score = 100 per correct + 25 for finishing + up to 50 shared time bonus.
+ * The time bonus is capped below the value of one correct answer, so ten
+ * correct scores at least 1000 and nine correct at most 975 \u2014 answering
+ * carefully can never lose to answering quickly. */
+const SCORING = {
+  BASE_PER_CORRECT: 100,
+  COMPLETION_BONUS: 25,
+  MAX_TIME_BONUS: 50,
+  SECONDS_PER_QUESTION: 10,
+};
+
+function computeScore(correct: number, total: number, durationMs: number, completed: boolean) {
+  const parMs = total * SCORING.SECONDS_PER_QUESTION * 1000;
+  const used = Math.max(0, Math.min(durationMs, parMs));
+  const timeBonus = parMs > 0 ? Math.round(SCORING.MAX_TIME_BONUS * (parMs - used) / parMs) : 0;
+  return SCORING.BASE_PER_CORRECT * correct + (completed ? SCORING.COMPLETION_BONUS : 0) + timeBonus;
+}
+
+/* A human reads the question before answering. Below this the attempt was
+ * scripted; above it the client sat on the result longer than the timer allows. */
+const MIN_MS_PER_QUESTION = 900;
+const MAX_MS_PER_QUESTION = SCORING.SECONDS_PER_QUESTION * 1000 + 5000;
+
+const NAME_MIN = 2;
+const NAME_MAX = 20;
+// C0/C1 controls, bidi overrides, zero-width joiners and the BOM: invisible, and
+// on a public board only ever used to make one name look like another.
+const CONTROL_AND_INVISIBLE = /[\u0000-\u001f\u007f-\u009f\u200b-\u200f\u202a-\u202e\u2060-\u206f\ufeff]/g;
+const ALLOWED = /[^\p{L}\p{M}\p{N} '\-._]/gu;
+const EMAIL = /[^\s@]+@[^\s@]+\.[^\s@]+/;
+const URLISH = /(https?:\/\/|www\.|\b[a-z0-9-]+\.(com|net|org|ie|co|uk|io|me|xyz|info|app)\b)/i;
+const PHONE = /(?:\+?\d[\s\-().]*){7,}/;
+
+/* Configurable: extend rather than rewrite, lowercase entries. Matched with
+ * separators stripped, so spaced-out spellings are caught too. */
+const BLOCKED_NAME_WORDS = [
+  'fuck', 'shit', 'cunt', 'bitch', 'bastard', 'wanker', 'slut', 'whore',
+  'nigger', 'nigga', 'faggot', 'retard', 'rape', 'nazi', 'hitler',
+  'admin', 'administrator', 'moderator', 'ahlulbayt', 'official',
+];
+
+function sanitiseName(raw: unknown): string {
+  return String(raw ?? '')
+    .normalize('NFC')
+    .replace(CONTROL_AND_INVISIBLE, '')
+    .replace(ALLOWED, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, NAME_MAX);
+}
+
+function validateDisplayName(raw: unknown) {
+  const original = String(raw ?? '');
+  if (!original.trim()) return { ok: false, reason: 'Please enter a display name.' };
+  if (EMAIL.test(original)) return { ok: false, reason: 'Please do not use an email address.' };
+  if (URLISH.test(original)) return { ok: false, reason: 'Please do not use a web address.' };
+  if (PHONE.test(original)) return { ok: false, reason: 'Please do not use a phone number.' };
+  const name = sanitiseName(original);
+  if (name.length < NAME_MIN) return { ok: false, reason: `Use at least ${NAME_MIN} characters.` };
+  if (!/[\p{L}\p{N}]/u.test(name)) return { ok: false, reason: 'Use letters or numbers.' };
+  const flat = name.toLowerCase().replace(/[^\p{L}\p{N}]/gu, '');
+  if (BLOCKED_NAME_WORDS.some(w => flat.includes(w))) {
+    return { ok: false, reason: 'Please choose a different name.' };
+  }
+  return { ok: true, name };
+}
+
+const DIFFICULTIES = ['easy', 'medium', 'hard'];
+/* Quizzes saved before difficulty was a first-class field carried the older
+ * labels. They keep working and mean what they always meant. */
+const LEGACY_DIFFICULTY: Record<string, string> = {
+  beginner: 'easy',
+  intermediate: 'medium',
+  advanced: 'hard',
+};
+function normaliseDifficulty(v: unknown): string {
+  const k = String(v ?? '').toLowerCase().trim();
+  if (DIFFICULTIES.includes(k)) return k;
+  return LEGACY_DIFFICULTY[k] ?? 'easy';
+}
 
 const SB_URL = Deno.env.get('SUPABASE_URL')!;
 const SB_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;

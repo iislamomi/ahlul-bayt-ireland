@@ -37,6 +37,22 @@ supabase functions deploy submit-quiz-score --no-verify-jwt
 supabase functions deploy report-prayer-time --no-verify-jwt
 ```
 
+Each function is a single self-contained file with no relative imports. That is
+deliberate: an import reaching outside the function's own directory is the usual
+reason one deploys successfully and then answers 502. The cost is that the
+scoring and display-name rules exist twice — here and in `app.js` — and must be
+changed together. `test/unit.js` covers the browser copy.
+
+**Checking a deploy landed.** A 404 means the function is not there; a 502 means
+it is there but failed to boot, and `supabase functions logs <name>` will say
+why. A healthy function answers a `{}` POST with a 400 from its own validator:
+
+```bash
+curl -s -X POST "$SB/functions/v1/submit-quiz-score" \
+  -H "apikey: $ANON" -H "Content-Type: application/json" -d '{}'
+# {"error":"bad_attempt_id"}
+```
+
 ## Environment variables
 
 | Name | Used by | Notes |
