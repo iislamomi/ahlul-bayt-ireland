@@ -53,7 +53,7 @@ Not a palette — a lookup. Each names a *thing*, and the same hue means the sam
 | Duʿāʾ | `#7d6220` | `#f5eeda` |
 | Ziyārah | `#6e2230` | `#f5e7e9` |
 | Books | `#2c5d52` | `#e6f0eb` |
-| Daily Aamals | `#8a4b2c` | `#f7ebe2` |
+| Daily Amaals | `#8a4b2c` | `#f7ebe2` |
 | Kids Corner | `#c06014` | `#fbe9dc` |
 | Quiz | `#8a2f52` | `#f7e6ed` |
 | Health | `#3f7a45` | `#e9f2e7` |
@@ -104,7 +104,7 @@ Reader text scales 0.6×–1.5× via the in-app control; Arabic and its embedded
 - **Gutter:** 20px page padding throughout. Cards align to it; nothing hangs off it.
 - **Rhythm:** 8/10/12/14/16/18/26px vertical gaps. Related items 8–12px, sections 14–18px, across a boundary 26px.
 - **Radii:** 9–11px controls · 13–16px cards and ribbons · 20px chips · 26px hero surfaces · 50% pebbles. Inner elements are tighter than their container.
-- **Grid:** Explore is a 4-column grid of 92×69 tiles. Library and content lists are 1D flex.
+- **Grid:** Explore is a 3-column grid of 123×98 tiles. Library and content lists are 1D flex.
 - **Touch targets:** 44×44 minimum.
 
 ## Components

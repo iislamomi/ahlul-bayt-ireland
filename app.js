@@ -1542,7 +1542,7 @@ const PUSH_MSG = {
   duas: 'Library updated — new duʿāʾ content',
   ziyarat: 'Library updated — new ziyārah content',
   nahj: 'Library updated — Books',
-  aamals: 'Daily Aamals updated'
+  aamals: 'Daily Amaals updated'
 };
 
 function urlBase64ToUint8Array(b64) {
@@ -1681,12 +1681,12 @@ function bindTapKeys() {
 }
 
 /* ── NEXT PRAYER SCENE ──
-   The next prayer decides the weather, by which half of the day it belongs to:
-   Fajr, Sunrise and Ẓuhr open the light half and carry the daylight horizon;
-   Sunset, Maghrib and Midnight belong to the dark half and carry the night sky.
-   Anything else falls to daylight. Drawn inline rather than loaded as an image —
+   The next prayer decides the weather: Sunrise and Ẓuhr carry the daylight
+   horizon; Fajr, Sunset, Maghrib and Midnight fall in the dark and carry the
+   night sky. In practice the countdown only ever names Fajr, Ẓuhr, Maghrib or
+   Midnight, so the daylight scene shows while the app is counting to Ẓuhr. Drawn inline rather than loaded as an image —
    no request, no licence, and it recolours with the palette. */
-const NIGHT_PRAYERS = ['Sunset', 'Maghrib', 'Midnight'];
+const NIGHT_PRAYERS = ['Fajr', 'Sunset', 'Maghrib', 'Midnight'];
 function prayerScene(name) {
   return NIGHT_PRAYERS.includes(name) ? {
     night: true, ink: '#f3ead4', sub: '#bcb098', accent: '#e2c67c',
@@ -2733,6 +2733,16 @@ class App extends Component {
         libCat: 'All'
       })
     }, {
+      title: 'Daily Amaals',
+      icon: '✨',
+      tone: ['#8a4b2c', '#f7ebe2'],
+      go: () => this.setState({
+        screen: 'library',
+        libTab: 'aamal',
+        libQuery: '',
+        libCat: 'All'
+      })
+    }, {
       title: 'Books',
       icon: '📖',
       tone: ['#2c5d52', '#e6f0eb'],
@@ -2765,16 +2775,6 @@ class App extends Component {
       icon: '🏪',
       tone: ['#7a5c9e', '#efe9f5'],
       go: () => this.go('classifieds')
-    }, {
-      title: 'Daily Aamals',
-      icon: '✨',
-      tone: ['#8a4b2c', '#f7ebe2'],
-      go: () => this.setState({
-        screen: 'library',
-        libTab: 'aamal',
-        libQuery: '',
-        libCat: 'All'
-      })
     }, {
       title: 'Tasbeeh',
       icon: '📿',
@@ -3242,8 +3242,8 @@ class App extends Component {
     }, this.t('home.explore')), /*#__PURE__*/React.createElement("div", {
       style: {
         display: 'grid',
-        gridTemplateColumns: 'repeat(4, 1fr)',
-        gap: 8,
+        gridTemplateColumns: 'repeat(3, 1fr)',
+        gap: 10,
         marginBottom: 14
       }
     }, quickCards.map((q, i) => {
@@ -3253,39 +3253,39 @@ class App extends Component {
         onClick: q.go,
         className: "neu-press",
         style: {
-          ...neuCard(14, .8),
-          padding: '8px 3px 7px',
+          ...neuCard(16, .85),
+          padding: '13px 6px 11px',
           cursor: 'pointer',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
-          gap: 5,
-          minHeight: 68,
+          gap: 8,
+          minHeight: 92,
           textAlign: 'center',
           animation: 'fu .38s cubic-bezier(.2,.8,.2,1) both',
           animationDelay: i * 26 + 'ms'
         }
       }, /*#__PURE__*/React.createElement("span", {
         style: {
-          width: 36,
-          height: 36,
+          width: 50,
+          height: 50,
           borderRadius: '50%',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          fontSize: 23,
+          fontSize: 30,
           lineHeight: 1,
           background: `linear-gradient(145deg, ${tint}, ${ink}22)`,
-          boxShadow: `inset 2px 2px 5px ${ink}33, inset -2px -2px 5px ${NEU.hi}, 0 3px 8px -5px ${ink}`
+          boxShadow: `inset 3px 3px 7px ${ink}33, inset -2px -2px 5px ${NEU.hi}, 0 3px 8px -5px ${ink}`
         }
       }, q.icon), /*#__PURE__*/React.createElement("div", {
         style: {
-          fontSize: 10.5,
+          fontSize: 12,
           fontWeight: 700,
           // colour lives in the pebble; a tinted label here drops under 4.5:1
           color: NEU.ink,
-          lineHeight: 1.2
+          lineHeight: 1.25
         }
       }, q.title));
     })), maulanas.length > 0 && /*#__PURE__*/React.createElement("div", {
@@ -4259,7 +4259,7 @@ class App extends Component {
         cats: ['All', ...new Set(ziyList.map(it => it.cat).filter(Boolean))]
       },
       aamal: {
-        title: 'Daily Aamals',
+        title: 'Daily Amaals',
         accent: '#8a4b2c',
         tint: '#f6ebe4',
         list: aamalList,
@@ -4410,7 +4410,7 @@ class App extends Component {
         display: 'flex',
         gap: 8
       }
-    }, [['dua', "Duʿāʾ", '🤲'], ['ziyarah', 'Ziyārah', '🕌'], ['aamal', 'Aamals', '✨'], ['nahj', 'Books', '📖']].map(libTab))), /*#__PURE__*/React.createElement("div", {
+    }, [['dua', "Duʿāʾ", '🤲'], ['ziyarah', 'Ziyārah', '🕌'], ['aamal', 'Amaals', '✨'], ['nahj', 'Books', '📖']].map(libTab))), /*#__PURE__*/React.createElement("div", {
       style: {
         display: 'flex',
         alignItems: 'center',
@@ -4648,7 +4648,7 @@ class App extends Component {
     const KICKERS = {
       dua: { English: 'Supplication', 'العربية': 'دعاء', 'हिन्दी': 'दुआ', 'فارسی': 'دعا', Urdu: 'دعا' },
       ziyarah: { English: 'Salutation', 'العربية': 'زيارة', 'हिन्दी': 'ज़ियारत', 'فارسی': 'زیارت', Urdu: 'زیارت' },
-      aamal: { English: 'Daily Aamal', 'العربية': 'عمل', 'हिन्दी': 'आमाल', 'فارسی': 'اعمال', Urdu: 'اعمال' }
+      aamal: { English: 'Daily Amaal', 'العربية': 'عمل', 'हिन्दी': 'आमाल', 'فارسی': 'اعمال', Urdu: 'اعمال' }
     };
     const kicker = KICKERS[rtype] ? KICKERS[rtype][st.lang] || KICKERS[rtype].English : r.ref || 'Books';
     const isBookmarked = st.bookmarks.some(b => b.title === r.title);
@@ -8513,7 +8513,7 @@ class App extends Component {
           padding: 4,
           marginBottom: 14
         }
-      }, [['dua', 'Duʿāʾ'], ['ziyarah', 'Ziyārah'], ['aamal', 'Aamals'], ['nahj', 'Books']].map(([k, label]) => /*#__PURE__*/React.createElement("div", {
+      }, [['dua', 'Duʿāʾ'], ['ziyarah', 'Ziyārah'], ['aamal', 'Amaals'], ['nahj', 'Books']].map(([k, label]) => /*#__PURE__*/React.createElement("div", {
         key: k,
         onClick: () => this.setState({
           adminLibTab: k,
@@ -8565,7 +8565,7 @@ class App extends Component {
       if (lt === 'dua' || lt === 'ziyarah' || lt === 'aamal') {
         const key = lt === 'dua' ? 'duas' : lt === 'ziyarah' ? 'ziyarat' : 'aamals';
         const stateKey = lt === 'dua' ? 'liveDuas' : lt === 'ziyarah' ? 'liveZiyarat' : 'liveAamals';
-        const label = lt === 'dua' ? 'Duʿāʾ' : lt === 'ziyarah' ? 'Ziyārah' : 'Aamal';
+        const label = lt === 'dua' ? 'Duʿāʾ' : lt === 'ziyarah' ? 'Ziyārah' : 'Amaal';
         const list = st[stateKey] || [];
         if (editing) {
           const d = st.adminEditDraft;
