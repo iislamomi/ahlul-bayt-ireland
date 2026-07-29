@@ -708,6 +708,10 @@ const LUCIDE = {
   'star': '<path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z" />',
   'book-heart': '<path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H19a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H6.5a1 1 0 0 1 0-5H20" /><path d="M8.62 9.8A2.25 2.25 0 1 1 12 6.836a2.25 2.25 0 1 1 3.38 2.966l-2.626 2.856a.998.998 0 0 1-1.507 0z" />',
   'target': '<circle cx="12" cy="12" r="10" /><circle cx="12" cy="12" r="6" /><circle cx="12" cy="12" r="2" />',
+  'locate-fixed': '<line x1="2" x2="5" y1="12" y2="12" /><line x1="19" x2="22" y1="12" y2="12" /><line x1="12" x2="12" y1="2" y2="5" /><line x1="12" x2="12" y1="19" y2="22" /><circle cx="12" cy="12" r="7" /><circle cx="12" cy="12" r="3" />',
+  'rotate-ccw': '<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" /><path d="M3 3v5h5" />',
+  'info': '<circle cx="12" cy="12" r="10" /><path d="M12 16v-4" /><path d="M12 8h.01" />',
+  'triangle-alert': '<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3" /><path d="M12 9v4" /><path d="M12 17h.01" />',
   'heart': '<path d="M2 9.5a5.5 5.5 0 0 1 9.591-3.676.56.56 0 0 0 .818 0A5.49 5.49 0 0 1 22 9.5c0 2.29-1.5 4-3 5.5l-5.492 5.313a2 2 0 0 1-3 .019L5 15c-1.5-1.5-3-3.2-3-5.5" />',
   'trash-2': '<path d="M10 11v6" /><path d="M14 11v6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" /><path d="M3 6h18" /><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />'
 };
@@ -1444,6 +1448,84 @@ function lsSet(key, val) {
   } catch (e) {}
 }
 
+/* ── PRAYER LOCATION ──
+   Dublin is the community's own timetable and stays the default; everywhere else
+   is calculated for that town's own coordinates. The list is the island's main
+   population centres rather than a gazetteer — a searchable list of forty is
+   something an older member can actually work through, a list of two thousand is
+   not. Coordinates are the town centre. */
+const ABI_HOME = { id: 'dublin', name: 'Dublin', region: 'Co. Dublin', lat: 53.3498, lng: -6.2603 };
+const IE_LOCATIONS = [ABI_HOME,
+  { id: 'cork', name: 'Cork', region: 'Co. Cork', lat: 51.8985, lng: -8.4756 },
+  { id: 'galway', name: 'Galway', region: 'Co. Galway', lat: 53.2707, lng: -9.0568 },
+  { id: 'limerick', name: 'Limerick', region: 'Co. Limerick', lat: 52.6638, lng: -8.6267 },
+  { id: 'waterford', name: 'Waterford', region: 'Co. Waterford', lat: 52.2593, lng: -7.1101 },
+  { id: 'drogheda', name: 'Drogheda', region: 'Co. Louth', lat: 53.7189, lng: -6.3478 },
+  { id: 'dundalk', name: 'Dundalk', region: 'Co. Louth', lat: 54.0019, lng: -6.4058 },
+  { id: 'swords', name: 'Swords', region: 'Co. Dublin', lat: 53.4597, lng: -6.2181 },
+  { id: 'balbriggan', name: 'Balbriggan', region: 'Co. Dublin', lat: 53.6089, lng: -6.1811 },
+  { id: 'bray', name: 'Bray', region: 'Co. Wicklow', lat: 53.2028, lng: -6.0983 },
+  { id: 'greystones', name: 'Greystones', region: 'Co. Wicklow', lat: 53.145, lng: -6.0703 },
+  { id: 'wicklow', name: 'Wicklow', region: 'Co. Wicklow', lat: 52.9808, lng: -6.0446 },
+  { id: 'arklow', name: 'Arklow', region: 'Co. Wicklow', lat: 52.7936, lng: -6.1417 },
+  { id: 'navan', name: 'Navan', region: 'Co. Meath', lat: 53.6528, lng: -6.6814 },
+  { id: 'ashbourne', name: 'Ashbourne', region: 'Co. Meath', lat: 53.5133, lng: -6.3994 },
+  { id: 'naas', name: 'Naas', region: 'Co. Kildare', lat: 53.2158, lng: -6.6669 },
+  { id: 'newbridge', name: 'Newbridge', region: 'Co. Kildare', lat: 53.181, lng: -6.7996 },
+  { id: 'maynooth', name: 'Maynooth', region: 'Co. Kildare', lat: 53.3814, lng: -6.5914 },
+  { id: 'portlaoise', name: 'Portlaoise', region: 'Co. Laois', lat: 53.0344, lng: -7.3011 },
+  { id: 'carlow', name: 'Carlow', region: 'Co. Carlow', lat: 52.8365, lng: -6.9341 },
+  { id: 'kilkenny', name: 'Kilkenny', region: 'Co. Kilkenny', lat: 52.6541, lng: -7.2448 },
+  { id: 'wexford', name: 'Wexford', region: 'Co. Wexford', lat: 52.3369, lng: -6.4633 },
+  { id: 'clonmel', name: 'Clonmel', region: 'Co. Tipperary', lat: 52.3553, lng: -7.7034 },
+  { id: 'ennis', name: 'Ennis', region: 'Co. Clare', lat: 52.8438, lng: -8.9864 },
+  { id: 'tralee', name: 'Tralee', region: 'Co. Kerry', lat: 52.2713, lng: -9.7016 },
+  { id: 'killarney', name: 'Killarney', region: 'Co. Kerry', lat: 52.0599, lng: -9.5044 },
+  { id: 'cobh', name: 'Cobh', region: 'Co. Cork', lat: 51.8508, lng: -8.2947 },
+  { id: 'athlone', name: 'Athlone', region: 'Co. Westmeath', lat: 53.4239, lng: -7.9407 },
+  { id: 'mullingar', name: 'Mullingar', region: 'Co. Westmeath', lat: 53.5236, lng: -7.3378 },
+  { id: 'tullamore', name: 'Tullamore', region: 'Co. Offaly', lat: 53.2736, lng: -7.4894 },
+  { id: 'longford', name: 'Longford', region: 'Co. Longford', lat: 53.7276, lng: -7.7932 },
+  { id: 'roscommon', name: 'Roscommon', region: 'Co. Roscommon', lat: 53.6279, lng: -8.1951 },
+  { id: 'cavan', name: 'Cavan', region: 'Co. Cavan', lat: 53.9908, lng: -7.3606 },
+  { id: 'monaghan', name: 'Monaghan', region: 'Co. Monaghan', lat: 54.2492, lng: -6.9683 },
+  { id: 'sligo', name: 'Sligo', region: 'Co. Sligo', lat: 54.2766, lng: -8.4761 },
+  { id: 'castlebar', name: 'Castlebar', region: 'Co. Mayo', lat: 53.856, lng: -9.2985 },
+  { id: 'ballina', name: 'Ballina', region: 'Co. Mayo', lat: 54.1157, lng: -9.1553 },
+  { id: 'tuam', name: 'Tuam', region: 'Co. Galway', lat: 53.5147, lng: -8.8546 },
+  { id: 'letterkenny', name: 'Letterkenny', region: 'Co. Donegal', lat: 54.9503, lng: -7.7343 },
+  { id: 'belfast', name: 'Belfast', region: 'Co. Antrim', lat: 54.5973, lng: -5.9301 },
+  { id: 'lisburn', name: 'Lisburn', region: 'Co. Antrim', lat: 54.5162, lng: -6.058 },
+  { id: 'newry', name: 'Newry', region: 'Co. Down', lat: 54.1753, lng: -6.3402 },
+  { id: 'derry', name: 'Derry', region: 'Co. Londonderry', lat: 54.9966, lng: -7.3086 }];
+/* Rough great-circle in km — only ever used to name the nearest town to a set of
+   device coordinates, so a spherical earth is plenty. */
+function kmBetween(a, b) {
+  const R = 6371, rad = d => d * Math.PI / 180;
+  const dLat = rad(b.lat - a.lat), dLng = rad(b.lng - a.lng);
+  const h = Math.sin(dLat / 2) ** 2 + Math.cos(rad(a.lat)) * Math.cos(rad(b.lat)) * Math.sin(dLng / 2) ** 2;
+  return 2 * R * Math.asin(Math.min(1, Math.sqrt(h)));
+}
+function nearestTown(pt) {
+  let best = null, bestKm = Infinity;
+  IE_LOCATIONS.forEach(l => {
+    const km = kmBetween(pt, l);
+    if (km < bestKm) { bestKm = km; best = l; }
+  });
+  return { town: best, km: bestKm };
+}
+/* Shia Ithna-Ashari (Leva Institute, Qum) with the Jaʿfarī midnight — the method
+   Ahlul-Bait Islamic Centre uses. Sunset and Maghrib are fetched and shown as two
+   separate times; collapsing them would be wrong for this community. */
+const PRAYER_METHOD = {
+  id: 0,
+  midnightMode: 1,
+  name: 'Shia Ithna-Ashari',
+  detail: 'Leva Institute, Qum · Jaʿfarī midnight',
+  source: 'AlAdhan API (aladhan.com)'
+};
+const ymd = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+
 /* ── SAVED PASSAGES ──
    Bookmarks and favourites go to IndexedDB rather than localStorage: they are a
    growing structured collection, not a preference, and a heavy reader would eat
@@ -2140,6 +2222,13 @@ class App extends Component {
       liveAds: lsGet('ads', []),
       adIdx: 0,
       liveAutoTimes: lsGet('autoTimes', null),
+      /* null means the community default; anything else is the town the reader
+         picked, or the device's own coordinates. */
+      prayerLoc: lsGet('prayerLoc', null),
+      autoTimesErr: null,
+      autoTimesBusy: false,
+      locQuery: '',
+      locBusy: false,
       kidsQuizPicks: {},
       kidsVidCat: 'All',
       healthVidCat: 'All',
@@ -2405,34 +2494,57 @@ class App extends Component {
       if (!s) return key;
       return s[lang] !== undefined ? s[lang] : s['English'] ?? key;
     });
+    _defineProperty(this, "prayerLocation", () => this.state.prayerLoc || ABI_HOME);
+    /* What the times on screen actually are. The reader has to be able to tell a
+       live timetable from yesterday's cached one, and above all from Dublin's
+       timetable being shown while they have Cork selected — which is the one
+       thing that must never happen quietly. */
+    _defineProperty(this, "prayerSource", () => {
+      const loc = this.prayerLocation();
+      const auto = this.state.liveAutoTimes;
+      const today = ymd(new Date());
+      if (auto && auto.times && auto.loc === loc.id) {
+        return { kind: auto.date === today ? 'live' : 'cached', loc, date: auto.date };
+      }
+      return { kind: loc.id === ABI_HOME.id ? 'preset' : 'fallback', loc, date: null };
+    });
     _defineProperty(this, "getActivePrayers", () => {
       const presets = abiPresets(this.state.livePrayerPresets);
       const preset = presets.find(p => p.id === this.state.prayerPreset) || presets[0];
       const auto = this.state.liveAutoTimes;
-      const n = new Date();
-      const today = `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, '0')}-${String(n.getDate()).padStart(2, '0')}`;
-      if (auto && auto.date === today && auto.times) {
-        return preset.prayers.map(p => auto.times[p.name] ? {
-          ...p,
-          time: auto.times[p.name]
-        } : p);
+      const loc = this.prayerLocation();
+      // an out-of-date timetable for the right town still beats no timetable,
+      // and prayerSource() is what tells the reader which one they are looking at
+      if (auto && auto.times && auto.loc === loc.id) {
+        return preset.prayers.map(p => auto.times[p.name] ? { ...p, time: auto.times[p.name] } : p);
       }
       return preset.prayers;
     });
-    _defineProperty(this, "fetchAutoTimes", () => {
+    /* Resolves to true when today's timetable for the selected town is in hand.
+       Every failure sets a named reason rather than disappearing, because the
+       screen has to say which one happened. */
+    _defineProperty(this, "fetchAutoTimes", force => {
       const n = new Date();
-      const today = `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, '0')}-${String(n.getDate()).padStart(2, '0')}`;
+      const today = ymd(n);
+      const loc = this.prayerLocation();
       const cached = this.state.liveAutoTimes;
-      if (cached && cached.date === today && cached.times) return;
-      if (this._autoTimesLastTry && Date.now() - this._autoTimesLastTry < 5 * 60 * 1000) return;
+      if (cached && cached.date === today && cached.loc === loc.id && cached.times) return Promise.resolve(true);
+      if (!force && this._autoTimesLastTry && Date.now() - this._autoTimesLastTry < 5 * 60 * 1000) return Promise.resolve(false);
       this._autoTimesLastTry = Date.now();
+      if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+        this.setState({ autoTimesErr: 'offline' });
+        return Promise.resolve(false);
+      }
       const dd = String(n.getDate()).padStart(2, '0'),
         mm = String(n.getMonth() + 1).padStart(2, '0');
-      // Shia Ithna-Ashari (Leva Institute, Qum) calculation for Dublin —
-      // the Jaʿfarī method used by Ahlul-Bait Islamic Centre (ahlulbait.ie)
-      fetch(`https://api.aladhan.com/v1/timings/${dd}-${mm}-${n.getFullYear()}?latitude=53.3498&longitude=-6.2603&method=0&midnightMode=1`).then(r => r.json()).then(j => {
+      this.setState({ autoTimesBusy: true });
+      const url = `https://api.aladhan.com/v1/timings/${dd}-${mm}-${n.getFullYear()}` + `?latitude=${loc.lat}&longitude=${loc.lng}` + `&method=${PRAYER_METHOD.id}&midnightMode=${PRAYER_METHOD.midnightMode}`;
+      return fetch(url).then(r => {
+        if (!r.ok) throw new Error('api');
+        return r.json();
+      }).then(j => {
         const tm = j && j.data && j.data.timings;
-        if (!tm || !tm.Fajr) return;
+        if (!tm || !tm.Fajr) throw new Error('bad');
         const clean = v => {
           const m = String(v).match(/\d{1,2}:\d{2}/);
           return m ? m[0].padStart(5, '0') : null;
@@ -2442,16 +2554,64 @@ class App extends Component {
           const v = clean(tm[k]);
           if (v) times[k] = v;
         });
-        if (!times.Fajr || !times.Maghrib) return;
-        const data = {
-          date: today,
-          times
-        };
+        // Sunset and Maghrib are separate times for this community; a response
+        // missing either is incomplete, not something to paper over
+        if (!times.Fajr || !times.Maghrib || !times.Sunset || !times.Dhuhr) throw new Error('bad');
+        const data = { date: today, loc: loc.id, locName: loc.name, times, at: Date.now() };
         lsSet('autoTimes', data);
-        this.setState({
-          liveAutoTimes: data
+        this.setState({ liveAutoTimes: data, autoTimesErr: null, autoTimesBusy: false });
+        return true;
+      }).catch(e => {
+        const why = e && e.message === 'bad' ? 'bad' : typeof navigator !== 'undefined' && navigator.onLine === false ? 'offline' : 'api';
+        this.setState({ autoTimesErr: why, autoTimesBusy: false });
+        return false;
+      });
+    });
+    /* Choosing a town refetches immediately rather than waiting for the hourly
+       poll, so the countdown and the card are right by the time the toast fades. */
+    _defineProperty(this, "setPrayerLocation", loc => {
+      const next = loc && loc.id !== ABI_HOME.id ? loc : null;
+      lsSet('prayerLoc', next);
+      this._autoTimesLastTry = 0;
+      this._lastAlertTime = '';
+      this.setState({ prayerLoc: next, autoTimesErr: null, locQuery: '' }, () => {
+        this.fetchAutoTimes(true).then(ok => {
+          const name = this.prayerLocation().name;
+          this.showToast(ok ? `Prayer times now for ${name}` : `Set to ${name} — times could not be loaded yet`);
         });
-      }).catch(() => {});
+      });
+    });
+    /* Permission is only ever asked for from here — nothing on launch. */
+    _defineProperty(this, "useDeviceLocation", () => {
+      if (typeof navigator === 'undefined' || !navigator.geolocation) {
+        this.showToast('This device cannot provide a location');
+        return;
+      }
+      this.setState({ locBusy: true });
+      navigator.geolocation.getCurrentPosition(pos => {
+        const pt = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+        if (!isFinite(pt.lat) || !isFinite(pt.lng)) {
+          this.setState({ locBusy: false });
+          this.showToast('That location reading was incomplete');
+          return;
+        }
+        const { town, km } = nearestTown(pt);
+        // near a listed town, use the listed town: the reader recognises the name,
+        // and a few km makes no difference to a prayer time
+        this.setState({ locBusy: false });
+        if (km < 12) return this.setPrayerLocation(town);
+        this.setPrayerLocation({
+          id: 'device',
+          name: km < 60 ? `Near ${town.name}` : 'My location',
+          region: km < 60 ? town.region : `${pt.lat.toFixed(2)}, ${pt.lng.toFixed(2)}`,
+          lat: pt.lat, lng: pt.lng, device: true,
+          outside: km > 250
+        });
+      }, err => {
+        this.setState({ locBusy: false });
+        const msg = err && err.code === 1 ? 'Location permission refused — pick a town from the list instead' : err && err.code === 2 ? 'Location services are unavailable right now' : err && err.code === 3 ? 'Finding your location took too long' : 'Could not read your location';
+        this.showToast(msg);
+      }, { enableHighAccuracy: false, timeout: 12000, maximumAge: 600000 });
     });
     _defineProperty(this, "saveContent", (key, stateKey, data) => {
       lsSet(key, data);
@@ -2580,7 +2740,7 @@ class App extends Component {
       if (notifEnabled && Notification.permission === 'granted') {
         const title = `${match.name} \xB7 Prayer Time`;
         const opts = {
-          body: `${match.en} prayer — ${match.time} \xB7 Dublin, Ireland`,
+          body: `${match.en} prayer — ${match.time} \xB7 ${this.prayerLocation().name}`,
           tag: 'prayer-alert',
           renotify: true,
           data: { url: '/' }
@@ -3170,6 +3330,8 @@ class App extends Component {
     const showNotif = !!todayRem && !st.notifDismissed;
     const onThisDay = (st.liveCalEvents || []).filter(e => (e.notice || 'day') === 'day' && e.date && eventOnDate(e, now));
     const sc = prayerScene(next.name);
+    const ploc = this.prayerLocation();
+    const psrc = this.prayerSource();
     /* Only the four obligatory times drive the countdown, so the dial measures
        against the previous one of those, wrapping over midnight. */
     const cycle = activePrayers.filter(p => ['Fajr', 'Dhuhr', 'Maghrib', 'Midnight'].includes(p.name));
@@ -3536,7 +3698,36 @@ class App extends Component {
         marginTop: 3,
         fontVariantNumeric: 'tabular-nums'
       }
-    }, this.t('home.in'), " ", cd)), prayerDial(next.name, sc, prog))), /*#__PURE__*/React.createElement("div", {
+    }, this.t('home.in'), " ", cd), /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: 4,
+        marginTop: 5,
+        fontSize: 11.5,
+        fontWeight: 600,
+        color: sc.sub
+      }
+    }, icon('map-pin', { size: 12, style: { flexShrink: 0 } }), ploc.name), psrc.kind === 'fallback' && /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: 4,
+        marginTop: 3,
+        fontSize: 10.5,
+        fontWeight: 700,
+        color: sc.accent,
+        lineHeight: 1.3
+      }
+    }, icon('triangle-alert', { size: 11, style: { flexShrink: 0 } }), "Dublin timetable shown"), psrc.kind === 'cached' && /*#__PURE__*/React.createElement("div", {
+      style: {
+        marginTop: 3,
+        fontSize: 10.5,
+        fontWeight: 700,
+        color: sc.sub,
+        lineHeight: 1.3
+      }
+    }, "Saved timetable")), prayerDial(next.name, sc, prog))), /*#__PURE__*/React.createElement("div", {
       style: {
         background: NEU.surf,
         boxShadow: neuUp(),
@@ -3934,7 +4125,40 @@ class App extends Component {
         prayerTab: 'settings'
       }),
       style: tabStyle(tab === 'settings')
-    }, this.t('prayer.settings'))), tab === 'today' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+    }, this.t('prayer.settings'))), /*#__PURE__*/React.createElement("div", {
+      onClick: () => this.go('location'),
+      className: "neu-press",
+      style: {
+        ...neuCard(14, .75),
+        padding: '11px 14px',
+        marginBottom: 14,
+        cursor: 'pointer',
+        display: 'flex',
+        alignItems: 'center',
+        gap: 10,
+        minHeight: 44
+      }
+    }, icon('map-pin', { size: 16, stroke: '#1f5145', style: { flexShrink: 0 } }), /*#__PURE__*/React.createElement("div", {
+      style: {
+        flex: 1,
+        minWidth: 0,
+        fontSize: 13,
+        color: NEU.ink,
+        fontWeight: 600
+      }
+    }, this.prayerLocation().name, /*#__PURE__*/React.createElement("span", {
+      style: {
+        fontWeight: 500,
+        color: this.prayerSource().kind === 'fallback' ? '#6e2230' : NEU.muted
+      }
+    }, this.prayerSource().kind === 'fallback' ? " · showing Dublin's timetable" : this.prayerSource().kind === 'cached' ? ' · saved timetable' : this.prayerSource().kind === 'preset' ? " · centre's timetable" : ' · updated today')), /*#__PURE__*/React.createElement("span", {
+      "aria-hidden": "true",
+      style: {
+        color: '#6b6252',
+        fontSize: 18,
+        flexShrink: 0
+      }
+    }, "›")), tab === 'today' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
       style: {
         background: 'linear-gradient(155deg,#1f5145,#163b30)',
         borderRadius: 22,
@@ -5629,6 +5853,200 @@ class App extends Component {
   }
 
   /* ── MORE ── */
+  /* \u2500\u2500 PRAYER LOCATION \u2500\u2500
+     Search, a list, the device, and a way back to the community default. Nothing
+     here asks for permission until "Use my location" is pressed \u2014 opening the
+     screen must not trigger a browser prompt. */
+  renderLocation(st) {
+    const loc = this.prayerLocation();
+    const src = this.prayerSource();
+    const isHome = loc.id === ABI_HOME.id;
+    const q = st.locQuery.trim().toLowerCase();
+    /* County counts as a match — "Co. Mayo" is how people look for their town —
+       but a town whose name starts with the query is what they meant, so it
+       sorts first. Otherwise "kil" buries Kilkenny under Co. Kildare. */
+    const rank = l => {
+      const n = l.name.toLowerCase();
+      return n.startsWith(q) ? 0 : n.includes(q) ? 1 : 2;
+    };
+    const hits = q ? IE_LOCATIONS.filter(l => `${l.name} ${l.region}`.toLowerCase().includes(q)).sort((a, b) => rank(a) - rank(b)) : IE_LOCATIONS;
+    const ERR = {
+      offline: 'No connection, so the timetable could not be refreshed.',
+      api: 'The prayer-time service is not responding.',
+      bad: 'The prayer-time service returned an incomplete timetable.'
+    };
+    const dateLabel = d => {
+      if (!d) return '';
+      const [y, m, dd] = d.split('-').map(Number);
+      return new Date(y, m - 1, dd).toLocaleDateString('en-IE', { day: 'numeric', month: 'short', year: 'numeric' });
+    };
+    /* One banner, saying exactly what the times on screen are. A wrong town shown
+       quietly would be worse than no times at all. */
+    const status = src.kind === 'live' ? { tone: '#1f5145', bg: '#e4efe9', mark: 'check', text: `Live timetable for ${loc.name}, updated today.` } : src.kind === 'cached' ? { tone: '#7d6220', bg: '#f5eeda', mark: 'info', text: `Showing the last timetable saved for ${loc.name}, from ${dateLabel(src.date)}.` } : src.kind === 'preset' ? { tone: '#1f5145', bg: '#e4efe9', mark: 'info', text: "Showing the centre's own published timetable for Dublin." } : { tone: '#6e2230', bg: '#f5e7e9', mark: 'alert', text: `No timetable loaded for ${loc.name} yet \u2014 the times shown are Dublin's community timetable, not ${loc.name}'s.` };
+    const row = (o) => /*#__PURE__*/React.createElement("div", {
+      key: o.key,
+      onClick: o.onClick,
+      className: "neu-press",
+      style: {
+        ...neuCard(14, .8), padding: '13px 15px', cursor: 'pointer',
+        display: 'flex', alignItems: 'center', gap: 12, minHeight: 44
+      }
+    }, /*#__PURE__*/React.createElement("span", {
+      "aria-hidden": "true",
+      style: {
+        flexShrink: 0, width: 36, height: 36, borderRadius: '50%', display: 'flex',
+        alignItems: 'center', justifyContent: 'center',
+        color: o.on ? '#e4efe9' : '#1f5145',
+        background: o.on ? 'linear-gradient(145deg,#1f5145e6,#1f5145)' : NEU.sunk,
+        boxShadow: o.on ? '0 4px 10px -6px #1f5145' : neuIn(.35)
+      }
+    }, icon(o.icon || 'map-pin', { size: 16 })), /*#__PURE__*/React.createElement("div", {
+      style: { flex: 1, minWidth: 0 }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: { fontSize: 14.5, fontWeight: o.on ? 700 : 600, color: NEU.ink }
+    }, o.name), o.sub && /*#__PURE__*/React.createElement("div", {
+      style: { fontSize: 11.5, color: NEU.muted, marginTop: 1 }
+    }, o.sub)), o.on && /*#__PURE__*/React.createElement("span", {
+      "aria-label": "Selected", style: { color: '#1f5145', fontSize: 17, flexShrink: 0 }
+    }, "\u2713"));
+    return /*#__PURE__*/React.createElement("div", {
+      style: { padding: '8px 20px 100px' },
+      className: "afu"
+    }, /*#__PURE__*/React.createElement("div", {
+      onClick: () => this.go('more'),
+      style: {
+        display: 'inline-flex', alignItems: 'center', gap: 4, color: '#1f5145',
+        fontSize: 14, fontWeight: 600, cursor: 'pointer', padding: '12px 10px',
+        margin: '0 -10px', minHeight: 44, boxSizing: 'border-box'
+      }
+    }, /*#__PURE__*/React.createElement("span", { style: { fontSize: 18 } }, "\u2039"), " More"),
+    /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontFamily: 'Spectral,serif', fontSize: 26, fontWeight: 600,
+        color: '#27241f', margin: '10px 0 4px'
+      }
+    }, "Prayer Location"), /*#__PURE__*/React.createElement("div", {
+      style: { fontSize: 13, color: NEU.muted, marginBottom: 16 }
+    }, "Prayer times are calculated for the town you choose."),
+    /*#__PURE__*/React.createElement("div", {
+      style: { ...neuCard(18, 1), padding: '15px 16px', marginBottom: 12 }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 10, letterSpacing: 1.1, textTransform: 'uppercase',
+        fontWeight: 800, color: '#1f5145'
+      }
+    }, "Current location"), /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: 'flex', alignItems: 'center', gap: 10, marginTop: 7
+      }
+    }, icon('map-pin', { size: 19, stroke: '#1f5145' }), /*#__PURE__*/React.createElement("div", {
+      style: { flex: 1, minWidth: 0 }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: { fontFamily: 'Spectral,serif', fontSize: 21, fontWeight: 600, color: NEU.ink, lineHeight: 1.15 }
+    }, loc.name), /*#__PURE__*/React.createElement("div", {
+      style: { fontSize: 12, color: NEU.muted, marginTop: 2 }
+    }, loc.outside ? `${loc.region} \u00b7 outside Ireland` : loc.region + (isHome ? ' \u00b7 community default' : '')))),
+    /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: 'flex', gap: 9, alignItems: 'flex-start', marginTop: 12,
+        padding: '10px 12px', borderRadius: 12, background: status.bg
+      }
+    }, icon(status.mark === 'check' ? 'check' : status.mark === 'alert' ? 'triangle-alert' : 'info', {
+      size: 15, stroke: status.tone, style: { flexShrink: 0, marginTop: 1 }
+    }), /*#__PURE__*/React.createElement("div", {
+      style: { fontSize: 12, color: status.tone, lineHeight: 1.45, fontWeight: 600 }
+    }, status.text)), st.autoTimesErr && /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: 'flex', alignItems: 'center', gap: 10, marginTop: 9,
+        fontSize: 12, color: NEU.muted, lineHeight: 1.45
+      }
+    }, /*#__PURE__*/React.createElement("span", { style: { flex: 1 } }, ERR[st.autoTimesErr] || 'The timetable could not be refreshed.'), /*#__PURE__*/React.createElement("div", {
+      onClick: () => { this._autoTimesLastTry = 0; this.fetchAutoTimes(true).then(ok => this.showToast(ok ? 'Timetable updated' : 'Still could not reach the service')); },
+      style: {
+        flexShrink: 0, padding: '11px 13px', borderRadius: 11, cursor: 'pointer',
+        border: '1.5px solid rgba(31,81,69,.35)', color: '#1f5145',
+        fontSize: 12.5, fontWeight: 700, minHeight: 44, display: 'flex', alignItems: 'center'
+      }
+    }, st.autoTimesBusy ? 'Trying\u2026' : 'Try again')), !isHome && /*#__PURE__*/React.createElement("div", {
+      onClick: () => this.setPrayerLocation(null),
+      style: {
+        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7,
+        marginTop: 12, padding: '12px', borderRadius: 12, cursor: 'pointer',
+        border: '1.5px solid rgba(31,81,69,.35)', color: '#1f5145',
+        fontSize: 13, fontWeight: 700, minHeight: 44
+      }
+    }, icon('rotate-ccw', { size: 15 }), "Reset to Dublin, the community default")),
+    /*#__PURE__*/React.createElement("div", {
+      onClick: this.useDeviceLocation,
+      className: "neu-press",
+      style: {
+        ...neuCard(16, .9), padding: '14px 15px', cursor: 'pointer', marginBottom: 16,
+        display: 'flex', alignItems: 'center', gap: 12, minHeight: 44
+      }
+    }, icon('locate-fixed', { size: 19, stroke: '#1f5145', style: { flexShrink: 0 } }), /*#__PURE__*/React.createElement("div", {
+      style: { flex: 1, minWidth: 0 }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: { fontSize: 14.5, fontWeight: 700, color: NEU.ink }
+    }, st.locBusy ? "Finding you\u2026" : "Use my location"), /*#__PURE__*/React.createElement("div", {
+      style: { fontSize: 11.5, color: NEU.muted, marginTop: 1, lineHeight: 1.4 }
+    }, "Your device will ask permission first. Refusing is fine \u2014 pick a town below instead.")),
+    /*#__PURE__*/React.createElement("span", { "aria-hidden": "true", style: { color: '#6b6252', fontSize: 18 } }, "\u203a")),
+    /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: 'flex', alignItems: 'center', gap: 10, ...neuWell(14, .8),
+        padding: '11px 14px', marginBottom: 14
+      }
+    }, icon('search', { size: 17, stroke: '#6b6252' }), /*#__PURE__*/React.createElement("input", {
+      value: st.locQuery,
+      onChange: e => this.setState({ locQuery: e.target.value }),
+      "aria-label": "Search Irish cities and towns",
+      placeholder: "Search a city or town",
+      style: { border: 'none', outline: 'none', background: 'transparent', fontSize: 14, color: '#3f3a32', width: '100%' }
+    }), st.locQuery && /*#__PURE__*/React.createElement("div", {
+      onClick: () => this.setState({ locQuery: '' }),
+      "aria-label": "Clear search",
+      style: {
+        color: '#6b6252', cursor: 'pointer', fontSize: 20, lineHeight: 1, width: 44,
+        height: 44, margin: -12, display: 'flex', alignItems: 'center',
+        justifyContent: 'center', flexShrink: 0
+      }
+    }, "\u00d7")),
+    hits.length === 0 && /*#__PURE__*/React.createElement("div", {
+      style: { ...neuCard(16, .85), padding: '26px 20px', textAlign: 'center' }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: { fontFamily: 'Spectral,serif', fontSize: 15.5, fontWeight: 600, color: NEU.ink }
+    }, `No town matching \u201c${st.locQuery.trim()}\u201d`), /*#__PURE__*/React.createElement("div", {
+      style: { fontSize: 12.5, color: NEU.muted, marginTop: 6, lineHeight: 1.5 }
+    }, "The list covers the island's main towns. If yours is not here, choose the nearest one or use your device location.")),
+    hits.length > 0 && /*#__PURE__*/React.createElement("div", {
+      style: { display: 'flex', flexDirection: 'column', gap: 8 }
+    }, loc.device && !q && row({
+      key: 'device', name: loc.name, sub: loc.region, on: true, icon: 'locate-fixed',
+      onClick: () => {}
+    }), hits.map(l => row({
+      key: l.id, name: l.name, sub: l.id === ABI_HOME.id ? l.region + ' \u00b7 community default' : l.region,
+      on: l.id === loc.id, onClick: () => this.setPrayerLocation(l)
+    }))),
+    /*#__PURE__*/React.createElement("div", {
+      style: { ...neuWell(16, .7), padding: '15px 16px', marginTop: 20 }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: { display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }
+    }, icon('info', { size: 15, stroke: NEU.muted }), /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 10, letterSpacing: 1.1, textTransform: 'uppercase',
+        fontWeight: 800, color: NEU.muted
+      }
+    }, "How these times are worked out")), /*#__PURE__*/React.createElement("div", {
+      style: { fontSize: 12.5, color: NEU.ink, lineHeight: 1.6 }
+    }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("strong", null, PRAYER_METHOD.name), " \u00b7 ", PRAYER_METHOD.detail), /*#__PURE__*/React.createElement("div", {
+      style: { color: NEU.muted, marginTop: 5 }
+    }, "Sunset (ghur\u016bb) and Maghrib are calculated and shown separately, as this community observes them."), /*#__PURE__*/React.createElement("div", {
+      style: { color: NEU.muted, marginTop: 5 }
+    }, "Source: ", PRAYER_METHOD.source, ". Dublin also carries the centre's own published timetable, used when no calculation has been fetched."), src.date && /*#__PURE__*/React.createElement("div", {
+      style: { color: NEU.muted, marginTop: 5 }
+    }, "Last retrieved: ", dateLabel(src.date), " for ", loc.name, "."))));
+  }
+
   renderMore(st) {
     const links = [{
       label: this.t('more.calendar'),
@@ -5652,6 +6070,8 @@ class App extends Component {
       go: () => this.go('offline')
     }];
     const langs = ['English', 'العربية', 'हिन्दी', 'فارسی', 'Urdu'];
+    const ploc = this.prayerLocation();
+    const psrc = this.prayerSource();
     return /*#__PURE__*/React.createElement("div", {
       style: {
         padding: '8px 20px 100px'
@@ -5669,6 +6089,56 @@ class App extends Component {
         color: st.dark ? '#ece6d8' : '#27241f'
       }
     }, this.t('more.title'))), /*#__PURE__*/React.createElement("div", {
+      onClick: () => this.go('location'),
+      className: "neu-press",
+      style: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: 14,
+        ...neuCard(16, .9),
+        padding: '15px 16px',
+        marginBottom: 11,
+        cursor: 'pointer',
+        minHeight: 44
+      }
+    }, /*#__PURE__*/React.createElement("span", {
+      "aria-hidden": "true",
+      style: {
+        flexShrink: 0,
+        width: 40,
+        height: 40,
+        borderRadius: 12,
+        background: 'linear-gradient(145deg,#1f5145e6,#1f5145)',
+        color: '#e4efe9',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        boxShadow: '0 4px 11px -6px #1f5145'
+      }
+    }, icon('map-pin', { size: 18 })), /*#__PURE__*/React.createElement("div", {
+      style: {
+        flex: 1,
+        minWidth: 0
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 15,
+        fontWeight: 600,
+        color: '#2c2823'
+      }
+    }, "Prayer Location"), /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 12,
+        color: psrc.kind === 'fallback' ? '#6e2230' : NEU.muted,
+        marginTop: 1
+      }
+    }, `Current location: ${ploc.name}${ploc.outside ? '' : ', Ireland'}` + (psrc.kind === 'fallback' ? ' · no timetable yet' : ''))), /*#__PURE__*/React.createElement("span", {
+      "aria-hidden": "true",
+      style: {
+        color: '#6b6252',
+        fontSize: 20
+      }
+    }, "›")), /*#__PURE__*/React.createElement("div", {
       style: {
         display: 'flex',
         flexDirection: 'column',
@@ -13107,7 +13577,7 @@ class App extends Component {
         position: 'relative',
         background: st.dark ? NEU_D.bg : NEU.bg
       }
-    }, showBrand && this.renderBrandMark(), st.screen === 'home' && this.renderHome(st, next, cd, greg, hijri, salaam), st.screen === 'prayer' && this.renderPrayer(st, next, cd, greg), st.screen === 'library' && this.renderLibrary(st), st.screen === 'reading' && this.renderReading(st), st.screen === 'classifieds' && this.renderClassifieds(st), st.screen === 'more' && this.renderMore(st), st.screen === 'about' && this.renderAbout(), st.screen === 'offline' && this.renderOffline(), st.screen === 'admin' && this.renderAdmin(st), st.screen === 'calendar' && this.renderCalendar(st), st.screen === 'kids' && this.renderKids(st), st.screen === 'health' && this.renderHealth(st), st.screen === 'qibla' && this.renderQibla(st), st.screen === 'khums' && this.renderKhums(st), st.screen === 'tasbeeh' && this.renderTasbeeh(st), st.screen === 'wallpaper' && this.renderWallpaper(st), st.screen === 'stories' && this.renderStories(st)), showNav && /*#__PURE__*/React.createElement("div", {
+    }, showBrand && this.renderBrandMark(), st.screen === 'home' && this.renderHome(st, next, cd, greg, hijri, salaam), st.screen === 'prayer' && this.renderPrayer(st, next, cd, greg), st.screen === 'library' && this.renderLibrary(st), st.screen === 'reading' && this.renderReading(st), st.screen === 'classifieds' && this.renderClassifieds(st), st.screen === 'more' && this.renderMore(st), st.screen === 'about' && this.renderAbout(), st.screen === 'location' && this.renderLocation(st), st.screen === 'offline' && this.renderOffline(), st.screen === 'admin' && this.renderAdmin(st), st.screen === 'calendar' && this.renderCalendar(st), st.screen === 'kids' && this.renderKids(st), st.screen === 'health' && this.renderHealth(st), st.screen === 'qibla' && this.renderQibla(st), st.screen === 'khums' && this.renderKhums(st), st.screen === 'tasbeeh' && this.renderTasbeeh(st), st.screen === 'wallpaper' && this.renderWallpaper(st), st.screen === 'stories' && this.renderStories(st)), showNav && /*#__PURE__*/React.createElement("div", {
       style: {
         flexShrink: 0,
         textAlign: 'center',
