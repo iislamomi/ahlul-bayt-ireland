@@ -1,4 +1,4 @@
-const CACHE = 'abi-v69';
+const CACHE = 'abi-v70';
 const SHELL = ['/', '/index.html', '/manifest.json',
   '/vendor/react.min.js', '/vendor/react-dom.min.js', '/app.js',
   '/adhan.mp3', '/app-title-logo.png', '/icon-192.png', '/icon-512.png', '/favicon.png'];
@@ -44,8 +44,17 @@ self.addEventListener('notificationclick', e => {
 });
 
 self.addEventListener('fetch', e => {
+  // Submissions are POSTs and were never cached; this is explicit so a later
+  // change to the strategy below cannot start caching them by accident.
   if (e.request.method !== 'GET') return;
   const url = new URL(e.request.url);
+  // Leaderboards, reports and admin content are read fresh or not at all: a
+  // stale board is misleading, and a report or an administrator's reply must
+  // never sit in a cache on a shared device.
+  if (/\/functions\/v1\/|\/rest\/v1\//.test(url.pathname)) {
+    e.respondWith(fetch(e.request));
+    return;
+  }
   // Network-first for CDN (fonts, React), cache-first for app shell
   if (url.origin !== self.location.origin) {
     e.respondWith(

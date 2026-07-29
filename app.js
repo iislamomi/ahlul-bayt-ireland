@@ -1596,16 +1596,193 @@ const CONTENT_KIND = {
   nahj: 'Books'
 };
 
-/* ── QUIZ DIFFICULTY ── */
+/* ── QUIZ DIFFICULTY ──
+   Easy / Medium / Hard are the difficulties. Quizzes saved under the older
+   Beginner / Intermediate / Advanced labels still read correctly — quizLevel()
+   maps them, and migrateQuizzes() writes the new key back the first time the app
+   loads, so nothing depends on the mapping surviving forever. */
 const QUIZ_LEVELS = [
-  { key: 'beginner', label: 'Beginner', color: '#2c5d52' },
-  { key: 'intermediate', label: 'Intermediate', color: '#7d6220' },
-  { key: 'advanced', label: 'Advanced', color: '#6e2230' }
+  { key: 'easy', label: 'Easy', color: '#2c5d52' },
+  { key: 'medium', label: 'Medium', color: '#7d6220' },
+  { key: 'hard', label: 'Hard', color: '#6e2230' }
 ];
+const LEGACY_LEVEL = { beginner: 'easy', intermediate: 'medium', advanced: 'hard' };
+const DEFAULT_LEVEL = 'easy';
 const quizLevel = q => {
-  const k = String((q && q.level) || 'beginner').toLowerCase();
-  return QUIZ_LEVELS.some(l => l.key === k) ? k : 'beginner';
+  const k = String((q && q.level) || '').toLowerCase().trim();
+  if (QUIZ_LEVELS.some(l => l.key === k)) return k;
+  return LEGACY_LEVEL[k] || DEFAULT_LEVEL;
 };
+const levelLabel = k => (QUIZ_LEVELS.find(l => l.key === quizLevel({ level: k })) || QUIZ_LEVELS[0]).label;
+/* Give every quiz an explicit difficulty. Returns the same array when nothing
+   needed changing, so callers can tell whether a write is worth doing. */
+function migrateQuizzes(list) {
+  if (!Array.isArray(list)) return list;
+  let touched = false;
+  const out = list.map(q => {
+    const lvl = quizLevel(q);
+    if (q && q.level === lvl) return q;
+    touched = true;
+    return { ...q, level: lvl };
+  });
+  return touched ? out : list;
+}
+
+/* ── THIS INSTALLATION ──
+   A random identifier made once and kept locally. It is not a fingerprint: it
+   says nothing about the device and is never sent anywhere in the raw — the
+   server stores a peppered digest of it, and the public leaderboard never
+   returns it at all. It exists so one installation keeps one best result and so
+   submissions can be rate-limited. */
+function installId() {
+  let v = lsGet('installId', null);
+  if (typeof v !== 'string' || v.length < 8) {
+    v = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : 'i' + Date.now().toString(36) + Math.random().toString(36).slice(2, 12);
+    lsSet('installId', v);
+  }
+  return v;
+}
+const randomId = () => typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID().replace(/-/g, '') : 'a' + Date.now().toString(36) + Math.random().toString(36).slice(2, 14);
+
+/* ── LOCAL STORE VERSION ──
+   Migrations run once, in order, before the app reads anything. They only ever
+   add or normalise: an installed PWA carrying months of preferences must come
+   through an update with all of them intact, so nothing here deletes a key it
+   does not itself own. */
+const ABI_STORE_VERSION = 1;
+function runStorageMigrations() {
+  let from = lsGet('storeVersion', 0);
+  if (typeof from !== 'number' || from < 0) from = 0;
+  if (from >= ABI_STORE_VERSION) return from;
+  try {
+    if (from < 1) {
+      // v1: quiz difficulty gains explicit easy/medium/hard keys
+      const qs = lsGet('kidsQuizzes', null);
+      if (Array.isArray(qs)) {
+        const next = migrateQuizzes(qs);
+        if (next !== qs) lsSet('kidsQuizzes', next);
+      }
+      installId();
+    }
+  } catch (e) {
+    // a failed migration must not stop the app booting; the read-time mapping
+    // in quizLevel() still covers anything left unconverted
+    console.error('[ABI] storage migration failed:', e && e.message);
+  }
+  lsSet('storeVersion', ABI_STORE_VERSION);
+  return ABI_STORE_VERSION;
+}
+
+/* ── QUIZ SCORING ──
+   Mirrors supabase/functions/_shared/quiz.ts. The server recomputes this from
+   the submitted answers and its own question bank, and its figure is what the
+   public board shows; this copy exists so the participant sees the same number
+   immediately and offline.
+
+     score = 100 per correct answer
+           + 25 for reaching the end
+           + up to 50 shared across the whole attempt for finishing under time
+
+   The time bonus is deliberately worth less than a single correct answer, so
+   answering carefully can never lose to answering quickly: ten correct is at
+   least 1000, nine correct is at most 975. */
+const SCORING = {
+  BASE_PER_CORRECT: 100,
+  COMPLETION_BONUS: 25,
+  MAX_TIME_BONUS: 50,
+  SECONDS_PER_QUESTION: 10
+};
+function computeScore(correct, total, durationMs, completed) {
+  const parMs = total * SCORING.SECONDS_PER_QUESTION * 1000;
+  const used = Math.max(0, Math.min(durationMs, parMs));
+  const timeBonus = parMs > 0 ? Math.round(SCORING.MAX_TIME_BONUS * (parMs - used) / parMs) : 0;
+  return SCORING.BASE_PER_CORRECT * correct + (completed ? SCORING.COMPLETION_BONUS : 0) + timeBonus;
+}
+function scoreParts(correct, total, durationMs, completed) {
+  const parMs = total * SCORING.SECONDS_PER_QUESTION * 1000;
+  const used = Math.max(0, Math.min(durationMs, parMs));
+  return {
+    answers: SCORING.BASE_PER_CORRECT * correct,
+    completion: completed ? SCORING.COMPLETION_BONUS : 0,
+    time: parMs > 0 ? Math.round(SCORING.MAX_TIME_BONUS * (parMs - used) / parMs) : 0
+  };
+}
+
+/* ── DISPLAY NAMES ──
+   Mirrors the server rules. Letters, marks and digits of any script pass, so an
+   Arabic, Urdu or Hindi name is as welcome as a Latin one; what does not pass is
+   anything that reaches out of the app — an address, a number, a link — and
+   anything invisible, which on a public board is only ever used to impersonate. */
+const NAME_MIN = 2;
+const NAME_MAX = 20;
+const NAME_INVISIBLE = /[\u0000-\u001f\u007f-\u009f\u200b-\u200f\u202a-\u202e\u2060-\u206f\ufeff]/g;
+const NAME_ALLOWED = /[^\p{L}\p{M}\p{N} '\-._]/gu;
+const NAME_EMAIL = /[^\s@]+@[^\s@]+\.[^\s@]+/;
+const NAME_URLISH = /(https?:\/\/|www\.|\b[a-z0-9-]+\.(com|net|org|ie|co|uk|io|me|xyz|info|app)\b)/i;
+const NAME_PHONE = /(?:\+?\d[\s\-().]*){7,}/;
+/* Configurable. Lowercase entries, matched against the name with separators
+   stripped so spaced-out spellings are caught too. */
+const BLOCKED_NAME_WORDS = ['fuck', 'shit', 'cunt', 'bitch', 'bastard', 'wanker', 'slut', 'whore', 'nigger', 'nigga', 'faggot', 'retard', 'rape', 'nazi', 'hitler', 'admin', 'administrator', 'moderator', 'ahlulbayt', 'official'];
+function sanitiseName(raw) {
+  return String(raw == null ? '' : raw).normalize('NFC').replace(NAME_INVISIBLE, '').replace(NAME_ALLOWED, '').replace(/\s+/g, ' ').trim().slice(0, NAME_MAX);
+}
+function validateDisplayName(raw) {
+  const original = String(raw == null ? '' : raw);
+  if (!original.trim()) return { ok: false, reason: 'Please enter a display name.' };
+  if (NAME_EMAIL.test(original)) return { ok: false, reason: 'Please do not use an email address.' };
+  if (NAME_URLISH.test(original)) return { ok: false, reason: 'Please do not use a web address.' };
+  if (NAME_PHONE.test(original)) return { ok: false, reason: 'Please do not use a phone number.' };
+  const name = sanitiseName(original);
+  if (name.length < NAME_MIN) return { ok: false, reason: `Use at least ${NAME_MIN} characters.` };
+  if (!/[\p{L}\p{N}]/u.test(name)) return { ok: false, reason: 'Use letters or numbers.' };
+  const flat = name.toLowerCase().replace(/[^\p{L}\p{N}]/gu, '');
+  if (BLOCKED_NAME_WORDS.some(w => flat.includes(w))) return { ok: false, reason: 'Please choose a different name.' };
+  return { ok: true, name };
+}
+
+/* ── PENDING ATTEMPTS ──
+   A quiz finished with no connection is not lost. The attempt is written to its
+   own IndexedDB store, keyed by an id the client generated before playing, and
+   replayed when the network returns. The server treats that id as an
+   idempotency key, so replaying twice publishes once. */
+const QUEUE_DB = 'abi-queue';
+const QUEUE_STORE = 'attempts';
+let queueDbPromise = null;
+function queueDb() {
+  if (queueDbPromise) return queueDbPromise;
+  queueDbPromise = new Promise((resolve, reject) => {
+    if (typeof indexedDB === 'undefined') return reject(new Error('no indexeddb'));
+    const req = indexedDB.open(QUEUE_DB, 1);
+    req.onupgradeneeded = () => {
+      const db = req.result;
+      if (!db.objectStoreNames.contains(QUEUE_STORE)) db.createObjectStore(QUEUE_STORE, { keyPath: 'attemptId' });
+    };
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+  queueDbPromise.catch(() => { queueDbPromise = null; });
+  return queueDbPromise;
+}
+function queueStore(mode) {
+  return queueDb().then(db => db.transaction(QUEUE_STORE, mode).objectStore(QUEUE_STORE));
+}
+function queueAll() {
+  return queueStore('readonly').then(os => new Promise((res, rej) => {
+    const r = os.getAll();
+    r.onsuccess = () => res(r.result || []);
+    r.onerror = () => rej(r.error);
+  })).catch(() => lsGet('pendingAttempts', []));
+}
+function queuePut(rec) {
+  const mirror = lsGet('pendingAttempts', []).filter(a => a.attemptId !== rec.attemptId);
+  lsSet('pendingAttempts', [...mirror, rec]);
+  return queueStore('readwrite').then(os => { os.put(rec); }).catch(() => {});
+}
+function queueDrop(attemptId) {
+  lsSet('pendingAttempts', lsGet('pendingAttempts', []).filter(a => a.attemptId !== attemptId));
+  return queueStore('readwrite').then(os => { os.delete(attemptId); }).catch(() => {});
+}
+
 
 /* ── TASBEEH ── */
 /* Tasbīḥ of Fāṭima al-Zahrāʾ (a.s.), in its traditional order: the counter walks
@@ -1698,6 +1875,12 @@ const SB_HEADS = { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY, 'Content-T
 /* ── WEB PUSH ── */
 const VAPID_PUBLIC_KEY = 'BGaIKdSnFYd_cHBqlukrEy1rI2wATyDLx7d08nvL90u2SxV240WaVz706fiqo5lPybZmf9Q0oEZuHpsOLHlPrs4';
 const EDGE_PUSH = SB_URL + '/functions/v1/send-push';
+/* Server-authoritative endpoints. The anon key below is a public identifier, not
+   a secret — it only gets past the gateway; both functions hold the service-role
+   key server-side and neither table is readable with the anon key. */
+const EDGE_QUIZ_SUBMIT = SB_URL + '/functions/v1/submit-quiz-score';
+const EDGE_REPORT_TIME = SB_URL + '/functions/v1/report-prayer-time';
+const LEADERBOARD_URL = SB_URL + '/rest/v1/quiz_leaderboard_public';
 
 const PUSH_MSG = {
   announcement: 'Majlis Live — new announcement from Ahlul Bayt Ireland',
@@ -2216,8 +2399,20 @@ class App extends Component {
       lastRead: lsGet('lastRead', null),
       liveZiyarat: lsGet('ziyarat', ZIYARAT),
       liveNahj: lsGet('nahj', NAHJ),
-      liveKidsQuizzes: lsGet('kidsQuizzes', KIDS_QUIZZES),
+      liveKidsQuizzes: migrateQuizzes(lsGet('kidsQuizzes', KIDS_QUIZZES)),
       quizRun: null,
+      /* The name is remembered so the next quiz does not ask again, and stays
+         editable on the way in. Nothing else about a participant is kept. */
+      quizName: lsGet('quizName', ''),
+      quizBest: lsGet('quizBest', {}),
+      quizNameDraft: null,
+      quizNameErr: null,
+      quizSubmit: null,
+      lbTab: 'easy',
+      lbState: 'idle',
+      lbRows: [],
+      lbError: null,
+      pendingCount: 0,
       liveAskImam: lsGet('askImam', []),
       liveAds: lsGet('ads', []),
       adIdx: 0,
@@ -2229,6 +2424,11 @@ class App extends Component {
       autoTimesBusy: false,
       locQuery: '',
       locBusy: false,
+      reportOpen: false,
+      reportPrayer: 'Fajr',
+      reportExpected: '',
+      reportNote: '',
+      reportState: null,
       kidsQuizPicks: {},
       kidsVidCat: 'All',
       healthVidCat: 'All',
@@ -2268,7 +2468,7 @@ class App extends Component {
       clearInterval(this.quizTick);
       clearTimeout(this.quizNext);
     });
-    _defineProperty(this, "startQuizRun", lvl => {
+    _defineProperty(this, "startQuizRun", (lvl, displayName) => {
       this.clearQuizTimers();
       const pool = (this.state.liveKidsQuizzes || []).filter(q => quizLevel(q) === lvl);
       const arr = [...pool];
@@ -2276,10 +2476,32 @@ class App extends Component {
         const j = Math.floor(Math.random() * (i + 1));
         [arr[i], arr[j]] = [arr[j], arr[i]];
       }
+      const now = Date.now();
       this.setState({
-        quizRun: { lvl, qs: arr.slice(0, 10), pos: 0, score: 0, pick: null, timeLeft: 10, done: false }
+        /* attemptId is minted before the first question, so a result finished
+           offline and replayed later is the same attempt to the server however
+           many times it is sent. */
+        quizRun: {
+          lvl, qs: arr.slice(0, 10), pos: 0, score: 0, pick: null,
+          timeLeft: SCORING.SECONDS_PER_QUESTION, done: false,
+          attemptId: randomId(), name: displayName, startedAt: now, qStart: now,
+          answers: [], durationMs: 0
+        },
+        quizSubmit: null
       });
       this.quizTick = setInterval(this.quizTickFn, 1000);
+    });
+    /* One place that appends to answers, so the timed-out path and the answered
+       path can never record different shapes. */
+    _defineProperty(this, "recordAnswer", (r, picked) => {
+      const q = r.qs[r.pos];
+      const ms = Math.max(0, Date.now() - r.qStart);
+      return {
+        ...r,
+        pick: picked,
+        score: r.score + (picked === q.answer ? 1 : 0),
+        answers: [...r.answers, { q: q.question, p: picked, ms }]
+      };
     });
     _defineProperty(this, "quizTickFn", () => {
       this.setState(s => {
@@ -2289,7 +2511,7 @@ class App extends Component {
         if (r.timeLeft <= 1) {
           clearInterval(this.quizTick);
           this.quizNext = setTimeout(this.quizAdvance, 2000);
-          return { quizRun: { ...r, timeLeft: 0, pick: -1 } };
+          return { quizRun: { ...this.recordAnswer(r, -1), timeLeft: 0 } };
         }
         return { quizRun: { ...r, timeLeft: r.timeLeft - 1 } };
       });
@@ -2298,24 +2520,187 @@ class App extends Component {
       const r = this.state.quizRun;
       if (!r || r.done || r.pick !== null) return;
       clearInterval(this.quizTick);
-      this.setState({
-        quizRun: { ...r, pick: oi, score: r.score + (oi === r.qs[r.pos].answer ? 1 : 0) }
-      });
+      this.setState({ quizRun: this.recordAnswer(r, oi) });
       this.quizNext = setTimeout(this.quizAdvance, 1600);
     });
     _defineProperty(this, "quizAdvance", () => {
       this.setState(s => {
         const r = s.quizRun;
         if (!r || r.done) return null;
-        if (r.pos >= r.qs.length - 1) return { quizRun: { ...r, done: true } };
-        return { quizRun: { ...r, pos: r.pos + 1, pick: null, timeLeft: 10 } };
+        if (r.pos >= r.qs.length - 1) {
+          return { quizRun: { ...r, done: true, durationMs: Math.max(0, Date.now() - r.startedAt) } };
+        }
+        return {
+          quizRun: {
+            ...r, pos: r.pos + 1, pick: null,
+            timeLeft: SCORING.SECONDS_PER_QUESTION, qStart: Date.now()
+          }
+        };
       }, () => {
         const r = this.state.quizRun;
         if (r && !r.done) {
           clearInterval(this.quizTick);
           this.quizTick = setInterval(this.quizTickFn, 1000);
+        } else if (r && r.done) {
+          this.submitQuizAttempt(r);
         }
       });
+    });
+    /* ── SUBMISSION ──
+       What goes up is the attempt, not the result: which questions were asked and
+       what was picked. The server marks them against its own copy of the bank and
+       stores the score it worked out. The figure shown here is the same formula
+       run locally, so the participant sees their result at once and offline. */
+    _defineProperty(this, "submitQuizAttempt", run => {
+      if (!run || !run.name) return;
+      const total = run.qs.length;
+      const payload = {
+        attemptId: run.attemptId,
+        quizId: 'kids',
+        difficulty: run.lvl,
+        displayName: run.name,
+        durationMs: run.durationMs,
+        completed: true,
+        clientScore: computeScore(run.score, total, run.durationMs, true),
+        correct: run.score,
+        total,
+        answers: run.answers.map(a => ({ q: a.q, p: a.p })),
+        installId: installId(),
+        queuedAt: Date.now()
+      };
+      this.setState({ quizSubmit: { state: 'sending' } });
+      this.sendQuizAttempt(payload, true);
+    });
+    /* Resolves to a state string. Anything that is not a refusal by the server
+       goes to the queue rather than being lost — a bad connection is the normal
+       case here, not the exceptional one. */
+    _defineProperty(this, "sendQuizAttempt", (payload, interactive) => {
+      const offline = typeof navigator !== 'undefined' && navigator.onLine === false;
+      if (offline) {
+        queuePut(payload);
+        this.refreshPendingCount();
+        if (interactive) this.setState({ quizSubmit: { state: 'queued' } });
+        return Promise.resolve('queued');
+      }
+      return fetch(EDGE_QUIZ_SUBMIT, {
+        method: 'POST',
+        headers: SB_HEADS,
+        cache: 'no-store',
+        body: JSON.stringify(payload)
+      }).then(r => r.json().then(j => ({ status: r.status, j })).catch(() => ({ status: r.status, j: {} }))).then(({ status, j }) => {
+        if (status === 200 && j && j.ok) {
+          queueDrop(payload.attemptId);
+          this.refreshPendingCount();
+          this.recordPersonalBest(payload, j);
+          if (interactive) {
+            this.setState({ quizSubmit: { state: 'ok', server: j } });
+            this.loadLeaderboard(payload.difficulty);
+          }
+          return 'ok';
+        }
+        if (status === 429) {
+          // the server is telling us to stop, not that the attempt is bad
+          queuePut(payload);
+          this.refreshPendingCount();
+          if (interactive) this.setState({ quizSubmit: { state: 'queued', message: 'Too many submissions just now — this will be sent shortly.' } });
+          return 'queued';
+        }
+        if (status >= 400 && status < 500) {
+          // a refusal: replaying it will not help, so it does not go in the queue
+          queueDrop(payload.attemptId);
+          this.refreshPendingCount();
+          const msg = j && j.message ? j.message : status === 503 ? 'The quiz service is unavailable.' : 'This result could not be accepted.';
+          if (interactive) this.setState({ quizSubmit: { state: 'rejected', message: msg, code: j && j.error } });
+          return 'rejected';
+        }
+        queuePut(payload);
+        this.refreshPendingCount();
+        if (interactive) this.setState({ quizSubmit: { state: 'queued' } });
+        return 'queued';
+      }).catch(() => {
+        queuePut(payload);
+        this.refreshPendingCount();
+        if (interactive) this.setState({ quizSubmit: { state: 'queued' } });
+        return 'queued';
+      });
+    });
+    /* The server's figure, not the browser's, and only when it improves on what
+       is already stored — same comparison the board sorts by. */
+    _defineProperty(this, "recordPersonalBest", (payload, server) => {
+      const diff = payload.difficulty;
+      const row = {
+        name: payload.displayName,
+        score: server && typeof server.score === 'number' ? server.score : payload.clientScore,
+        correct: server && typeof server.correct === 'number' ? server.correct : payload.correct,
+        total: payload.total,
+        durationMs: payload.durationMs,
+        at: Date.now()
+      };
+      const cur = this.state.quizBest || {};
+      const prev = cur[diff];
+      const better = !prev || row.score > prev.score || row.score === prev.score && row.correct > prev.correct || row.score === prev.score && row.correct === prev.correct && row.durationMs < prev.durationMs;
+      if (!better) return;
+      const next = { ...cur, [diff]: row };
+      lsSet('quizBest', next);
+      this.setState({ quizBest: next });
+    });
+    _defineProperty(this, "refreshPendingCount", () => {
+      queueAll().then(rows => this.setState({ pendingCount: Array.isArray(rows) ? rows.length : 0 })).catch(() => {});
+    });
+    /* Replayed one at a time and dropped only on a definite answer, so a flaky
+       connection cannot quietly discard somebody's result. */
+    _defineProperty(this, "syncPendingAttempts", () => {
+      if (this._syncing) return Promise.resolve();
+      if (typeof navigator !== 'undefined' && navigator.onLine === false) return Promise.resolve();
+      this._syncing = true;
+      return queueAll().then(rows => {
+        const list = Array.isArray(rows) ? rows : [];
+        return list.reduce((chain, p) => chain.then(() => this.sendQuizAttempt(p, false)), Promise.resolve());
+      }).then(() => {
+        this._syncing = false;
+        this.refreshPendingCount();
+      }).catch(() => {
+        this._syncing = false;
+      });
+    });
+    _defineProperty(this, "retrySync", () => {
+      this.setState({ quizSubmit: { state: 'sending' } });
+      this.syncPendingAttempts().then(() => queueAll()).then(rows => {
+        const left = Array.isArray(rows) ? rows.length : 0;
+        this.setState({ quizSubmit: left ? { state: 'queued', message: 'Still waiting for a connection.' } : { state: 'ok' } });
+        if (!left) this.loadLeaderboard(this.state.lbTab);
+      });
+    });
+    /* ── LEADERBOARD ──
+       Read straight from the public view, which carries no install identifiers,
+       no hidden rows and no answers. Ordering is the tie-break order applied in
+       the database so the board and the server's own idea of "best" agree. */
+    _defineProperty(this, "loadLeaderboard", difficulty => {
+      const diff = difficulty || this.state.lbTab;
+      this.setState({ lbTab: diff, lbState: 'loading', lbError: null });
+      const url = LEADERBOARD_URL + '?select=id,display_name,score,correct,total,duration_ms,submitted_at' + '&quiz_id=eq.kids&difficulty=eq.' + encodeURIComponent(diff) + '&order=score.desc,correct.desc,duration_ms.asc,submitted_at.asc&limit=20';
+      return fetch(url, { headers: SB_HEADS, cache: 'no-store' }).then(r => {
+        if (!r.ok) throw new Error(r.status === 404 ? 'not_deployed' : 'http_' + r.status);
+        return r.json();
+      }).then(rows => {
+        this.setState({ lbState: 'ready', lbRows: Array.isArray(rows) ? rows : [] });
+      }).catch(e => {
+        const offline = typeof navigator !== 'undefined' && navigator.onLine === false;
+        this.setState({
+          lbState: 'error',
+          lbError: offline ? 'offline' : e && e.message === 'not_deployed' ? 'not_deployed' : 'network'
+        });
+      });
+    });
+    _defineProperty(this, "setQuizName", value => {
+      const check = validateDisplayName(value);
+      if (!check.ok) {
+        this.setState({ quizNameErr: check.reason });
+        return null;
+      }
+      lsSet('quizName', check.name);
+      this.setState({ quizName: check.name, quizNameDraft: null, quizNameErr: null });
+      return check.name;
     });
     _defineProperty(this, "quitQuiz", () => {
       this.clearQuizTimers();
@@ -2582,6 +2967,65 @@ class App extends Component {
       });
     });
     /* Permission is only ever asked for from here — nothing on launch. */
+    /* ── REPORT AN INCORRECT TIME ──
+       No account, and no field that could identify anyone: the prayer, what the
+       app showed, what it should have shown, and an optional note. The same
+       checks run again on the server, which is the copy that counts — these are
+       here so the reader is told immediately rather than after a round trip. */
+    _defineProperty(this, "submitTimeReport", () => {
+      const st = this.state;
+      const expected = st.reportExpected.trim();
+      const note = st.reportNote.trim().slice(0, 500);
+      if (!['Fajr', 'Sunrise', 'Dhuhr', 'Sunset', 'Maghrib', 'Midnight'].includes(st.reportPrayer)) {
+        this.setState({ reportState: { kind: 'error', message: 'Choose which prayer looks wrong.' } });
+        return;
+      }
+      if (expected && !/^([01][0-9]|2[0-3]):[0-5][0-9]$/.test(expected)) {
+        this.setState({ reportState: { kind: 'error', message: 'Give the correct time as HH:MM, for example 05:12.' } });
+        return;
+      }
+      if (!expected && !note) {
+        this.setState({ reportState: { kind: 'error', message: 'Give the correct time, or a short note about what is wrong.' } });
+        return;
+      }
+      if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+        this.setState({ reportState: { kind: 'error', message: 'You are offline. Please send this when you are back online.' } });
+        return;
+      }
+      const loc = this.prayerLocation();
+      const src = this.prayerSource();
+      const shown = (this.getActivePrayers().find(p => p.name === st.reportPrayer) || {}).time || '';
+      this.setState({ reportState: { kind: 'sending' } });
+      fetch(EDGE_REPORT_TIME, {
+        method: 'POST',
+        headers: SB_HEADS,
+        cache: 'no-store',
+        body: JSON.stringify({
+          reportId: randomId(),
+          locationId: loc.id,
+          locationName: loc.name,
+          prayer: st.reportPrayer,
+          shownTime: shown,
+          expectedTime: expected,
+          note,
+          timeSource: src.kind,
+          appDate: ymd(new Date()),
+          installId: installId()
+        })
+      }).then(r => r.json().then(j => ({ status: r.status, j })).catch(() => ({ status: r.status, j: {} }))).then(({ status, j }) => {
+        if (status === 200 && j && j.ok) {
+          this.setState({
+            reportState: { kind: 'sent' },
+            reportExpected: '', reportNote: ''
+          });
+          return;
+        }
+        const message = status === 429 ? 'You have sent a few reports just now — please try again shortly.' : status === 404 ? 'The reporting service is not available yet.' : j && j.message ? j.message : 'That report could not be sent.';
+        this.setState({ reportState: { kind: 'error', message } });
+      }).catch(() => {
+        this.setState({ reportState: { kind: 'error', message: 'That report could not be sent. Please try again.' } });
+      });
+    });
     _defineProperty(this, "useDeviceLocation", () => {
       if (typeof navigator === 'undefined' || !navigator.geolocation) {
         this.showToast('This device cannot provide a location');
@@ -3043,6 +3487,13 @@ class App extends Component {
   componentDidMount() {
     this._lastAlertTime = '';
     this.loadSaved();
+    this.refreshPendingCount();
+    this.syncPendingAttempts();
+    if (this.state.screen === 'kids' && this.state.kidsTab === 'quiz') {
+      this.loadLeaderboard(this.state.kidsQuizLevel || DEFAULT_LEVEL);
+    }
+    this._onlineSync = () => this.syncPendingAttempts();
+    window.addEventListener('online', this._onlineSync);
     /* Re-enhance on structural change only — the clock ticks every second and
        only rewrites text, which childList mutations ignore. */
     bindTapKeys();
@@ -3100,8 +3551,12 @@ class App extends Component {
       const update = {};
       Object.entries(SB_KEY_MAP).forEach(([key, stateKey]) => {
         if (data[key] !== undefined) {
-          lsSet(key, data[key]);
-          update[stateKey] = key === 'stories' ? pruneExpiredStories(data[key]) : data[key];
+          /* Content arriving from the server is normalised on the way in, not
+             only at boot: the remote copy keeps whatever the admin last saved,
+             so a boot-time migration alone would be undone by the next refresh. */
+          const value = key === 'kidsQuizzes' ? migrateQuizzes(data[key]) : data[key];
+          lsSet(key, value);
+          update[stateKey] = key === 'stories' ? pruneExpiredStories(value) : value;
         }
       });
       if (Object.keys(update).length > 0) this.setState(update);
@@ -3133,6 +3588,7 @@ class App extends Component {
   }
   componentWillUnmount() {
     if (this._a11yObserver) this._a11yObserver.disconnect();
+    if (this._onlineSync) window.removeEventListener('online', this._onlineSync);
     if (this._a11yFrame) clearTimeout(this._a11yFrame);
     clearInterval(this.clockTimer);
     clearInterval(this.storyTimer);
@@ -4797,6 +5253,159 @@ class App extends Component {
      with different intent; splitting them across two screens would hide half of
      what a reader has kept. Removal is a two-step press rather than a dialog \u2014
      the app has no modal, and an accidental tap on a phone is easy. */
+  /* ── LEADERBOARD ──
+     One board per difficulty, read from the public view. Rank, name, score,
+     correct, time and date; the participant's own row is marked by a label as
+     well as a tint, because a colour alone tells a colour-blind reader nothing.
+     Loading, empty and error each have their own state, and the error offers a
+     retry rather than leaving a blank panel. */
+  renderLeaderboard(st) {
+    const diff = st.lbTab;
+    const meta = QUIZ_LEVELS.find(l => l.key === diff) || QUIZ_LEVELS[0];
+    const best = (st.quizBest || {})[diff];
+    const fmtTime = ms => {
+      const t = Math.round((ms || 0) / 1000);
+      return t >= 60 ? `${Math.floor(t / 60)}m ${String(t % 60).padStart(2, '0')}s` : `${t}s`;
+    };
+    const fmtDate = v => {
+      const d = new Date(v);
+      return isNaN(d) ? '' : d.toLocaleDateString('en-IE', { day: 'numeric', month: 'short', year: 'numeric' });
+    };
+    const mine = row => !!best && row.display_name === st.quizName && row.score === best.score && row.correct === best.correct;
+    const tab = L => /*#__PURE__*/React.createElement("div", {
+      key: L.key,
+      onClick: () => this.loadLeaderboard(L.key),
+      "aria-pressed": diff === L.key ? 'true' : 'false',
+      style: {
+        flex: 1, textAlign: 'center', padding: '11px 4px', borderRadius: 12,
+        fontSize: 12.5, fontWeight: diff === L.key ? 800 : 600, cursor: 'pointer',
+        background: NEU.surf, color: diff === L.key ? L.color : NEU.muted,
+        border: NEU.edge, boxShadow: diff === L.key ? neuIn(.55) : neuUp(.55),
+        minHeight: 44, display: 'flex', alignItems: 'center', justifyContent: 'center',
+        transition: 'box-shadow .18s ease, color .18s ease'
+      }
+    }, L.label);
+    const panel = children => /*#__PURE__*/React.createElement("div", {
+      style: { ...neuCard(16, .85), padding: '24px 18px', textAlign: 'center' }
+    }, children);
+    let body;
+    if (st.lbState === 'loading' || st.lbState === 'idle') {
+      body = panel(/*#__PURE__*/React.createElement("div", {
+        style: { fontSize: 13, color: NEU.muted }
+      }, "Loading the ", meta.label.toLowerCase(), " leaderboard\u2026"));
+    } else if (st.lbState === 'error') {
+      const msg = st.lbError === 'offline' ? 'You are offline, so the leaderboard cannot be shown. Your own results are safe and will be sent when you reconnect.' : st.lbError === 'not_deployed' ? 'The leaderboard service is not available yet.' : 'The leaderboard could not be loaded.';
+      body = panel(/*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+        style: { fontSize: 13, color: NEU.ink, lineHeight: 1.5 }
+      }, /*#__PURE__*/React.createElement("span", { "aria-hidden": "true" }, "\u26a0 "), msg), /*#__PURE__*/React.createElement("div", {
+        onClick: () => this.loadLeaderboard(diff),
+        style: {
+          display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+          marginTop: 14, padding: '12px 20px', borderRadius: 12, cursor: 'pointer',
+          border: `1.5px solid ${NEU.accent}`, color: NEU.accent,
+          fontSize: 13, fontWeight: 700, minHeight: 44
+        }
+      }, "Try again")));
+    } else if (!st.lbRows.length) {
+      body = panel(/*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+        style: { fontFamily: 'Spectral,serif', fontSize: 16, fontWeight: 600, color: NEU.ink }
+      }, "No ", meta.label.toLowerCase(), " results yet"), /*#__PURE__*/React.createElement("div", {
+        style: { fontSize: 12.5, color: NEU.muted, marginTop: 6, lineHeight: 1.5 }
+      }, "Be the first to finish a ", meta.label.toLowerCase(), " quiz.")));
+    } else {
+      body = /*#__PURE__*/React.createElement("ol", {
+        style: { listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 7 }
+      }, st.lbRows.map((row, i) => {
+        const you = mine(row);
+        return /*#__PURE__*/React.createElement("li", {
+          key: row.id || i,
+          style: {
+            ...neuCard(13, you ? .95 : .7),
+            padding: '10px 12px', display: 'flex', alignItems: 'center', gap: 11,
+            border: you ? `1.5px solid ${NEU.accent}` : NEU.edge
+          }
+        }, /*#__PURE__*/React.createElement("span", {
+          // read out, not hidden: with list-style removed the ol does not
+          // announce positions, and rank is the whole point of the row
+          "aria-label": 'Rank ' + (i + 1),
+          style: {
+            flexShrink: 0, width: 28, textAlign: 'center',
+            fontFamily: 'Spectral,serif', fontSize: 15, fontWeight: 700,
+            color: i < 3 ? meta.color : NEU.muted
+          }
+        }, i + 1), /*#__PURE__*/React.createElement("div", {
+          style: { flex: 1, minWidth: 0 }
+        }, /*#__PURE__*/React.createElement("div", {
+          style: {
+            fontSize: 14, fontWeight: you ? 800 : 600, color: NEU.ink,
+            whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'
+          }
+        }, row.display_name, you ? /*#__PURE__*/React.createElement("span", {
+          style: {
+            marginLeft: 6, fontSize: 9.5, letterSpacing: .8, textTransform: 'uppercase',
+            fontWeight: 800, color: NEU.accent
+          }
+        }, "\u2022 You") : null), /*#__PURE__*/React.createElement("div", {
+          style: { fontSize: 11, color: NEU.muted, marginTop: 2 }
+        }, row.correct, "/", row.total, " correct \u00b7 ", fmtTime(row.duration_ms), " \u00b7 ", fmtDate(row.submitted_at))), /*#__PURE__*/React.createElement("span", {
+          style: {
+            flexShrink: 0, fontSize: 15, fontWeight: 800, color: meta.color,
+            fontVariantNumeric: 'tabular-nums'
+          }
+        }, row.score));
+      }));
+    }
+    return /*#__PURE__*/React.createElement("section", {
+      "aria-label": "Quiz leaderboard",
+      style: { marginBottom: 14 }
+    }, /*#__PURE__*/React.createElement("h3", {
+      style: {
+        fontFamily: 'Spectral,serif', fontSize: 18, fontWeight: 600,
+        color: NEU.ink, margin: '4px 0 10px'
+      }
+    }, "Leaderboard"), /*#__PURE__*/React.createElement("div", {
+      role: "tablist",
+      "aria-label": "Leaderboard difficulty",
+      style: { display: 'flex', gap: 8, marginBottom: 12 }
+    }, QUIZ_LEVELS.map(tab)), best && /*#__PURE__*/React.createElement("div", {
+      style: {
+        ...neuWell(13, .7), padding: '11px 13px', marginBottom: 10,
+        display: 'flex', alignItems: 'center', gap: 10
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: { flex: 1, minWidth: 0 }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 9.5, letterSpacing: 1.1, textTransform: 'uppercase',
+        fontWeight: 800, color: NEU.muted
+      }
+    }, "Your best ", meta.label.toLowerCase(), " result"), /*#__PURE__*/React.createElement("div", {
+      style: { fontSize: 13, color: NEU.ink, marginTop: 2 }
+    }, best.correct, "/", best.total, " correct \u00b7 ", fmtTime(best.durationMs))), /*#__PURE__*/React.createElement("span", {
+      style: {
+        flexShrink: 0, fontSize: 17, fontWeight: 800, color: meta.color,
+        fontVariantNumeric: 'tabular-nums'
+      }
+    }, best.score)), st.pendingCount > 0 && /*#__PURE__*/React.createElement("div", {
+      role: "status",
+      style: {
+        display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10,
+        padding: '10px 12px', borderRadius: 12, background: '#f5eeda',
+        fontSize: 12, color: '#7d6220', fontWeight: 600, lineHeight: 1.45
+      }
+    }, /*#__PURE__*/React.createElement("span", { style: { flex: 1 } }, /*#__PURE__*/React.createElement("span", { "aria-hidden": "true" }, "\u21bb "), st.pendingCount, " result", st.pendingCount === 1 ? '' : 's', " waiting to be sent."), /*#__PURE__*/React.createElement("span", {
+      onClick: this.retrySync,
+      role: "button",
+      tabIndex: 0,
+      onKeyDown: e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); this.retrySync(); } },
+      style: {
+        flexShrink: 0, padding: '10px 12px', borderRadius: 10, cursor: 'pointer',
+        border: '1px solid rgba(125,98,32,.4)', fontWeight: 700, minHeight: 44,
+        display: 'flex', alignItems: 'center'
+      }
+    }, "Send now")), body);
+  }
+
   renderSaved(st) {
     const kind = st.savedTab;
     const accent = kind === 'bookmark' ? '#3a4a78' : '#8a2f52';
@@ -5103,7 +5712,7 @@ class App extends Component {
         gap: 10,
         marginTop: 16,
         ...neuWell(14, .8),
-        padding: '11px 14px',
+        padding: '0 14px',
         marginBottom: 14
       }
     }, icon('search', { size: 17, stroke: '#6b6252' }), /*#__PURE__*/React.createElement("input", {
@@ -5118,7 +5727,11 @@ class App extends Component {
         background: 'transparent',
         fontSize: 14,
         color: '#3f3a32',
-        width: '100%'
+        width: '100%',
+        // the field is the target, not just the well drawn around it
+        padding: '12px 0',
+        minHeight: 44,
+        boxSizing: 'border-box'
       }
     }), st.libQuery && /*#__PURE__*/React.createElement("div", {
       onClick: () => this.setState({
@@ -5665,7 +6278,11 @@ class App extends Component {
         background: 'transparent',
         fontSize: 14,
         color: '#3f3a32',
-        width: '100%'
+        width: '100%',
+        // the field is the target, not just the well drawn around it
+        padding: '12px 0',
+        minHeight: 44,
+        boxSizing: 'border-box'
       }
     }), st.classQuery && /*#__PURE__*/React.createElement("div", {
       onClick: () => this.setState({
@@ -5994,14 +6611,17 @@ class App extends Component {
     /*#__PURE__*/React.createElement("div", {
       style: {
         display: 'flex', alignItems: 'center', gap: 10, ...neuWell(14, .8),
-        padding: '11px 14px', marginBottom: 14
+        padding: '0 14px', marginBottom: 14
       }
     }, icon('search', { size: 17, stroke: '#6b6252' }), /*#__PURE__*/React.createElement("input", {
       value: st.locQuery,
       onChange: e => this.setState({ locQuery: e.target.value }),
       "aria-label": "Search Irish cities and towns",
       placeholder: "Search a city or town",
-      style: { border: 'none', outline: 'none', background: 'transparent', fontSize: 14, color: '#3f3a32', width: '100%' }
+      dir: "auto",
+      // padding on the field, not only on the well around it: a 20px input inside
+      // a 44px box means the top and bottom of the target do not focus anything
+      style: { border: 'none', outline: 'none', background: 'transparent', fontSize: 14, color: '#3f3a32', width: '100%', padding: '12px 0', minHeight: 44, boxSizing: 'border-box' }
     }), st.locQuery && /*#__PURE__*/React.createElement("div", {
       onClick: () => this.setState({ locQuery: '' }),
       "aria-label": "Clear search",
@@ -6044,7 +6664,119 @@ class App extends Component {
       style: { color: NEU.muted, marginTop: 5 }
     }, "Source: ", PRAYER_METHOD.source, ". Dublin also carries the centre's own published timetable, used when no calculation has been fetched."), src.date && /*#__PURE__*/React.createElement("div", {
       style: { color: NEU.muted, marginTop: 5 }
-    }, "Last retrieved: ", dateLabel(src.date), " for ", loc.name, "."))));
+    }, "Last retrieved: ", dateLabel(src.date), " for ", loc.name, ".")), this.renderTimeReport(st, loc)));
+  }
+
+  /* ── REPORT AN INCORRECT TIME ──
+     Collapsed until asked for, because most people will never need it. Three
+     fields, none of them about the person sending it. */
+  renderTimeReport(st, loc) {
+    const rs = st.reportState || {};
+    const prayers = ['Fajr', 'Sunrise', 'Dhuhr', 'Sunset', 'Maghrib', 'Midnight'];
+    const shown = (this.getActivePrayers().find(p => p.name === st.reportPrayer) || {}).time || '\u2014';
+    if (!st.reportOpen) {
+      return /*#__PURE__*/React.createElement("div", {
+        onClick: () => this.setState({ reportOpen: true, reportState: null }),
+        className: "neu-press",
+        style: {
+          ...neuCard(14, .75), marginTop: 14, padding: '13px 15px', cursor: 'pointer',
+          display: 'flex', alignItems: 'center', gap: 10, minHeight: 44
+        }
+      }, icon('triangle-alert', { size: 16, stroke: '#7d6220', style: { flexShrink: 0 } }), /*#__PURE__*/React.createElement("div", {
+        style: { flex: 1, minWidth: 0, fontSize: 13.5, fontWeight: 600, color: NEU.ink }
+      }, "Report an incorrect time"), /*#__PURE__*/React.createElement("span", {
+        "aria-hidden": "true", style: { color: '#6b6252', fontSize: 18, flexShrink: 0 }
+      }, "\u203a"));
+    }
+    const field = { ...neuWell(12, .7), width: '100%', boxSizing: 'border-box', padding: '12px 13px', border: NEU.edge, outline: 'none', fontSize: 14, color: NEU.ink, minHeight: 44, fontFamily: 'inherit' };
+    const label = t => /*#__PURE__*/React.createElement("div", {
+      style: { fontSize: 12, fontWeight: 700, color: NEU.ink, margin: '12px 0 5px' }
+    }, t);
+    return /*#__PURE__*/React.createElement("div", {
+      style: { ...neuCard(16, .9), marginTop: 14, padding: '16px 16px 18px' }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: { display: 'flex', alignItems: 'flex-start', gap: 10 }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: { flex: 1, minWidth: 0 }
+    }, /*#__PURE__*/React.createElement("h3", {
+      style: { fontFamily: 'Spectral,serif', fontSize: 17, fontWeight: 600, color: NEU.ink, margin: 0 }
+    }, "Report an incorrect time"), /*#__PURE__*/React.createElement("div", {
+      style: { fontSize: 12, color: NEU.muted, marginTop: 3, lineHeight: 1.5 }
+    }, "For ", loc.name, ". No account and no contact details \u2014 we only need the time.")), /*#__PURE__*/React.createElement("div", {
+      onClick: () => this.setState({ reportOpen: false, reportState: null }),
+      "aria-label": "Close the report form",
+      style: {
+        flexShrink: 0, width: 44, height: 44, margin: '-10px -10px 0 0', display: 'flex',
+        alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
+        color: NEU.muted, fontSize: 22, lineHeight: 1
+      }
+    }, "\u00d7")),
+    label('Which prayer?'),
+    /*#__PURE__*/React.createElement("div", {
+      style: { display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 7 }
+    }, prayers.map(p => /*#__PURE__*/React.createElement("div", {
+      key: p,
+      onClick: () => this.setState({ reportPrayer: p, reportState: null }),
+      role: "button",
+      "aria-pressed": st.reportPrayer === p ? 'true' : 'false',
+      style: {
+        textAlign: 'center', padding: '11px 3px', borderRadius: 11, cursor: 'pointer',
+        fontSize: 12.5, fontWeight: st.reportPrayer === p ? 800 : 600,
+        color: st.reportPrayer === p ? NEU.accent : NEU.muted,
+        background: NEU.surf, border: NEU.edge,
+        boxShadow: st.reportPrayer === p ? neuIn(.5) : neuUp(.5),
+        minHeight: 44, display: 'flex', alignItems: 'center', justifyContent: 'center'
+      }
+    }, p))),
+    /*#__PURE__*/React.createElement("div", {
+      style: { fontSize: 12, color: NEU.muted, marginTop: 8 }
+    }, "The app is currently showing ", /*#__PURE__*/React.createElement("strong", { style: { color: NEU.ink } }, shown), " for ", st.reportPrayer, "."),
+    label('What should it be? (optional)'),
+    /*#__PURE__*/React.createElement("input", {
+      value: st.reportExpected,
+      onChange: e => this.setState({ reportExpected: e.target.value.slice(0, 5), reportState: null }),
+      placeholder: "HH:MM, e.g. 05:12",
+      inputMode: "numeric",
+      maxLength: 5,
+      "aria-label": "The correct time, as HH:MM",
+      style: field
+    }),
+    label('Anything else? (optional)'),
+    /*#__PURE__*/React.createElement("textarea", {
+      value: st.reportNote,
+      onChange: e => this.setState({ reportNote: e.target.value.slice(0, 500), reportState: null }),
+      rows: 3,
+      maxLength: 500,
+      placeholder: "For example: this is a few minutes out all week.",
+      "aria-label": "A short note about what is wrong",
+      dir: "auto",
+      style: { ...field, resize: 'vertical', lineHeight: 1.5 }
+    }),
+    /*#__PURE__*/React.createElement("div", {
+      style: { fontSize: 11, color: NEU.muted, marginTop: 4, textAlign: 'right', fontVariantNumeric: 'tabular-nums' }
+    }, st.reportNote.length, "/500"),
+    /*#__PURE__*/React.createElement("div", {
+      onClick: rs.kind === 'sending' ? undefined : this.submitTimeReport,
+      style: {
+        marginTop: 12, padding: '13px 0', borderRadius: 12, textAlign: 'center',
+        background: NEU.accent, color: '#f3ead4', fontSize: 14, fontWeight: 800,
+        cursor: rs.kind === 'sending' ? 'default' : 'pointer', opacity: rs.kind === 'sending' ? .6 : 1,
+        minHeight: 44
+      }
+    }, rs.kind === 'sending' ? 'Sending\u2026' : 'Send report'),
+    /* One live region for both outcomes, so a screen reader hears the result
+       without the focus having to move. */
+    /*#__PURE__*/React.createElement("div", {
+      role: "status",
+      "aria-live": "polite",
+      style: {
+        fontSize: 12.5, lineHeight: 1.5, marginTop: rs.kind ? 10 : 0, fontWeight: 600,
+        color: rs.kind === 'sent' ? NEU.accent : '#6e2230'
+      }
+    }, rs.kind === 'sent' ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("span", { "aria-hidden": "true" }, "\u2713 "), 'Thank you \u2014 this has been sent to the administrators.') : rs.kind === 'error' ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("span", { "aria-hidden": "true" }, "\u26a0 "), rs.message) : ''),
+    /*#__PURE__*/React.createElement("div", {
+      style: { fontSize: 11, color: NEU.muted, marginTop: 12, lineHeight: 1.55 }
+    }, "Sent with the town, the prayer and the date only. No name, email or phone number is collected."));
   }
 
   renderMore(st) {
@@ -10573,9 +11305,12 @@ class App extends Component {
       const on = kt === k;
       return /*#__PURE__*/React.createElement("div", {
         key: k,
-        onClick: () => this.setState({
-          kidsTab: k
-        }),
+        onClick: () => {
+          if (k === 'quiz' && this.state.lbState === 'idle') this.loadLeaderboard(this.state.kidsQuizLevel || DEFAULT_LEVEL);
+          this.setState({
+            kidsTab: k
+          });
+        },
         style: {
           flex: 1,
           display: 'flex',
@@ -11012,16 +11747,14 @@ class App extends Component {
         marginBottom: 14
       }
     }, QUIZ_LEVELS.map(L => {
-      const on = (st.kidsQuizLevel || 'beginner') === L.key;
+      const on = (st.kidsQuizLevel || DEFAULT_LEVEL) === L.key;
       const n = (st.liveKidsQuizzes || []).filter(q => quizLevel(q) === L.key).length;
       return /*#__PURE__*/React.createElement("div", {
         key: L.key,
         onClick: () => {
           this.clearQuizTimers();
-          this.setState({
-            kidsQuizLevel: L.key,
-            quizRun: null
-          });
+          this.setState({ kidsQuizLevel: L.key, quizRun: null });
+          this.loadLeaderboard(L.key);
         },
         style: {
           flex: 1,
@@ -11043,7 +11776,7 @@ class App extends Component {
         }
       }, " · ", n) : null);
     })), (() => {
-      const lvl = st.kidsQuizLevel || 'beginner';
+      const lvl = st.kidsQuizLevel || DEFAULT_LEVEL;
       const lvlMeta = QUIZ_LEVELS.find(l => l.key === lvl) || QUIZ_LEVELS[0];
       const pool = (st.liveKidsQuizzes || []).filter(q => quizLevel(q) === lvl);
       if (!pool.length) return /*#__PURE__*/React.createElement("div", {
@@ -11061,47 +11794,122 @@ class App extends Component {
       const r = st.quizRun && st.quizRun.lvl === lvl ? st.quizRun : null;
 
       /* start card */
-      if (!r) return /*#__PURE__*/React.createElement("div", {
-        style: {
-          background: NEU.surf, boxShadow: neuUp(),
-          border: NEU.edge,
-          borderRadius: 18,
-          padding: '24px 20px',
-          textAlign: 'center',
-          marginBottom: 14
-        }
-      }, /*#__PURE__*/React.createElement("div", {
-        style: {
-          fontSize: 40,
-          marginBottom: 8
-        }
-      }, "🎯"), /*#__PURE__*/React.createElement("div", {
-        style: {
-          fontFamily: 'Spectral,serif',
-          fontSize: 19,
-          fontWeight: 600,
-          color: '#2c2823'
-        }
-      }, "Ready to play?"), /*#__PURE__*/React.createElement("div", {
-        style: {
-          fontSize: 13,
-          color: '#8c8270',
-          marginTop: 6,
-          lineHeight: 1.5
-        }
-      }, Math.min(10, pool.length), " random question", Math.min(10, pool.length) > 1 ? 's' : '', " · 10 seconds each", /*#__PURE__*/React.createElement("br", null), "Answer before the clock runs out!"), /*#__PURE__*/React.createElement("div", {
-        onClick: () => this.startQuizRun(lvl),
-        style: {
-          marginTop: 16,
-          padding: '13px 0',
-          borderRadius: 13,
-          background: lvlMeta.color,
-          color: '#fffdf9',
-          fontSize: 15,
-          fontWeight: 800,
-          cursor: 'pointer'
-        }
-      }, "Start Quiz ▶"));
+      if (!r) return (() => {
+        const draft = st.quizNameDraft === null ? st.quizName : st.quizNameDraft;
+        const count = Math.min(10, pool.length);
+        const mins = Math.ceil(count * SCORING.SECONDS_PER_QUESTION / 60);
+        const begin = () => {
+          const name = this.setQuizName(draft);
+          if (name) this.startQuizRun(lvl, name);
+        };
+        const nameErr = st.quizNameErr;
+        return /*#__PURE__*/React.createElement("div", {
+          style: {
+            ...neuCard(18, .9),
+            padding: '22px 18px',
+            marginBottom: 14
+          }
+        }, /*#__PURE__*/React.createElement("div", {
+          style: { textAlign: 'center' }
+        }, /*#__PURE__*/React.createElement("div", {
+          "aria-hidden": "true",
+          style: { fontSize: 36, marginBottom: 6 }
+        }, "🎯"), /*#__PURE__*/React.createElement("h2", {
+          style: {
+            fontFamily: 'Spectral,serif', fontSize: 20, fontWeight: 600,
+            color: NEU.ink, margin: 0
+          }
+        }, "Community Quiz")),
+        /* Everything the participant is agreeing to before they begin. */
+        /*#__PURE__*/React.createElement("dl", {
+          style: {
+            display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8,
+            margin: '16px 0 0'
+          }
+        }, [
+          ['Questions', String(count)],
+          ['Difficulty', lvlMeta.label],
+          ['Time each', SCORING.SECONDS_PER_QUESTION + ' seconds'],
+          ['About', mins <= 1 ? 'Under 2 minutes' : mins + ' minutes']
+        ].map(([k, v]) => /*#__PURE__*/React.createElement("div", {
+          key: k,
+          style: { ...neuWell(12, .6), padding: '9px 11px' }
+        }, /*#__PURE__*/React.createElement("dt", {
+          style: {
+            fontSize: 9.5, letterSpacing: 1.1, textTransform: 'uppercase',
+            fontWeight: 800, color: NEU.muted, margin: 0
+          }
+        }, k), /*#__PURE__*/React.createElement("dd", {
+          style: {
+            fontSize: 14, fontWeight: 700,
+            color: k === 'Difficulty' ? lvlMeta.color : NEU.ink, margin: '2px 0 0'
+          }
+        }, v)))),
+        /*#__PURE__*/React.createElement("div", {
+          style: { marginTop: 16 }
+        }, /*#__PURE__*/React.createElement("label", {
+          htmlFor: "abi-quiz-name",
+          style: {
+            display: 'block', fontSize: 12.5, fontWeight: 700,
+            color: NEU.ink, marginBottom: 6
+          }
+        }, "Display name"), /*#__PURE__*/React.createElement("input", {
+          id: "abi-quiz-name",
+          value: draft,
+          maxLength: NAME_MAX,
+          autoComplete: "off",
+          spellCheck: false,
+          "aria-invalid": nameErr ? 'true' : 'false',
+          "aria-describedby": "abi-quiz-name-help" + (nameErr ? ' abi-quiz-name-err' : ''),
+          onChange: e => this.setState({ quizNameDraft: e.target.value, quizNameErr: null }),
+          onKeyDown: e => { if (e.key === 'Enter') begin(); },
+          dir: "auto",
+      placeholder: "e.g. Zainab, \u0639\u0644\u06cc, Ahmed K.",
+          style: {
+            ...neuWell(12, .7),
+            width: '100%', boxSizing: 'border-box', padding: '13px 14px',
+            border: nameErr ? '1.5px solid #6e2230' : NEU.edge,
+            outline: 'none', fontSize: 15, color: NEU.ink, minHeight: 44
+          }
+        }), /*#__PURE__*/React.createElement("div", {
+          style: {
+            display: 'flex', justifyContent: 'space-between', gap: 8, marginTop: 5
+          }
+        }, /*#__PURE__*/React.createElement("div", {
+          id: "abi-quiz-name-help",
+          style: { fontSize: 11, color: NEU.muted, lineHeight: 1.45 }
+        }, NAME_MIN, "\u2013", NAME_MAX, " characters. Any language."), /*#__PURE__*/React.createElement("div", {
+          style: {
+            fontSize: 11, color: NEU.muted, fontVariantNumeric: 'tabular-nums', flexShrink: 0
+          }
+        }, sanitiseName(draft).length, "/", NAME_MAX)),
+        /* Errors are announced, not only shown: the input is off-screen for a
+           screen-reader user by the time the message appears. */
+        /*#__PURE__*/React.createElement("div", {
+          id: "abi-quiz-name-err",
+          role: "alert",
+          style: {
+            fontSize: 12, color: '#6e2230', fontWeight: 600,
+            marginTop: nameErr ? 6 : 0, lineHeight: 1.4
+          }
+        }, nameErr ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("span", {
+          "aria-hidden": "true"
+        }, "\u26a0 "), nameErr) : '')),
+        /*#__PURE__*/React.createElement("div", {
+          onClick: begin,
+          style: {
+            marginTop: 14, padding: '14px 0', borderRadius: 13,
+            background: lvlMeta.color, color: '#fffdf9', fontSize: 15,
+            fontWeight: 800, cursor: 'pointer', textAlign: 'center', minHeight: 44
+          }
+        }, "Start Quiz"),
+        /*#__PURE__*/React.createElement("p", {
+          style: {
+            fontSize: 11.5, color: NEU.muted, lineHeight: 1.55,
+            margin: '12px 0 0', textAlign: 'center'
+          }
+        }, "Enter a display name for the leaderboard. You do not need to create an account. Avoid using your full name or private information."));
+      })()
 
       /* results card */
       if (r.done) {
@@ -11150,14 +11958,73 @@ class App extends Component {
             marginTop: 8,
             lineHeight: 1.5
           }
-        }, cheer[2]), /*#__PURE__*/React.createElement("div", {
+        }, cheer[2]), (() => {
+          const parts = scoreParts(r.score, total, r.durationMs, true);
+          const secs = Math.round((r.durationMs || 0) / 1000);
+          const sub = st.quizSubmit || {};
+          const line = (label, value) => /*#__PURE__*/React.createElement("div", {
+            key: label,
+            style: { display: 'flex', justifyContent: 'space-between', gap: 10, padding: '3px 0' }
+          }, /*#__PURE__*/React.createElement("span", null, label), /*#__PURE__*/React.createElement("span", {
+            style: { fontWeight: 700, fontVariantNumeric: 'tabular-nums' }
+          }, value));
+          /* Plain arithmetic, shown rather than asserted — a score nobody can
+             check is a score nobody trusts. */
+          return /*#__PURE__*/React.createElement("div", {
+            style: {
+              textAlign: 'left', marginTop: 16, padding: '13px 14px',
+              borderRadius: 13, background: 'rgba(0,0,0,.16)',
+              fontSize: 12.5, color: 'rgba(243,234,212,.92)', lineHeight: 1.5
+            }
+          }, /*#__PURE__*/React.createElement("div", {
+            style: {
+              fontSize: 9.5, letterSpacing: 1.1, textTransform: 'uppercase',
+              fontWeight: 800, color: '#d8b863', marginBottom: 6
+            }
+          }, "How this score was worked out"),
+          line(`${r.score} correct × ${SCORING.BASE_PER_CORRECT}`, parts.answers),
+          line('Finished the quiz', '+' + parts.completion),
+          line(`Time bonus (${secs}s of ${total * SCORING.SECONDS_PER_QUESTION}s)`, '+' + parts.time),
+          /*#__PURE__*/React.createElement("div", {
+            style: {
+              display: 'flex', justifyContent: 'space-between', gap: 10,
+              borderTop: '1px solid rgba(243,234,212,.25)', marginTop: 6,
+              paddingTop: 6, fontWeight: 800
+            }
+          }, /*#__PURE__*/React.createElement("span", null, "Total"), /*#__PURE__*/React.createElement("span", {
+            style: { color: '#d8b863', fontVariantNumeric: 'tabular-nums' }
+          }, parts.answers + parts.completion + parts.time)),
+          /*#__PURE__*/React.createElement("div", {
+            style: { fontSize: 11, color: 'rgba(243,234,212,.7)', marginTop: 7 }
+          }, "The time bonus is always worth less than one correct answer, so answering carefully never loses to answering quickly."),
+          /* Submission state, announced as it changes. */
+          /*#__PURE__*/React.createElement("div", {
+            role: "status",
+            "aria-live": "polite",
+            style: {
+              display: 'flex', alignItems: 'center', gap: 8, marginTop: 10,
+              paddingTop: 9, borderTop: '1px solid rgba(243,234,212,.25)',
+              fontSize: 11.5, color: 'rgba(243,234,212,.9)', lineHeight: 1.45
+            }
+          }, sub.state === 'sending' ? 'Sending your result…' : sub.state === 'ok' ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("span", { "aria-hidden": "true" }, "✓ "), 'Result confirmed and added to the ' + lvlMeta.label + ' leaderboard.') : sub.state === 'queued' ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("span", { style: { flex: 1 } }, /*#__PURE__*/React.createElement("span", { "aria-hidden": "true" }, "↻ "), sub.message || 'Saved on this device — waiting to be sent when you are back online.'), /*#__PURE__*/React.createElement("span", {
+            onClick: this.retrySync,
+            role: "button",
+            tabIndex: 0,
+            onKeyDown: e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); this.retrySync(); } },
+            style: {
+              flexShrink: 0, padding: '10px 12px', borderRadius: 10, cursor: 'pointer',
+              border: '1px solid rgba(243,234,212,.45)', fontWeight: 700, minHeight: 44,
+              display: 'flex', alignItems: 'center'
+            }
+          }, 'Retry')) : sub.state === 'rejected' ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("span", { "aria-hidden": "true" }, "⚠ "), sub.message || 'This result was not accepted.') : ''));
+        })(), /*#__PURE__*/React.createElement("div", {
           style: {
             display: 'flex',
             gap: 10,
             marginTop: 18
           }
         }, /*#__PURE__*/React.createElement("div", {
-          onClick: () => this.startQuizRun(lvl),
+          onClick: () => this.startQuizRun(lvl, r.name || st.quizName),
           style: {
             flex: 1,
             padding: '12px 0',
@@ -11303,7 +12170,7 @@ class App extends Component {
           color: r.pick === qz.answer ? '#1f5145' : '#6e2230'
         }
       }, r.pick === qz.answer ? 'Correct — well done! 🎉' : r.pick === -1 ? "Time's up! The answer is highlighted." : 'Not quite — the correct answer is highlighted.'));
-    })()), kt === 'quiz' && /*#__PURE__*/React.createElement("div", {
+    })(), this.renderLeaderboard(st)), kt === 'quiz' && /*#__PURE__*/React.createElement("div", {
       onClick: () => this.openStory(STORIES.findIndex(s => s.kind === 'quiz')),
       style: {
         display: 'flex',
@@ -13667,4 +14534,5 @@ class App extends Component {
     }, "×")), showNav && this.renderNav(st), (st.story !== null || st.storyPreview) && this.renderStoryViewer(st), st.ytPlayer && this.renderYtPlayer(st), st.toast && this.renderToast(st.toast));
   }
 }
+runStorageMigrations();
 ReactDOM.createRoot(document.getElementById('root')).render(/*#__PURE__*/React.createElement(App, null));
