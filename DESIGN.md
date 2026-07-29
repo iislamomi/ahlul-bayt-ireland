@@ -104,7 +104,7 @@ Reader text scales 0.6×–1.5× via the in-app control; Arabic and its embedded
 - **Gutter:** 20px page padding throughout. Cards align to it; nothing hangs off it.
 - **Rhythm:** 8/10/12/14/16/18/26px vertical gaps. Related items 8–12px, sections 14–18px, across a boundary 26px.
 - **Radii:** 9–11px controls · 13–16px cards and ribbons · 20px chips · 26px hero surfaces · 50% pebbles. Inner elements are tighter than their container.
-- **Grid:** Explore (6) and Tools (5) are 3-column grids of 123×98 tiles. Library and content lists are 1D flex.
+- **Grid:** Explore (6) and Tools (5) are 3-column grids of 123×98 tiles. The prayer strip is one column per active time (six by default, 61×69). Library and content lists are 1D flex.
 - **Home order:** the page leads with what to do now — date, on this day, happening now, updates, next prayer, prayer times, then three full-width lead-in tiles (today's amaal, continue reading, take a quiz), then the Explore and Tools grids.
 - **Touch targets:** 44×44 minimum.
 
@@ -122,7 +122,9 @@ Depth `d` scales the extrusion: `.4` pebble · `.55` chip · `.72` tab · `.8–
 - **Buttons**: raised; primary takes the accent as a fill, destructive takes `#6e2230` as ink.
 - **Inputs**: sunken wells, soft white rim, no visible border.
 - **Toggles**: sunken groove, raised knob, accent fill when on.
-- **Home lead-in tiles** (`renderHomeTile`): full-width row, recessed pebble left, kicker + title + detail centre, chevron right, all in that section's identity colour. One per thing-to-do-next; they are the answer to "where do I start".
+- **Home lead-in tiles** (`renderHomeTile`): full-width row, 46px pebble left, kicker + title + detail centre, chevron right, all in that section's identity colour. The pebble is *filled* with the identity ink and carries a Lucide mark in the pale tint — the one place the tiles read as objects rather than panels. One per thing-to-do-next; they are the answer to "where do I start".
+- **Next Prayer** is the page's one hero: kicker, prayer name at 32px Spectral, time at 27px in the scene accent, countdown beneath, and `prayerDial` on the right — a ring whose gold arc is the share of the current window already elapsed, wrapped round the prayer's own celestial mark (`PRAYER_ICONS`). It sits over the day/night `sceneArt`, so every value takes its colour from `prayerScene`, never from `NEU`.
+- **Prayer strip**: one raised card, a column per time, each icon over name over time. The next prayer's column fills with the accent and takes gold numerals; the rest stay flat on the card. Depth is not used here — the fill alone marks the selection, because six pressed wells would read as noise.
 - **Coloured surfaces** (Next Prayer, live majlis, On this day) carry `neuUpOn(rgb, d)` — the shade takes the surface's own hue so one light source still reads.
 
 ## Motion
@@ -172,5 +174,5 @@ slim by request, and past the 24×24 minimum.
 
 - `app.js` is hand-edited **pre-transpiled** `React.createElement` output. There is no JSX source and no build step. Match the surrounding call style.
 - All styling is inline objects. Tokens come from `NEU` / `NEU_D` and the `neu*` helpers — do not hard-code surface or shadow values.
-- Icons are Lucide, kept verbatim in the `LUCIDE` table and drawn via `icon(name, opts)`. Section identity uses emoji, deliberately, because it carries colour.
+- Icons are Lucide, kept verbatim in the `LUCIDE` table and drawn via `icon(name, opts)`. Emoji survive in the Explore and Tools grids, where the tile is small and the glyph carries its own colour; anywhere a mark sits on a coloured field — the prayer strip, the dial, the lead-in pebbles — it is a Lucide line icon inheriting `currentColor`.
 - The service worker caches the shell. **Bump `CACHE` in `sw.js` on every change** or users keep the old build.

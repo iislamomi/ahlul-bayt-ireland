@@ -700,7 +700,14 @@ const LUCIDE = {
   'wifi-off': '<path d="M12 20h.01" /><path d="M8.5 16.429a5 5 0 0 1 7 0" /><path d="M5 12.859a10 10 0 0 1 5.17-2.69" /><path d="M19 12.859a10 10 0 0 0-2.007-1.523" /><path d="M2 8.82a15 15 0 0 1 4.177-2.643" /><path d="M22 8.82a15 15 0 0 0-11.288-3.764" /><path d="m2 2 20 20" />',
   'log-out': '<path d="m16 17 5-5-5-5" /><path d="M21 12H9" /><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />',
   'calendar': '<path d="M8 2v4" /><path d="M16 2v4" /><rect width="18" height="18" x="3" y="4" rx="2" /><path d="M3 10h18" />',
-  'clock': '<circle cx="12" cy="12" r="10" /><path d="M12 6v6l4 2" />'
+  'clock': '<circle cx="12" cy="12" r="10" /><path d="M12 6v6l4 2" />',
+  'sunrise': '<path d="M12 2v8" /><path d="m4.93 10.93 1.41 1.41" /><path d="M2 18h2" /><path d="M20 18h2" /><path d="m19.07 10.93-1.41 1.41" /><path d="M22 22H2" /><path d="m8 6 4-4 4 4" /><path d="M16 18a4 4 0 0 0-8 0" />',
+  'sun': '<circle cx="12" cy="12" r="4" /><path d="M12 2v2" /><path d="M12 20v2" /><path d="m4.93 4.93 1.41 1.41" /><path d="m17.66 17.66 1.41 1.41" /><path d="M2 12h2" /><path d="M20 12h2" /><path d="m6.34 17.66-1.41 1.41" /><path d="m19.07 4.93-1.41 1.41" />',
+  'sunset': '<path d="M12 10V2" /><path d="m4.93 10.93 1.41 1.41" /><path d="M2 18h2" /><path d="M20 18h2" /><path d="m19.07 10.93-1.41 1.41" /><path d="M22 22H2" /><path d="m16 6-4 4-4-4" /><path d="M16 18a4 4 0 0 0-8 0" />',
+  'moon-star': '<path d="M18 5h4" /><path d="M20 3v4" /><path d="M20.985 12.486a9 9 0 1 1-9.473-9.472c.405-.022.617.46.402.803a6 6 0 0 0 8.268 8.268c.344-.215.825-.004.803.401" />',
+  'star': '<path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z" />',
+  'book-heart': '<path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H19a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H6.5a1 1 0 0 1 0-5H20" /><path d="M8.62 9.8A2.25 2.25 0 1 1 12 6.836a2.25 2.25 0 1 1 3.38 2.966l-2.626 2.856a.998.998 0 0 1-1.507 0z" />',
+  'target': '<circle cx="12" cy="12" r="10" /><circle cx="12" cy="12" r="6" /><circle cx="12" cy="12" r="2" />'
 };
 const icon = (name, o = {}) => React.createElement('svg', {
   width: o.size || 20,
@@ -1721,6 +1728,75 @@ function prayerScene(name) {
     scrim: 'linear-gradient(90deg,rgba(253,246,236,.9) 0%,rgba(253,246,236,.45) 58%,rgba(253,246,236,.05) 100%)',
     shadowRgb: '190,158,120'
   };
+}
+/* One celestial mark per prayer, walking the sky from the dark before Fajr
+   round to the deepest point of the night. */
+const PRAYER_ICONS = {
+  Fajr: 'moon',
+  Sunrise: 'sunrise',
+  Dhuhr: 'sun',
+  Sunset: 'sunset',
+  Maghrib: 'moon-star',
+  Midnight: 'star'
+};
+/* The ring is the share of the current window already gone, so the card says
+   how far through you are and not only what is left to wait. */
+function prayerDial(name, sc, prog, size = 92) {
+  const R = 42,
+    C = 2 * Math.PI * R;
+  return React.createElement('div', {
+    style: {
+      position: 'relative',
+      width: size,
+      height: size,
+      flexShrink: 0
+    },
+    'aria-hidden': 'true'
+  }, React.createElement('svg', {
+    viewBox: '0 0 100 100',
+    style: {
+      position: 'absolute',
+      inset: 0,
+      width: '100%',
+      height: '100%'
+    }
+  }, React.createElement('circle', {
+    cx: 50,
+    cy: 50,
+    r: R - 3.5,
+    fill: sc.night ? 'rgba(9,20,26,.5)' : 'rgba(253,246,236,.5)'
+  }), React.createElement('circle', {
+    cx: 50,
+    cy: 50,
+    r: R,
+    fill: 'none',
+    stroke: sc.accent,
+    strokeOpacity: .22,
+    strokeWidth: 5
+  }), React.createElement('circle', {
+    cx: 50,
+    cy: 50,
+    r: R,
+    fill: 'none',
+    stroke: sc.accent,
+    strokeWidth: 5,
+    strokeLinecap: 'round',
+    strokeDasharray: C,
+    strokeDashoffset: C * (1 - prog),
+    transform: 'rotate(-90 50 50)'
+  })), React.createElement('div', {
+    style: {
+      position: 'absolute',
+      inset: 0,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      color: sc.accent
+    }
+  }, icon(PRAYER_ICONS[name] || 'moon', {
+    size: Math.round(size * .37),
+    sw: 1.6
+  })));
 }
 function sceneArt(night) {
   const svg = night ? `
@@ -2927,6 +3003,16 @@ class App extends Component {
     const showNotif = !!todayRem && !st.notifDismissed;
     const onThisDay = (st.liveCalEvents || []).filter(e => (e.notice || 'day') === 'day' && e.date && eventOnDate(e, now));
     const sc = prayerScene(next.name);
+    /* Only the four obligatory times drive the countdown, so the dial measures
+       against the previous one of those, wrapping over midnight. */
+    const cycle = activePrayers.filter(p => ['Fajr', 'Dhuhr', 'Maghrib', 'Midnight'].includes(p.name));
+    const ni = Math.max(0, cycle.findIndex(p => p.name === next.name));
+    const prevP = cycle[(ni - 1 + cycle.length) % cycle.length];
+    const wrapMin = v => v <= 0 ? v + 1440 : v;
+    const nowMin = st.now.getHours() * 60 + st.now.getMinutes() + st.now.getSeconds() / 60;
+    const left = wrapMin(this.toMin(next.time) - nowMin);
+    const span = cycle.length > 1 ? wrapMin(this.toMin(next.time) - this.toMin(prevP.time)) : 1440;
+    const prog = Math.min(1, Math.max(0, 1 - left / span));
     // frosted-pane treatment shared by the slim home ribbons
     return /*#__PURE__*/React.createElement("div", {
       style: {
@@ -3208,16 +3294,17 @@ class App extends Component {
       }
     }, s.short)))), /*#__PURE__*/React.createElement("div", {
       onClick: () => this.go('prayer'),
+      className: "neu-press",
       style: {
         position: 'relative',
         overflow: 'hidden',
         border: sc.night ? '1px solid rgba(255,255,255,.08)' : '1px solid rgba(255,255,255,.6)',
-        borderRadius: 16,
-        padding: '11px 15px',
+        borderRadius: 20,
+        padding: '15px 17px',
         color: sc.ink,
-        boxShadow: neuUpOn(sc.shadowRgb, 1.05),
+        boxShadow: neuUpOn(sc.shadowRgb, 1.15),
         cursor: 'pointer',
-        marginBottom: 14
+        marginBottom: 12
       }
     }, sceneArt(sc.night), /*#__PURE__*/React.createElement("div", {
       style: {
@@ -3227,124 +3314,112 @@ class App extends Component {
       }
     }), /*#__PURE__*/React.createElement("div", {
       style: {
-        position: 'relative'
+        position: 'relative',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        gap: 12
       }
     }, /*#__PURE__*/React.createElement("div", {
       style: {
-        display: 'flex',
-        alignItems: 'center',
-        gap: 6,
+        minWidth: 0
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
         fontSize: 10,
-        letterSpacing: 1.1,
+        letterSpacing: 1.2,
         textTransform: 'uppercase',
         color: sc.accent,
         fontWeight: 800
       }
-    }, /*#__PURE__*/React.createElement("span", {
-      style: {
-        width: 5,
-        height: 5,
-        borderRadius: '50%',
-        background: sc.accent,
-        boxShadow: `0 0 0 3px ${sc.night ? 'rgba(226,198,124,.2)' : 'rgba(169,109,36,.16)'}`
-      }
-    }), " ", this.t('home.nextPrayer')), /*#__PURE__*/React.createElement("div", {
-      style: {
-        display: 'flex',
-        alignItems: 'flex-end',
-        justifyContent: 'space-between',
-        marginTop: 5
-      }
-    }, /*#__PURE__*/React.createElement("div", {
+    }, this.t('home.nextPrayer')), /*#__PURE__*/React.createElement("div", {
       style: {
         display: 'flex',
         alignItems: 'baseline',
-        gap: 8
+        gap: 8,
+        marginTop: 7
       }
     }, /*#__PURE__*/React.createElement("div", {
       style: {
         fontFamily: 'Spectral,serif',
-        fontSize: 20,
+        fontSize: 32,
         fontWeight: 600,
         lineHeight: 1
       }
     }, next.name), /*#__PURE__*/React.createElement("div", {
       style: {
         fontFamily: 'Amiri,serif',
-        fontSize: 14,
+        fontSize: 15,
         color: sc.sub
       },
       dir: "rtl"
     }, next.ar)), /*#__PURE__*/React.createElement("div", {
       style: {
-        textAlign: 'right'
-      }
-    }, /*#__PURE__*/React.createElement("div", {
-      style: {
-        fontSize: 20,
+        fontSize: 27,
         fontWeight: 700,
+        color: sc.accent,
         fontVariantNumeric: 'tabular-nums',
-        lineHeight: 1
+        lineHeight: 1.1,
+        marginTop: 5
       }
     }, next.time), /*#__PURE__*/React.createElement("div", {
       style: {
-        fontSize: 10,
+        fontSize: 12,
         color: sc.sub,
-        marginTop: 3
+        marginTop: 3,
+        fontVariantNumeric: 'tabular-nums'
       }
-    }, this.t('home.in'), " ", cd))))), /*#__PURE__*/React.createElement("div", {
+    }, this.t('home.in'), " ", cd)), prayerDial(next.name, sc, prog))), /*#__PURE__*/React.createElement("div", {
       style: {
-        background: NEU.surf, boxShadow: neuUp(),
+        background: NEU.surf,
+        boxShadow: neuUp(),
         border: NEU.edge,
-        borderRadius: 16,
-        padding: '3px 4px',
+        borderRadius: 18,
+        padding: 5,
         marginBottom: 18,
         display: 'grid',
-        gridAutoFlow: 'column',
-        gridTemplateColumns: '1fr 1fr',
-        gridTemplateRows: `repeat(${Math.ceil(prayers.length / 2)}, auto)`
+        gridTemplateColumns: `repeat(${prayers.length}, 1fr)`,
+        gap: 2
       }
-    }, prayers.map((p, i) => /*#__PURE__*/React.createElement("div", {
+    }, prayers.map(p => /*#__PURE__*/React.createElement("div", {
       key: p.name,
       style: {
         display: 'flex',
+        flexDirection: 'column',
         alignItems: 'center',
-        justifyContent: 'space-between',
-        padding: '5.5px 12px',
-        borderBottom: i % Math.ceil(prayers.length / 2) === Math.ceil(prayers.length / 2) - 1 || i === prayers.length - 1 ? 'none' : NEU.rule,
-        borderLeft: i >= Math.ceil(prayers.length / 2) ? NEU.rule : 'none'
-      }
-    }, /*#__PURE__*/React.createElement("div", {
-      style: {
-        display: 'flex',
-        alignItems: 'center',
-        gap: 10
+        gap: 5,
+        padding: '9px 1px 8px',
+        borderRadius: 13,
+        background: p.isNext ? NEU.accent : 'transparent',
+        boxShadow: p.isNext ? neuUpOn('31,81,69', .7) : 'none'
       }
     }, /*#__PURE__*/React.createElement("span", {
+      "aria-hidden": "true",
       style: {
-        fontFamily: 'Amiri,serif',
-        fontSize: 14.5,
-        color: '#75601f',
-        width: 19,
-        textAlign: 'center'
-      },
-      dir: "rtl"
-    }, p.glyph), /*#__PURE__*/React.createElement("span", {
-      style: {
-        fontSize: 13.5,
-        color: p.isNext ? '#1f5145' : '#3f3a32',
-        fontWeight: p.isNext ? 700 : 500
+        display: 'flex',
+        color: p.isNext ? '#e2c67c' : '#75601f'
       }
-    }, p.name)), /*#__PURE__*/React.createElement("span", {
+    }, icon(PRAYER_ICONS[p.name] || 'moon', {
+      size: 19,
+      sw: 1.7
+    })), /*#__PURE__*/React.createElement("span", {
       style: {
-        fontSize: 13.5,
-        color: p.isNext ? '#1f5145' : '#3f3a32',
-        fontWeight: p.isNext ? 700 : 500,
-        fontVariantNumeric: 'tabular-nums'
+        fontSize: 11,
+        color: p.isNext ? '#fffbf0' : '#3f3a32',
+        fontWeight: p.isNext ? 700 : 600,
+        lineHeight: 1
+      }
+    }, p.name), /*#__PURE__*/React.createElement("span", {
+      style: {
+        fontSize: 11.5,
+        color: p.isNext ? '#e2c67c' : NEU.muted,
+        fontWeight: 600,
+        fontVariantNumeric: 'tabular-nums',
+        lineHeight: 1
       }
     }, p.time)))),
     dayAmaal && this.renderHomeTile({
-      icon: '✨',
+      icon: 'book-heart',
       kicker: "Today's recommended amaal",
       title: dayAmaal.title,
       sub: dayAmaal.cat || dayAmaal.tr || 'Tap to read',
@@ -3352,7 +3427,7 @@ class App extends Component {
       onClick: () => this.openReading('aamal', dayAmaal)
     }),
     lastRead && lastRead.title && this.renderHomeTile({
-      icon: '📖',
+      icon: 'book-open',
       kicker: 'Continue reading',
       title: lastRead.title,
       sub: READ_KIND[lastRead.type] || 'Library',
@@ -3360,7 +3435,7 @@ class App extends Component {
       onClick: this.resumeReading
     }),
     this.renderHomeTile({
-      icon: '🎯',
+      icon: 'target',
       kicker: 'Take a quiz',
       title: 'Test what you know',
       sub: 'Ten questions, ten seconds each',
@@ -11732,12 +11807,15 @@ class App extends Component {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        fontSize: 26,
-        lineHeight: 1,
-        background: `linear-gradient(145deg, ${tint}, ${ink}22)`,
-        boxShadow: `inset 3px 3px 7px ${ink}33, inset -2px -2px 5px ${NEU.hi}, 0 3px 8px -5px ${ink}`
-      }
-    }, o.icon), /*#__PURE__*/React.createElement("div", {
+        color: tint,
+        background: `linear-gradient(145deg, ${ink}e6, ${ink})`,
+        boxShadow: `inset 0 1px 0 rgba(255,255,255,.3), 0 5px 12px -6px ${ink}, 0 1px 2px rgba(0,0,0,.14)`
+      },
+      "aria-hidden": "true"
+    }, LUCIDE[o.icon] ? icon(o.icon, {
+      size: 23,
+      sw: 1.8
+    }) : o.icon), /*#__PURE__*/React.createElement("div", {
       style: {
         flex: 1,
         minWidth: 0
@@ -11798,7 +11876,7 @@ class App extends Component {
     if (!majlis) {
       const first = todayRems[0];
       return this.renderHomeTile({
-        icon: '🔔',
+        icon: 'bell',
         kicker: todayRems.length > 1 ? `Reminders · ${todayRems.length}` : 'Reminders',
         title: first ? first.title : 'No reminders today',
         sub: first ? todayRems.length > 1
