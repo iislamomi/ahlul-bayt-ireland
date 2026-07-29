@@ -3124,7 +3124,7 @@ class App extends Component {
         marginTop: 1,
         lineHeight: 1.35
       }
-    }, ev.desc)))), this.renderHappeningNow(st, todayRems, onThisDay), /*#__PURE__*/React.createElement("div", {
+    }, ev.desc)))), this.renderHappeningNow(st, todayRems), /*#__PURE__*/React.createElement("div", {
       style: {
         display: 'flex',
         alignItems: 'baseline',
@@ -9723,12 +9723,6 @@ class App extends Component {
       }
     }, "The Story of the Two Brothers"))), /*#__PURE__*/React.createElement("div", {
       style: {
-        fontSize: 11.5,
-        color: '#6b6252',
-        marginBottom: 22
-      }
-    }, "Safe, ad-free Islamic videos chosen for the community."), /*#__PURE__*/React.createElement("div", {
-      style: {
         fontFamily: 'Spectral,serif',
         fontSize: 17,
         fontWeight: 600,
@@ -10542,12 +10536,6 @@ class App extends Component {
       }),
       style: tabStyle(k)
     }, label))), ht === 'videos' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
-      style: {
-        fontSize: 11.5,
-        color: '#6b6252',
-        marginBottom: 22
-      }
-    }, "Community health and wellness videos, handpicked for you."), /*#__PURE__*/React.createElement("div", {
       style: {
         fontFamily: 'Spectral,serif',
         fontSize: 17,
@@ -11799,7 +11787,7 @@ class App extends Component {
      Beside a live majlis sits whatever else is on today. With no majlis running
      the pair collapses to one Reminders tile carrying today's reminders, so the
      slot always says something rather than disappearing. */
-  renderHappeningNow(st, todayRems, onThisDay) {
+  renderHappeningNow(st, todayRems) {
     const majlis = announcementActive(st.liveAnnouncement);
     const openCal = () => this.setState({
       screen: 'calendar',
@@ -11821,7 +11809,7 @@ class App extends Component {
         onClick: openCal
       });
     }
-    const now = onThisDay[0] || todayRems[0];
+    const rem = todayRems[0];
     return /*#__PURE__*/React.createElement("div", {
       style: {
         display: 'grid',
@@ -11850,7 +11838,7 @@ class App extends Component {
         fontWeight: 800,
         color: '#7d6220'
       }
-    }, now ? 'On today' : 'Programme'), /*#__PURE__*/React.createElement("div", {
+    }, rem ? todayRems.length > 1 ? `Reminders · ${todayRems.length}` : 'Reminder' : 'Reminders'), /*#__PURE__*/React.createElement("div", {
       style: {
         fontFamily: 'Spectral,serif',
         fontSize: 14.5,
@@ -11858,13 +11846,13 @@ class App extends Component {
         color: NEU.ink,
         lineHeight: 1.3
       }
-    }, now ? now.title : 'Nothing else scheduled'), now && now.type && /*#__PURE__*/React.createElement("div", {
+    }, rem ? rem.title : 'No reminders today'), rem && rem.type && /*#__PURE__*/React.createElement("div", {
       style: {
         fontSize: 11,
         color: NEU.muted,
         marginTop: 1
       }
-    }, now.type)));
+    }, rem.type)));
   }
 
   /* ── MAJLIS LIVE ──
@@ -12243,7 +12231,7 @@ class App extends Component {
         color: NEU.muted,
         fontWeight: 500
       }
-    }, "Ten new picks every day"), /*#__PURE__*/React.createElement("div", {
+    }, "Gallery"), /*#__PURE__*/React.createElement("div", {
       style: {
         fontFamily: 'Spectral,serif',
         fontSize: 26,
@@ -12299,15 +12287,6 @@ class App extends Component {
         textOverflow: 'ellipsis'
       }
     }, w.by)))),
-    /*#__PURE__*/React.createElement("div", {
-      style: {
-        textAlign: 'center',
-        fontSize: 11.5,
-        color: '#6b6252',
-        lineHeight: 1.5,
-        padding: '20px 20px 0'
-      }
-    }, "Photos from Unsplash, free to use. A fresh set appears each day."),
     open && /*#__PURE__*/React.createElement("div", {
       onClick: () => this.setState({
         wallOpen: null
