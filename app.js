@@ -5292,7 +5292,7 @@ class App extends Component {
     if (st.lbState === 'loading' || st.lbState === 'idle') {
       body = panel(/*#__PURE__*/React.createElement("div", {
         style: { fontSize: 13, color: NEU.muted }
-      }, "Loading the ", meta.label.toLowerCase(), " leaderboard\u2026"));
+      }, "Loading the ", meta.label, " leaderboard\u2026"));
     } else if (st.lbState === 'error') {
       const msg = st.lbError === 'offline' ? 'You are offline, so the leaderboard cannot be shown. Your own results are safe and will be sent when you reconnect.' : st.lbError === 'not_deployed' ? 'The leaderboard service is not available yet.' : 'The leaderboard could not be loaded.';
       body = panel(/*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
@@ -5309,9 +5309,9 @@ class App extends Component {
     } else if (!st.lbRows.length) {
       body = panel(/*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
         style: { fontFamily: 'Spectral,serif', fontSize: 16, fontWeight: 600, color: NEU.ink }
-      }, "No ", meta.label.toLowerCase(), " results yet"), /*#__PURE__*/React.createElement("div", {
+      }, "No ", meta.label, " results yet"), /*#__PURE__*/React.createElement("div", {
         style: { fontSize: 12.5, color: NEU.muted, marginTop: 6, lineHeight: 1.5 }
-      }, "Be the first to finish a ", meta.label.toLowerCase(), " quiz.")));
+      }, "Be the first to finish ", /^[aeiou]/i.test(meta.label) ? 'an' : 'a', " ", meta.label, " quiz.")));
     } else {
       body = /*#__PURE__*/React.createElement("ol", {
         style: { listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 7 }
@@ -5379,7 +5379,7 @@ class App extends Component {
         fontSize: 9.5, letterSpacing: 1.1, textTransform: 'uppercase',
         fontWeight: 800, color: NEU.muted
       }
-    }, "Your best ", meta.label.toLowerCase(), " result"), /*#__PURE__*/React.createElement("div", {
+    }, "Your best ", meta.label, " result"), /*#__PURE__*/React.createElement("div", {
       style: { fontSize: 13, color: NEU.ink, marginTop: 2 }
     }, best.correct, "/", best.total, " correct \u00b7 ", fmtTime(best.durationMs))), /*#__PURE__*/React.createElement("span", {
       style: {
