@@ -104,7 +104,8 @@ Reader text scales 0.6×–1.5× via the in-app control; Arabic and its embedded
 - **Gutter:** 20px page padding throughout. Cards align to it; nothing hangs off it.
 - **Rhythm:** 8/10/12/14/16/18/26px vertical gaps. Related items 8–12px, sections 14–18px, across a boundary 26px.
 - **Radii:** 9–11px controls · 13–16px cards and ribbons · 20px chips · 26px hero surfaces · 50% pebbles. Inner elements are tighter than their container.
-- **Grid:** Explore is a 3-column grid of 123×98 tiles. Library and content lists are 1D flex.
+- **Grid:** Explore (6) and Tools (5) are 3-column grids of 123×98 tiles. Library and content lists are 1D flex.
+- **Home order:** the page leads with what to do now — date, on this day, happening now, updates, next prayer, prayer times, then three full-width lead-in tiles (today's amaal, continue reading, take a quiz), then the Explore and Tools grids.
 - **Touch targets:** 44×44 minimum.
 
 ## Components
@@ -121,6 +122,7 @@ Depth `d` scales the extrusion: `.4` pebble · `.55` chip · `.72` tab · `.8–
 - **Buttons**: raised; primary takes the accent as a fill, destructive takes `#6e2230` as ink.
 - **Inputs**: sunken wells, soft white rim, no visible border.
 - **Toggles**: sunken groove, raised knob, accent fill when on.
+- **Home lead-in tiles** (`renderHomeTile`): full-width row, recessed pebble left, kicker + title + detail centre, chevron right, all in that section's identity colour. One per thing-to-do-next; they are the answer to "where do I start".
 - **Coloured surfaces** (Next Prayer, live majlis, On this day) carry `neuUpOn(rgb, d)` — the shade takes the surface's own hue so one light source still reads.
 
 ## Motion

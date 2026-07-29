@@ -1497,6 +1497,17 @@ const wallPage = w => `https://unsplash.com/photos/${w.id}`;
 
 /* The ten wallpapers for a given day: a shuffle seeded by the date, so it is stable
    for the whole day and different tomorrow. */
+/* One amaal a day, picked by a date-seeded shuffle so the whole community lands
+   on the same one and it changes at midnight rather than on every render. */
+function amaalForDay(list, date) {
+  if (!list || !list.length) return null;
+  const seedStr = `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
+  let seed = 0;
+  for (let i = 0; i < seedStr.length; i++) seed = (seed * 31 + seedStr.charCodeAt(i)) >>> 0;
+  seed = (seed * 1664525 + 1013904223) >>> 0;
+  return list[seed % list.length];
+}
+
 function wallpapersFor(date) {
   const seedStr = `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
   let seed = 0;
@@ -1641,18 +1652,29 @@ const SYMBOL_LABELS = {
   '▾': 'Open list', '▴': 'Close list', '▶': 'Play', '−': 'Subtract one',
   '−1': 'Subtract one', '− 1': 'Subtract one', '+': 'Add'
 };
+function unwireTap(el) {
+  delete el.dataset.tap;
+  el.removeAttribute('tabindex');
+  if (el.getAttribute('role') === 'button') el.removeAttribute('role');
+  if (el.dataset.taplabel) {
+    delete el.dataset.taplabel;
+    el.removeAttribute('aria-label');
+  }
+}
 function enhanceTappables(root) {
   if (!root) return;
+  /* React reuses DOM nodes between renders, so a node that was a button on the
+     last pass can come back as a plain container. Clear anything that no longer
+     qualifies before wiring up what does, or stale roles accumulate and the
+     keyboard lands on things that do nothing. */
+  root.querySelectorAll('[data-tap]').forEach(el => {
+    const style = el.getAttribute('style') || '';
+    if (!style.includes('cursor: pointer') ||
+        el.querySelector('[style*="cursor: pointer"],a,button,input,select,textarea')) unwireTap(el);
+  });
   root.querySelectorAll('[style*="cursor: pointer"]').forEach(el => {
     // a container whose children are the real controls should not be focusable
-    if (el.querySelector('[style*="cursor: pointer"],a,button,input,select,textarea')) {
-      if (el.dataset.tap) {
-        delete el.dataset.tap;
-        el.removeAttribute('tabindex');
-        if (el.getAttribute('role') === 'button') el.removeAttribute('role');
-      }
-      return;
-    }
+    if (el.querySelector('[style*="cursor: pointer"],a,button,input,select,textarea')) return;
     if (el.closest('a,button')) return; // already reachable through its own element
     if (!el.dataset.tap) {
       el.dataset.tap = '1';
@@ -1661,9 +1683,11 @@ function enhanceTappables(root) {
     }
     // a control labelled only by a glyph announces as "times" or as nothing at all
     if (!el.getAttribute('aria-label')) {
-      const t = (el.textContent || '').trim();
-      const label = SYMBOL_LABELS[t] || (t === '' ? null : undefined);
-      if (label) el.setAttribute('aria-label', label);
+      const label = SYMBOL_LABELS[(el.textContent || '').trim()];
+      if (label) {
+        el.setAttribute('aria-label', label);
+        el.dataset.taplabel = '1';
+      }
     }
   });
 }
@@ -1953,6 +1977,7 @@ class App extends Component {
       liveHealthVideos: lsGet('healthVideos', HEALTH_VIDEOS),
       liveDuas: lsGet('duas', DUAS),
       liveAamals: lsGet('aamals', []),
+      lastRead: lsGet('lastRead', null),
       liveZiyarat: lsGet('ziyarat', ZIYARAT),
       liveNahj: lsGet('nahj', NAHJ),
       liveKidsQuizzes: lsGet('kidsQuizzes', KIDS_QUIZZES),
@@ -1969,6 +1994,7 @@ class App extends Component {
     _defineProperty(this, "go", s => {
       // Refresh every page on navigation: reset transient view state so each
       // screen opens fresh, and scroll the content area back to the top.
+      if (this.state.screen === 'reading') this.saveReadPos();
       this.clearQuizTimers();
       this.setState({
         screen: s,
@@ -2176,16 +2202,56 @@ class App extends Component {
         ytPlayer: id
       });else this.showToast('No video linked yet');
     });
-    _defineProperty(this, "openReading", (type, item) => this.setState({
-      screen: 'reading',
-      readingType: type,
-      readingItem: item,
-      readingLang: null
-    }, () => {
-      // React may reuse the scroll node from a previous reading — always start at top
+    /* Where you were last reading, per device. Stored on open and topped up with
+       the scroll offset whenever you leave the reader, so Continue reading picks
+       up on the line you stopped at rather than the top of the page. */
+    _defineProperty(this, "saveReadPos", () => {
+      const lr = this.state.lastRead;
+      if (!lr) return;
       const inner = document.querySelector('.app > .s .s');
-      if (inner) inner.scrollTop = 0;
-    }));
+      const pos = inner ? inner.scrollTop : 0;
+      const next = { ...lr, pos };
+      lsSet('lastRead', next);
+      this.setState({ lastRead: next });
+    });
+    _defineProperty(this, "openReading", (type, item) => {
+      const prev = this.state.lastRead;
+      const same = prev && prev.title === (item && item.title) && prev.type === type;
+      const mark = { type, title: (item && item.title) || '', pos: same ? prev.pos || 0 : 0, at: Date.now() };
+      lsSet('lastRead', mark);
+      this.setState({
+        screen: 'reading',
+        readingType: type,
+        readingItem: item,
+        readingLang: null,
+        lastRead: mark
+      }, () => {
+        // React may reuse the scroll node from a previous reading, so the offset
+        // is always set explicitly — to where you left off, or to the top
+        const inner = document.querySelector('.app > .s .s');
+        if (inner) inner.scrollTop = mark.pos || 0;
+      });
+    });
+    /* Reopen whatever Continue reading points at, from whichever list holds it. */
+    _defineProperty(this, "resumeReading", () => {
+      const lr = this.state.lastRead;
+      if (!lr) return;
+      const pools = {
+        dua: this.state.liveDuas || DUAS,
+        ziyarah: this.state.liveZiyarat || ZIYARAT,
+        aamal: this.state.liveAamals || []
+      };
+      let item = (pools[lr.type] || []).find(x => x.title === lr.title);
+      if (!item) {
+        const nahj = this.state.liveNahj || NAHJ;
+        ['sermons', 'letters', 'sayings'].forEach(k => {
+          if (!item) item = (nahj[k] || []).find(x => x.title === lr.title);
+        });
+        if (item) return this.openReading('nahj', item);
+      }
+      if (item) this.openReading(lr.type, item);
+      else this.showToast('That reading is no longer in the library');
+    });
     _defineProperty(this, "t", key => {
       const lang = this.state.lang;
       const s = STRINGS[key];
@@ -2733,16 +2799,6 @@ class App extends Component {
         libCat: 'All'
       })
     }, {
-      title: 'Daily Amaals',
-      icon: '✨',
-      tone: ['#8a4b2c', '#f7ebe2'],
-      go: () => this.setState({
-        screen: 'library',
-        libTab: 'aamal',
-        libQuery: '',
-        libCat: 'All'
-      })
-    }, {
       title: 'Books',
       icon: '📖',
       tone: ['#2c5d52', '#e6f0eb'],
@@ -2757,15 +2813,6 @@ class App extends Component {
       tone: ['#c06014', '#fbe9dc'],
       go: () => this.go('kids')
     }, {
-      title: 'Quiz',
-      icon: '🎯',
-      tone: ['#8a2f52', '#f7e6ed'],
-      go: () => this.setState({
-        screen: 'kids',
-        kidsTab: 'quiz',
-        quizRun: null
-      })
-    }, {
       title: this.t('more.health'),
       icon: '🌿',
       tone: ['#3f7a45', '#e9f2e7'],
@@ -2775,7 +2822,8 @@ class App extends Component {
       icon: '🏪',
       tone: ['#7a5c9e', '#efe9f5'],
       go: () => this.go('classifieds')
-    }, {
+    }];
+    const toolCards = [{
       title: 'Tasbeeh',
       icon: '📿',
       tone: ['#3a4a78', '#e9ecf5'],
@@ -2801,6 +2849,69 @@ class App extends Component {
       tone: ['#b8923f', '#f7efdd'],
       go: () => this.go('calendar')
     }];
+    const dayAmaal = amaalForDay(st.liveAamals, st.now);
+    const lastRead = st.lastRead;
+    const READ_KIND = { dua: 'Duʿāʾ', ziyarah: 'Ziyārah', aamal: 'Daily Amaal', nahj: 'Books' };
+    /* One grid renderer for both Explore and Tools, so the two sections cannot
+       drift apart. */
+    const iconGrid = cards => /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: 'grid',
+        gridTemplateColumns: 'repeat(3, 1fr)',
+        gap: 10,
+        marginBottom: 14
+      }
+    }, cards.map((q, i) => {
+      const [ink, tint] = q.tone || ['#6e6252', '#efe8db'];
+      return /*#__PURE__*/React.createElement("div", {
+        key: q.title,
+        onClick: q.go,
+        className: "neu-press",
+        style: {
+          ...neuCard(16, .85),
+          padding: '13px 6px 11px',
+          cursor: 'pointer',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 8,
+          minHeight: 92,
+          textAlign: 'center',
+          animation: 'fu .38s cubic-bezier(.2,.8,.2,1) both',
+          animationDelay: i * 26 + 'ms'
+        }
+      }, /*#__PURE__*/React.createElement("span", {
+        style: {
+          width: 50,
+          height: 50,
+          borderRadius: '50%',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontSize: 30,
+          lineHeight: 1,
+          background: `linear-gradient(145deg, ${tint}, ${ink}22)`,
+          boxShadow: `inset 3px 3px 7px ${ink}33, inset -2px -2px 5px ${NEU.hi}, 0 3px 8px -5px ${ink}`
+        }
+      }, q.icon), /*#__PURE__*/React.createElement("div", {
+        style: {
+          fontSize: 12,
+          fontWeight: 700,
+          color: NEU.ink,
+          lineHeight: 1.25
+        }
+      }, q.title));
+    }));
+    const sectionHead = label => /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontFamily: 'Spectral,serif',
+        fontSize: 18,
+        fontWeight: 600,
+        color: '#2c2823',
+        marginBottom: 12
+      }
+    }, label);
     const maulanas = Array.isArray(st.liveAskImam) ? st.liveAskImam.filter(m => m && m.number) : st.liveAskImam && st.liveAskImam.number ? [{
       name: '',
       number: st.liveAskImam.number
@@ -3013,7 +3124,7 @@ class App extends Component {
         marginTop: 1,
         lineHeight: 1.35
       }
-    }, ev.desc)))), announcementActive(st.liveAnnouncement) && this.renderMajlisCard(st), /*#__PURE__*/React.createElement("div", {
+    }, ev.desc)))), this.renderHappeningNow(st, todayRems, onThisDay), /*#__PURE__*/React.createElement("div", {
       style: {
         display: 'flex',
         alignItems: 'baseline',
@@ -3231,64 +3342,42 @@ class App extends Component {
         fontWeight: p.isNext ? 700 : 500,
         fontVariantNumeric: 'tabular-nums'
       }
-    }, p.time)))), /*#__PURE__*/React.createElement("div", {
+    }, p.time)))),
+    dayAmaal && this.renderHomeTile({
+      icon: '✨',
+      kicker: "Today's recommended amaal",
+      title: dayAmaal.title,
+      sub: dayAmaal.cat || dayAmaal.tr || 'Tap to read',
+      tone: ['#8a4b2c', '#f7ebe2'],
+      onClick: () => this.openReading('aamal', dayAmaal)
+    }),
+    lastRead && lastRead.title && this.renderHomeTile({
+      icon: '📖',
+      kicker: 'Continue reading',
+      title: lastRead.title,
+      sub: READ_KIND[lastRead.type] || 'Library',
+      tone: ['#2c5d52', '#e6f0eb'],
+      onClick: this.resumeReading
+    }),
+    this.renderHomeTile({
+      icon: '🎯',
+      kicker: 'Take a quiz',
+      title: 'Test what you know',
+      sub: 'Ten questions, ten seconds each',
+      tone: ['#8a2f52', '#f7e6ed'],
+      onClick: () => this.setState({ screen: 'kids', kidsTab: 'quiz', quizRun: null })
+    }),
+    /*#__PURE__*/React.createElement("div", {
       style: {
         fontFamily: 'Spectral,serif',
         fontSize: 18,
         fontWeight: 600,
         color: '#2c2823',
-        marginBottom: 12
+        margin: '18px 0 12px'
       }
-    }, this.t('home.explore')), /*#__PURE__*/React.createElement("div", {
-      style: {
-        display: 'grid',
-        gridTemplateColumns: 'repeat(3, 1fr)',
-        gap: 10,
-        marginBottom: 14
-      }
-    }, quickCards.map((q, i) => {
-      const [ink, tint] = q.tone || ['#6e6252', '#efe8db'];
-      return /*#__PURE__*/React.createElement("div", {
-        key: i,
-        onClick: q.go,
-        className: "neu-press",
-        style: {
-          ...neuCard(16, .85),
-          padding: '13px 6px 11px',
-          cursor: 'pointer',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: 8,
-          minHeight: 92,
-          textAlign: 'center',
-          animation: 'fu .38s cubic-bezier(.2,.8,.2,1) both',
-          animationDelay: i * 26 + 'ms'
-        }
-      }, /*#__PURE__*/React.createElement("span", {
-        style: {
-          width: 50,
-          height: 50,
-          borderRadius: '50%',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          fontSize: 30,
-          lineHeight: 1,
-          background: `linear-gradient(145deg, ${tint}, ${ink}22)`,
-          boxShadow: `inset 3px 3px 7px ${ink}33, inset -2px -2px 5px ${NEU.hi}, 0 3px 8px -5px ${ink}`
-        }
-      }, q.icon), /*#__PURE__*/React.createElement("div", {
-        style: {
-          fontSize: 12,
-          fontWeight: 700,
-          // colour lives in the pebble; a tinted label here drops under 4.5:1
-          color: NEU.ink,
-          lineHeight: 1.25
-        }
-      }, q.title));
-    })), maulanas.length > 0 && /*#__PURE__*/React.createElement("div", {
+    }, this.t('home.explore')), iconGrid(quickCards),
+    sectionHead('Tools'), iconGrid(toolCards),
+    maulanas.length > 0 && /*#__PURE__*/React.createElement("div", {
       style: {
         background: 'linear-gradient(120deg,#1f5145,#163b30)',
         borderRadius: 16,
@@ -4713,6 +4802,7 @@ class App extends Component {
       }
     }, React.createElement("div", {
       onClick: () => {
+        this.saveReadPos();
         this.setState({ screen: 'library', readingItem: null, readingType: null, readingLang: null });
         const sc = document.querySelector('.app > .s');
         if (sc) sc.scrollTop = 0;
@@ -11625,11 +11715,163 @@ class App extends Component {
     }, "›")))));
   }
 
+  /* ── HOME TILES ──
+     A full-width row that names one thing to do next, in that section's own
+     colour: recessed pebble on the left, label and detail in the middle, a
+     chevron on the right. The home page leads with these so a first visit has
+     somewhere obvious to start instead of a wall of equal choices. */
+  renderHomeTile(o) {
+    const [ink, tint] = o.tone;
+    return /*#__PURE__*/React.createElement("div", {
+      onClick: o.onClick,
+      className: "neu-press",
+      style: {
+        ...neuCard(16, .85),
+        display: 'flex',
+        alignItems: 'center',
+        gap: 13,
+        padding: '13px 15px',
+        marginBottom: 10,
+        cursor: 'pointer',
+        minHeight: 44
+      }
+    }, /*#__PURE__*/React.createElement("span", {
+      style: {
+        flexShrink: 0,
+        width: 46,
+        height: 46,
+        borderRadius: '50%',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        fontSize: 26,
+        lineHeight: 1,
+        background: `linear-gradient(145deg, ${tint}, ${ink}22)`,
+        boxShadow: `inset 3px 3px 7px ${ink}33, inset -2px -2px 5px ${NEU.hi}, 0 3px 8px -5px ${ink}`
+      }
+    }, o.icon), /*#__PURE__*/React.createElement("div", {
+      style: {
+        flex: 1,
+        minWidth: 0
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 10,
+        letterSpacing: .9,
+        textTransform: 'uppercase',
+        fontWeight: 800,
+        color: ink
+      }
+    }, o.kicker), /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontFamily: 'Spectral,serif',
+        fontSize: 15.5,
+        fontWeight: 600,
+        color: NEU.ink,
+        marginTop: 2,
+        lineHeight: 1.25,
+        whiteSpace: 'nowrap',
+        overflow: 'hidden',
+        textOverflow: 'ellipsis'
+      }
+    }, o.title), o.sub && /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 11.5,
+        color: NEU.muted,
+        marginTop: 2,
+        lineHeight: 1.35,
+        whiteSpace: 'nowrap',
+        overflow: 'hidden',
+        textOverflow: 'ellipsis'
+      }
+    }, o.sub)), /*#__PURE__*/React.createElement("span", {
+      "aria-hidden": "true",
+      style: {
+        flexShrink: 0,
+        fontSize: 20,
+        color: ink,
+        opacity: .7
+      }
+    }, "›"));
+  }
+
+  /* ── HAPPENING NOW ──
+     Beside a live majlis sits whatever else is on today. With no majlis running
+     the pair collapses to one Reminders tile carrying today's reminders, so the
+     slot always says something rather than disappearing. */
+  renderHappeningNow(st, todayRems, onThisDay) {
+    const majlis = announcementActive(st.liveAnnouncement);
+    const openCal = () => this.setState({
+      screen: 'calendar',
+      calViewY: null,
+      calViewM: undefined,
+      calDay: null
+    });
+    if (!majlis) {
+      const first = todayRems[0];
+      return this.renderHomeTile({
+        icon: '🔔',
+        kicker: todayRems.length > 1 ? `Reminders · ${todayRems.length}` : 'Reminders',
+        title: first ? first.title : 'No reminders today',
+        sub: first ? todayRems.length > 1
+          ? todayRems.slice(1).map(r => r.title).join(' · ')
+          : first.desc || first.type || 'Tap for the calendar'
+          : 'Anything scheduled will appear here',
+        tone: ['#a03a3a', '#f7e8e6'],
+        onClick: openCal
+      });
+    }
+    const now = onThisDay[0] || todayRems[0];
+    return /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: 'grid',
+        gridTemplateColumns: '1fr 1fr',
+        gap: 10,
+        marginBottom: 12
+      }
+    }, this.renderMajlisCard(st, true), /*#__PURE__*/React.createElement("div", {
+      onClick: openCal,
+      className: "neu-press",
+      style: {
+        ...neuCard(16, .85),
+        padding: '12px 13px',
+        cursor: 'pointer',
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'center',
+        gap: 4,
+        minHeight: 44
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 10,
+        letterSpacing: .9,
+        textTransform: 'uppercase',
+        fontWeight: 800,
+        color: '#7d6220'
+      }
+    }, now ? 'On today' : 'Programme'), /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontFamily: 'Spectral,serif',
+        fontSize: 14.5,
+        fontWeight: 600,
+        color: NEU.ink,
+        lineHeight: 1.3
+      }
+    }, now ? now.title : 'Nothing else scheduled'), now && now.type && /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 11,
+        color: NEU.muted,
+        marginTop: 1
+      }
+    }, now.type)));
+  }
+
   /* ── MAJLIS LIVE ──
      One card, four voices. It reads the clock rather than a stored flag, so the
      same saved majlis counts down, goes live, and settles into a recording on
      its own; st.now ticks every second, which is what moves it along. */
-  renderMajlisCard(st) {
+  renderMajlisCard(st, compact) {
     const a = st.liveAnnouncement || {};
     const s = majlisStatus(a, st.now);
     const live = s.kind === 'live';
@@ -11666,8 +11908,8 @@ class App extends Component {
         position: 'relative',
         overflow: 'hidden',
         borderRadius: 16,
-        padding: '12px 14px',
-        marginBottom: 12,
+        padding: compact ? '12px 13px' : '12px 14px',
+        marginBottom: compact ? 0 : 12,
         cursor: playable ? 'pointer' : 'default',
         ...(live || ahead ? {
           background: tone.bg,
@@ -11710,12 +11952,12 @@ class App extends Component {
     }, /*#__PURE__*/React.createElement("div", {
       style: {
         fontFamily: 'Spectral,serif',
-        fontSize: 15.5,
+        fontSize: compact ? 14.5 : 15.5,
         fontWeight: 600,
         color: tone.ink,
-        lineHeight: 1.25
+        lineHeight: 1.3
       }
-    }, a.title), a.body && /*#__PURE__*/React.createElement("div", {
+    }, a.title), !compact && a.body && /*#__PURE__*/React.createElement("div", {
       style: {
         fontSize: 11.5,
         color: tone.sub,
@@ -11731,10 +11973,11 @@ class App extends Component {
       }
     }, dateLine)), playable && /*#__PURE__*/React.createElement("div", {
       className: live ? "live-ring" : undefined,
+      "aria-label": "Watch",
       style: {
         flexShrink: 0,
-        width: 42,
-        height: 42,
+        width: compact ? 34 : 42,
+        height: compact ? 34 : 42,
         borderRadius: '50%',
         display: 'flex',
         alignItems: 'center',
@@ -11747,9 +11990,9 @@ class App extends Component {
       style: {
         width: 0,
         height: 0,
-        borderLeft: `13px solid ${live || ahead ? tone.ink : tone.chip}`,
-        borderTop: '8px solid transparent',
-        borderBottom: '8px solid transparent',
+        borderLeft: `${compact ? 10 : 13}px solid ${live || ahead ? tone.ink : tone.chip}`,
+        borderTop: `${compact ? 6 : 8}px solid transparent`,
+        borderBottom: `${compact ? 6 : 8}px solid transparent`,
         marginLeft: 4
       }
     }))));
