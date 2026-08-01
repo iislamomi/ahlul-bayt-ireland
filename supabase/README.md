@@ -12,6 +12,8 @@ service-role key.
 | Quiz results | `quiz_scores` | **nobody** via the API | `submit-quiz-score` only |
 | Public board | `quiz_leaderboard_public` (view) | anon, read-only | — |
 | Time reports | `prayer_time_reports` | **nobody** via the API | `report-prayer-time` only |
+| Library PDFs | `library-pdfs` (storage) | anyone (public bucket) | `upload-pdf` only |
+| Upload ledger | `library_pdfs` | **nobody** via the API | `upload-pdf` only |
 
 ⚠️ The `content` row is pre-existing and not something this change introduced,
 but it is worth stating plainly: the in-app admin screen is a client-side gate,
@@ -31,11 +33,22 @@ supabase db push        # or paste migrations/0001_quiz_leaderboard_and_reports.
 # 2. secrets (see below)
 supabase secrets set ABI_INSTALL_PEPPER="$(openssl rand -hex 32)"
 
-# 3. the two functions. --no-verify-jwt because there are no accounts:
+# 3. the three functions. --no-verify-jwt because there are no accounts:
 #    the functions do their own validation and rate limiting.
 supabase functions deploy submit-quiz-score --no-verify-jwt
 supabase functions deploy report-prayer-time --no-verify-jwt
+supabase functions deploy upload-pdf --no-verify-jwt
 ```
+
+`0002_library_pdfs.sql` creates the storage bucket as well as the table. Until
+both it and `upload-pdf` are applied, the Books editor's **Upload a PDF** button
+reports that uploads are not switched on and points at this file; pasting a link
+keeps working throughout, and nothing else in the app is affected.
+
+A note on how that failure looks. An undeployed function answers `404`, but the
+gateway's own 404 does not permit the request's headers, so the browser's
+preflight fails first and the client only ever sees a network error. That is why
+the message in the app names both causes rather than claiming to know which.
 
 Each function is a single self-contained file with no relative imports. That is
 deliberate: an import reaching outside the function's own directory is the usual
@@ -77,3 +90,12 @@ admin screen is not a safe place to surface it — see below.
 - **`content` is world-writable with the anon key.** Fixing this needs RLS on
   `content` plus an authenticated write path, which is the same piece of work as
   the point above.
+- **`upload-pdf` is bounded, not authenticated.** It exists so the storage
+  bucket can refuse the anon key outright: a bucket anyone could write to is a
+  bucket anyone could host a document on under this project's own address, which
+  is exactly where a forged document would be most believed. What the function
+  actually enforces is a ceiling — PDFs only, checked at the first five bytes
+  rather than taken on the caller's word, 25 MB, and ten uploads an hour per
+  installation, every one of them recorded in `library_pdfs`. Anyone who reads
+  `app.js` can still call it. Real admin authentication is the fix; review the
+  ledger in the dashboard until then, and delete from the bucket to revoke a file.

@@ -1951,6 +1951,37 @@ const EDGE_PUSH = SB_URL + '/functions/v1/send-push';
    key server-side and neither table is readable with the anon key. */
 const EDGE_QUIZ_SUBMIT = SB_URL + '/functions/v1/submit-quiz-score';
 const EDGE_REPORT_TIME = SB_URL + '/functions/v1/report-prayer-time';
+const EDGE_UPLOAD_PDF = SB_URL + '/functions/v1/upload-pdf';
+const PDF_MAX_BYTES = 25 * 1024 * 1024;
+
+/* pdf.js and its worker are 1.4 MB \u2014 more than everything else this app ships
+   put together. Fetched the first time someone opens a PDF and never at boot, so
+   a reader who never touches one never pays for it. The service worker caches
+   them like any other same-origin GET, so the second time is free and offline. */
+let pdfjsLoad = null;
+function loadPdfjs() {
+  if (window.pdfjsLib) return Promise.resolve(window.pdfjsLib);
+  if (pdfjsLoad) return pdfjsLoad;
+  pdfjsLoad = new Promise((resolve, reject) => {
+    const el = document.createElement('script');
+    el.src = '/vendor/pdf.min.js';
+    el.onload = () => {
+      if (!window.pdfjsLib) { pdfjsLoad = null; reject(new Error('viewer_missing')); return; }
+      window.pdfjsLib.GlobalWorkerOptions.workerSrc = '/vendor/pdf.worker.min.js';
+      resolve(window.pdfjsLib);
+    };
+    el.onerror = () => { pdfjsLoad = null; reject(new Error('viewer_unreachable')); };
+    document.head.appendChild(el);
+  });
+  return pdfjsLoad;
+}
+
+/* A PDF is the one thing here that can be checked for what it claims to be: the
+   first five bytes are fixed by the format. Worth doing before a 25 MB upload. */
+function looksLikePdf(head) {
+  return head.length >= 5 && head[0] === 0x25 && head[1] === 0x50 &&
+         head[2] === 0x44 && head[3] === 0x46 && head[4] === 0x2d;
+}
 const LEADERBOARD_URL = SB_URL + '/rest/v1/quiz_leaderboard_public';
 
 const PUSH_MSG = {
@@ -2424,6 +2455,13 @@ class App extends Component {
       qiblaLat: null,
       qiblaLng: null,
       qiblaAcc: null,
+      pdfStatus: 'idle',
+      pdfError: null,
+      pdfPage: 1,
+      pdfPages: 0,
+      pdfZoom: 1,
+      pdfSaving: false,
+      adminPdfUp: null,
       // the live compass reading, and the accumulated dial angle that follows it
       qiblaHeading: null,
       qiblaSpin: null,
@@ -2518,6 +2556,8 @@ class App extends Component {
       // Refresh every page on navigation: reset transient view state so each
       // screen opens fresh, and scroll the content area back to the top.
       if (this.state.screen === 'reading') this.saveReadPos();
+      // a PDF left open keeps a worker and a decoded page in memory
+      if (this.state.screen === 'reading' && s !== 'reading') this.destroyPdf();
       // GPS and the magnetometer cost battery for as long as they are attached
       if (this.state.screen === 'qibla' && s !== 'qibla') this.stopQibla();
       this.clearQuizTimers();
@@ -2928,6 +2968,10 @@ class App extends Component {
       this.setState({ lastRead: next });
     });
     _defineProperty(this, "openReading", (type, item, opts) => {
+      /* Every open is a fresh attempt. Without this, a PDF that failed once is
+         remembered as failed for the rest of the session, and reopening the same
+         entry after the connection comes back shows the same error. */
+      this.destroyPdf();
       const o = opts || {};
       const prev = this.state.lastRead;
       const same = prev && prev.title === (item && item.title) && prev.type === type;
@@ -3197,12 +3241,15 @@ class App extends Component {
     });
     _defineProperty(this, "startEdit", (idx, draft) => this.setState({
       adminEditIdx: idx,
+      // an upload result belongs to the entry it was made for, not the next one
+      adminPdfUp: null,
       adminEditDraft: {
         ...draft
       }
     }));
     _defineProperty(this, "cancelEdit", () => this.setState(s => ({
       adminEditIdx: null,
+      adminPdfUp: null,
       // keep the sub-tab (_sub) so Kids/Health admin stays on the same tab after Save/Cancel
       adminEditDraft: s.adminEditDraft && s.adminEditDraft._sub ? {
         _sub: s.adminEditDraft._sub
@@ -3371,6 +3418,171 @@ class App extends Component {
         qiblaMotion: 'live',
         qiblaSpin: this.qiblaSpinFor(this.state.qiblaBearing, h)
       });
+    });
+    /* Loaded once per document, keyed by URL so re-rendering the reader does not
+       re-download it. The document object itself is kept off state: it is a live
+       handle with a worker behind it, not a value to diff. */
+    _defineProperty(this, "ensurePdf", url => {
+      if (!url || this._pdfUrl === url) return;
+      this._pdfUrl = url;
+      this.destroyPdf(false);
+      this.setState({ pdfStatus: 'loading', pdfError: null, pdfPage: 1, pdfPages: 0, pdfZoom: 1 });
+      loadPdfjs().then(lib => {
+        if (this._pdfUrl !== url) return;
+        const task = lib.getDocument({ url, withCredentials: false });
+        this._pdfTaskLoad = task;
+        return task.promise.then(doc => {
+          if (this._pdfUrl !== url) { doc.destroy(); return; }
+          this._pdfDoc = doc;
+          window.addEventListener('resize', this.onPdfResize);
+          this.setState({ pdfStatus: 'ready', pdfPages: doc.numPages, pdfPage: 1 },
+            () => this.drawPdfPage());
+        });
+      }).catch(err => {
+        if (this._pdfUrl !== url) return;
+        const name = err && (err.name || '');
+        /* The usual failure is not a broken file. It is a PDF on a host that does
+           not allow another site to read it, which arrives as an unhelpful
+           network error \u2014 so say the useful thing rather than the literal one. */
+        const kind = name === 'MissingPDFException' ? 'missing'
+          : name === 'PasswordException' ? 'password'
+          : err && err.message === 'viewer_unreachable' ? 'offline'
+          : 'blocked';
+        this.setState({ pdfStatus: 'error', pdfError: kind });
+      });
+    });
+    _defineProperty(this, "drawPdfPage", () => {
+      const doc = this._pdfDoc, canvas = this._pdfCanvas;
+      if (!doc || !canvas) return;
+      const page = Math.min(Math.max(1, this.state.pdfPage), doc.numPages);
+      this._pdfDrawn = canvas;
+      doc.getPage(page).then(pg => {
+        if (this._pdfCanvas !== canvas || !canvas.parentNode) return;
+        const wrap = canvas.parentNode.clientWidth || 320;
+        const base = pg.getViewport({ scale: 1 });
+        /* Capped at 2: a full-bleed page at 3x device pixels is a canvas big
+           enough to have the tab killed on a mid-range phone. */
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        const vp = pg.getViewport({ scale: (wrap / base.width) * this.state.pdfZoom * dpr });
+        canvas.width = Math.floor(vp.width);
+        canvas.height = Math.floor(vp.height);
+        canvas.style.width = Math.floor(vp.width / dpr) + 'px';
+        canvas.style.height = Math.floor(vp.height / dpr) + 'px';
+        // turning two pages quickly must not leave half of each on the canvas
+        if (this._pdfRender) { try { this._pdfRender.cancel(); } catch (e) {} }
+        this._pdfRender = pg.render({ canvasContext: canvas.getContext('2d'), viewport: vp });
+        return this._pdfRender.promise.catch(() => {});
+      }).catch(() => {});
+    });
+    /* Rotating the phone changes the width the page was fitted to. Debounced,
+       because a rotation animation emits a stream of resize events. */
+    _defineProperty(this, "onPdfResize", () => {
+      clearTimeout(this._pdfResizeTimer);
+      this._pdfResizeTimer = setTimeout(() => this.drawPdfPage(), 220);
+    });
+    _defineProperty(this, "goPdfPage", n => {
+      const total = this.state.pdfPages || 1;
+      const page = Math.min(Math.max(1, n), total);
+      if (page === this.state.pdfPage) return;
+      this.setState({ pdfPage: page }, () => this.drawPdfPage());
+    });
+    _defineProperty(this, "zoomPdf", mult => {
+      const zoom = Math.min(3, Math.max(0.75, Math.round(this.state.pdfZoom * mult * 100) / 100));
+      if (zoom === this.state.pdfZoom) return;
+      this.setState({ pdfZoom: zoom }, () => this.drawPdfPage());
+    });
+    _defineProperty(this, "destroyPdf", (clearUrl = true) => {
+      if (this._pdfRender) { try { this._pdfRender.cancel(); } catch (e) {} this._pdfRender = null; }
+      if (this._pdfTaskLoad) { try { this._pdfTaskLoad.destroy(); } catch (e) {} this._pdfTaskLoad = null; }
+      if (this._pdfDoc) { try { this._pdfDoc.destroy(); } catch (e) {} this._pdfDoc = null; }
+      window.removeEventListener('resize', this.onPdfResize);
+      clearTimeout(this._pdfResizeTimer);
+      this._pdfDrawn = null;
+      if (clearUrl) this._pdfUrl = null;
+    });
+    /* The bytes are already here once the document is open, so saving a copy is a
+       local operation \u2014 no second download, and it works on a host that would
+       refuse a direct fetch. */
+    _defineProperty(this, "downloadPdf", (url, title) => {
+      if (this.state.pdfSaving) return;
+      const name = String(title || 'document').replace(/[^\w\u00c0-\u024f -]+/g, '').trim().slice(0, 60) || 'document';
+      const save = bytes => {
+        const blob = new Blob([bytes], { type: 'application/pdf' });
+        const href = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = href;
+        a.download = name + '.pdf';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(href), 4000);
+        this.setState({ pdfSaving: false });
+        this.showToast('Saved to your downloads');
+      };
+      this.setState({ pdfSaving: true });
+      const fromDoc = this._pdfDoc && this._pdfUrl === url
+        ? this._pdfDoc.getData()
+        : Promise.reject(new Error('no_doc'));
+      fromDoc.then(save).catch(() => fetch(url).then(res => {
+        if (!res.ok) throw new Error('http_' + res.status);
+        return res.arrayBuffer();
+      }).then(save).catch(() => {
+        this.setState({ pdfSaving: false });
+        this.showToast('Could not save it here \u2014 opening it instead');
+        window.open(url, '_blank', 'noopener,noreferrer');
+      }));
+    });
+    /* Upload goes through an Edge Function, not straight to storage. The anon key
+       is in this file, so a bucket anyone could write to is a bucket anyone could
+       host a document on under the mosque's own address. */
+    _defineProperty(this, "uploadPdf", file => {
+      if (!file) return;
+      if (file.size > PDF_MAX_BYTES) {
+        this.setState({ adminPdfUp: { state: 'error', msg: `That file is ${(file.size / 1048576).toFixed(1)} MB. The limit is 25 MB.` } });
+        return;
+      }
+      this.setState({ adminPdfUp: { state: 'reading', msg: 'Checking the file\u2026' } });
+      file.slice(0, 5).arrayBuffer().then(head => {
+        if (!looksLikePdf(new Uint8Array(head))) {
+          this.setState({ adminPdfUp: { state: 'error', msg: 'That is not a PDF file.' } });
+          return;
+        }
+        this.setState({ adminPdfUp: { state: 'sending', msg: 'Uploading\u2026' } });
+        return fetch(EDGE_UPLOAD_PDF, {
+          method: 'POST',
+          headers: {
+            apikey: SB_KEY,
+            Authorization: 'Bearer ' + SB_KEY,
+            'Content-Type': 'application/pdf',
+            'x-abi-install': installId(),
+            'x-abi-filename': encodeURIComponent(file.name || 'document.pdf')
+          },
+          body: file
+        }).then(res => res.json().catch(() => ({})).then(body => ({ res, body })))
+          .then(({ res, body }) => {
+            if (res.ok && body && body.url) {
+              this.setDraft({ pdf: body.url });
+              this.setState({ adminPdfUp: { state: 'done', msg: 'Uploaded. The link below is filled in.' } });
+              return;
+            }
+            const err = (body && body.error) || 'upload_failed';
+            const msg = res.status === 404
+              ? 'Uploads are not switched on yet \u2014 see supabase/README.md. Paste a link instead.'
+              : err === 'rate_limited' ? 'Too many uploads just now. Try again in a few minutes.'
+              : err === 'too_large' ? 'That file is over the 25 MB limit.'
+              : err === 'not_a_pdf' ? 'The server did not accept that as a PDF.'
+              : 'Upload failed. Paste a link instead.';
+            this.setState({ adminPdfUp: { state: 'error', msg } });
+          });
+      }).catch(() => this.setState({
+        /* A function that is not deployed and a dropped connection look identical
+           from here: the gateway's own 404 does not permit this request's headers,
+           so the preflight fails before any status is readable. Name both. */
+        adminPdfUp: {
+          state: 'error',
+          msg: 'Upload did not go through. Either uploads are not switched on yet (see supabase/README.md) or the connection dropped \u2014 you can paste a link instead.'
+        }
+      }));
     });
     _defineProperty(this, "stopQibla", () => {
       if (this._qiblaWatch !== null && this._qiblaWatch !== undefined) {
@@ -6440,23 +6652,232 @@ class App extends Component {
       }, this.t('lib.summary')), React.createElement("div", {
         style: { fontSize: 14, lineHeight: 1.6, color: rd.text }
       }, r.sum))),
-    lang === 'pdf' && hasPdf && React.createElement(React.Fragment, null,
-      React.createElement("iframe", {
-        src: 'https://docs.google.com/gview?embedded=1&url=' + encodeURIComponent(r.pdf),
-        title: "PDF",
-        style: { width: '100%', height: '62vh', border: `1px solid ${rd.border}`, borderRadius: 16, background: rd.surf }
-      }),
+    lang === 'pdf' && hasPdf && this.renderPdf(st, r, rd, readAccent, dark)));
+  }
+
+  /* \u2500\u2500 PDF \u2500\u2500
+     Rendered here rather than handed to Google's viewer, which is what this used
+     to do: that sent the address of whatever anyone was reading to a third party,
+     needed a live connection every time, and could not offer a download. pdf.js
+     draws the page on a canvas from bytes this app fetched itself.
+
+     The cost of that swap is honest and worth stating: a viewer running in the
+     page can only read a file the file's own host allows it to read. An uploaded
+     PDF always works; a linked one works if that host permits it, and says so
+     plainly when it does not. */
+  renderPdf(st, r, rd, accent, dark) {
+    const url = r.pdf;
+    const status = this._pdfUrl === url ? st.pdfStatus : 'loading';
+    const page = st.pdfPage;
+    const pages = st.pdfPages;
+    const btn = (label, onClick, o = {}) => React.createElement("div", {
+      onClick: o.disabled ? undefined : onClick,
+      "aria-disabled": o.disabled ? 'true' : undefined,
+      style: {
+        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7,
+        minHeight: 44, padding: '11px 14px', borderRadius: 13, flex: o.flex,
+        border: `1.5px solid ${o.disabled ? rd.border : (o.solid ? accent : rd.border)}`,
+        background: o.solid && !o.disabled ? accent : rd.surf,
+        color: o.disabled ? rd.muted : (o.solid ? '#fff' : accent),
+        fontSize: 13.5, fontWeight: 600,
+        cursor: o.disabled ? 'default' : 'pointer',
+        opacity: o.disabled ? .55 : 1
+      }
+    }, o.icon ? icon(o.icon, { size: 16 }) : null, label);
+
+    const message = {
+      blocked: 'This PDF is stored somewhere that does not allow other sites to read it, so it cannot be shown here. It will still open in your browser.',
+      missing: 'This PDF could not be found at its link. It may have been moved or removed.',
+      password: 'This PDF is password protected, so it cannot be shown here.',
+      offline: 'The viewer could not be downloaded. Connect to the internet once and it will be available offline afterwards.'
+    };
+
+    return React.createElement(React.Fragment, null,
+      /* The canvas mounting is what starts the load: it fires after the element
+         exists, so there is never a first page drawn into nothing. */
       React.createElement("div", {
-        onClick: () => window.open(r.pdf, '_blank'),
         style: {
-          marginTop: 12, textAlign: 'center', padding: 13, borderRadius: 14,
-          border: `1.5px solid ${readAccent}`, color: readAccent, background: rd.surf,
-          fontSize: 13.5, fontWeight: 600, cursor: 'pointer'
+          position: 'relative', borderRadius: 16, overflow: 'auto',
+          border: `1px solid ${rd.border}`, background: dark ? '#15191a' : '#e8e2d6',
+          padding: 10, textAlign: 'center', maxHeight: '68vh',
+          WebkitOverflowScrolling: 'touch'
         }
-      }, "Open PDF in browser \u2197"))));
+      }, React.createElement("canvas", {
+        ref: el => {
+          this._pdfCanvas = el;
+          if (!el) return;
+          this.ensurePdf(url);
+          /* Only when the node is new. This component re-renders on a one-second
+             clock, and drawing again cancels the draw in flight and blanks the
+             canvas — on a big page that loop never lets a page finish. */
+          if (this._pdfDoc && this._pdfDrawn !== el) this.drawPdfPage();
+        },
+        "aria-label": `${r.title || 'Document'}, page ${page}${pages ? ' of ' + pages : ''}`,
+        role: "img",
+        style: {
+          display: status === 'ready' ? 'inline-block' : 'none',
+          maxWidth: '100%', borderRadius: 8,
+          boxShadow: '0 4px 16px -6px rgba(0,0,0,.35)', background: '#fff'
+        }
+      }), status !== 'ready' && React.createElement("div", {
+        role: "status",
+        style: {
+          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+          gap: 10, minHeight: 220, padding: '30px 18px', color: rd.muted, fontSize: 13.5, lineHeight: 1.6
+        }
+      }, icon(status === 'error' ? 'triangle-alert' : 'book-open', {
+        size: 26, stroke: status === 'error' ? '#a2564a' : rd.muted
+      }), status === 'error' ? (message[st.pdfError] || message.blocked) : 'Opening the document\u2026')),
+
+      status === 'ready' && pages > 1 && React.createElement("div", {
+        style: { display: 'flex', alignItems: 'center', gap: 9, marginTop: 12 }
+      }, btn('\u2039', () => this.goPdfPage(page - 1), { disabled: page <= 1 }),
+         React.createElement("div", {
+           role: "status",
+           "aria-live": "polite",
+           style: {
+             flex: 1, textAlign: 'center', fontSize: 13.5, fontWeight: 600,
+             color: rd.text, minHeight: 44, display: 'flex', alignItems: 'center', justifyContent: 'center'
+           }
+         }, `Page ${page} of ${pages}`),
+         btn('\u203a', () => this.goPdfPage(page + 1), { disabled: page >= pages })),
+
+      status === 'ready' && React.createElement("div", {
+        style: { display: 'flex', gap: 9, marginTop: 9 }
+      }, btn('Zoom out', () => this.zoomPdf(1 / 1.25), { flex: 1, disabled: st.pdfZoom <= 0.75 }),
+         btn('Zoom in', () => this.zoomPdf(1.25), { flex: 1, disabled: st.pdfZoom >= 3 })),
+
+      React.createElement("div", {
+        style: { display: 'flex', gap: 9, marginTop: 9 }
+      }, btn(st.pdfSaving ? 'Saving\u2026' : 'Download', () => this.downloadPdf(url, r.title),
+             { flex: 1, solid: true, icon: 'book-heart', disabled: st.pdfSaving }),
+         btn('Open in browser', () => window.open(url, '_blank', 'noopener,noreferrer'), { flex: 1 })),
+
+      React.createElement("div", {
+        style: { fontSize: 11.5, color: rd.muted, lineHeight: 1.6, textAlign: 'center', marginTop: 14 }
+      }, 'Downloaded copies are saved by your browser, not inside the app.'));
   }
 
   /* ── CLASSIFIEDS ── */
+  /* A PDF gets into the Books section one of two ways, and the two are not equal.
+     An uploaded file is served from the project's own storage, which permits this
+     app to read it, so it can be shown in the reader. A pasted link is shown only
+     if the host it lives on allows that \u2014 many do not. The control says which is
+     which up front rather than leaving an administrator to discover it later. */
+  renderPdfPicker(st, d) {
+    const up = st.adminPdfUp;
+    const busy = !!up && (up.state === 'reading' || up.state === 'sending');
+    const tone = !up ? null
+      : up.state === 'error' ? { bg: '#fdf0f2', edge: '#dfc4ca', ink: '#6e2230' }
+      : up.state === 'done' ? { bg: '#eef7f4', edge: '#c4ddd7', ink: '#1f5145' }
+      : { bg: '#f4ede0', edge: '#e2d3b4', ink: '#7d6220' };
+    return /*#__PURE__*/React.createElement("div", {
+      style: {
+        border: NEU.edge,
+        background: NEU.surf,
+        boxShadow: neuUp(.6),
+        borderRadius: 14,
+        padding: 13,
+        marginBottom: 11
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 11,
+        letterSpacing: 1,
+        textTransform: 'uppercase',
+        fontWeight: 700,
+        color: '#6b6252',
+        marginBottom: 9
+      }
+    }, "PDF (optional)"), /*#__PURE__*/React.createElement("label", {
+      htmlFor: "abi-pdf-file",
+      style: {
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 8,
+        minHeight: 46,
+        padding: '12px 14px',
+        borderRadius: 12,
+        border: '1.5px dashed #c4ddd7',
+        background: busy ? '#f0e8d6' : '#eef7f4',
+        color: busy ? '#7d6220' : '#1f5145',
+        fontSize: 13.5,
+        fontWeight: 700,
+        cursor: busy ? 'default' : 'pointer'
+      }
+    }, icon('book-open', { size: 16 }), busy ? up.msg : 'Upload a PDF from this device'),
+    /*#__PURE__*/React.createElement("input", {
+      id: "abi-pdf-file",
+      type: "file",
+      accept: "application/pdf,.pdf",
+      disabled: busy,
+      onChange: e => {
+        const f = e.target.files && e.target.files[0];
+        e.target.value = '';
+        this.uploadPdf(f);
+      },
+      style: {
+        position: 'absolute',
+        width: 1,
+        height: 1,
+        opacity: 0,
+        pointerEvents: 'none'
+      }
+    }), up && !busy && /*#__PURE__*/React.createElement("div", {
+      role: "status",
+      style: {
+        marginTop: 9,
+        padding: '9px 11px',
+        borderRadius: 11,
+        background: tone.bg,
+        border: `1px solid ${tone.edge}`,
+        color: tone.ink,
+        fontSize: 12,
+        lineHeight: 1.5
+      }
+    }, up.msg), /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 11,
+        color: NEU.muted,
+        margin: '11px 0 7px',
+        lineHeight: 1.5
+      }
+    }, "\u2026 or paste a link. A linked PDF opens in the browser, but only shows inside the app if its host allows other sites to read it."),
+    /*#__PURE__*/React.createElement("input", {
+      value: d.pdf || '',
+      onChange: e => this.setDraft({ pdf: e.target.value }),
+      placeholder: "https://\u2026",
+      style: {
+        width: '100%',
+        border: NEU.edge,
+        background: NEU.sunk,
+        boxShadow: neuIn(.7),
+        borderRadius: 11,
+        padding: '11px 13px',
+        minHeight: 44,
+        fontSize: 14,
+        color: '#2c2823',
+        outline: 'none',
+        boxSizing: 'border-box'
+      }
+    }), d.pdf && /*#__PURE__*/React.createElement("div", {
+      onClick: () => this.setDraft({ pdf: '' }),
+      style: {
+        marginTop: 9,
+        textAlign: 'center',
+        minHeight: 40,
+        padding: '10px',
+        borderRadius: 11,
+        border: '1px solid rgba(110,34,48,.3)',
+        color: '#6e2230',
+        fontSize: 12.5,
+        fontWeight: 600,
+        cursor: 'pointer'
+      }
+    }, "Remove this PDF"));
+  }
+
   renderClassifieds(st) {
     const allLabel = this.t('class.all');
     const cats = [allLabel, 'Food', 'Butcher', 'Travel', 'Education', 'Services'];
@@ -10917,14 +11338,7 @@ class App extends Component {
             overflowY: 'auto',
             resize: 'vertical'
           }
-        }), /*#__PURE__*/React.createElement("input", {
-          value: d.pdf || '',
-          onChange: e => this.setDraft({
-            pdf: e.target.value
-          }),
-          placeholder: "PDF link (optional — adds a Read PDF button)",
-          style: inp
-        }), /*#__PURE__*/React.createElement("div", {
+        }), this.renderPdfPicker(st, d), /*#__PURE__*/React.createElement("div", {
           style: {
             display: 'flex',
             gap: 10
