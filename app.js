@@ -781,7 +781,10 @@ const LUCIDE = {
   'info': '<circle cx="12" cy="12" r="10" /><path d="M12 16v-4" /><path d="M12 8h.01" />',
   'triangle-alert': '<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3" /><path d="M12 9v4" /><path d="M12 17h.01" />',
   'heart': '<path d="M2 9.5a5.5 5.5 0 0 1 9.591-3.676.56.56 0 0 0 .818 0A5.49 5.49 0 0 1 22 9.5c0 2.29-1.5 4-3 5.5l-5.492 5.313a2 2 0 0 1-3 .019L5 15c-1.5-1.5-3-3.2-3-5.5" />',
-  'trash-2': '<path d="M10 11v6" /><path d="M14 11v6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" /><path d="M3 6h18" /><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />'
+  'trash-2': '<path d="M10 11v6" /><path d="M14 11v6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" /><path d="M3 6h18" /><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />',
+  'compass': '<path d="m16.24 7.76-1.804 5.411a2 2 0 0 1-1.265 1.265L7.76 16.24l1.804-5.411a2 2 0 0 1 1.265-1.265z" /><circle cx="12" cy="12" r="10" />',
+  'navigation': '<path d="M3 11l19-9-9 19-2-8-8-2z" />',
+  'shield-check': '<path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z" /><path d="m9 12 2 2 4-4" />'
 };
 const icon = (name, o = {}) => React.createElement('svg', {
   width: o.size || 20,
@@ -2420,6 +2423,11 @@ class App extends Component {
       qiblaBearing: null,
       qiblaLat: null,
       qiblaLng: null,
+      qiblaAcc: null,
+      // the live compass reading, and the accumulated dial angle that follows it
+      qiblaHeading: null,
+      qiblaSpin: null,
+      qiblaMotion: null,
       /* ── KHUMS & ZAKAT ── */
       khumsTab: 'khums',
       tasbeehMode: lsGet('tasbeehMode', 'zehra'),
@@ -2510,6 +2518,8 @@ class App extends Component {
       // Refresh every page on navigation: reset transient view state so each
       // screen opens fresh, and scroll the content area back to the top.
       if (this.state.screen === 'reading') this.saveReadPos();
+      // GPS and the magnetometer cost battery for as long as they are attached
+      if (this.state.screen === 'qibla' && s !== 'qibla') this.stopQibla();
       this.clearQuizTimers();
       this.setState({
         screen: s,
@@ -3328,7 +3338,49 @@ class App extends Component {
       const x = Math.cos(phi1) * Math.sin(phi2) - Math.sin(phi1) * Math.cos(phi2) * Math.cos(deltaLambda);
       return (Math.atan2(y, x) * 180 / Math.PI + 360) % 360;
     });
-    _defineProperty(this, "locateQibla", () => {
+    /* The dial angle is accumulated rather than recomputed, so a heading crossing
+       359\u00b0 to 0\u00b0 nudges the needle one degree instead of spinning it the long way
+       round. The result is unbounded on purpose; CSS is happy to rotate past 360. */
+    _defineProperty(this, "qiblaSpinFor", (bearing, heading) => {
+      if (bearing === null || bearing === undefined) return null;
+      const rel = ((bearing - (heading === null || heading === undefined ? 0 : heading)) % 360 + 360) % 360;
+      const prev = this.state.qiblaSpin;
+      if (prev === null || prev === undefined) return rel;
+      return prev + ((((rel - prev) % 360) + 540) % 360) - 180;
+    });
+    /* A magnetometer fires far faster than this app can usefully repaint, and every
+       reading here re-renders the whole tree. Throttled by both time and angle: a
+       phone lying still on a table must not keep the app busy. */
+    _defineProperty(this, "onQiblaHeading", e => {
+      let h = null;
+      if (typeof e.webkitCompassHeading === 'number' && !isNaN(e.webkitCompassHeading)) {
+        h = e.webkitCompassHeading;
+      } else if (e.absolute && typeof e.alpha === 'number') {
+        // a non-absolute alpha is measured from wherever the device happened to be
+        // when the page loaded, which would point the arrow confidently at nothing
+        h = (360 - e.alpha) % 360;
+      }
+      if (h === null) return;
+      const now = Date.now();
+      const prev = this.state.qiblaHeading;
+      const moved = prev === null ? 999 : Math.abs(((h - prev + 540) % 360) - 180);
+      if (prev !== null && (now - (this._qiblaTick || 0) < 120 || moved < 0.8)) return;
+      this._qiblaTick = now;
+      this.setState({
+        qiblaHeading: h,
+        qiblaMotion: 'live',
+        qiblaSpin: this.qiblaSpinFor(this.state.qiblaBearing, h)
+      });
+    });
+    _defineProperty(this, "stopQibla", () => {
+      if (this._qiblaWatch !== null && this._qiblaWatch !== undefined) {
+        navigator.geolocation.clearWatch(this._qiblaWatch);
+        this._qiblaWatch = null;
+      }
+      window.removeEventListener('deviceorientationabsolute', this.onQiblaHeading, true);
+      window.removeEventListener('deviceorientation', this.onQiblaHeading, true);
+    });
+    _defineProperty(this, "locateQibla", async () => {
       if (!navigator.geolocation) {
         this.setState({
           qiblaStatus: 'unsupported'
@@ -3338,7 +3390,32 @@ class App extends Component {
       this.setState({
         qiblaStatus: 'loading'
       });
-      navigator.geolocation.getCurrentPosition(pos => {
+      /* iOS will not deliver orientation at all without an explicit grant, and only
+         from inside a real tap \u2014 which is why this lives on the button and nowhere
+         near startup. A refusal costs the live arrow, not the bearing. */
+      try {
+        const DOE = typeof DeviceOrientationEvent !== 'undefined' ? DeviceOrientationEvent : null;
+        if (DOE && typeof DOE.requestPermission === 'function') {
+          const grant = await DOE.requestPermission();
+          this.setState({ qiblaMotion: grant === 'granted' ? 'waiting' : 'denied' });
+        } else if (typeof window.DeviceOrientationEvent === 'undefined') {
+          this.setState({ qiblaMotion: 'unsupported' });
+        } else {
+          this.setState({ qiblaMotion: 'waiting' });
+        }
+      } catch (err) {
+        this.setState({ qiblaMotion: 'denied' });
+      }
+      window.removeEventListener('deviceorientationabsolute', this.onQiblaHeading, true);
+      window.removeEventListener('deviceorientation', this.onQiblaHeading, true);
+      window.addEventListener('deviceorientationabsolute', this.onQiblaHeading, true);
+      window.addEventListener('deviceorientation', this.onQiblaHeading, true);
+      if (this._qiblaWatch !== null && this._qiblaWatch !== undefined) {
+        navigator.geolocation.clearWatch(this._qiblaWatch);
+      }
+      // watched rather than read once: walking a few streets moves the bearing, and
+      // the first fix is usually the least accurate one the device will offer
+      this._qiblaWatch = navigator.geolocation.watchPosition(pos => {
         const lat = pos.coords.latitude;
         const lng = pos.coords.longitude;
         const bearing = this.bearingToKaaba(lat, lng);
@@ -3346,13 +3423,18 @@ class App extends Component {
           qiblaStatus: 'granted',
           qiblaLat: lat,
           qiblaLng: lng,
-          qiblaBearing: bearing
+          qiblaAcc: pos.coords.accuracy,
+          qiblaBearing: bearing,
+          qiblaSpin: this.qiblaSpinFor(bearing, this.state.qiblaHeading)
         });
-      }, () => this.setState({
-        qiblaStatus: 'denied'
+      }, err => this.setState({
+        // a refusal and a failed fix need opposite advice: one is fixed in settings,
+        // the other by walking outside
+        qiblaStatus: err && err.code === err.PERMISSION_DENIED ? 'denied' : 'nofix'
       }), {
         enableHighAccuracy: true,
-        timeout: 10000
+        maximumAge: 3000,
+        timeout: 15000
       });
     });
     _defineProperty(this, "showToast", msg => {
@@ -12945,16 +13027,24 @@ class App extends Component {
       }
     }, "These figures are a guide only. Rulings differ between marājiʿ — please confirm your calculation with your marjaʿ or a local scholar."));
   }
+  /* \u2500\u2500 QIBLA \u2500\u2500
+     Two questions, answered in the order a person actually asks them: which way
+     do I turn from here, and how far off am I. The dial answers the first by
+     rotating with the phone; the bearing beneath it answers the second and stays
+     true whether or not the device has a usable compass. */
   renderQibla(st) {
-    const {
-      qiblaStatus,
-      qiblaBearing,
-      qiblaLat,
-      qiblaLng
-    } = st;
-    const bearing = qiblaBearing !== null ? Math.round(qiblaBearing) : null;
+    const { qiblaStatus, qiblaBearing, qiblaLat, qiblaLng, qiblaAcc, qiblaHeading, qiblaMotion } = st;
+    const bearing = qiblaBearing;
+    const heading = qiblaHeading;
     const cardinals = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW'];
     const cardinal = bearing !== null ? cardinals[Math.round(bearing / 22.5) % 16] : null;
+    const spin = st.qiblaSpin === null ? 0 : st.qiblaSpin;
+    /* Signed, so the instruction can say which way to turn rather than making the
+       reader work it out from a number between 0 and 360. */
+    const turn = bearing === null || heading === null
+      ? null
+      : (((bearing - heading) % 360) + 540) % 360 - 180;
+    const aligned = turn !== null && Math.abs(turn) <= 5;
     const distKm = qiblaLat !== null && qiblaLng !== null ? (() => {
       const R = 6371;
       const toRad = d => d * Math.PI / 180;
@@ -12963,76 +13053,74 @@ class App extends Component {
       const a = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(qiblaLat)) * Math.cos(toRad(21.4225)) * Math.sin(dLng / 2) ** 2;
       return Math.round(2 * R * Math.asin(Math.sqrt(a)));
     })() : null;
-    const Compass = ({
-      deg
-    }) => /*#__PURE__*/React.createElement("div", {
+    const live = qiblaStatus === 'granted';
+    const ring = aligned ? '#1f5145' : 'rgba(203,195,178,.85)';
+
+    /* Called, not mounted as a component: a function defined inside render is a new
+       type on every pass, and React would tear the dial down and rebuild it each
+       time \u2014 which resets the rotation mid-transition and makes the needle jump. */
+    const dial = () => /*#__PURE__*/React.createElement("div", {
       style: {
         position: 'relative',
+        // 268 keeps a margin either side of a 320px phone once the page padding is taken
         width: 268,
         height: 268,
         borderRadius: '50%',
+        // the needle group is a square that rotates, and its bounding box sticks out
+        // past the circle on the diagonal — unclipped, that is a page you can drag sideways
+        overflow: 'hidden',
         background: NEU.surf,
         border: NEU.edge,
-        boxShadow: neuUp(1.5)
+        boxShadow: aligned
+          ? neuUp(1.5) + ', 0 0 0 3px rgba(31,81,69,.28)'
+          : neuUp(1.5),
+        transition: 'box-shadow .35s ease'
       }
     }, /*#__PURE__*/React.createElement("div", {
       style: {
         position: 'absolute',
         inset: 14,
         borderRadius: '50%',
-        border: '1px dashed rgba(203,195,178,.85)'
+        border: `1px ${aligned ? 'solid' : 'dashed'} ${ring}`,
+        transition: 'border-color .35s ease'
       }
-    }), /*#__PURE__*/React.createElement("div", {
+    }),
+    /* 24 ticks, one every 15\u00b0: enough to read a turn against, few enough to stay
+       quiet behind the needle. */
+    Array.from({ length: 24 }).map((_, i) => /*#__PURE__*/React.createElement("div", {
+      key: i,
+      "aria-hidden": "true",
       style: {
         position: 'absolute',
-        top: 10,
         left: '50%',
-        transform: 'translateX(-50%)',
-        fontSize: 13,
-        fontWeight: 700,
-        color: '#6e2230'
+        top: 20,
+        width: 1,
+        height: i % 6 === 0 ? 11 : 6,
+        background: i % 6 === 0 ? '#b9ae95' : 'rgba(203,195,178,.9)',
+        transformOrigin: '50% 114px',
+        transform: `translateX(-50%) rotate(${i * 15}deg)`
       }
-    }, "N"), /*#__PURE__*/React.createElement("div", {
-      style: {
-        position: 'absolute',
-        bottom: 10,
-        left: '50%',
-        transform: 'translateX(-50%)',
-        fontSize: 13,
-        fontWeight: 700,
-        color: NEU.muted
-      }
-    }, "S"), /*#__PURE__*/React.createElement("div", {
-      style: {
-        position: 'absolute',
-        right: 12,
-        top: '50%',
-        transform: 'translateY(-50%)',
-        fontSize: 13,
-        fontWeight: 700,
-        color: NEU.muted
-      }
-    }, "E"), /*#__PURE__*/React.createElement("div", {
-      style: {
-        position: 'absolute',
-        left: 12,
-        top: '50%',
-        transform: 'translateY(-50%)',
-        fontSize: 13,
-        fontWeight: 700,
-        color: NEU.muted
-      }
-    }, "W"), /*#__PURE__*/React.createElement("div", {
+    })),
+    [['N', { top: 34, left: '50%', transform: 'translateX(-50%)' }, '#6e2230'],
+     ['S', { bottom: 34, left: '50%', transform: 'translateX(-50%)' }, NEU.muted],
+     ['E', { right: 32, top: '50%', transform: 'translateY(-50%)' }, NEU.muted],
+     ['W', { left: 32, top: '50%', transform: 'translateY(-50%)' }, NEU.muted]
+    ].map(([lbl, pos, col]) => /*#__PURE__*/React.createElement("div", {
+      key: lbl,
+      "aria-hidden": "true",
+      style: { position: 'absolute', fontSize: 12.5, fontWeight: 700, color: col, ...pos }
+    }, lbl)),
+    bearing !== null && /*#__PURE__*/React.createElement("div", {
       style: {
         position: 'absolute',
         inset: 0,
-        transform: `rotate(${deg}deg)`,
-        transition: 'transform .6s cubic-bezier(.2,.8,.2,1)'
+        transform: `rotate(${spin}deg)`,
+        transition: 'transform .32s cubic-bezier(.2,.8,.2,1)'
       }
     }, /*#__PURE__*/React.createElement("div", {
       style: {
         position: 'absolute',
-        top: 22,
+        top: 26,
         left: '50%',
         transform: 'translateX(-50%)',
         display: 'flex',
@@ -13041,68 +13129,129 @@ class App extends Component {
       }
     }, /*#__PURE__*/React.createElement("div", {
       style: {
+        width: 34,
+        height: 34,
+        borderRadius: 10,
+        background: '#1c1a17',
+        border: `2px solid ${aligned ? '#e8d39a' : '#d8b863'}`,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        boxShadow: '0 6px 14px -6px rgba(28,26,23,.6)'
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: { width: 15, height: 10, border: '1.5px solid #d8b863', borderRadius: 1 }
+    })), /*#__PURE__*/React.createElement("div", {
+      style: {
         width: 0,
         height: 0,
-        borderLeft: '10px solid transparent',
-        borderRight: '10px solid transparent',
-        borderBottom: '24px solid #1f5145'
+        marginTop: 6,
+        borderLeft: '9px solid transparent',
+        borderRight: '9px solid transparent',
+        borderTop: `20px solid ${aligned ? '#1f5145' : '#2c5d52'}`
       }
     }), /*#__PURE__*/React.createElement("div", {
       style: {
         width: 3,
-        height: 80,
-        background: 'linear-gradient(#1f5145,#cdbf9e)'
+        height: 62,
+        background: `linear-gradient(${aligned ? '#1f5145' : '#2c5d52'},rgba(205,191,158,0))`
       }
-    })), /*#__PURE__*/React.createElement("div", {
+    }))),
+    /* The centre well is the one number that stays true with or without a compass. */
+    /*#__PURE__*/React.createElement("div", {
       style: {
         position: 'absolute',
-        top: 26,
-        left: '50%',
-        transform: 'translateX(-50%) translateY(-28px)',
-        width: 28,
-        height: 28,
-        borderRadius: 7,
-        background: '#1c1a17',
-        border: '2px solid #d8b863',
+        inset: '31%',
+        borderRadius: '50%',
+        background: NEU.surf,
+        boxShadow: neuIn(.9),
         display: 'flex',
+        flexDirection: 'column',
         alignItems: 'center',
-        justifyContent: 'center'
+        justifyContent: 'center',
+        textAlign: 'center'
+      }
+    }, bearing !== null ? [
+      /*#__PURE__*/React.createElement("div", {
+        key: 'deg',
+        style: {
+          fontFamily: 'Spectral,serif',
+          fontSize: 30,
+          fontWeight: 600,
+          color: aligned ? '#1f5145' : '#27241f',
+          lineHeight: 1,
+          transition: 'color .35s ease'
+        }
+      }, Math.round(bearing) + '\u00b0'),
+      /*#__PURE__*/React.createElement("div", {
+        key: 'card',
+        style: {
+          fontSize: 10,
+          letterSpacing: 1.1,
+          textTransform: 'uppercase',
+          fontWeight: 700,
+          color: '#6b6252',
+          marginTop: 5
+        }
+      }, cardinal + ' from north')
+    ] : icon(qiblaStatus === 'loading' ? 'locate-fixed' : 'compass', {
+      size: 34, stroke: '#8a8272'
+    })));
+
+    const stat = (label, value) => /*#__PURE__*/React.createElement("div", {
+      key: label,
+      style: {
+        flex: 1,
+        minWidth: 0,
+        background: NEU.surf,
+        boxShadow: neuUp(),
+        border: NEU.edge,
+        borderRadius: 15,
+        padding: '12px 13px'
       }
     }, /*#__PURE__*/React.createElement("div", {
       style: {
-        width: 13,
-        height: 8,
-        border: '1.4px solid #d8b863',
-        borderRadius: 1
+        fontSize: 10,
+        letterSpacing: .7,
+        textTransform: 'uppercase',
+        color: '#6b6252',
+        fontWeight: 700
       }
-    }))), /*#__PURE__*/React.createElement("div", {
+    }, label), /*#__PURE__*/React.createElement("div", {
       style: {
-        position: 'absolute',
-        top: '50%',
-        left: '50%',
-        transform: 'translate(-50%,-50%)',
-        width: 18,
-        height: 18,
-        borderRadius: '50%',
-        background: '#1f5145',
-        boxShadow: `0 0 0 4px ${NEU.surf},0 0 0 5px rgba(203,195,178,.7)`
+        fontSize: 16,
+        fontWeight: 700,
+        color: '#2c2823',
+        marginTop: 4
       }
-    }));
+    }, value));
+
+    const note = (mark, tone, text) => /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: 'flex',
+        gap: 11,
+        alignItems: 'flex-start',
+        background: tone.bg,
+        border: `1px solid ${tone.edge}`,
+        borderRadius: 16,
+        padding: '13px 14px',
+        marginTop: 12
+      }
+    }, icon(mark, { size: 17, stroke: tone.ink, style: { flexShrink: 0, marginTop: 1 } }),
+    /*#__PURE__*/React.createElement("div", {
+      style: { fontSize: 12.5, color: tone.text, lineHeight: 1.55 }
+    }, text));
+
+    const GOLD = { bg: 'linear-gradient(120deg,#faf4e6,#f6efe0)', edge: '#ecdfc2', ink: '#a8873a', text: '#8a7846' };
+    const GREEN = { bg: '#eef7f4', edge: '#c4ddd7', ink: '#1f5145', text: '#4a6b62' };
+
     return /*#__PURE__*/React.createElement("div", {
-      style: {
-        padding: '8px 20px 100px'
-      },
+      style: { padding: '8px 20px 100px' },
       className: "afu"
     }, /*#__PURE__*/React.createElement("div", {
-      style: {
-        padding: '8px 56px 14px 0'
-      }
+      style: { padding: '8px 56px 14px 0' }
     }, /*#__PURE__*/React.createElement("div", {
-      style: {
-        fontSize: 13,
-        color: NEU.muted,
-        fontWeight: 500
-      }
+      style: { fontSize: 13, color: NEU.muted, fontWeight: 500 }
     }, this.t('more.qiblaSub')), /*#__PURE__*/React.createElement("div", {
       style: {
         fontFamily: 'Spectral,serif',
@@ -13111,87 +13260,66 @@ class App extends Component {
         color: '#27241f',
         marginTop: 2
       }
-    }, this.t('qibla.title'))), /*#__PURE__*/React.createElement("div", {
-      style: {
-        display: 'flex',
-        justifyContent: 'center',
-        margin: '8px 0 6px'
-      }
-    }, /*#__PURE__*/React.createElement(Compass, {
-      deg: bearing !== null ? bearing : 0
-    })), bearing !== null ? /*#__PURE__*/React.createElement("div", {
-      style: {
-        textAlign: 'center',
-        marginTop: 14,
-        marginBottom: 20
-      }
-    }, /*#__PURE__*/React.createElement("div", {
-      style: {
-        fontFamily: 'Spectral,serif',
-        fontSize: 38,
-        fontWeight: 600,
-        color: '#1f5145',
-        lineHeight: 1
-      }
-    }, bearing, "° ", /*#__PURE__*/React.createElement("span", {
-      style: {
-        fontSize: 20,
-        color: '#7d6220'
-      }
-    }, cardinal)), /*#__PURE__*/React.createElement("div", {
-      style: {
-        fontSize: 13,
-        color: NEU.muted,
-        marginTop: 5
-      }
-    }, "Bearing from true North")) : /*#__PURE__*/React.createElement("div", {
-      style: {
-        textAlign: 'center',
-        marginTop: 14,
-        marginBottom: 20
-      }
+    }, this.t('qibla.title'))),
+
+    /*#__PURE__*/React.createElement("div", {
+      style: { display: 'flex', justifyContent: 'center', margin: '10px 0 4px' }
+    }, dial()),
+
+    /* One line that changes as you turn, announced rather than merely redrawn. */
+    /*#__PURE__*/React.createElement("div", {
+      role: "status",
+      "aria-live": "polite",
+      style: { textAlign: 'center', marginTop: 16, minHeight: 52 }
     }, /*#__PURE__*/React.createElement("div", {
       style: {
         fontFamily: 'Spectral,serif',
         fontSize: 22,
-        color: NEU.muted
+        fontWeight: 600,
+        color: aligned ? '#1f5145' : '#27241f',
+        lineHeight: 1.25
       }
-    }, "—°"), /*#__PURE__*/React.createElement("div", {
+    }, bearing === null
+      ? (qiblaStatus === 'loading' ? this.t('qibla.detecting') : 'Direction not set yet')
+      : heading === null
+        ? `Face ${Math.round(bearing)}\u00b0 ${cardinal}`
+        : aligned
+          ? 'You are facing the Qibla'
+          : `Turn ${turn > 0 ? 'right' : 'left'} ${Math.round(Math.abs(turn))}\u00b0`),
+    /*#__PURE__*/React.createElement("div", {
+      style: { fontSize: 12.5, color: NEU.muted, marginTop: 5 }
+    }, bearing === null
+      ? 'Allow location to calculate the bearing'
+      : heading === null
+        ? 'Bearing from true north \u00b7 turn with a compass'
+        : 'Hold the phone flat and turn slowly')),
+
+    /*#__PURE__*/React.createElement("div", {
+      onClick: qiblaStatus === 'loading' ? undefined : this.locateQibla,
       style: {
-        fontSize: 13,
-        color: '#6b6252',
-        marginTop: 4
-      }
-    }, "Location needed to calculate bearing")), qiblaStatus === 'idle' && /*#__PURE__*/React.createElement("div", {
-      onClick: this.locateQibla,
-      style: {
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 9,
         textAlign: 'center',
         padding: '14px',
+        minHeight: 48,
+        boxSizing: 'border-box',
         borderRadius: 16,
-        background: '#1f5145',
-        color: '#f3ead4',
+        background: qiblaStatus === 'loading' ? '#f0e8d6' : '#1f5145',
+        color: qiblaStatus === 'loading' ? '#7d6220' : '#f3ead4',
         fontSize: 15,
         fontWeight: 700,
-        cursor: 'pointer',
-        marginBottom: 16,
-        boxShadow: '0 8px 18px -8px rgba(22,59,48,.5)'
+        cursor: qiblaStatus === 'loading' ? 'default' : 'pointer',
+        margin: '16px 0 14px',
+        boxShadow: qiblaStatus === 'loading' ? 'none' : '0 8px 18px -8px rgba(22,59,48,.5)'
       }
-    }, this.t('qibla.allow')), qiblaStatus === 'loading' && /*#__PURE__*/React.createElement("div", {
-      style: {
-        textAlign: 'center',
-        padding: '14px',
-        borderRadius: 16,
-        background: '#f0e8d6',
-        color: '#7d6220',
-        fontSize: 14,
-        fontWeight: 600,
-        marginBottom: 16
-      }
-    }, this.t('qibla.detecting')), qiblaStatus === 'denied' && /*#__PURE__*/React.createElement("div", {
-      style: {
-        marginBottom: 16
-      }
-    }, /*#__PURE__*/React.createElement("div", {
+    }, icon(live ? 'rotate-ccw' : 'locate-fixed', { size: 18 }),
+       qiblaStatus === 'loading' ? this.t('qibla.detecting')
+       : live ? 'Recheck my position'
+       : this.t('qibla.allow')),
+
+    qiblaStatus === 'denied' && /*#__PURE__*/React.createElement("div", {
       style: {
         textAlign: 'center',
         padding: '12px',
@@ -13201,22 +13329,25 @@ class App extends Component {
         color: '#6e2230',
         fontSize: 13,
         fontWeight: 600,
-        marginBottom: 8
+        marginBottom: 14
       }
-    }, this.t('qibla.error')), /*#__PURE__*/React.createElement("div", {
-      onClick: this.locateQibla,
+    }, this.t('qibla.error')),
+
+    qiblaStatus === 'nofix' && /*#__PURE__*/React.createElement("div", {
       style: {
         textAlign: 'center',
-        padding: '11px',
+        padding: '12px',
         borderRadius: 14,
-        background: '#eef7f4',
-        border: '1px solid #c4ddd7',
-        color: '#1f5145',
+        background: '#f4ede0',
+        border: '1px solid #e2d3b4',
+        color: '#7d6220',
         fontSize: 13,
         fontWeight: 600,
-        cursor: 'pointer'
+        marginBottom: 14
       }
-    }, this.t('qibla.allow'))), qiblaStatus === 'unsupported' && /*#__PURE__*/React.createElement("div", {
+    }, 'Your position could not be read. Move outdoors or near a window and try again.'),
+
+    qiblaStatus === 'unsupported' && /*#__PURE__*/React.createElement("div", {
       style: {
         textAlign: 'center',
         padding: '12px',
@@ -13224,106 +13355,38 @@ class App extends Component {
         background: '#f4ede0',
         color: '#7d6220',
         fontSize: 13,
-        marginBottom: 16
-      }
-    }, this.t('qibla.unsupported')), /*#__PURE__*/React.createElement("div", {
-      style: {
-        display: 'flex',
-        gap: 11,
-        marginBottom: 16
-      }
-    }, /*#__PURE__*/React.createElement("div", {
-      style: {
-        flex: 1,
-        background: NEU.surf, boxShadow: neuUp(),
-        border: NEU.edge,
-        borderRadius: 16,
-        padding: 15,
-        textAlign: 'center'
-      }
-    }, /*#__PURE__*/React.createElement("div", {
-      style: {
-        fontSize: 11,
-        letterSpacing: .6,
-        textTransform: 'uppercase',
-        color: '#6b6252',
-        fontWeight: 700
-      }
-    }, this.t('qibla.distance')), /*#__PURE__*/React.createElement("div", {
-      style: {
-        fontSize: 18,
-        fontWeight: 700,
-        color: '#2c2823',
-        marginTop: 5
-      }
-    }, distKm !== null ? `≈ ${distKm.toLocaleString()} km` : '—')), /*#__PURE__*/React.createElement("div", {
-      style: {
-        flex: 1,
-        background: NEU.surf, boxShadow: neuUp(),
-        border: NEU.edge,
-        borderRadius: 16,
-        padding: 15,
-        textAlign: 'center'
-      }
-    }, /*#__PURE__*/React.createElement("div", {
-      style: {
-        fontSize: 11,
-        letterSpacing: .6,
-        textTransform: 'uppercase',
-        color: '#6b6252',
-        fontWeight: 700
-      }
-    }, "Holy site"), /*#__PURE__*/React.createElement("div", {
-      style: {
-        fontSize: 18,
-        fontWeight: 700,
-        color: '#2c2823',
-        marginTop: 5
-      }
-    }, "Kaʿba"))), bearing !== null && /*#__PURE__*/React.createElement("div", {
-      onClick: this.locateQibla,
-      style: {
-        textAlign: 'center',
-        padding: '10px',
-        borderRadius: 13,
-        background: '#eef7f4',
-        border: '1px solid #c4ddd7',
-        color: '#1f5145',
-        fontSize: 13,
-        fontWeight: 600,
-        cursor: 'pointer',
         marginBottom: 14
       }
-    }, this.t('qibla.allow')), /*#__PURE__*/React.createElement("div", {
+    }, this.t('qibla.unsupported')),
+
+    /*#__PURE__*/React.createElement("div", {
+      style: { display: 'flex', gap: 10, marginBottom: 10 }
+    }, stat('Qibla bearing', bearing === null ? '\u2014' : bearing.toFixed(1) + '\u00b0'),
+       stat(this.t('qibla.distance'), distKm === null ? '\u2014' : `\u2248 ${distKm.toLocaleString()} km`)),
+    /*#__PURE__*/React.createElement("div", {
+      style: { display: 'flex', gap: 10 }
+    }, stat('Compass', heading === null ? 'Unavailable' : Math.round(heading) + '\u00b0'),
+       stat('GPS accuracy', qiblaAcc === null ? '\u2014' : '\u00b1 ' + Math.round(qiblaAcc) + ' m')),
+
+    /* Said plainly, because "the compass is not working" is the moment a person
+       decides the whole screen is wrong. The bearing above is still correct. */
+    live && heading === null && note('navigation', GOLD,
+      qiblaMotion === 'denied'
+        ? 'Motion access was declined, so the arrow cannot follow you. The bearing above is still correct \u2014 line it up using true north on a separate compass.'
+        : 'No live compass on this device yet. The bearing above is still correct \u2014 line it up using true north on a separate compass. Some phones only report a heading once you move.'),
+
+    note('shield-check', GREEN,
+      'Your coordinates stay on this device and are never sent anywhere. For the best reading, hold the phone flat and step away from metal, magnets and speakers.'),
+
+    /*#__PURE__*/React.createElement("div", {
       style: {
-        display: 'flex',
-        gap: 11,
-        alignItems: 'flex-start',
-        background: 'linear-gradient(120deg,#faf4e6,#f6efe0)',
-        border: '1px solid #ecdfc2',
-        borderRadius: 16,
-        padding: '14px 15px'
+        fontSize: 11.5,
+        color: NEU.muted,
+        lineHeight: 1.6,
+        textAlign: 'center',
+        marginTop: 16
       }
-    }, /*#__PURE__*/React.createElement("div", {
-      style: {
-        flexShrink: 0,
-        width: 30,
-        height: 30,
-        borderRadius: 9,
-        background: '#e8d39a',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        color: '#7a5d18',
-        fontWeight: 700
-      }
-    }, "i"), /*#__PURE__*/React.createElement("div", {
-      style: {
-        fontSize: 12.5,
-        color: '#8a7846',
-        lineHeight: 1.5
-      }
-    }, "The bearing is calculated from your GPS coordinates to the Kaʿba in Makkah using the great-circle formula.")));
+    }, 'The bearing is the great-circle direction from your GPS position to the Ka' + '\u02bf' + 'ba in Makkah.'));
   }
 
   /* ── STORY VIEWER ── */
