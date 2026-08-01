@@ -72,6 +72,13 @@
       outline: 3px solid #1f5145; outline-offset: 2px; }
     :root[data-theme="dark"] .abi-line:focus-visible,
     :root[data-theme="dark"] .abi-line-act:focus-visible { outline-color: #e2c67c; }
+    /* The sort control is a real <select> so the platform picker does the work.
+       Its cursor lives here rather than inline because enhanceTappables promotes
+       any inline `cursor: pointer` to role="button" — which would hide a listbox
+       behind the wrong announcement. */
+    .abi-select { cursor: pointer; appearance: none; -webkit-appearance: none; }
+    .abi-select:focus-visible { outline: 3px solid #1f5145; outline-offset: 2px; border-radius: 6px; }
+    :root[data-theme="dark"] .abi-select:focus-visible { outline-color: #e2c67c; }
     @keyframes abi-flash { 0%, 55% { background: rgba(216,184,99,.38); } 100% { background: transparent; } }
     .abi-flash { animation: abi-flash 2.8s ease both; }
     @media (prefers-reduced-motion: reduce) {

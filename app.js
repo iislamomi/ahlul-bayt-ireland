@@ -125,6 +125,67 @@ function sortKey(t) {
   return String(t || '').normalize('NFD').replace(/[\u0300-\u036f\u02b0-\u02ff\u2018\u2019']/g, '').trim();
 }
 
+/* Library ordering. Alphabet is the wrong axis for a taqeeb or a weekday
+   devotion: what a reader wants is the order they are actually performed in.
+   The day or prayer is read out of the title because that is where the admin
+   dashboard puts it — there is no separate field, and inventing one would
+   orphan every entry already saved. Matching is on whole words so that "Nasr"
+   is never mistaken for ʿAsr. */
+const LIB_DAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+const LIB_PRAYERS = [
+  ['fajr', 'fajar', 'subh'],
+  ['zuhr', 'dhuhr', 'duhr', 'zohr', 'zohar'],
+  ['asr'],
+  ['maghrib', 'magrib'],
+  ['isha', 'ishaa', 'esha']
+];
+function hasWord(text, word) {
+  return new RegExp('(^|[^a-z])' + word + '([^a-z]|$)', 'i').test(String(text || ''));
+}
+function dayRank(title) {
+  for (let i = 0; i < LIB_DAYS.length; i++) if (hasWord(title, LIB_DAYS[i])) return i;
+  return -1;
+}
+function prayerRank(title) {
+  for (let i = 0; i < LIB_PRAYERS.length; i++) {
+    if (LIB_PRAYERS[i].some(w => hasWord(title, w))) return i;
+  }
+  return -1;
+}
+const isZiyarahTitle = t => /ziyara|ziyarat|ziarat|ziarah/i.test(String(t || ''));
+/* Title and category together: the admin dashboard files "Duʿāʾ e Nudba" under
+   the category Friday rather than saying Friday in the title, and a reader
+   looking for Friday means both. */
+const libText = it => it && typeof it === 'object'
+  ? (it.title || '') + ' · ' + (it.cat || '')
+  : String(it || '');
+/* Sort orders offered per section. 'order' walks the Amaals the way the day
+   does: the taqeebat from Fajr to Isha, then the weekly ziyārah Monday to
+   Sunday, then the weekly duʿāʾ Monday to Sunday, then whatever is left. */
+const LIB_SORTS = {
+  dua: [['az', 'A–Z'], ['day', 'Monday to Sunday']],
+  ziyarah: [['az', 'A–Z'], ['day', 'Monday to Sunday']],
+  aamal: [['order', 'In order · Fajr to Isha, then Mon to Sun'], ['day', 'Monday to Sunday'], ['az', 'A–Z']]
+};
+const LIB_SORT_DEFAULT = { dua: 'az', ziyarah: 'az', aamal: 'order' };
+function libBand(mode, it) {
+  const t = libText(it);
+  if (mode === 'day') return dayRank(t) >= 0 ? 0 : 1;
+  if (mode !== 'order') return 0;
+  if (prayerRank(t) >= 0) return 0;
+  if (dayRank(t) >= 0) return isZiyarahTitle(t) ? 1 : 2;
+  return 3;
+}
+function libWithin(mode, band, it) {
+  const t = libText(it);
+  if (mode === 'day') return band === 0 ? dayRank(t) : 0;
+  if (mode === 'order') {
+    if (band === 0) return prayerRank(t);
+    if (band === 1 || band === 2) return dayRank(t);
+  }
+  return 0;
+}
+
 /* Parse an admin 'YYYY-MM-DD' string to a local Date (midnight), matching the calendar grid convention. */
 function gregToDate(s) {
   const [y, m, d] = String(s || '').split('-').map(Number);
@@ -610,8 +671,15 @@ const NAHJ = {
     sum: '',
     ar: '',
     tr: 'Knowledge is better than wealth. Knowledge guards you, while you have to guard wealth. Wealth decreases by spending, while knowledge multiplies by it.'
-  }]
+  }],
+  /* Al-Ṣaḥīfa al-Sajjādiyya sits in the same record as Nahj al-Balāgha rather
+     than a new one: the Books tab already reads this key, and a second key
+     would need its own sync, its own migration and its own admin plumbing for
+     nothing the reader would notice. */
+  sahifa: []
 };
+const BOOKS = [['nahj', 'Nahjul Balagha'], ['sahifa', 'Sahifa e Sajjadia']];
+const NAHJ_PARTS = [['sermons', 'Sermons'], ['letters', 'Letters'], ['sayings', 'Sayings']];
 const PINNED_CLASSIFIED = {
   name: 'SoftEire Technology Limited',
   cat: 'Services',
@@ -2306,6 +2374,10 @@ class App extends Component {
       screen: 'home',
       libTab: 'dua',
       nahjTab: 'sermons',
+      nahjBook: 'nahj',
+      // per tab, because each section's natural order is its own: carrying one
+      // tab's choice across would quietly override the next tab's default
+      libSort: {},
       prayerTab: 'today',
       kidsTab: 'videos',
       healthTab: 'videos',
@@ -2445,6 +2517,9 @@ class App extends Component {
         libTab: 'dua',
         libCat: 'All',
         libQuery: '',
+        libSort: {},
+        nahjBook: 'nahj',
+        nahjTab: 'sermons',
         prayerTab: 'today',
         kidsTab: 'videos',
         kidsVidCat: 'All',
@@ -3388,7 +3463,7 @@ class App extends Component {
       const nahj = st.liveNahj || NAHJ;
       const all = [];
       Object.keys(pools).forEach(k => (pools[k] || []).forEach(x => all.push([k, x])));
-      ['sermons', 'letters', 'sayings'].forEach(k => (nahj[k] || []).forEach(x => all.push(['nahj', x])));
+      ['sermons', 'letters', 'sayings', 'sahifa'].forEach(k => (nahj[k] || []).forEach(x => all.push(['nahj', x])));
       return all.find(([k, x]) => contentKey(k, x) === contentId) || (title ? all.find(([k, x]) => x.title === title && k === type) || all.find(([, x]) => x.title === title) : null) || null;
     });
     _defineProperty(this, "openSaved", mark => {
@@ -3664,6 +3739,7 @@ class App extends Component {
       go: () => this.setState({
         screen: 'library',
         libTab: 'nahj',
+        nahjBook: 'nahj',
         libCat: 'All'
       })
     }, {
@@ -5630,31 +5706,52 @@ class App extends Component {
         boxShadow: active ? neuIn(.55) : neuUp(.55)
       };
     };
+    /* An order is only offered where the section can actually be put in it. A
+       dropdown that reshuffles nothing reads as broken, and the day the admin
+       adds a "Monday Duʿāʾ" the option appears on its own. */
+    const sortOpts = (LIB_SORTS[st.libTab] || []).filter(([k]) =>
+      k === 'az' ? true
+      : k === 'day' ? lm.list.some(it => dayRank(libText(it)) >= 0)
+      : lm.list.some(it => prayerRank(libText(it)) >= 0 || dayRank(libText(it)) >= 0));
+    const sortDefault = LIB_SORT_DEFAULT[st.libTab] || 'az';
+    const sortPick = (st.libSort || {})[st.libTab];
+    const sortMode = sortOpts.some(([k]) => k === sortPick) ? sortPick
+      : sortOpts.some(([k]) => k === sortDefault) ? sortDefault : 'az';
     let libCards = [];
     if (st.libTab === 'dua' || st.libTab === 'ziyarah' || st.libTab === 'aamal') {
+      // nearly every ziyārah title starts with a variant spelling of the word
+      // itself, so ordering only reads properly by what comes after it
+      const alpha = t => {
+        let k = sortKey(t);
+        if (st.libTab === 'ziyarah') k = k.replace(/^(ziyarat|ziyarah|ziarat|ziarah)\s+(of\s+)?/i, '');
+        return k;
+      };
       libCards = lm.list.filter(it => {
         const catOk = st.libCat === 'All' || it.cat === st.libCat;
         const qOk = !q || (it.title || '').toLowerCase().includes(q) || (it.tr || '').toLowerCase().includes(q);
         return catOk && qOk;
       }).sort((a, b) => {
-        // nearly every ziyārah title starts with a variant spelling of the word
-        // itself, so ordering only reads properly by what comes after it
-        const key = t => {
-          let k = sortKey(t);
-          if (st.libTab === 'ziyarah') k = k.replace(/^(ziyarat|ziyarah|ziarat|ziarah)\s+(of\s+)?/i, '');
-          return k;
-        };
-        return key(a.title).localeCompare(key(b.title), 'en', { sensitivity: 'base', numeric: true });
+        // A–Z always breaks the tie, so an entry the title says nothing about
+        // still lands somewhere predictable rather than wherever it was typed.
+        const ba = libBand(sortMode, a), bb = libBand(sortMode, b);
+        if (ba !== bb) return ba - bb;
+        const wa = libWithin(sortMode, ba, a), wb = libWithin(sortMode, bb, b);
+        if (wa !== wb) return wa - wb;
+        return alpha(a.title).localeCompare(alpha(b.title), 'en', { sensitivity: 'base', numeric: true });
       });
     }
     let nahjCards = [];
+    const bookPart = st.nahjBook === 'sahifa' ? 'sahifa' : st.nahjTab;
     if (st.libTab === 'nahj') {
-      nahjCards = (nahjData[st.nahjTab] || []).filter(it => !q || (it.title || '').toLowerCase().includes(q) || (it.tr || '').toLowerCase().includes(q));
+      nahjCards = (nahjData[bookPart] || []).filter(it => !q || (it.title || '').toLowerCase().includes(q) || (it.tr || '').toLowerCase().includes(q));
     }
     const nahjTabStyle = k => ({
       flex: 1,
       textAlign: 'center',
-      padding: '8px 0',
+      // 8px left these at 33px tall, under the minimum target the rest of the app keeps to
+      padding: '12px 0',
+      minHeight: 44,
+      boxSizing: 'border-box',
       fontSize: 13,
       cursor: 'pointer',
       borderRadius: 11,
@@ -5663,6 +5760,25 @@ class App extends Component {
       color: st.nahjTab === k ? '#2c5d52' : NEU.muted,
       background: NEU.surf,
       boxShadow: st.nahjTab === k ? neuIn(.55) : neuUp(.55)
+    });
+    /* The book comes first and the parts belong to it, so the book row is the
+       heavier of the two — same depth language, one step up in weight. */
+    const bookTabStyle = k => ({
+      flex: 1,
+      textAlign: 'center',
+      padding: '13px 6px',
+      minHeight: 44,
+      boxSizing: 'border-box',
+      fontFamily: 'Spectral,serif',
+      fontSize: 14,
+      cursor: 'pointer',
+      borderRadius: 13,
+      transition: 'box-shadow .18s ease, color .18s ease, background .18s ease',
+      fontWeight: st.nahjBook === k ? 700 : 600,
+      color: st.nahjBook === k ? '#2c5d52' : NEU.muted,
+      background: st.nahjBook === k ? '#e6efe9' : NEU.surf,
+      border: NEU.edge,
+      boxShadow: st.nahjBook === k ? neuIn(.6) : neuUp(.6)
     });
     return /*#__PURE__*/React.createElement("div", {
       style: {
@@ -5765,13 +5881,72 @@ class App extends Component {
         libCat: c
       }),
       style: chipStyle(c)
-    }, c))), st.libTab === 'nahj' && /*#__PURE__*/React.createElement("div", {
+    }, c))), sortOpts.length > 1 && /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: 10,
+        ...neuWell(14, .8),
+        padding: '0 14px',
+        marginBottom: 14
+      }
+    }, /*#__PURE__*/React.createElement("label", {
+      htmlFor: "abi-lib-sort",
+      style: {
+        fontSize: 11,
+        letterSpacing: 1,
+        textTransform: 'uppercase',
+        fontWeight: 700,
+        color: '#6b6252',
+        flexShrink: 0
+      }
+    }, 'Sort'), /*#__PURE__*/React.createElement("select", {
+      id: "abi-lib-sort",
+      className: "abi-select",
+      value: sortMode,
+      onChange: e => this.setState({ libSort: { ...st.libSort, [st.libTab]: e.target.value } }),
+      style: {
+        flex: 1,
+        minWidth: 0,
+        border: 'none',
+        outline: 'none',
+        background: 'transparent',
+        fontSize: 13.5,
+        fontWeight: 600,
+        color: lm.accent,
+        padding: '12px 0',
+        minHeight: 44,
+        boxSizing: 'border-box'
+      }
+    }, sortOpts.map(([k, label]) => /*#__PURE__*/React.createElement("option", {
+      key: k,
+      value: k
+    }, label))), /*#__PURE__*/React.createElement("span", {
+      "aria-hidden": "true",
+      style: {
+        color: '#6b6252',
+        fontSize: 11,
+        flexShrink: 0
+      }
+    }, "▾")), st.libTab === 'nahj' && /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: 'flex',
+        gap: 8,
+        marginBottom: st.nahjBook === 'nahj' ? 10 : 16
+      }
+    }, BOOKS.map(([k, label]) => /*#__PURE__*/React.createElement("div", {
+      key: k,
+      onClick: () => this.setState({
+        nahjBook: k
+      }),
+      style: bookTabStyle(k)
+    }, label))), st.libTab === 'nahj' && st.nahjBook === 'nahj' && /*#__PURE__*/React.createElement("div", {
       style: {
         display: 'flex',
         gap: 8,
         marginBottom: 16
       }
-    }, [['sermons', 'Sermons'], ['letters', 'Letters'], ['sayings', 'Sayings']].map(([k, label]) => /*#__PURE__*/React.createElement("div", {
+    }, NAHJ_PARTS.map(([k, label]) => /*#__PURE__*/React.createElement("div", {
       key: k,
       onClick: () => this.setState({
         nahjTab: k
@@ -5911,7 +6086,7 @@ class App extends Component {
       }
     }, q ? `No results for "${st.libQuery}"`
        : st.libCat !== 'All' ? `No items in "${st.libCat}"`
-       : `Nothing here yet — ${lm.title} is filled in from the admin dashboard.`));
+       : `Nothing here yet — ${st.libTab === 'nahj' ? (BOOKS.find(([k]) => k === st.nahjBook) || [, lm.title])[1] : lm.title} is filled in from the admin dashboard.`));
   }
 
   /* ── READING ── */
@@ -7145,7 +7320,20 @@ class App extends Component {
         marginTop: 26,
         lineHeight: 1.6
       }
-    }, "Ahlul Bayt Ireland · V1.5", /*#__PURE__*/React.createElement("br", null), "Built for the community, by ", /*#__PURE__*/React.createElement("a", {
+    }, "For support please email us at ", /*#__PURE__*/React.createElement("a", {
+      href: "mailto:info@softeire.com",
+      style: {
+        color: '#1f5145',
+        fontWeight: 600,
+        textDecoration: 'underline',
+        textDecorationColor: 'rgba(31,81,69,.3)'
+      }
+    }, "info@softeire.com"), /*#__PURE__*/React.createElement("br", null), /*#__PURE__*/React.createElement("span", {
+      style: {
+        display: 'inline-block',
+        marginTop: 10
+      }
+    }, "Ahlul Bayt Ireland · V1.5"), /*#__PURE__*/React.createElement("br", null), "Built for the community, by ", /*#__PURE__*/React.createElement("a", {
       href: "https://www.softeire.com",
       target: "_blank",
       rel: "noopener noreferrer",
@@ -10542,7 +10730,7 @@ class App extends Component {
       }
       /* nahj */
       const nahj = st.liveNahj || NAHJ;
-      const groups = [['sermons', 'Sermons'], ['letters', 'Letters'], ['sayings', 'Sayings']];
+      const groups = [...NAHJ_PARTS.map(([k, l]) => [k, 'Nahjul Balagha · ' + l]), ['sahifa', 'Sahifa e Sajjadia']];
       if (editing) {
         const d = st.adminEditDraft;
         const isNew = st.adminEditIdx === -1;
@@ -10553,9 +10741,11 @@ class App extends Component {
             return;
           }
           const next = {
+            ...nahj,
             sermons: [...(nahj.sermons || [])],
             letters: [...(nahj.letters || [])],
-            sayings: [...(nahj.sayings || [])]
+            sayings: [...(nahj.sayings || [])],
+            sahifa: [...(nahj.sahifa || [])]
           };
           if (d.pdf && !/^https?:\/\//.test(d.pdf.trim())) {
             this.showToast('PDF link must start with http(s)://');
@@ -10583,7 +10773,7 @@ class App extends Component {
             color: '#27241f',
             marginBottom: 14
           }
-        }, isNew ? 'Add Nahj Entry' : 'Edit Nahj Entry'), /*#__PURE__*/React.createElement("select", {
+        }, isNew ? 'Add Book Entry' : 'Edit Book Entry'), /*#__PURE__*/React.createElement("select", {
           value: g,
           disabled: !isNew,
           onChange: e => this.setDraft({
@@ -10602,7 +10792,7 @@ class App extends Component {
           onChange: e => this.setDraft({
             ref: e.target.value
           }),
-          placeholder: "Reference (e.g. Sermon 1, Letter 31)",
+          placeholder: "Reference (e.g. Sermon 1, Letter 31, Supplication 20)",
           style: inp
         }), /*#__PURE__*/React.createElement("input", {
           value: d.title || '',
@@ -13414,6 +13604,8 @@ class App extends Component {
         if (cur.kind === 'kids') this.go('kids');else if (cur.kind === 'classified') this.go('classifieds');else if (cur.kind === 'announce') this.go('calendar');else if (cur.kind === 'sermon') this.setState({
           screen: 'library',
           libTab: 'nahj',
+          nahjBook: 'nahj',
+          nahjTab: 'sermons',
           story: null
         });else this.go('library');
       },
@@ -14444,24 +14636,7 @@ class App extends Component {
         position: 'relative',
         background: st.dark ? NEU_D.bg : NEU.bg
       }
-    }, showBrand && this.renderBrandMark(), st.screen === 'home' && this.renderHome(st, next, cd, greg, hijri, salaam), st.screen === 'prayer' && this.renderPrayer(st, next, cd, greg), st.screen === 'library' && this.renderLibrary(st), st.screen === 'reading' && this.renderReading(st), st.screen === 'classifieds' && this.renderClassifieds(st), st.screen === 'more' && this.renderMore(st), st.screen === 'about' && this.renderAbout(), st.screen === 'location' && this.renderLocation(st), st.screen === 'offline' && this.renderOffline(), st.screen === 'admin' && this.renderAdmin(st), st.screen === 'calendar' && this.renderCalendar(st), st.screen === 'kids' && this.renderKids(st), st.screen === 'health' && this.renderHealth(st), st.screen === 'qibla' && this.renderQibla(st), st.screen === 'khums' && this.renderKhums(st), st.screen === 'tasbeeh' && this.renderTasbeeh(st), st.screen === 'wallpaper' && this.renderWallpaper(st), st.screen === 'stories' && this.renderStories(st)), showNav && /*#__PURE__*/React.createElement("div", {
-      style: {
-        flexShrink: 0,
-        textAlign: 'center',
-        padding: '5px 16px',
-        fontSize: 10.5,
-        color: st.dark ? '#5a6060' : '#6b6252',
-        background: st.dark ? NEU_D.bg : NEU.bg,
-        borderTop: `1px solid ${st.dark ? '#2c3234' : 'rgba(234,223,202,.7)'}`
-      }
-    }, "For support please email us at ", /*#__PURE__*/React.createElement("a", {
-      href: "mailto:info@softeire.com",
-      style: {
-        color: st.dark ? '#d8b863' : '#1f5145',
-        fontWeight: 600,
-        textDecoration: 'none'
-      }
-    }, "info@softeire.com")), st.adhanPending && /*#__PURE__*/React.createElement("div", {
+    }, showBrand && this.renderBrandMark(), st.screen === 'home' && this.renderHome(st, next, cd, greg, hijri, salaam), st.screen === 'prayer' && this.renderPrayer(st, next, cd, greg), st.screen === 'library' && this.renderLibrary(st), st.screen === 'reading' && this.renderReading(st), st.screen === 'classifieds' && this.renderClassifieds(st), st.screen === 'more' && this.renderMore(st), st.screen === 'about' && this.renderAbout(), st.screen === 'location' && this.renderLocation(st), st.screen === 'offline' && this.renderOffline(), st.screen === 'admin' && this.renderAdmin(st), st.screen === 'calendar' && this.renderCalendar(st), st.screen === 'kids' && this.renderKids(st), st.screen === 'health' && this.renderHealth(st), st.screen === 'qibla' && this.renderQibla(st), st.screen === 'khums' && this.renderKhums(st), st.screen === 'tasbeeh' && this.renderTasbeeh(st), st.screen === 'wallpaper' && this.renderWallpaper(st), st.screen === 'stories' && this.renderStories(st)), st.adhanPending && /*#__PURE__*/React.createElement("div", {
       onClick: this.playAdhan,
       style: {
         position: 'absolute',
