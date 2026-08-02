@@ -2061,9 +2061,48 @@ const CAT_INK = {
   'Education': '#2c5d52', 'Services': '#3a4a78'
 };
 
-/* Billboard slides that are switched on and actually carry an image. */
+/* Billboard slides that are switched on, carry an image, and are inside their
+   booked run of dates. */
 function activeAds(ads) {
-  return (ads || []).filter(a => a && a.img && a.on !== false);
+  return (ads || []).filter(a => a && a.img && a.on !== false && withinWindow(a));
+}
+
+/* Why an ad is or is not on the billboard, in the order that decides it: a
+   paused ad is paused whatever its dates say. Written once so the editor and the
+   list cannot describe the same ad differently. */
+function adStatus(a) {
+  if (!a) return 'ended';
+  if (a.on === false) return 'paused';
+  if (a.from && Date.now() < new Date(a.from + 'T00:00:00').getTime()) return 'scheduled';
+  if (a.until && Date.now() > new Date(a.until + 'T23:59:59').getTime()) return 'ended';
+  return 'live';
+}
+const shortDate = s => {
+  const d = new Date(String(s || '') + 'T00:00:00');
+  return isNaN(d.getTime()) ? String(s || '') : d.toLocaleDateString('en-IE', { day: 'numeric', month: 'short' });
+};
+
+/* A classified is sponsored while a billboard ad is running under its name.
+   The name is the join: the ad editor's "Fill from a classifieds business"
+   writes it, and there is no id on either side to match on instead.
+
+   Which makes the comparison worth being generous about. A name typed by hand
+   rather than picked from that list differs by a capital, a double space, or the
+   apostrophe a phone keyboard substitutes — and the cost of a near miss is an
+   advertiser quietly not getting the badge they paid for. */
+const sponsorKey = s => String(s || '')
+  .replace(/[‘’ʼ´`]/g, "'")
+  .replace(/\s+/g, ' ')
+  .trim()
+  .toLowerCase();
+
+function sponsoredNames(ads) {
+  const names = new Set();
+  activeAds(ads).forEach(a => {
+    const n = sponsorKey(a.name);
+    if (n) names.add(n);
+  });
+  return names;
 }
 
 function announcementActive(a) {
@@ -2302,11 +2341,19 @@ function pruneExpiredStories(list) {
 }
 
 // A story is visible to users only inside its scheduled from–until window.
-function storyIsLive(s) {
+/* A run of dates, both ends optional and both inclusive of their whole day: an
+   ad booked until the 8th is still up on the evening of the 8th. Stories and
+   billboard ads are scheduled by the same function on purpose — two copies of a
+   date comparison are two chances to disagree about whether the last day counts. */
+function withinWindow(item) {
+  if (!item) return false;
   const now = Date.now();
-  if (s.from && now < new Date(s.from + 'T00:00:00').getTime()) return false;
-  if (s.until && now > new Date(s.until + 'T23:59:59').getTime()) return false;
+  if (item.from && now < new Date(item.from + 'T00:00:00').getTime()) return false;
+  if (item.until && now > new Date(item.until + 'T23:59:59').getTime()) return false;
   return true;
+}
+function storyIsLive(s) {
+  return withinWindow(s);
 }
 const activeStories = list => (list || []).filter(storyIsLive);
 
@@ -6756,7 +6803,6 @@ class App extends Component {
       }, 'Downloaded copies are saved by your browser, not inside the app.'));
   }
 
-  /* ── CLASSIFIEDS ── */
   /* A PDF gets into the Books section one of two ways, and the two are not equal.
      An uploaded file is served from the project's own storage, which permits this
      app to read it, so it can be shown in the reader. A pasted link is shown only
@@ -6876,11 +6922,20 @@ class App extends Component {
     }, "Remove this PDF"));
   }
 
+  /* ── CLASSIFIEDS ── */
   renderClassifieds(st) {
     const allLabel = this.t('class.all');
     const cats = [allLabel, 'Food', 'Butcher', 'Travel', 'Education', 'Services'];
     const q = st.classQuery.trim().toLowerCase();
-    const cards = [PINNED_CLASSIFIED, ...st.liveClassifieds.filter(c => c.name !== 'SoftEire Technology Limited').filter(c => st.classCat === allLabel || st.classCat === 'All' || c.cat === st.classCat).filter(c => !q || c.name.toLowerCase().includes(q) || c.desc.toLowerCase().includes(q))];
+    const shown = st.liveClassifieds.filter(c => c.name !== 'SoftEire Technology Limited').filter(c => st.classCat === allLabel || st.classCat === 'All' || c.cat === st.classCat).filter(c => !q || c.name.toLowerCase().includes(q) || c.desc.toLowerCase().includes(q));
+    /* Sponsors sit under the pinned tile, in two passes rather than a comparator
+       so each group keeps the order the admin put it in. A sponsor is only ahead
+       while its ad is actually running: the day the booking ends it takes its
+       place back in the list, with no second thing for anyone to remember to
+       switch off. */
+    const sponsors = sponsoredNames(st.liveAds);
+    const isSponsored = c => sponsors.has(sponsorKey(c.name));
+    const cards = [PINNED_CLASSIFIED, ...shown.filter(isSponsored), ...shown.filter(c => !isSponsored(c))];
     const chipStyle = c => {
       const active = st.classCat === c;
       return {
@@ -7006,7 +7061,24 @@ class App extends Component {
         borderRadius: 18,
         padding: 16
       }
-    }, /*#__PURE__*/React.createElement("div", {
+    }, isSponsored(b) && /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: 5,
+        marginBottom: 11,
+        padding: '4px 9px 4px 7px',
+        borderRadius: 7,
+        background: 'linear-gradient(120deg,#f2e4bd,#e8d39a)',
+        border: '1px solid #dcc588',
+        color: '#6d5312',
+        fontSize: 9.5,
+        letterSpacing: 1,
+        textTransform: 'uppercase',
+        fontWeight: 800
+      }
+    }, icon('star', { size: 11, fill: '#6d5312', stroke: '#6d5312', style: { flexShrink: 0 } }), 'Sponsored'),
+    /*#__PURE__*/React.createElement("div", {
       style: {
         display: 'flex',
         gap: 13
@@ -7115,6 +7187,9 @@ class App extends Component {
       href: b.web,
       target: "_blank",
       rel: "noopener noreferrer",
+      // the only control on this card with no text in it: a screen reader would
+      // otherwise read out the bare URL, or nothing at all
+      "aria-label": `${b.name} website`,
       style: {
         width: 46
       }
@@ -9749,10 +9824,20 @@ class App extends Component {
             this.showToast('Upload an ad image first');
             return;
           }
+          const from = (d.from || '').trim();
+          const until = (d.until || '').trim();
+          // a run that ends before it starts would never show, and would look
+          // like a broken billboard rather than a mistyped booking
+          if (from && until && until < from) {
+            this.showToast('The end date is before the start date');
+            return;
+          }
           const item = {
             name: (d.name || '').trim(),
             link: (d.link || '').trim(),
             img: d.img,
+            from,
+            until,
             on: d.on !== false
           };
           const a = [...list];
@@ -9865,6 +9950,55 @@ class App extends Component {
             marginBottom: 14
           }
         }), /*#__PURE__*/React.createElement("div", {
+          style: {
+            display: 'flex',
+            gap: 10
+          }
+        }, /*#__PURE__*/React.createElement("div", {
+          style: {
+            flex: 1
+          }
+        }, /*#__PURE__*/React.createElement("div", {
+          style: {
+            fontSize: 11.5,
+            fontWeight: 600,
+            color: '#5d564a',
+            marginBottom: 4
+          }
+        }, "Runs from (optional)"), /*#__PURE__*/React.createElement("input", {
+          type: "date",
+          value: d.from || '',
+          onChange: e => this.setDraft({
+            from: e.target.value
+          }),
+          style: inp
+        })), /*#__PURE__*/React.createElement("div", {
+          style: {
+            flex: 1
+          }
+        }, /*#__PURE__*/React.createElement("div", {
+          style: {
+            fontSize: 11.5,
+            fontWeight: 600,
+            color: '#5d564a',
+            marginBottom: 4
+          }
+        }, "Until (optional)"), /*#__PURE__*/React.createElement("input", {
+          type: "date",
+          value: d.until || '',
+          onChange: e => this.setDraft({
+            until: e.target.value
+          }),
+          style: inp
+        }))), /*#__PURE__*/React.createElement("div", {
+          style: {
+            fontSize: 11,
+            color: NEU.muted,
+            margin: '-4px 0 12px',
+            lineHeight: 1.5
+          }
+        }, "Both days count in full. Leave either blank to run open-ended. While an ad is running, its business is marked Sponsored in Classifieds and listed near the top."),
+        /*#__PURE__*/React.createElement("div", {
           onClick: () => this.setDraft({
             on: d.on === false
           }),
@@ -9898,7 +10032,14 @@ class App extends Component {
             color: '#3f3a32',
             fontWeight: 600
           }
-        }, d.on === false ? 'Paused — not shown on the home page' : 'Live — shown in the billboard')), /*#__PURE__*/React.createElement("div", {
+        }, (() => {
+          // the toggle says what the ad is doing, not merely what the switch is set to
+          const s = adStatus({ ...d, on: d.on !== false });
+          if (d.on === false) return 'Paused — not shown on the home page';
+          if (s === 'scheduled') return 'Scheduled — starts ' + shortDate(d.from);
+          if (s === 'ended') return 'Finished — the run ended ' + shortDate(d.until);
+          return 'Live — shown in the billboard' + (d.until ? ' until ' + shortDate(d.until) : '');
+        })())), /*#__PURE__*/React.createElement("div", {
           style: {
             display: 'flex',
             gap: 10
@@ -9919,6 +10060,8 @@ class App extends Component {
         name: '',
         link: '',
         img: '',
+        from: '',
+        until: '',
         on: true
       }), {
         background: '#1f5145',
@@ -9965,12 +10108,19 @@ class App extends Component {
       }, a.name || 'Untitled ad'), /*#__PURE__*/React.createElement("div", {
         style: {
           fontSize: 10.5,
-          color: a.on === false ? '#a03a3a' : NEU.muted,
+          color: adStatus(a) === 'live' ? NEU.muted : adStatus(a) === 'scheduled' ? '#7d6220' : '#a03a3a',
           whiteSpace: 'nowrap',
           overflow: 'hidden',
           textOverflow: 'ellipsis'
         }
-      }, (a.on === false ? 'Paused' : 'Live') + ' · ' + (a.link || 'No link'))), btn(a.on === false ? 'Show' : 'Pause', () => {
+      }, (() => {
+        const s = adStatus(a);
+        return (s === 'paused' ? 'Paused'
+          : s === 'scheduled' ? '⏳ Scheduled ' + shortDate(a.from)
+          : s === 'ended' ? 'Ended ' + shortDate(a.until)
+          : '● Live' + (a.until ? ' until ' + shortDate(a.until) : ''))
+          + ' · ' + (a.link || 'No link');
+      })())), btn(a.on === false ? 'Show' : 'Pause', () => {
         const arr = [...list];
         arr[i] = {
           ...a,
