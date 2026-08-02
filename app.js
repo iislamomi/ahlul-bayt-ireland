@@ -1906,17 +1906,6 @@ const wallPage = w => `https://unsplash.com/photos/${w.id}`;
 
 /* The ten wallpapers for a given day: a shuffle seeded by the date, so it is stable
    for the whole day and different tomorrow. */
-/* One amaal a day, picked by a date-seeded shuffle so the whole community lands
-   on the same one and it changes at midnight rather than on every render. */
-function amaalForDay(list, date) {
-  if (!list || !list.length) return null;
-  const seedStr = `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
-  let seed = 0;
-  for (let i = 0; i < seedStr.length; i++) seed = (seed * 31 + seedStr.charCodeAt(i)) >>> 0;
-  seed = (seed * 1664525 + 1013904223) >>> 0;
-  return list[seed % list.length];
-}
-
 function wallpapersFor(date) {
   const seedStr = `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
   let seed = 0;
@@ -4078,7 +4067,7 @@ class App extends Component {
       tone: ['#b8923f', '#f7efdd'],
       go: () => this.go('calendar')
     }];
-    const dayAmaal = amaalForDay(st.liveAamals, st.now);
+    const amaalCount = (st.liveAamals || []).length;
     const lastRead = st.lastRead;
     const READ_KIND = { dua: 'Duʿāʾ', ziyarah: 'Ziyārah', aamal: 'Daily Amaal', nahj: 'Books' };
     /* One grid renderer for both Explore and Tools, so the two sections cannot
@@ -4602,13 +4591,22 @@ class App extends Component {
         lineHeight: 1
       }
     }, p.time)))),
-    dayAmaal && this.renderHomeTile({
+    /* Opens the section, not one amaal. A single rotating pick was a guess at
+       what someone wanted today, and it was a poor one: the taqeebat go by the
+       prayer and the weekly devotions by the weekday, so which amaal is due is
+       something the reader knows and a shuffle does not. */
+    amaalCount > 0 && this.renderHomeTile({
       icon: 'book-heart',
-      kicker: "Today's recommended amaal",
-      title: dayAmaal.title,
-      sub: dayAmaal.cat || dayAmaal.tr || 'Tap to read',
+      kicker: 'Daily Amaal',
+      title: 'Amaals',
+      sub: `${amaalCount} to read`,
       tone: ['#8a4b2c', '#f7ebe2'],
-      onClick: () => this.openReading('aamal', dayAmaal)
+      onClick: () => this.setState({
+        screen: 'library',
+        libTab: 'aamal',
+        libCat: 'All',
+        libQuery: ''
+      })
     }),
     lastRead && lastRead.title && this.renderHomeTile({
       icon: 'book-open',
