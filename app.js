@@ -1980,11 +1980,11 @@ const EDGE_UPLOAD_MEDIA = SB_URL + '/functions/v1/upload-media';
 /* Kept in step with upload-media's own table by hand. The server's limit is the
    one that binds; this one only saves the caller a doomed upload. */
 const MEDIA_KINDS = {
-  pdf: { max: 25 * 1024 * 1024, label: 'PDF', accept: 'application/pdf,.pdf' },
-  audio: { max: 60 * 1024 * 1024, label: 'audio', accept: 'audio/*,.mp3,.m4a,.ogg,.wav' },
+  pdf: { max: 25 * 1024 * 1024, label: 'PDF', upload: 'a PDF', accept: 'application/pdf,.pdf' },
+  audio: { max: 60 * 1024 * 1024, label: 'audio', upload: 'audio', accept: 'audio/*,.mp3,.m4a,.ogg,.wav' },
   /* Shrunk to 320px before it is sent, so the ceiling is for a mistake rather
      than the target: a logo is drawn at 50 CSS pixels. */
-  image: { max: 5 * 1024 * 1024, label: 'logo', accept: 'image/*', resizeTo: 320 }
+  image: { max: 5 * 1024 * 1024, label: 'logo', upload: 'a Logo', accept: 'image/*', resizeTo: 320 }
 };
 
 /* The two published courses, chapter by chapter. Held here rather than typed
@@ -7255,7 +7255,7 @@ class App extends Component {
         fontSize: 13.5, fontWeight: 700, cursor: busy ? 'default' : 'pointer'
       }
     }, icon(kind === 'audio' ? 'book-heart' : 'book-open', { size: 16 }),
-       busy ? up.msg : 'Upload ' + (kind === 'audio' ? 'audio' : 'a PDF') + ' from this device'),
+       busy ? up.msg : 'Upload ' + spec.upload + ' from this device'),
     /*#__PURE__*/React.createElement("input", {
       id: inputId,
       type: "file",
