@@ -25,6 +25,7 @@ const PEPPER = Deno.env.get('ABI_INSTALL_PEPPER') ?? '';
 const KINDS = {
   pdf: { bucket: 'library-pdfs', max: 25 * 1024 * 1024, ext: 'pdf' },
   audio: { bucket: 'library-audio', max: 60 * 1024 * 1024, ext: 'mp3' },
+  image: { bucket: 'library-images', max: 5 * 1024 * 1024, ext: 'png' },
 };
 const RATE = { WINDOW_MS: 3_600_000, MAX_IN_WINDOW: 40 };
 

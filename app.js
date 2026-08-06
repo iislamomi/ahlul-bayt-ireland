@@ -1981,7 +1981,10 @@ const EDGE_UPLOAD_MEDIA = SB_URL + '/functions/v1/upload-media';
    one that binds; this one only saves the caller a doomed upload. */
 const MEDIA_KINDS = {
   pdf: { max: 25 * 1024 * 1024, label: 'PDF', accept: 'application/pdf,.pdf' },
-  audio: { max: 60 * 1024 * 1024, label: 'audio', accept: 'audio/*,.mp3,.m4a,.ogg,.wav' }
+  audio: { max: 60 * 1024 * 1024, label: 'audio', accept: 'audio/*,.mp3,.m4a,.ogg,.wav' },
+  /* Shrunk to 320px before it is sent, so the ceiling is for a mistake rather
+     than the target: a logo is drawn at 50 CSS pixels. */
+  image: { max: 5 * 1024 * 1024, label: 'logo', accept: 'image/*', resizeTo: 320 }
 };
 
 /* The two published courses, chapter by chapter. Held here rather than typed
@@ -2194,7 +2197,20 @@ function looksLikeAudio(head) {
   if (head[0] === 0x1a && head[1] === 0x45 && head[2] === 0xdf && head[3] === 0xa3) return true; // WebM
   return false;
 }
-const sniffMedia = (kind, head) => kind === 'audio' ? looksLikeAudio(head) : looksLikePdf(head);
+function looksLikeImage(head) {
+  if (head.length < 12) return false;
+  const at = (i, str) => [...str].every((c, n) => head[i + n] === c.charCodeAt(0));
+  if (head[0] === 0x89 && at(1, 'PNG')) return true;
+  if (head[0] === 0xff && head[1] === 0xd8 && head[2] === 0xff) return true;   // JPEG
+  if (at(0, 'GIF8')) return true;
+  if (at(0, 'RIFF') && at(8, 'WEBP')) return true;
+  if (at(0, '<svg') || at(0, '<?xm')) return true;                              // SVG, with or without a prolog
+  return false;
+}
+const sniffMedia = (kind, head) =>
+  kind === 'audio' ? looksLikeAudio(head)
+  : kind === 'image' ? looksLikeImage(head)
+  : looksLikePdf(head);
 const LEADERBOARD_URL = SB_URL + '/rest/v1/quiz_leaderboard_public';
 
 const PUSH_MSG = {
@@ -2588,7 +2604,32 @@ function ytId(url) {
   return m ? m[1] : null;
 }
 
-function resizeImageFile(file, maxDim, quality) {
+/* Same shrink, but handing back a Blob. The data-URL version cannot feed an
+   upload: turning one back into bytes means fetch()ing it, and the content
+   security policy does not list data: under connect-src — correctly, since
+   nothing else here should be fetching one. */
+function resizeImageBlob(file, maxDim, type, quality) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        const scale = Math.min(1, maxDim / Math.max(img.width, img.height));
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.max(1, Math.round(img.width * scale));
+        canvas.height = Math.max(1, Math.round(img.height * scale));
+        canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+        canvas.toBlob(b => b ? resolve(b) : reject(new Error('encode_failed')), type, quality);
+      };
+      img.onerror = reject;
+      img.src = reader.result;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+function resizeImageFile(file, maxDim, quality, type) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => {
@@ -2602,7 +2643,8 @@ function resizeImageFile(file, maxDim, quality) {
         canvas.width = w;
         canvas.height = h;
         canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-        resolve(canvas.toDataURL('image/jpeg', quality));
+        // PNG when asked: a JPEG puts a white rectangle behind every transparent mark
+        resolve(canvas.toDataURL(type || 'image/jpeg', quality));
       };
       img.onerror = reject;
       img.src = reader.result;
@@ -3823,64 +3865,31 @@ class App extends Component {
         return;
       }
       say('reading', 'Checking the file\u2026');
+      /* An arrow bound here rather than a hoisted declaration: this leg keeps the
+         request on this._upload so it can be cancelled, and a plain function
+         would have no `this` to keep it on. */
+      // takes the file as an argument, because the resize hands back a different one
+      const sign = f => this.signAndPut(kind, f, onDone, say);
       file.slice(0, 12).arrayBuffer().then(head => {
         if (!sniffMedia(kind, new Uint8Array(head))) {
-          say('error', `That does not look like ${kind === 'audio' ? 'an audio file' : 'a PDF'}.`);
+          say('error', `That does not look like ${kind === 'audio' ? 'an audio file' : kind === 'image' ? 'an image' : 'a PDF'}.`);
           return;
         }
-        say('sending', 'Preparing\u2026', 0);
-        return fetch(EDGE_UPLOAD_MEDIA, {
-          method: 'POST',
-          headers: {
-            apikey: SB_KEY,
-            Authorization: 'Bearer ' + SB_KEY,
-            'Content-Type': 'application/json',
-            'x-abi-install': installId()
-          },
-          body: JSON.stringify({ kind, bytes: file.size, filename: (file.name || '').slice(0, 120) })
-        }).then(res => res.json().catch(() => ({})).then(body => ({ res, body })))
-          .then(({ res, body }) => {
-            if (!res.ok || !body || !body.uploadUrl) {
-              const err = (body && body.error) || 'upload_failed';
-              say('error',
-                err === 'rate_limited' ? 'Too many uploads just now. Try again in a few minutes.'
-                : err === 'too_large' ? 'That file is over the limit.'
-                : err === 'bucket_missing' ? 'Storage is not set up for this yet \u2014 see supabase/README.md.'
-                : 'Upload could not start. Paste a link instead.');
-              return;
-            }
-            /* XHR rather than fetch for this leg: a 60 MB upload with no sign of
-               progress is one a person cancels. */
-            return new Promise(resolve => {
-              const xhr = new XMLHttpRequest();
-              this._upload = xhr;
-              xhr.open('PUT', body.uploadUrl, true);
-              xhr.setRequestHeader('Content-Type', file.type || (kind === 'audio' ? 'audio/mpeg' : 'application/pdf'));
-              xhr.upload.onprogress = e => {
-                if (!e.lengthComputable) return;
-                const pct = Math.round(e.loaded / e.total * 100);
-                say('sending', `Uploading\u2026 ${pct}%`, pct);
-              };
-              xhr.onload = () => {
-                this._upload = null;
-                if (xhr.status >= 200 && xhr.status < 300) {
-                  if (onDone) onDone(body.publicUrl);
-                  say('done', 'Uploaded. The link below is filled in.');
-                } else {
-                  say('error', 'The file did not finish uploading. Try again, or paste a link.');
-                }
-                resolve();
-              };
-              xhr.onerror = () => {
-                this._upload = null;
-                say('error', 'The upload was interrupted. Try again, or paste a link.');
-                resolve();
-              };
-              xhr.onabort = () => { this._upload = null; resolve(); };
-              xhr.send(file);
-            });
-          });
-      }).catch(() => say('error', 'Upload failed \u2014 check the connection, or paste a link instead.'));
+        /* A logo photographed at 4000px is still drawn as a 50px tile. Shrinking
+           it here rather than at render time means every reader downloads what is
+           drawn instead of forty times it. SVG is left alone: it is already the
+           right size at every size, and a canvas would throw that away. */
+        if (spec.resizeTo && !/svg/i.test(file.type || '')) {
+          return resizeImageBlob(file, spec.resizeTo, 'image/png', 0.92).then(
+            blob => sign(new File([blob], String(file.name || 'logo').replace(/[.][^.]*$/, '') + '.png', { type: 'image/png' })),
+            () => say('error', 'That image could not be read.'));
+        }
+        return sign(file);
+      }).catch(() => say('error', 'Upload failed — check the connection, or paste a link instead.'));
+    });
+    _defineProperty(this, "cancelUpload", () => {
+      if (this._upload) { try { this._upload.abort(); } catch (e) {} this._upload = null; }
+      this.setState({ adminUpload: null });
     });
     /* The audio element is the source of truth; state only mirrors it for the
        controls to read. Nothing here seeks by rewriting state and hoping the
@@ -7150,6 +7159,65 @@ class App extends Component {
      link works only if the host it lives on allows that \u2014 many do not. The
      control says which is which up front rather than leaving an administrator to
      find out from a reader. */
+  /* Ask the function for a signed URL, then PUT the bytes at it. Split out of
+     uploadMedia so the sniff-and-shrink stage above stays readable, and because
+     it is the only part that needs to hold on to the request. */
+  signAndPut(kind, file, onDone, say) {
+    say('sending', 'Preparing…', 0);
+    return fetch(EDGE_UPLOAD_MEDIA, {
+      method: 'POST',
+      headers: {
+        apikey: SB_KEY,
+        Authorization: 'Bearer ' + SB_KEY,
+        'Content-Type': 'application/json',
+        'x-abi-install': installId()
+      },
+      body: JSON.stringify({ kind, bytes: file.size, filename: (file.name || '').slice(0, 120) })
+    }).then(res => res.json().catch(() => ({})).then(body => ({ res, body })))
+      .then(({ res, body }) => {
+        if (!res.ok || !body || !body.uploadUrl) {
+          const err = (body && body.error) || 'upload_failed';
+          say('error',
+            err === 'rate_limited' ? 'Too many uploads just now. Try again in a few minutes.'
+            : err === 'too_large' ? 'That file is over the limit.'
+            : err === 'bucket_missing' ? 'Storage is not set up for this yet — see supabase/README.md.'
+            : 'Upload could not start. Paste a link instead.');
+          return;
+        }
+        /* XHR rather than fetch for this leg: a 60 MB upload with no sign of
+           progress is one a person cancels. */
+        return new Promise(resolve => {
+          const xhr = new XMLHttpRequest();
+          this._upload = xhr;
+          xhr.open('PUT', body.uploadUrl, true);
+          xhr.setRequestHeader('Content-Type', file.type
+            || (kind === 'audio' ? 'audio/mpeg' : kind === 'image' ? 'image/png' : 'application/pdf'));
+          xhr.upload.onprogress = e => {
+            if (!e.lengthComputable) return;
+            const pct = Math.round(e.loaded / e.total * 100);
+            say('sending', `Uploading… ${pct}%`, pct);
+          };
+          xhr.onload = () => {
+            this._upload = null;
+            if (xhr.status >= 200 && xhr.status < 300) {
+              if (onDone) onDone(body.publicUrl);
+              say('done', 'Uploaded. The link below is filled in.');
+            } else {
+              say('error', 'The file did not finish uploading. Try again, or paste a link.');
+            }
+            resolve();
+          };
+          xhr.onerror = () => {
+            this._upload = null;
+            say('error', 'The upload was interrupted. Try again, or paste a link.');
+            resolve();
+          };
+          xhr.onabort = () => { this._upload = null; resolve(); };
+          xhr.send(file);
+        });
+      });
+  }
+
   renderMediaPicker(st, d, o) {
     const kind = o.kind;
     const spec = MEDIA_KINDS[kind];
@@ -7510,7 +7578,12 @@ class App extends Component {
         width: 50,
         height: 50,
         borderRadius: 14,
-        background: b.tint,
+        /* A logo is given a plain light ground rather than the category tint:
+           most arrive as a PNG cut out on white, and a coloured square behind one
+           reads as a mistake. The lettered tile keeps the tint. */
+        background: b.logo ? '#fffdf9' : b.tint,
+        border: b.logo ? '1px solid rgba(203,195,178,.7)' : 'none',
+        overflow: 'hidden',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -7519,7 +7592,15 @@ class App extends Component {
         fontWeight: 600,
         color: b.ink
       }
-    }, b.name[0]), /*#__PURE__*/React.createElement("div", {
+    }, b.logo ? /*#__PURE__*/React.createElement("img", {
+      src: b.logo,
+      alt: "",
+      loading: "lazy",
+      /* contain, not cover: a logo cropped to a square is a logo with its name
+         cut off. The empty name is deliberate — the business name is read out
+         immediately beside it, and repeating it helps nobody. */
+      style: { width: '100%', height: '100%', objectFit: 'contain', padding: 4, boxSizing: 'border-box' }
+    }) : b.name[0]), /*#__PURE__*/React.createElement("div", {
       style: {
         flex: 1,
         minWidth: 0
@@ -9176,6 +9257,7 @@ class App extends Component {
             web: safeUrl(d.web || ''),
             phone: d.phone || '',
             wa: safeWa(d.wa || ''),
+            logo: (d.logo || '').trim(),
             ink: CAT_COLORS[cat],
             tint: CAT_TINTS[cat]
           };
@@ -9253,7 +9335,26 @@ class App extends Component {
           placeholder: "WhatsApp number (digits only)",
           maxLength: 15,
           style: inp
+        }), this.renderMediaPicker(st, d, {
+          kind: 'image', field: 'logo', heading: 'Logo (optional)',
+          hint: '… or paste a link. Shown on the listing card in place of the initial; anything larger is shrunk to 320px before it is stored.'
+        }), d.logo && /*#__PURE__*/React.createElement("div", {
+          style: {
+            display: 'flex', alignItems: 'center', gap: 11,
+            marginBottom: 11, padding: '10px 12px', borderRadius: 13,
+            background: NEU.surf, border: NEU.edge, boxShadow: neuUp(.6)
+          }
+        }, /*#__PURE__*/React.createElement("img", {
+          src: d.logo,
+          alt: '',
+          style: {
+            width: 44, height: 44, borderRadius: 12, objectFit: 'contain',
+            background: '#fffdf9', flexShrink: 0
+          }
         }), /*#__PURE__*/React.createElement("div", {
+          style: { fontSize: 11.5, color: NEU.muted, lineHeight: 1.5 }
+        }, 'This is how the logo will appear on the card.')),
+        /*#__PURE__*/React.createElement("div", {
           style: {
             display: 'flex',
             gap: 10

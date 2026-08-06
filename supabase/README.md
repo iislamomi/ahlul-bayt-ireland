@@ -14,6 +14,7 @@ service-role key.
 | Time reports | `prayer_time_reports` | **nobody** via the API | `report-prayer-time` only |
 | Library PDFs | `library-pdfs` (storage) | anyone (public bucket) | `upload-media` only |
 | Recitations & adhans | `library-audio` (storage) | anyone (public bucket) | `upload-media` only |
+| Business logos | `library-images` (storage) | anyone (public bucket) | `upload-media` only |
 | Upload ledger | `library_pdfs` | **nobody** via the API | `upload-media` only |
 
 ⚠️ The `content` row is pre-existing and not something this change introduced,
@@ -41,7 +42,7 @@ supabase functions deploy report-prayer-time --no-verify-jwt
 supabase functions deploy upload-media --no-verify-jwt
 ```
 
-`0002` and `0003` create the two storage buckets as well as the ledger table.
+`0002`, `0003` and `0004` create the three storage buckets as well as the ledger table.
 Until they and `upload-media` are applied, every **Upload** button reports that
 uploads are not switched on and points at this file; pasting a link keeps working
 throughout, and nothing else in the app is affected.
@@ -95,7 +96,8 @@ admin screen is not a safe place to surface it — see below.
   buckets can refuse the anon key outright: a bucket anyone could write to is a
   bucket anyone could host a document on under this project's own address, which
   is exactly where a forged document would be most believed. What the function
-  enforces is a ceiling — a declared kind, 25 MB for PDFs and 60 MB for audio, and
+  enforces is a ceiling — a declared kind, 25 MB for PDFs, 60 MB for audio, 5 MB
+  for images, and
   forty uploads an hour per installation, every one recorded in `library_pdfs`.
   The bytes go straight from the browser to storage through a signed URL good for
   one path and fifteen minutes, so the token is not a key to the bucket; the
