@@ -1963,6 +1963,176 @@ const EDGE_REPORT_TIME = SB_URL + '/functions/v1/report-prayer-time';
 const EDGE_UPLOAD_PDF = SB_URL + '/functions/v1/upload-pdf';
 const PDF_MAX_BYTES = 25 * 1024 * 1024;
 
+/* The two published courses, chapter by chapter. Held here rather than typed
+   into the dashboard: 149 chapters is not something anyone should enter by hand,
+   and the set only changes when a new edition of the book does. A 'learning'
+   content row overrides it if one is ever added, like every other section.
+   File names are slugs built from the titles, so an apostrophe or a space in a
+   chapter name never has to survive a URL. */
+const LEARNING_BASE = SB_URL + '/storage/v1/object/public/library-pdfs/learning/';
+const LEARNING = [{
+  id: 'jurisprudence',
+  title: 'Teaching Jurisprudence',
+  sub: 'Fiqh one topic at a time, for older children and adults',
+  chapters: [
+    { title: 'Adhan & Iqama', file: 'adhan-iqama.pdf' },
+    { title: 'Cover and Contents', file: 'cover-and-contents.pdf' },
+    { title: 'Dietary Laws', file: 'dietary-laws.pdf' },
+    { title: 'Fiqh', file: 'fiqh.pdf' },
+    { title: 'Ghusl', file: 'ghusl.pdf' },
+    { title: 'Hajj', file: 'hajj.pdf' },
+    { title: 'Ijtihaad', file: 'ijtihaad.pdf' },
+    { title: 'Jabira Wudhoo', file: 'jabira-wudhoo.pdf' },
+    { title: 'Khums', file: 'khums.pdf' },
+    { title: 'Mujtahid', file: 'mujtahid.pdf' },
+    { title: 'Muqaddamatus Salaa', file: 'muqaddamatus-salaa.pdf' },
+    { title: 'Muqallid', file: 'muqallid.pdf' },
+    { title: 'Najasa & Tahara', file: 'najasa-tahara.pdf' },
+    { title: 'Nawaaqiz of Wudhoo', file: 'nawaaqiz-of-wudhoo.pdf' },
+    { title: 'Niyya', file: 'niyya.pdf' },
+    { title: 'Qiyaam', file: 'qiyaam.pdf' },
+    { title: 'Qunoot', file: 'qunoot.pdf' },
+    { title: 'Rukoo', file: 'rukoo.pdf' },
+    { title: 'Salaa (Pl. Salawat)', file: 'salaa-pl-salawat.pdf' },
+    { title: 'Salaatul Jumua\u2019', file: 'salaatul-jumua.pdf' },
+    { title: 'Salatul Ayaat', file: 'salatul-ayaat.pdf' },
+    { title: 'Salatul Jama\u2019a', file: 'salatul-jamaa.pdf' },
+    { title: 'Salatul Qasr', file: 'salatul-qasr.pdf' },
+    { title: 'Sawm', file: 'sawm.pdf' },
+    { title: 'Sujood', file: 'sujood.pdf' },
+    { title: 'Takbeeratul Ihram', file: 'takbeeratul-ihram.pdf' },
+    { title: 'Taqleed', file: 'taqleed.pdf' },
+    { title: 'Tarteeb & Muwalat', file: 'tarteeb-muwalat.pdf' },
+    { title: 'Tashahhud & Tasleem (Salaam)', file: 'tashahhud-tasleem-salaam.pdf' },
+    { title: 'Tayammum', file: 'tayammum.pdf' },
+    { title: 'Terminology & Practices', file: 'terminology-practices.pdf' },
+    { title: 'The Munafiyaat of Salaa', file: 'the-munafiyaat-of-salaa.pdf' },
+    { title: 'Third and Fourth Raka\u2019a', file: 'third-and-fourth-rakaa.pdf' },
+    { title: 'Wajibaat of Salaa', file: 'wajibaat-of-salaa.pdf' },
+    { title: 'Wudhoo', file: 'wudhoo.pdf' },
+    { title: 'Zakaa', file: 'zakaa.pdf' }
+  ]
+}, {
+  id: 'infants',
+  title: 'Learning Islam for Infants',
+  sub: 'A first course: the Qur\'an, belief, salaa and the Ahlul Bayt',
+  chapters: [
+    { no: 0, title: 'Cover and Contents', file: 'cover-and-contents.pdf' },
+    { no: 1, title: 'Preface', file: 'preface.pdf' },
+    { no: 2, title: 'Learning Objectives', file: 'learning-objectives.pdf' },
+    { no: 3, title: 'Syllabus at a Glance', file: 'syllabus-at-a-glance.pdf' },
+    { no: 4, title: 'Q Calendar - Up to 7 Years', file: 'q-calendar-up-to-7-years.pdf' },
+    { no: 5, title: 'Qur\'an City Map', file: 'quran-city-map.pdf' },
+    { no: 6, title: 'Blank Qur\'an City Map', file: 'blank-quran-city-map.pdf' },
+    { no: 7, title: 'The Qur\'an', file: 'the-quran.pdf' },
+    { no: 8, title: 'Let Us Use Correct Words', file: 'let-us-use-correct-words.pdf' },
+    { no: 9, title: 'Manners for Reciting the Qur\'an', file: 'manners-for-reciting-the-quran.pdf' },
+    { no: 10, title: 'Learning the Names of Suwer', file: 'learning-the-names-of-suwer.pdf' },
+    { no: 11, title: 'Sura Al Faatiha', file: 'sura-al-faatiha.pdf' },
+    { no: 12, title: 'Sura Al Ikhlaas', file: 'sura-al-ikhlaas.pdf' },
+    { no: 13, title: 'Sura Al Qadr', file: 'sura-al-qadr.pdf' },
+    { no: 14, title: 'Sura Al Kaafirun', file: 'sura-al-kaafirun.pdf' },
+    { no: 15, title: 'Sura Al Falaq', file: 'sura-al-falaq.pdf' },
+    { no: 16, title: 'Sura Al Naas', file: 'sura-al-naas.pdf' },
+    { no: 17, title: 'Sura Al Kawthar', file: 'sura-al-kawthar.pdf' },
+    { no: 18, title: 'Sura Al \'Asr', file: 'sura-al-asr.pdf' },
+    { no: 19, title: 'Sura Al Feel', file: 'sura-al-feel.pdf' },
+    { no: 20, title: 'Ayatul Kursi - 2-255', file: 'ayatul-kursi-2-255.pdf' },
+    { no: 21, title: 'Ayatul Birr - 2-177', file: 'ayatul-birr-2-177.pdf' },
+    { no: 22, title: 'I Am a Muslim', file: 'i-am-a-muslim.pdf' },
+    { no: 23, title: 'Remembering Allah All the Time', file: 'remembering-allah-all-the-time.pdf' },
+    { no: 24, title: 'Angels', file: 'angels.pdf' },
+    { no: 25, title: 'Who Is Shaytan', file: 'who-is-shaytan.pdf' },
+    { no: 26, title: 'Tawheed', file: 'tawheed.pdf' },
+    { no: 27, title: 'Adala (Justice)', file: 'adala-justice.pdf' },
+    { no: 28, title: 'Nabuwwa (Prophethood)', file: 'nabuwwa-prophethood.pdf' },
+    { no: 29, title: 'Imama', file: 'imama.pdf' },
+    { no: 30, title: 'Qiyama', file: 'qiyama.pdf' },
+    { no: 31, title: 'Taqleed', file: 'taqleed.pdf' },
+    { no: 32, title: 'Najasaat and Mutahhiraat', file: 'najasaat-and-mutahhiraat.pdf' },
+    { no: 33, title: 'Manner and Tahara in the Toilet', file: 'manner-and-tahara-in-the-toilet.pdf' },
+    { no: 34, title: 'Wudhoo', file: 'wudhoo.pdf' },
+    { no: 35, title: 'Qibla', file: 'qibla.pdf' },
+    { no: 36, title: 'Place for Salaa', file: 'place-for-salaa.pdf' },
+    { no: 37, title: 'Clothes for Salaa', file: 'clothes-for-salaa.pdf' },
+    { no: 38, title: 'Times for Salaa', file: 'times-for-salaa.pdf' },
+    { no: 39, title: 'Salaa', file: 'salaa.pdf' },
+    { no: 40, title: 'Adhaan', file: 'adhaan.pdf' },
+    { no: 41, title: 'Iqama', file: 'iqama.pdf' },
+    { no: 42, title: 'Number of Rakaats and Times of Salaa', file: 'number-of-rakaats-and-times-of-salaa.pdf' },
+    { no: 43, title: 'This Is How I Pray Salaa (Namaz)', file: 'this-is-how-i-pray-salaa-namaz.pdf' },
+    { no: 44, title: 'Qunoot', file: 'qunoot.pdf' },
+    { no: 45, title: 'Ta\'qibaat', file: 'taqibaat.pdf' },
+    { no: 46, title: 'Words Used in Fiqh and Their Meaning', file: 'words-used-in-fiqh-and-their-meaning.pdf' },
+    { no: 47, title: 'Activities of a Day', file: 'activities-of-a-day.pdf' },
+    { no: 48, title: 'Waking Up', file: 'waking-up.pdf' },
+    { no: 49, title: 'Toilet Manners', file: 'toilet-manners.pdf' },
+    { no: 50, title: 'Bathroom Manners', file: 'bathroom-manners.pdf' },
+    { no: 51, title: 'Eating Manners', file: 'eating-manners.pdf' },
+    { no: 52, title: 'Manners in the Imambara', file: 'manners-in-the-imambara.pdf' },
+    { no: 53, title: 'Classroom Manners', file: 'classroom-manners.pdf' },
+    { no: 54, title: 'Sharing', file: 'sharing.pdf' },
+    { no: 55, title: 'Friendship', file: 'friendship.pdf' },
+    { no: 56, title: 'Manners of Sleeping', file: 'manners-of-sleeping.pdf' },
+    { no: 57, title: 'Lying', file: 'lying.pdf' },
+    { no: 58, title: 'Manners of Talking', file: 'manners-of-talking.pdf' },
+    { no: 59, title: 'Sadaqa', file: 'sadaqa.pdf' },
+    { no: 60, title: 'Do Not Abuse', file: 'do-not-abuse.pdf' },
+    { no: 61, title: 'Do Not Belittle Others', file: 'do-not-belittle-others.pdf' },
+    { no: 62, title: 'Duties Towards Parents', file: 'duties-towards-parents.pdf' },
+    { no: 63, title: 'Behaving Like Little Muslims', file: 'behaving-like-little-muslims.pdf' },
+    { no: 64, title: 'Process of Life', file: 'process-of-life.pdf' },
+    { no: 65, title: 'Prophet Adam (PBUH)', file: 'prophet-adam-pbuh.pdf' },
+    { no: 66, title: 'The Sons of Prophet Adam (PBUH)', file: 'the-sons-of-prophet-adam-pbuh.pdf' },
+    { no: 67, title: 'Prophet Nuh (PBUH)', file: 'prophet-nuh-pbuh.pdf' },
+    { no: 68, title: 'Prophet Ibraheem (PBUH)', file: 'prophet-ibraheem-pbuh.pdf' },
+    { no: 69, title: 'Prophet Ismail (PBUH)', file: 'prophet-ismail-pbuh.pdf' },
+    { no: 70, title: 'Prophet Yunus (PBUH)', file: 'prophet-yunus-pbuh.pdf' },
+    { no: 71, title: 'Prophet Musa (PBUH) - Part 1', file: 'prophet-musa-pbuh-part-1.pdf' },
+    { no: 72, title: 'Prophet Musa (PBUH) - Part 2', file: 'prophet-musa-pbuh-part-2.pdf' },
+    { no: 73, title: 'Prophet Sulayman (PBUH)', file: 'prophet-sulayman-pbuh.pdf' },
+    { no: 74, title: 'Prophet Isa (PBUH)', file: 'prophet-isa-pbuh.pdf' },
+    { no: 75, title: 'Aamul Feel', file: 'aamul-feel.pdf' },
+    { no: 76, title: 'The Year of the Elephant', file: 'the-year-of-the-elephant.pdf' },
+    { no: 77, title: 'Abdul Muttalib (PBUH)', file: 'abdul-muttalib-pbuh.pdf' },
+    { no: 78, title: 'Hazrat Abdullah and Amina (PBUH)', file: 'hazrat-abdullah-and-amina-pbuh.pdf' },
+    { no: 79, title: 'Birth of Prophet Muhammad (PBUH)', file: 'birth-of-prophet-muhammad-pbuh.pdf' },
+    { no: 80, title: 'Prophet Muhammad (PBUH) - Part 1', file: 'prophet-muhammad-pbuh-part-1.pdf' },
+    { no: 81, title: 'Al Amin (The Trustworthy One)', file: 'al-amin-the-trustworthy-one.pdf' },
+    { no: 82, title: 'Announcement of Prophethood', file: 'announcement-of-prophethood.pdf' },
+    { no: 83, title: 'Prophet Muhammad (PBUH) - Part 2', file: 'prophet-muhammad-pbuh-part-2.pdf' },
+    { no: 84, title: 'Mi\'raaj', file: 'miraaj.pdf' },
+    { no: 85, title: 'Hijra to Madina', file: 'hijra-to-madina.pdf' },
+    { no: 86, title: 'Farewell Hajj', file: 'farewell-hajj.pdf' },
+    { no: 87, title: 'A Very Special Announcement', file: 'a-very-special-announcement.pdf' },
+    { no: 88, title: 'Wafat of Prophet Muhammad (PBUH)', file: 'wafat-of-prophet-muhammad-pbuh.pdf' },
+    { no: 89, title: 'The Prophet and His Ahlulbayt (PBUH)', file: 'the-prophet-and-his-ahlulbayt-pbuh.pdf' },
+    { no: 90, title: 'Salawaat', file: 'salawaat.pdf' },
+    { no: 91, title: 'Sayyida Fatima Az Zahra (PBUH)', file: 'sayyida-fatima-az-zahra-pbuh.pdf' },
+    { no: 92, title: 'Imam Ali (PBUH)', file: 'imam-ali-pbuh.pdf' },
+    { no: 93, title: 'Imam Hasan (PBUH)', file: 'imam-hasan-pbuh.pdf' },
+    { no: 94, title: 'Imam Husayn (PBUH)', file: 'imam-husayn-pbuh.pdf' },
+    { no: 95, title: 'Imam Ali Zaynul Aabideen (PBUH)', file: 'imam-ali-zaynul-aabideen-pbuh.pdf' },
+    { no: 96, title: 'Imam Muhammad Al Baqir (PBUH)', file: 'imam-muhammad-al-baqir-pbuh.pdf' },
+    { no: 97, title: 'Imam Ja\'fer As Sadiq (PBUH)', file: 'imam-jafer-as-sadiq-pbuh.pdf' },
+    { no: 98, title: 'Imam Musa Al Kadhim (PBUH)', file: 'imam-musa-al-kadhim-pbuh.pdf' },
+    { no: 99, title: 'Imam Ali Ar Ridha (PBUH)', file: 'imam-ali-ar-ridha-pbuh.pdf' },
+    { no: 100, title: 'Imam Muhammad At Taqi (PBUH)', file: 'imam-muhammad-at-taqi-pbuh.pdf' },
+    { no: 101, title: 'Imam Ali An Naqi (PBUH)', file: 'imam-ali-an-naqi-pbuh.pdf' },
+    { no: 102, title: 'Imam Hasan Al Askery (PBUH)', file: 'imam-hasan-al-askery-pbuh.pdf' },
+    { no: 103, title: 'Imam Muhammad Al Mahdi (PBUH)', file: 'imam-muhammad-al-mahdi-pbuh.pdf' },
+    { no: 104, title: 'The Islamic Year', file: 'the-islamic-year.pdf' },
+    { no: 105, title: 'Friday', file: 'friday.pdf' },
+    { no: 106, title: 'Eid Ul Fitr', file: 'eid-ul-fitr.pdf' },
+    { no: 107, title: 'Eid Ul Hajj and Eid Ul Adha (Sacrifice)', file: 'eid-ul-hajj-and-eid-ul-adha-sacrifice.pdf' },
+    { no: 108, title: 'Eid Ul Ghadeer', file: 'eid-ul-ghadeer.pdf' },
+    { no: 109, title: 'Eid Ul Mubahila', file: 'eid-ul-mubahila.pdf' },
+    { no: 110, title: 'Ziyara', file: 'ziyara.pdf' },
+    { no: 111, title: 'Other Important Places of Ziyara', file: 'other-important-places-of-ziyara.pdf' },
+    { no: 112, title: 'Daily Ziyara', file: 'daily-ziyara.pdf' }
+  ]
+}];
+
 /* pdf.js and its worker are 1.4 MB \u2014 more than everything else this app ships
    put together. Fetched the first time someone opens a PDF and never at boot, so
    a reader who never touches one never pays for it. The service worker caches
@@ -2070,7 +2240,7 @@ const SB_KEY_MAP = {
   prayerPresets: 'livePrayerPresets', calEvents: 'liveCalEvents',
   healthTips: 'liveHealthTips', healthVideos: 'liveHealthVideos',
   duas: 'liveDuas', ziyarat: 'liveZiyarat', nahj: 'liveNahj', aamals: 'liveAamals',
-  reminders: 'liveReminders', ads: 'liveAds'
+  reminders: 'liveReminders', ads: 'liveAds', learning: 'liveLearning'
 };
 
 /* Category ink for classifieds badges. Listings store the colour they were saved
@@ -2470,6 +2640,8 @@ class App extends Component {
       libSort: {},
       prayerTab: 'today',
       kidsTab: 'videos',
+      learnBook: null,
+      learnQuery: '',
       healthTab: 'videos',
       dark: lsGet('dark', false),
       textSize: lsGet('textSize', 1),
@@ -2573,6 +2745,7 @@ class App extends Component {
       lastRead: lsGet('lastRead', null),
       liveZiyarat: lsGet('ziyarat', ZIYARAT),
       liveNahj: lsGet('nahj', NAHJ),
+      liveLearning: lsGet('learning', LEARNING),
       liveKidsQuizzes: migrateQuizzes(lsGet('kidsQuizzes', KIDS_QUIZZES)),
       quizRun: null,
       /* The name is remembered so the next quiz does not ask again, and stays
@@ -2628,6 +2801,8 @@ class App extends Component {
         nahjTab: 'sermons',
         prayerTab: 'today',
         kidsTab: 'videos',
+        learnBook: null,
+        learnQuery: '',
         kidsVidCat: 'All',
         kidsQuizPicks: {},
         quizRun: null,
@@ -4137,7 +4312,7 @@ class App extends Component {
     }];
     const amaalCount = (st.liveAamals || []).length;
     const lastRead = st.lastRead;
-    const READ_KIND = { dua: 'Duʿāʾ', ziyarah: 'Ziyārah', aamal: 'Daily Amaal', nahj: 'Books' };
+    const READ_KIND = { dua: 'Duʿāʾ', ziyarah: 'Ziyārah', aamal: 'Daily Amaal', nahj: 'Books', learning: 'Learning' };
     /* One grid renderer for both Explore and Tools, so the two sections cannot
        drift apart. */
     const iconGrid = cards => /*#__PURE__*/React.createElement("div", {
@@ -6548,7 +6723,7 @@ class App extends Component {
     };
     const arSize = Math.round(30 * st.textSize) + 'px';
     const trSize = Math.round(17 * st.textSize) + 'px';
-    const readAccent = rtype === 'ziyarah' ? '#6e2230' : rtype === 'nahj' ? '#2c5d52' : rtype === 'aamal' ? '#8a4b2c' : '#7d6220';
+    const readAccent = rtype === 'ziyarah' ? '#6e2230' : rtype === 'nahj' ? '#2c5d52' : rtype === 'aamal' ? '#8a4b2c' : rtype === 'learning' ? '#3a4a78' : '#7d6220';
     // per-language content: items may carry body_ur / body_fa / body_hi alongside the English body
     const TR_CODES = { 'हिन्दी': 'hi', 'فارسی': 'fa', 'Urdu': 'ur' };
     const trCode = TR_CODES[st.lang];
@@ -6646,12 +6821,14 @@ class App extends Component {
     }, React.createElement("div", {
       onClick: () => {
         this.saveReadPos();
-        this.setState({ screen: 'library', readingItem: null, readingType: null, readingLang: null });
+        this.destroyPdf();
+        // a Learning chapter was opened from Madrasa, and back means where you were
+        this.setState({ screen: rtype === 'learning' ? 'kids' : 'library', readingItem: null, readingType: null, readingLang: null });
         const sc = document.querySelector('.app > .s');
         if (sc) sc.scrollTop = 0;
       },
       style: { display: 'flex', alignItems: 'center', gap: 5, cursor: 'pointer', color: rd.accent, fontSize: 14, fontWeight: 600, minHeight: 44, padding: '0 8px', margin: '0 -8px' }
-    }, React.createElement("span", { style: { fontSize: 18 } }, "\u2039"), " ", this.t('lib.back')),
+    }, React.createElement("span", { style: { fontSize: 18 } }, "\u2039"), " ", rtype === 'learning' ? 'Learning' : this.t('lib.back')),
     React.createElement("div", { style: { display: 'flex', alignItems: 'center', gap: 8 } },
       React.createElement("div", {
         onClick: () => this.setTextSize(st.textSize - .12),
@@ -12236,7 +12413,7 @@ class App extends Component {
         gap: 9,
         marginBottom: 18
       }
-    }, [['videos', this.t('kids.videos'), '🎬', '#3a4a78', '#e8ebf4'], ['books', this.t('kids.books'), '📚', '#8a4b2c', '#f6ebe4'], ['wisdom', this.t('kids.wisdom'), '💡', '#7d6220', '#f7f0dc'], ['quiz', 'Quiz', '🎯', '#6e2230', '#f7e7ea']].map(([k, label, icon, ink, tint]) => {
+    }, [['learning', 'Learning', '🎓', '#1f5145', '#e6efe9'], ['videos', this.t('kids.videos'), '🎬', '#3a4a78', '#e8ebf4'], ['books', this.t('kids.books'), '📚', '#8a4b2c', '#f6ebe4'], ['wisdom', this.t('kids.wisdom'), '💡', '#7d6220', '#f7f0dc'], ['quiz', 'Quiz', '🎯', '#6e2230', '#f7e7ea']].map(([k, label, icon, ink, tint]) => {
       const on = kt === k;
       return /*#__PURE__*/React.createElement("div", {
         key: k,
@@ -12281,7 +12458,7 @@ class App extends Component {
           textAlign: 'center'
         }
       }, label));
-    })), kt === 'videos' && /*#__PURE__*/React.createElement(React.Fragment, null, !heroV && /*#__PURE__*/React.createElement("div", {
+    })), kt === 'learning' && this.renderLearning(st), kt === 'videos' && /*#__PURE__*/React.createElement(React.Fragment, null, !heroV && /*#__PURE__*/React.createElement("div", {
       style: {
         position: 'relative',
         overflow: 'hidden',
@@ -13106,6 +13283,141 @@ class App extends Component {
         }
       }, r.pick === qz.answer ? 'Correct — well done! 🎉' : r.pick === -1 ? "Time's up! The answer is highlighted." : 'Not quite — the correct answer is highlighted.'));
     })(), this.renderLeaderboard(st)));
+  }
+
+  /* \u2500\u2500 LEARNING \u2500\u2500
+     Two courses, and inside each one its chapters as tiles. The chapter is a PDF
+     and nothing else, so opening one hands it straight to the reader that already
+     knows how to draw a PDF \u2014 there is no second viewer here. */
+  renderLearning(st) {
+    const books = st.liveLearning || LEARNING;
+    const open = books.find(b => b.id === st.learnBook) || null;
+    const q = (st.learnQuery || '').trim().toLowerCase();
+
+    if (!open) {
+      return /*#__PURE__*/React.createElement("div", {
+        style: { display: 'flex', flexDirection: 'column', gap: 12 }
+      }, books.map(b => /*#__PURE__*/React.createElement("div", {
+        key: b.id,
+        onClick: () => this.setState({ learnBook: b.id, learnQuery: '' }),
+        style: {
+          display: 'flex', alignItems: 'center', gap: 14,
+          background: NEU.surf, boxShadow: neuUp(), border: NEU.edge,
+          borderRadius: 18, padding: 16, cursor: 'pointer'
+        }
+      }, /*#__PURE__*/React.createElement("div", {
+        "aria-hidden": "true",
+        style: {
+          flexShrink: 0, width: 48, height: 48, borderRadius: 14,
+          background: '#e6efe9', color: '#1f5145',
+          display: 'flex', alignItems: 'center', justifyContent: 'center'
+        }
+      }, icon('book-open', { size: 22 })), /*#__PURE__*/React.createElement("div", {
+        style: { flex: 1, minWidth: 0 }
+      }, /*#__PURE__*/React.createElement("div", {
+        style: { fontFamily: 'Spectral,serif', fontSize: 17, fontWeight: 600, color: '#2c2823', lineHeight: 1.25 }
+      }, b.title), /*#__PURE__*/React.createElement("div", {
+        style: { fontSize: 12.5, color: NEU.muted, marginTop: 3, lineHeight: 1.45 }
+      }, b.sub), /*#__PURE__*/React.createElement("div", {
+        style: {
+          fontSize: 10.5, letterSpacing: .7, textTransform: 'uppercase', fontWeight: 700,
+          color: '#1f5145', marginTop: 7
+        }
+      }, `${(b.chapters || []).length} chapters`)), /*#__PURE__*/React.createElement("span", {
+        "aria-hidden": "true",
+        style: { flexShrink: 0, color: '#6b6252', fontSize: 20 }
+      }, "\u203a"))));
+    }
+
+    /* Ordered by the number the book itself gives each chapter, falling back to
+       the order they were listed in. A chapter numbered 0 is the cover, and 0 is
+       a real position \u2014 hence the explicit check rather than a truthy one. */
+    const chapters = [...(open.chapters || [])]
+      .map((c, i) => ({ ...c, i }))
+      .sort((a, b) => {
+        const na = typeof a.no === 'number' ? a.no : Infinity;
+        const nb = typeof b.no === 'number' ? b.no : Infinity;
+        return na - nb || a.i - b.i;
+      })
+      .filter(c => !q || (c.title || '').toLowerCase().includes(q));
+
+    return /*#__PURE__*/React.createElement(React.Fragment, null,
+      /*#__PURE__*/React.createElement("div", {
+        onClick: () => this.setState({ learnBook: null, learnQuery: '' }),
+        style: {
+          display: 'inline-flex', alignItems: 'center', gap: 7, minHeight: 44,
+          padding: '10px 14px 10px 10px', borderRadius: 13, marginBottom: 12,
+          background: NEU.surf, boxShadow: neuUp(.6), border: NEU.edge,
+          color: '#1f5145', fontSize: 13, fontWeight: 700, cursor: 'pointer'
+        }
+      }, /*#__PURE__*/React.createElement("span", { "aria-hidden": "true", style: { fontSize: 16 } }, "\u2039"), 'All courses'),
+
+      /*#__PURE__*/React.createElement("div", {
+        style: { marginBottom: 12 }
+      }, /*#__PURE__*/React.createElement("div", {
+        style: { fontFamily: 'Spectral,serif', fontSize: 21, fontWeight: 600, color: '#27241f', lineHeight: 1.2 }
+      }, open.title), /*#__PURE__*/React.createElement("div", {
+        style: { fontSize: 12.5, color: NEU.muted, marginTop: 3 }
+      }, open.sub)),
+
+      (open.chapters || []).length > 12 && /*#__PURE__*/React.createElement("div", {
+        style: {
+          display: 'flex', alignItems: 'center', gap: 10,
+          ...neuWell(14, .8), padding: '0 14px', marginBottom: 14
+        }
+      }, icon('search', { size: 17, stroke: '#6b6252' }), /*#__PURE__*/React.createElement("input", {
+        value: st.learnQuery || '',
+        onChange: e => this.setState({ learnQuery: e.target.value }),
+        placeholder: 'Search ' + (open.chapters || []).length + ' chapters',
+        "aria-label": 'Search chapters in ' + open.title,
+        style: {
+          border: 'none', outline: 'none', background: 'transparent', fontSize: 14,
+          color: '#3f3a32', width: '100%', padding: '12px 0', minHeight: 44, boxSizing: 'border-box'
+        }
+      }), (st.learnQuery || '') && /*#__PURE__*/React.createElement("div", {
+        onClick: () => this.setState({ learnQuery: '' }),
+        "aria-label": "Clear search",
+        style: {
+          color: '#6b6252', cursor: 'pointer', fontSize: 20, lineHeight: 1,
+          width: 44, height: 44, margin: -12, display: 'flex',
+          alignItems: 'center', justifyContent: 'center', flexShrink: 0
+        }
+      }, "\u00d7")),
+
+      /*#__PURE__*/React.createElement("div", {
+        style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }
+      }, chapters.map(c => /*#__PURE__*/React.createElement("div", {
+        key: c.file,
+        onClick: () => this.openReading('learning', {
+          title: c.title,
+          ref: open.title,
+          pdf: LEARNING_BASE + open.id + '/' + c.file
+        }),
+        style: {
+          background: NEU.surf, boxShadow: neuUp(), border: NEU.edge,
+          borderRadius: 16, padding: '13px 13px 12px', cursor: 'pointer',
+          display: 'flex', flexDirection: 'column', gap: 8, minHeight: 96
+        }
+      }, /*#__PURE__*/React.createElement("div", {
+        style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6 }
+      }, /*#__PURE__*/React.createElement("span", {
+        style: {
+          fontSize: 10, letterSpacing: .7, textTransform: 'uppercase', fontWeight: 700,
+          color: '#1f5145', background: '#e6efe9', padding: '3px 7px', borderRadius: 6,
+          whiteSpace: 'nowrap'
+        }
+      }, typeof c.no === 'number' ? 'Ch ' + c.no : 'PDF'), icon('book-open', { size: 14, stroke: '#8a8272' })),
+      /*#__PURE__*/React.createElement("div", {
+        style: {
+          fontFamily: 'Spectral,serif', fontSize: 14, fontWeight: 600, color: '#2c2823',
+          lineHeight: 1.3, display: '-webkit-box', WebkitLineClamp: 3,
+          WebkitBoxOrient: 'vertical', overflow: 'hidden'
+        }
+      }, c.title)))),
+
+      chapters.length === 0 && /*#__PURE__*/React.createElement("div", {
+        style: { textAlign: 'center', padding: '34px 20px', color: NEU.muted, fontSize: 14 }
+      }, `No chapter matching "${st.learnQuery}"`));
   }
 
   /* ── HEALTH & WELLNESS ── */

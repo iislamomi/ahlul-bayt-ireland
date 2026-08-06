@@ -83,20 +83,27 @@ Deno.serve(async (req: Request) => {
   const magic = buf[0] === 0x25 && buf[1] === 0x50 && buf[2] === 0x44 && buf[3] === 0x46 && buf[4] === 0x2d;
   if (!magic) return json({ error: 'not_a_pdf' }, 415);
 
+  /* A caller that sends no installation id used to skip the rate limit entirely,
+   * which made the limit optional for exactly the caller least likely to respect
+   * it. Anonymous uploads now share one bucket of their own, so leaving the
+   * header off is a worse deal than sending it, not a better one. */
   const installId = (req.headers.get('x-abi-install') ?? '').slice(0, 100);
-  const installHash = installId ? await sha256Hex(installId + '|' + PEPPER) : null;
+  const installHash = await sha256Hex((installId || 'anonymous') + '|' + PEPPER);
 
-  if (installHash) {
-    const since = new Date(Date.now() - RATE.WINDOW_MS).toISOString();
-    const recent = await rest(
-      `library_pdfs?select=id&install_hash=eq.${installHash}&created_at=gte.${since}`,
-    );
-    if (recent.ok) {
-      const rows = await recent.json().catch(() => []);
-      if (Array.isArray(rows) && rows.length >= RATE.MAX_IN_WINDOW) {
-        return json({ error: 'rate_limited', retryAfterMs: RATE.WINDOW_MS }, 429);
-      }
+  const since = new Date(Date.now() - RATE.WINDOW_MS).toISOString();
+  const recent = await rest(
+    `library_pdfs?select=id&install_hash=eq.${installHash}&created_at=gte.${since}`,
+  );
+  if (recent.ok) {
+    const rows = await recent.json().catch(() => []);
+    if (Array.isArray(rows) && rows.length >= RATE.MAX_IN_WINDOW) {
+      return json({ error: 'rate_limited', retryAfterMs: RATE.WINDOW_MS }, 429);
     }
+  } else {
+    // the ledger is how the limit is counted; if it cannot be read, do not
+    // fall through to an unlimited write
+    console.error('rate check failed', recent.status);
+    return json({ error: 'store_failed' }, 503);
   }
 
   /* The path is generated here and nowhere else. Nothing the caller sent shapes
