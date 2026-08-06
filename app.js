@@ -676,10 +676,30 @@ const NAHJ = {
      than a new one: the Books tab already reads this key, and a second key
      would need its own sync, its own migration and its own admin plumbing for
      nothing the reader would notice. */
-  sahifa: []
+  sahifa: [],
+  munajat: []
 };
 const BOOKS = [['nahj', 'Nahjul Balagha'], ['sahifa', 'Sahifa e Sajjadia']];
 const NAHJ_PARTS = [['sermons', 'Sermons'], ['letters', 'Letters'], ['sayings', 'Sayings']];
+/* The fifty-four supplications and the fifteen whispered prayers are read as two
+   different things, so they are kept as two. */
+const SAHIFA_PARTS = [['sahifa', 'Supplications'], ['munajat', 'Munājāt']];
+const BOOK_PARTS = { nahj: NAHJ_PARTS, sahifa: SAHIFA_PARTS };
+
+/* Every part of both books is numbered — Duʿāʾ 1 to 54, Sermon 1, Letter 31 — so
+   they read in that order rather than in the order they happened to be typed in,
+   which is newest-first and therefore backwards for a book. The number is taken
+   from the reference and falls back to the title; anything carrying no number at
+   all sorts to the end alphabetically rather than to an arbitrary place. */
+function bookNo(it) {
+  const m = String((it && it.ref) || '').match(/\d+/) || String((it && it.title) || '').match(/\d+/);
+  return m ? parseInt(m[0], 10) : Infinity;
+}
+function orderBook(list) {
+  return [...(list || [])].sort((a, b) =>
+    bookNo(a) - bookNo(b) ||
+    sortKey(a && a.title).localeCompare(sortKey(b && b.title), 'en', { sensitivity: 'base', numeric: true }));
+}
 const PINNED_CLASSIFIED = {
   name: 'SoftEire Technology Limited',
   cat: 'Services',
@@ -3793,7 +3813,8 @@ class App extends Component {
       const nahj = st.liveNahj || NAHJ;
       const all = [];
       Object.keys(pools).forEach(k => (pools[k] || []).forEach(x => all.push([k, x])));
-      ['sermons', 'letters', 'sayings', 'sahifa'].forEach(k => (nahj[k] || []).forEach(x => all.push(['nahj', x])));
+      // driven off BOOK_PARTS so a new section is searchable the day it is added
+      Object.values(BOOK_PARTS).flat().forEach(([k]) => (nahj[k] || []).forEach(x => all.push(['nahj', x])));
       return all.find(([k, x]) => contentKey(k, x) === contentId) || (title ? all.find(([k, x]) => x.title === title && k === type) || all.find(([, x]) => x.title === title) : null) || null;
     });
     _defineProperty(this, "openSaved", mark => {
@@ -6080,9 +6101,12 @@ class App extends Component {
       });
     }
     let nahjCards = [];
-    const bookPart = st.nahjBook === 'sahifa' ? 'sahifa' : st.nahjTab;
+    // each book keeps its own chosen part, so switching books and back lands
+    // where the reader left off rather than resetting to the first section
+    const parts = BOOK_PARTS[st.nahjBook] || NAHJ_PARTS;
+    const bookPart = parts.some(([k]) => k === st.nahjTab) ? st.nahjTab : parts[0][0];
     if (st.libTab === 'nahj') {
-      nahjCards = (nahjData[bookPart] || []).filter(it => !q || (it.title || '').toLowerCase().includes(q) || (it.tr || '').toLowerCase().includes(q));
+      nahjCards = orderBook(nahjData[bookPart]).filter(it => !q || (it.title || '').toLowerCase().includes(q) || (it.tr || '').toLowerCase().includes(q));
     }
     const nahjTabStyle = k => ({
       flex: 1,
@@ -6095,10 +6119,12 @@ class App extends Component {
       cursor: 'pointer',
       borderRadius: 11,
       transition: 'box-shadow .18s ease, color .18s ease',
-      fontWeight: st.nahjTab === k ? 700 : 500,
-      color: st.nahjTab === k ? '#2c5d52' : NEU.muted,
+      // bookPart, not st.nahjTab: a part carried over from the other book is not
+      // the part being shown, and an unlit row would be lying about which it is
+      fontWeight: bookPart === k ? 700 : 500,
+      color: bookPart === k ? '#2c5d52' : NEU.muted,
       background: NEU.surf,
-      boxShadow: st.nahjTab === k ? neuIn(.55) : neuUp(.55)
+      boxShadow: bookPart === k ? neuIn(.55) : neuUp(.55)
     });
     /* The book comes first and the parts belong to it, so the book row is the
        heavier of the two — same depth language, one step up in weight. */
@@ -6271,7 +6297,7 @@ class App extends Component {
       style: {
         display: 'flex',
         gap: 8,
-        marginBottom: st.nahjBook === 'nahj' ? 10 : 16
+        marginBottom: 10
       }
     }, BOOKS.map(([k, label]) => /*#__PURE__*/React.createElement("div", {
       key: k,
@@ -6279,13 +6305,13 @@ class App extends Component {
         nahjBook: k
       }),
       style: bookTabStyle(k)
-    }, label))), st.libTab === 'nahj' && st.nahjBook === 'nahj' && /*#__PURE__*/React.createElement("div", {
+    }, label))), st.libTab === 'nahj' && /*#__PURE__*/React.createElement("div", {
       style: {
         display: 'flex',
         gap: 8,
         marginBottom: 16
       }
-    }, NAHJ_PARTS.map(([k, label]) => /*#__PURE__*/React.createElement("div", {
+    }, parts.map(([k, label]) => /*#__PURE__*/React.createElement("div", {
       key: k,
       onClick: () => this.setState({
         nahjTab: k
@@ -6425,7 +6451,11 @@ class App extends Component {
       }
     }, q ? `No results for "${st.libQuery}"`
        : st.libCat !== 'All' ? `No items in "${st.libCat}"`
-       : `Nothing here yet — ${st.libTab === 'nahj' ? (BOOKS.find(([k]) => k === st.nahjBook) || [, lm.title])[1] : lm.title} is filled in from the admin dashboard.`));
+       // named down to the section: "Sahifa e Sajjadia" is not empty when its
+       // Munājāt are, and saying so sends the admin looking in the wrong place
+       : `Nothing here yet — ${st.libTab === 'nahj'
+            ? (BOOKS.find(([k]) => k === st.nahjBook) || [, ''])[1] + ' · ' + (parts.find(([k]) => k === bookPart) || [, ''])[1]
+            : lm.title} is filled in from the admin dashboard.`));
   }
 
   /* ── READING ── */
@@ -6655,6 +6685,33 @@ class App extends Component {
           r.note && React.createElement("div", { style: { fontSize: 10.5, color: rd.muted, marginTop: 2, fontStyle: 'italic' } }, r.note)),
         shareBtn, bookmarkBtn, favouriteBtn),
       tabs.length > 1 && React.createElement("div", { style: { display: 'flex', gap: 8, marginTop: 8 } }, tabs.map(pill))),
+    /* The recitation sits above the text and outside the language tabs: it is the
+       same recitation whichever script is on screen, and a reader following along
+       must not lose their place in it by switching to the translation.
+       Native controls on purpose — seeking, speed and the lock screen all come
+       free, and none of them is worth re-implementing badly for a duʿāʾ someone
+       may be twenty minutes into. */
+    r.audio && React.createElement("div", {
+      style: {
+        background: rd.surf, border: `1px solid ${rd.border}`, borderRadius: 16,
+        padding: '12px 14px', marginBottom: 14
+      }
+    }, React.createElement("div", {
+      style: { display: 'flex', alignItems: 'center', gap: 8, marginBottom: 9 }
+    }, icon('book-heart', { size: 15, stroke: readAccent, style: { flexShrink: 0 } }),
+       React.createElement("div", {
+         style: { fontSize: 11, letterSpacing: 1, textTransform: 'uppercase', fontWeight: 700, color: rd.muted }
+       }, 'Recitation'),
+       r.reciter && React.createElement("div", {
+         style: { fontSize: 11.5, color: rd.muted, marginLeft: 'auto', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }
+       }, r.reciter)),
+       React.createElement("audio", {
+         controls: true,
+         preload: "metadata",
+         src: r.audio,
+         "aria-label": `Recitation of ${r.title || 'this text'}`,
+         style: { width: '100%', display: 'block' }
+       })),
     lang === 'ar' && hasAr && React.createElement("div", {
       style: { background: rd.surf, border: `1px solid ${rd.border}`, borderRadius: 20, padding: '18px 16px' }
     }, mkLines(r.ar).map(L => {
@@ -11193,6 +11250,10 @@ class App extends Component {
               this.showToast('PDF link must start with http(s)://');
               return;
             }
+            if (d.audio && !/^https?:\/\//.test(d.audio.trim())) {
+              this.showToast('Audio link must start with http(s)://');
+              return;
+            }
             const item = {
               title: d.title || '',
               cat: (d.cat || '').trim() || 'General',
@@ -11203,7 +11264,9 @@ class App extends Component {
               body_ur: d.body_ur || '',
               body_fa: d.body_fa || '',
               body_hi: d.body_hi || '',
-              pdf: (d.pdf || '').trim()
+              pdf: (d.pdf || '').trim(),
+              audio: (d.audio || '').trim(),
+              reciter: (d.reciter || '').trim()
             };
             if (isNew) a.unshift(item);else a[st.adminEditIdx] = item;
             save(key, stateKey, a, isNew ? label + ' added!' : label + ' updated!');
@@ -11330,6 +11393,47 @@ class App extends Component {
             style: inp
           }), /*#__PURE__*/React.createElement("div", {
             style: {
+              border: NEU.edge,
+              background: NEU.surf,
+              boxShadow: neuUp(.6),
+              borderRadius: 14,
+              padding: 13,
+              marginBottom: 11
+            }
+          }, /*#__PURE__*/React.createElement("div", {
+            style: {
+              fontSize: 11,
+              letterSpacing: 1,
+              textTransform: 'uppercase',
+              fontWeight: 700,
+              color: '#6b6252',
+              marginBottom: 9
+            }
+          }, "Recitation (optional)"), /*#__PURE__*/React.createElement("input", {
+            value: d.audio || '',
+            onChange: e => this.setDraft({
+              audio: e.target.value
+            }),
+            placeholder: "Audio link — https://…mp3",
+            style: { ...inp, marginBottom: 9 }
+          }), /*#__PURE__*/React.createElement("input", {
+            value: d.reciter || '',
+            onChange: e => this.setDraft({
+              reciter: e.target.value
+            }),
+            placeholder: "Reciter (optional)",
+            maxLength: 60,
+            style: { ...inp, marginBottom: 0 }
+          }), /*#__PURE__*/React.createElement("div", {
+            style: {
+              fontSize: 11,
+              color: NEU.muted,
+              marginTop: 9,
+              lineHeight: 1.5
+            }
+          }, "A direct link to an MP3 or M4A file, not a page it sits on. The player appears at the top of the reader.")),
+          /*#__PURE__*/React.createElement("div", {
+            style: {
               display: 'flex',
               gap: 10
             }
@@ -11381,7 +11485,8 @@ class App extends Component {
       }
       /* nahj */
       const nahj = st.liveNahj || NAHJ;
-      const groups = [...NAHJ_PARTS.map(([k, l]) => [k, 'Nahjul Balagha · ' + l]), ['sahifa', 'Sahifa e Sajjadia']];
+      const groups = BOOKS.flatMap(([bk, bl]) =>
+        (BOOK_PARTS[bk] || []).map(([k, l]) => [k, bl + ' · ' + l]));
       if (editing) {
         const d = st.adminEditDraft;
         const isNew = st.adminEditIdx === -1;
@@ -11391,13 +11496,9 @@ class App extends Component {
             this.showToast('Title is required');
             return;
           }
-          const next = {
-            ...nahj,
-            sermons: [...(nahj.sermons || [])],
-            letters: [...(nahj.letters || [])],
-            sayings: [...(nahj.sayings || [])],
-            sahifa: [...(nahj.sahifa || [])]
-          };
+          // every part copied, so a book gaining a section later cannot drop one
+          const next = { ...nahj };
+          groups.forEach(([k]) => { next[k] = [...(nahj[k] || [])]; });
           if (d.pdf && !/^https?:\/\//.test(d.pdf.trim())) {
             this.showToast('PDF link must start with http(s)://');
             return;
@@ -13004,54 +13105,7 @@ class App extends Component {
           color: r.pick === qz.answer ? '#1f5145' : '#6e2230'
         }
       }, r.pick === qz.answer ? 'Correct — well done! 🎉' : r.pick === -1 ? "Time's up! The answer is highlighted." : 'Not quite — the correct answer is highlighted.'));
-    })(), this.renderLeaderboard(st)), kt === 'quiz' && /*#__PURE__*/React.createElement("div", {
-      onClick: () => this.openStory(STORIES.findIndex(s => s.kind === 'quiz')),
-      style: {
-        display: 'flex',
-        alignItems: 'center',
-        gap: 14,
-        background: 'linear-gradient(120deg,#faf4e6,#f6efe0)',
-        border: '1px solid #ecdfc2',
-        borderRadius: 18,
-        padding: 16,
-        cursor: 'pointer'
-      }
-    }, /*#__PURE__*/React.createElement("div", {
-      style: {
-        flexShrink: 0,
-        width: 46,
-        height: 46,
-        borderRadius: 13,
-        background: '#6e2230',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        fontFamily: 'Amiri,serif',
-        fontSize: 24,
-        color: '#f3ead4'
-      }
-    }, "؟"), /*#__PURE__*/React.createElement("div", {
-      style: {
-        flex: 1
-      }
-    }, /*#__PURE__*/React.createElement("div", {
-      style: {
-        fontSize: 15,
-        fontWeight: 600,
-        color: '#5e4d22'
-      }
-    }, "Today's Kids Quiz"), /*#__PURE__*/React.createElement("div", {
-      style: {
-        fontSize: 12,
-        color: '#8a7846',
-        marginTop: 2
-      }
-    }, "One quick question — can you get it right?")), /*#__PURE__*/React.createElement("span", {
-      style: {
-        color: '#75601f',
-        fontSize: 20
-      }
-    }, "→")));
+    })(), this.renderLeaderboard(st)));
   }
 
   /* ── HEALTH & WELLNESS ── */
@@ -13971,6 +14025,11 @@ class App extends Component {
       fill: preview ? 100 : i < st.story ? 100 : i === st.story ? st.storyProg : 0
     }));
     const isQuiz = cur.kind === 'quiz';
+    /* A photograph posted with nothing written on it. Every text field is checked
+       rather than the title alone, because a story carrying only an āyah or only
+       a caption still needs the words to stay readable. */
+    const photoOnly = !!cur.photo && !isQuiz &&
+      !['tag', 'title', 'sub', 'ar', 'body', 'cta'].some(k => String(cur[k] || '').trim());
     const quizAnswered = st.quizPick !== null;
     return /*#__PURE__*/React.createElement("div", {
       style: {
@@ -13994,9 +14053,17 @@ class App extends Component {
       style: {
         position: 'absolute',
         inset: 0,
-        background: cur.photo ? 'linear-gradient(180deg,rgba(0,0,0,.5) 0%,rgba(0,0,0,.22) 42%,rgba(0,0,0,.68) 100%)' : 'radial-gradient(120% 90% at 50% 0%,rgba(255,255,255,.1),rgba(0,0,0,.35))'
+        /* The scrim exists to keep white text readable over a photograph. A
+           picture posted on its own has no text to keep readable, so it is shown
+           as it was taken. The short fade at the top stays either way: the
+           progress bars and the close button are white, and without it a bright
+           photograph would leave no way out of the story. */
+        background: photoOnly
+          ? 'linear-gradient(180deg,rgba(0,0,0,.42) 0%,rgba(0,0,0,.14) 12%,rgba(0,0,0,0) 24%)'
+          : cur.photo ? 'linear-gradient(180deg,rgba(0,0,0,.5) 0%,rgba(0,0,0,.22) 42%,rgba(0,0,0,.68) 100%)'
+          : 'radial-gradient(120% 90% at 50% 0%,rgba(255,255,255,.1),rgba(0,0,0,.35))'
       }
-    }), /*#__PURE__*/React.createElement("div", {
+    }), !photoOnly && /*#__PURE__*/React.createElement("div", {
       style: {
         position: 'absolute',
         right: -50,
