@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://img.youtube.com https://i.ytimg.com https://unsplash.com https://images.unsplash.com; connect-src 'self' blob: https://zwpimotdtuhbpwjcooiz.supabase.co https://api.aladhan.com https://unsplash.com https://images.unsplash.com; media-src 'self'; frame-src https://www.youtube-nocookie.com https://www.youtube.com https://docs.google.com https://drive.google.com; object-src 'none'; base-uri 'self'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://img.youtube.com https://i.ytimg.com https://unsplash.com https://images.unsplash.com; connect-src 'self' blob: https://zwpimotdtuhbpwjcooiz.supabase.co https://api.aladhan.com https://unsplash.com https://images.unsplash.com; media-src 'self' https://zwpimotdtuhbpwjcooiz.supabase.co; frame-src https://www.youtube-nocookie.com https://www.youtube.com https://docs.google.com https://drive.google.com; object-src 'none'; base-uri 'self'">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="theme-color" content="#ece5d8">
   <meta name="mobile-web-app-capable" content="yes">
@@ -72,6 +72,17 @@
       outline: 3px solid #1f5145; outline-offset: 2px; }
     :root[data-theme="dark"] .abi-line:focus-visible,
     :root[data-theme="dark"] .abi-line-act:focus-visible { outline-color: #e2c67c; }
+    /* The seek bar is a real range input so a thumb can drag it and the arrow keys
+       can move it; only its size is adjusted, so the platform keeps its own thumb. */
+    .abi-seek { -webkit-appearance: none; appearance: none; height: 24px; background: transparent; cursor: pointer; }
+    .abi-seek::-webkit-slider-runnable-track { height: 5px; border-radius: 3px; background: rgba(120,110,92,.28); }
+    .abi-seek::-moz-range-track { height: 5px; border-radius: 3px; background: rgba(120,110,92,.28); }
+    .abi-seek::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%;
+      background: #1f5145; border: 2px solid #fffdf9; margin-top: -6px; box-shadow: 0 1px 4px rgba(0,0,0,.3); }
+    .abi-seek::-moz-range-thumb { width: 14px; height: 14px; border-radius: 50%; background: #1f5145;
+      border: 2px solid #fffdf9; }
+    .abi-seek:focus-visible { outline: 3px solid #1f5145; outline-offset: 3px; border-radius: 4px; }
+    :root[data-theme="dark"] .abi-seek:focus-visible { outline-color: #e2c67c; }
     /* The sort control is a real <select> so the platform picker does the work.
        Its cursor lives here rather than inline because enhanceTappables promotes
        any inline `cursor: pointer` to role="button" — which would hide a listbox

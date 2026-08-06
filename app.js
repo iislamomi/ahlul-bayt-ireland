@@ -1942,10 +1942,26 @@ function wallpapersFor(date) {
   return pool.slice(0, 10);
 }
 
-/* ── ADHAN SOUNDS ── */
-const ADHAN_SOUNDS = [
-  { key: 'default', label: 'Classic Adhan', sub: 'The original call', file: './adhan.mp3' }
-];
+/* \u2500\u2500 ADHAN SOUNDS \u2500\u2500
+   One shipped with the app and whatever the administrators have uploaded since.
+   The shipped one is always first and cannot be removed: it is the only adhan
+   that is in the service-worker cache from the start, so it is the one that still
+   plays when the phone is offline at Fajr. */
+const ADHAN_DEFAULT = { key: 'default', label: 'Classic Adhan', sub: 'Shipped with the app', file: './adhan.mp3' };
+function adhanSounds(list) {
+  const extra = (list || [])
+    .filter(a => a && a.url && a.name)
+    .map(a => ({
+      /* Keyed on an id rather than the URL: two azans may legitimately point at the
+         same file, and an index would quietly hand everyone a different adhan the
+         day one above it is removed. */
+      key: 'up:' + (a.id || a.url),
+      label: String(a.name).slice(0, 40),
+      sub: String(a.reciter || 'Uploaded').slice(0, 40),
+      file: a.url
+    }));
+  return [ADHAN_DEFAULT, ...extra];
+}
 
 /* ── SUPABASE SYNC ── */
 const SB_URL = 'https://zwpimotdtuhbpwjcooiz.supabase.co';
@@ -1960,8 +1976,13 @@ const EDGE_PUSH = SB_URL + '/functions/v1/send-push';
    key server-side and neither table is readable with the anon key. */
 const EDGE_QUIZ_SUBMIT = SB_URL + '/functions/v1/submit-quiz-score';
 const EDGE_REPORT_TIME = SB_URL + '/functions/v1/report-prayer-time';
-const EDGE_UPLOAD_PDF = SB_URL + '/functions/v1/upload-pdf';
-const PDF_MAX_BYTES = 25 * 1024 * 1024;
+const EDGE_UPLOAD_MEDIA = SB_URL + '/functions/v1/upload-media';
+/* Kept in step with upload-media's own table by hand. The server's limit is the
+   one that binds; this one only saves the caller a doomed upload. */
+const MEDIA_KINDS = {
+  pdf: { max: 25 * 1024 * 1024, label: 'PDF', accept: 'application/pdf,.pdf' },
+  audio: { max: 60 * 1024 * 1024, label: 'audio', accept: 'audio/*,.mp3,.m4a,.ogg,.wav' }
+};
 
 /* The two published courses, chapter by chapter. Held here rather than typed
    into the dashboard: 149 chapters is not something anyone should enter by hand,
@@ -2155,12 +2176,25 @@ function loadPdfjs() {
   return pdfjsLoad;
 }
 
-/* A PDF is the one thing here that can be checked for what it claims to be: the
-   first five bytes are fixed by the format. Worth doing before a 25 MB upload. */
+/* Both formats announce themselves in their first few bytes, which is worth
+   checking before a 60 MB upload and worth not trusting afterwards \u2014 the bucket's
+   own MIME allow-list is what actually decides. */
 function looksLikePdf(head) {
   return head.length >= 5 && head[0] === 0x25 && head[1] === 0x50 &&
          head[2] === 0x44 && head[3] === 0x46 && head[4] === 0x2d;
 }
+function looksLikeAudio(head) {
+  if (head.length < 12) return false;
+  const at = (i, str) => [...str].every((c, n) => head[i + n] === c.charCodeAt(0));
+  if (at(0, 'ID3')) return true;                                   // tagged MP3
+  if (head[0] === 0xff && (head[1] & 0xe0) === 0xe0) return true;   // bare MPEG frame
+  if (at(4, 'ftyp')) return true;                                   // M4A / MP4 audio
+  if (at(0, 'OggS')) return true;
+  if (at(0, 'RIFF') && at(8, 'WAVE')) return true;
+  if (head[0] === 0x1a && head[1] === 0x45 && head[2] === 0xdf && head[3] === 0xa3) return true; // WebM
+  return false;
+}
+const sniffMedia = (kind, head) => kind === 'audio' ? looksLikeAudio(head) : looksLikePdf(head);
 const LEADERBOARD_URL = SB_URL + '/rest/v1/quiz_leaderboard_public';
 
 const PUSH_MSG = {
@@ -2240,7 +2274,8 @@ const SB_KEY_MAP = {
   prayerPresets: 'livePrayerPresets', calEvents: 'liveCalEvents',
   healthTips: 'liveHealthTips', healthVideos: 'liveHealthVideos',
   duas: 'liveDuas', ziyarat: 'liveZiyarat', nahj: 'liveNahj', aamals: 'liveAamals',
-  reminders: 'liveReminders', ads: 'liveAds', learning: 'liveLearning'
+  reminders: 'liveReminders', ads: 'liveAds', learning: 'liveLearning',
+  azans: 'liveAzans'
 };
 
 /* Category ink for classifieds badges. Listings store the colour they were saved
@@ -2689,7 +2724,10 @@ class App extends Component {
       pdfPages: 0,
       pdfZoom: 1,
       pdfSaving: false,
-      adminPdfUp: null,
+      audioPlaying: false,
+      audioAt: 0,
+      audioDur: 0,
+      adminUpload: null,
       // the live compass reading, and the accumulated dial angle that follows it
       qiblaHeading: null,
       qiblaSpin: null,
@@ -2746,6 +2784,7 @@ class App extends Component {
       liveZiyarat: lsGet('ziyarat', ZIYARAT),
       liveNahj: lsGet('nahj', NAHJ),
       liveLearning: lsGet('learning', LEARNING),
+      liveAzans: lsGet('azans', []),
       liveKidsQuizzes: migrateQuizzes(lsGet('kidsQuizzes', KIDS_QUIZZES)),
       quizRun: null,
       /* The name is remembered so the next quiz does not ask again, and stays
@@ -2786,7 +2825,7 @@ class App extends Component {
       // screen opens fresh, and scroll the content area back to the top.
       if (this.state.screen === 'reading') this.saveReadPos();
       // a PDF left open keeps a worker and a decoded page in memory
-      if (this.state.screen === 'reading' && s !== 'reading') this.destroyPdf();
+      if (this.state.screen === 'reading' && s !== 'reading') { this.destroyPdf(); this.audioStop(); }
       // GPS and the magnetometer cost battery for as long as they are attached
       if (this.state.screen === 'qibla' && s !== 'qibla') this.stopQibla();
       this.clearQuizTimers();
@@ -3203,6 +3242,9 @@ class App extends Component {
          remembered as failed for the rest of the session, and reopening the same
          entry after the connection comes back shows the same error. */
       this.destroyPdf();
+      // the previous recitation must not keep playing under the next text
+      this.audioStop();
+      this._audioEl = null;
       const o = opts || {};
       const prev = this.state.lastRead;
       const same = prev && prev.title === (item && item.title) && prev.type === type;
@@ -3473,14 +3515,14 @@ class App extends Component {
     _defineProperty(this, "startEdit", (idx, draft) => this.setState({
       adminEditIdx: idx,
       // an upload result belongs to the entry it was made for, not the next one
-      adminPdfUp: null,
+      adminUpload: null,
       adminEditDraft: {
         ...draft
       }
     }));
     _defineProperty(this, "cancelEdit", () => this.setState(s => ({
       adminEditIdx: null,
-      adminPdfUp: null,
+      adminUpload: null,
       // keep the sub-tab (_sub) so Kids/Health admin stays on the same tab after Save/Cancel
       adminEditDraft: s.adminEditDraft && s.adminEditDraft._sub ? {
         _sub: s.adminEditDraft._sub
@@ -3493,7 +3535,7 @@ class App extends Component {
       }
     })));
     _defineProperty(this, "setAdhanSound", key => {
-      const pick = ADHAN_SOUNDS.find(s => s.key === key);
+      const pick = adhanSounds(this.state.liveAzans).find(s => s.key === key);
       if (!pick) return;
       this.stopAdhan();
       lsSet('adhanSound', key);
@@ -3505,7 +3547,11 @@ class App extends Component {
     });
     _defineProperty(this, "playAdhan", () => {
       this.stopAdhan();
-      const pick = ADHAN_SOUNDS.find(s => s.key === this.state.adhanSound) || ADHAN_SOUNDS[0];
+      /* A remembered choice can outlive the file it named \u2014 an azan removed by an
+         administrator, or a device that has never seen it. Falling back to the
+         shipped one means the adhan still sounds at the right minute. */
+      const all = adhanSounds(this.state.liveAzans);
+      const pick = all.find(s => s.key === this.state.adhanSound) || all[0];
       this.adhanAudio = new Audio(pick.file);
       this.adhanAudio.onended = () => this.setState({
         adhanPlaying: false,
@@ -3763,57 +3809,129 @@ class App extends Component {
         window.open(url, '_blank', 'noopener,noreferrer');
       }));
     });
-    /* Upload goes through an Edge Function, not straight to storage. The anon key
-       is in this file, so a bucket anyone could write to is a bucket anyone could
-       host a document on under the mosque's own address. */
-    _defineProperty(this, "uploadPdf", file => {
-      if (!file) return;
-      if (file.size > PDF_MAX_BYTES) {
-        this.setState({ adminPdfUp: { state: 'error', msg: `That file is ${(file.size / 1048576).toFixed(1)} MB. The limit is 25 MB.` } });
+    /* Two steps, on purpose. The function decides whether this caller may upload
+       and hands back a signed URL good for one path; the bytes then go straight
+       from the browser to storage. An Edge Function has a request body limit and
+       an hour of recitation is on the wrong side of it, so routing the file
+       through the function would fail on exactly the files this is for. */
+    _defineProperty(this, "uploadMedia", (kind, file, onDone) => {
+      const spec = MEDIA_KINDS[kind];
+      if (!file || !spec) return;
+      const say = (state, msg, pct) => this.setState({ adminUpload: { kind, state, msg, pct } });
+      if (file.size > spec.max) {
+        say('error', `That file is ${(file.size / 1048576).toFixed(1)} MB. The limit is ${Math.round(spec.max / 1048576)} MB.`);
         return;
       }
-      this.setState({ adminPdfUp: { state: 'reading', msg: 'Checking the file\u2026' } });
-      file.slice(0, 5).arrayBuffer().then(head => {
-        if (!looksLikePdf(new Uint8Array(head))) {
-          this.setState({ adminPdfUp: { state: 'error', msg: 'That is not a PDF file.' } });
+      say('reading', 'Checking the file\u2026');
+      file.slice(0, 12).arrayBuffer().then(head => {
+        if (!sniffMedia(kind, new Uint8Array(head))) {
+          say('error', `That does not look like ${kind === 'audio' ? 'an audio file' : 'a PDF'}.`);
           return;
         }
-        this.setState({ adminPdfUp: { state: 'sending', msg: 'Uploading\u2026' } });
-        return fetch(EDGE_UPLOAD_PDF, {
+        say('sending', 'Preparing\u2026', 0);
+        return fetch(EDGE_UPLOAD_MEDIA, {
           method: 'POST',
           headers: {
             apikey: SB_KEY,
             Authorization: 'Bearer ' + SB_KEY,
-            'Content-Type': 'application/pdf',
-            'x-abi-install': installId(),
-            'x-abi-filename': encodeURIComponent(file.name || 'document.pdf')
+            'Content-Type': 'application/json',
+            'x-abi-install': installId()
           },
-          body: file
+          body: JSON.stringify({ kind, bytes: file.size, filename: (file.name || '').slice(0, 120) })
         }).then(res => res.json().catch(() => ({})).then(body => ({ res, body })))
           .then(({ res, body }) => {
-            if (res.ok && body && body.url) {
-              this.setDraft({ pdf: body.url });
-              this.setState({ adminPdfUp: { state: 'done', msg: 'Uploaded. The link below is filled in.' } });
+            if (!res.ok || !body || !body.uploadUrl) {
+              const err = (body && body.error) || 'upload_failed';
+              say('error',
+                err === 'rate_limited' ? 'Too many uploads just now. Try again in a few minutes.'
+                : err === 'too_large' ? 'That file is over the limit.'
+                : err === 'bucket_missing' ? 'Storage is not set up for this yet \u2014 see supabase/README.md.'
+                : 'Upload could not start. Paste a link instead.');
               return;
             }
-            const err = (body && body.error) || 'upload_failed';
-            const msg = res.status === 404
-              ? 'Uploads are not switched on yet \u2014 see supabase/README.md. Paste a link instead.'
-              : err === 'rate_limited' ? 'Too many uploads just now. Try again in a few minutes.'
-              : err === 'too_large' ? 'That file is over the 25 MB limit.'
-              : err === 'not_a_pdf' ? 'The server did not accept that as a PDF.'
-              : 'Upload failed. Paste a link instead.';
-            this.setState({ adminPdfUp: { state: 'error', msg } });
+            /* XHR rather than fetch for this leg: a 60 MB upload with no sign of
+               progress is one a person cancels. */
+            return new Promise(resolve => {
+              const xhr = new XMLHttpRequest();
+              this._upload = xhr;
+              xhr.open('PUT', body.uploadUrl, true);
+              xhr.setRequestHeader('Content-Type', file.type || (kind === 'audio' ? 'audio/mpeg' : 'application/pdf'));
+              xhr.upload.onprogress = e => {
+                if (!e.lengthComputable) return;
+                const pct = Math.round(e.loaded / e.total * 100);
+                say('sending', `Uploading\u2026 ${pct}%`, pct);
+              };
+              xhr.onload = () => {
+                this._upload = null;
+                if (xhr.status >= 200 && xhr.status < 300) {
+                  if (onDone) onDone(body.publicUrl);
+                  say('done', 'Uploaded. The link below is filled in.');
+                } else {
+                  say('error', 'The file did not finish uploading. Try again, or paste a link.');
+                }
+                resolve();
+              };
+              xhr.onerror = () => {
+                this._upload = null;
+                say('error', 'The upload was interrupted. Try again, or paste a link.');
+                resolve();
+              };
+              xhr.onabort = () => { this._upload = null; resolve(); };
+              xhr.send(file);
+            });
           });
-      }).catch(() => this.setState({
-        /* A function that is not deployed and a dropped connection look identical
-           from here: the gateway's own 404 does not permit this request's headers,
-           so the preflight fails before any status is readable. Name both. */
-        adminPdfUp: {
-          state: 'error',
-          msg: 'Upload did not go through. Either uploads are not switched on yet (see supabase/README.md) or the connection dropped \u2014 you can paste a link instead.'
-        }
-      }));
+      }).catch(() => say('error', 'Upload failed \u2014 check the connection, or paste a link instead.'));
+    });
+    /* The audio element is the source of truth; state only mirrors it for the
+       controls to read. Nothing here seeks by rewriting state and hoping the
+       element follows. */
+    _defineProperty(this, "bindAudio", el => {
+      if (this._audioEl === el) return;
+      this._audioEl = el;
+      if (!el) return;
+      el.onplay = () => this.setState({ audioPlaying: true });
+      el.onpause = () => this.setState({ audioPlaying: false });
+      el.onended = () => this.setState({ audioPlaying: false, audioAt: 0 });
+      el.onloadedmetadata = () => this.setState({ audioDur: el.duration || 0 });
+      /* timeupdate fires about four times a second and this component re-renders
+         its whole tree, so the seek bar is stepped rather than followed exactly. */
+      el.ontimeupdate = () => {
+        const at = el.currentTime || 0;
+        if (Math.abs(at - (this.state.audioAt || 0)) < 0.4) return;
+        this.setState({ audioAt: at });
+      };
+    });
+    _defineProperty(this, "audioToggle", () => {
+      const el = this._audioEl;
+      if (!el) return;
+      if (el.paused) el.play().catch(() => this.showToast('This recitation could not be played'));
+      else el.pause();
+    });
+    _defineProperty(this, "audioStop", () => {
+      const el = this._audioEl;
+      if (!el) return;
+      el.pause();
+      el.currentTime = 0;
+      this.setState({ audioPlaying: false, audioAt: 0 });
+    });
+    _defineProperty(this, "audioSkip", secs => {
+      const el = this._audioEl;
+      if (!el) return;
+      const dur = el.duration || 0;
+      const to = Math.min(dur || Infinity, Math.max(0, (el.currentTime || 0) + secs));
+      el.currentTime = to;
+      this.setState({ audioAt: to });
+    });
+    _defineProperty(this, "audioSeek", frac => {
+      const el = this._audioEl;
+      if (!el || !el.duration) return;
+      const to = Math.min(el.duration, Math.max(0, frac * el.duration));
+      el.currentTime = to;
+      this.setState({ audioAt: to });
+    });
+    _defineProperty(this, "cancelUpload", () => {
+      if (this._upload) { try { this._upload.abort(); } catch (e) {} this._upload = null; }
+      this.setState({ adminUpload: null });
     });
     _defineProperty(this, "stopQibla", () => {
       if (this._qiblaWatch !== null && this._qiblaWatch !== undefined) {
@@ -5601,52 +5719,59 @@ class App extends Component {
         transition: 'transform .2s ease',
         boxShadow: neuUp(.35)
       }
-    }))), st.adhanEnabled && ADHAN_SOUNDS.length > 1 && /*#__PURE__*/React.createElement("div", {
-      style: {
-        marginTop: 12
-      }
-    }, /*#__PURE__*/React.createElement("div", {
-      style: {
-        fontSize: 10,
-        letterSpacing: 1,
-        textTransform: 'uppercase',
-        fontWeight: 700,
-        color: NEU.muted,
-        marginBottom: 7
-      }
-    }, this.t('prayer.adhanSound')), /*#__PURE__*/React.createElement("div", {
-      style: {
-        display: 'flex',
-        gap: 8
-      }
-    }, ADHAN_SOUNDS.map(snd => {
-      const on = st.adhanSound === snd.key;
+    }))), st.adhanEnabled && (() => {
+      const sounds = adhanSounds(st.liveAzans);
+      if (sounds.length < 2) return null;
+      const chosen = sounds.find(x => x.key === st.adhanSound) ? st.adhanSound : sounds[0].key;
       return /*#__PURE__*/React.createElement("div", {
-        key: snd.key,
-        onClick: () => this.setAdhanSound(snd.key),
-        style: {
-          flex: 1,
-          padding: '9px 11px',
-          borderRadius: 12,
-          cursor: 'pointer',
-          background: NEU.surf,
-          border: NEU.edge,
-          boxShadow: on ? neuIn(.6) : neuUp(.6)
-        }
+        style: { marginTop: 12 }
       }, /*#__PURE__*/React.createElement("div", {
         style: {
-          fontSize: 12.5,
-          fontWeight: 700,
-          color: on ? NEU.accent : NEU.ink
+          fontSize: 10, letterSpacing: 1, textTransform: 'uppercase',
+          fontWeight: 700, color: NEU.muted, marginBottom: 7
         }
-      }, snd.label), /*#__PURE__*/React.createElement("div", {
-        style: {
-          fontSize: 10.5,
-          marginTop: 1,
-          color: on ? 'rgba(255,253,249,.7)' : NEU.muted
-        }
-      }, snd.sub));
-    }))), st.adhanEnabled && /*#__PURE__*/React.createElement("div", {
+      }, this.t('prayer.adhanSound')), /*#__PURE__*/React.createElement("div", {
+        style: { display: 'flex', flexDirection: 'column', gap: 7 }
+      }, sounds.map(snd => {
+        const on = chosen === snd.key;
+        return /*#__PURE__*/React.createElement("div", {
+          key: snd.key,
+          onClick: () => this.setAdhanSound(snd.key),
+          role: "radio",
+          "aria-checked": on ? 'true' : 'false',
+          style: {
+            display: 'flex', alignItems: 'center', gap: 11,
+            padding: '11px 13px', minHeight: 48, boxSizing: 'border-box',
+            borderRadius: 13, cursor: 'pointer',
+            background: NEU.surf, border: NEU.edge,
+            boxShadow: on ? neuIn(.6) : neuUp(.6)
+          }
+        }, /*#__PURE__*/React.createElement("div", {
+          "aria-hidden": "true",
+          style: {
+            flexShrink: 0, width: 18, height: 18, borderRadius: '50%',
+            border: `2px solid ${on ? '#1f5145' : '#cbc3b2'}`,
+            display: 'flex', alignItems: 'center', justifyContent: 'center'
+          }
+        }, on && /*#__PURE__*/React.createElement("div", {
+          style: { width: 8, height: 8, borderRadius: '50%', background: '#1f5145' }
+        })), /*#__PURE__*/React.createElement("div", {
+          style: { flex: 1, minWidth: 0 }
+        }, /*#__PURE__*/React.createElement("div", {
+          style: {
+            fontSize: 13, fontWeight: 700, color: on ? '#1f5145' : NEU.ink,
+            whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'
+          }
+        }, snd.label), /*#__PURE__*/React.createElement("div", {
+          style: {
+            fontSize: 10.5, marginTop: 1, color: NEU.muted,
+            whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'
+          }
+        }, snd.sub)));
+      })), /*#__PURE__*/React.createElement("div", {
+        style: { fontSize: 11, color: NEU.muted, marginTop: 8, lineHeight: 1.5 }
+      }, 'Your choice is kept on this device and plays at every prayer time.'));
+    })(), st.adhanEnabled && /*#__PURE__*/React.createElement("div", {
       style: {
         display: 'flex',
         gap: 8,
@@ -6822,6 +6947,7 @@ class App extends Component {
       onClick: () => {
         this.saveReadPos();
         this.destroyPdf();
+        this.audioStop();
         // a Learning chapter was opened from Madrasa, and back means where you were
         this.setState({ screen: rtype === 'learning' ? 'kids' : 'library', kidsTab: rtype === 'learning' ? 'books' : this.state.kidsTab, readingItem: null, readingType: null, readingLang: null });
         const sc = document.querySelector('.app > .s');
@@ -6865,30 +6991,11 @@ class App extends Component {
     /* The recitation sits above the text and outside the language tabs: it is the
        same recitation whichever script is on screen, and a reader following along
        must not lose their place in it by switching to the translation.
-       Native controls on purpose — seeking, speed and the lock screen all come
-       free, and none of them is worth re-implementing badly for a duʿāʾ someone
-       may be twenty minutes into. */
-    r.audio && React.createElement("div", {
-      style: {
-        background: rd.surf, border: `1px solid ${rd.border}`, borderRadius: 16,
-        padding: '12px 14px', marginBottom: 14
-      }
-    }, React.createElement("div", {
-      style: { display: 'flex', alignItems: 'center', gap: 8, marginBottom: 9 }
-    }, icon('book-heart', { size: 15, stroke: readAccent, style: { flexShrink: 0 } }),
-       React.createElement("div", {
-         style: { fontSize: 11, letterSpacing: 1, textTransform: 'uppercase', fontWeight: 700, color: rd.muted }
-       }, 'Recitation'),
-       r.reciter && React.createElement("div", {
-         style: { fontSize: 11.5, color: rd.muted, marginLeft: 'auto', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }
-       }, r.reciter)),
-       React.createElement("audio", {
-         controls: true,
-         preload: "metadata",
-         src: r.audio,
-         "aria-label": `Recitation of ${r.title || 'this text'}`,
-         style: { width: '100%', display: 'block' }
-       })),
+
+       Custom controls rather than the browser's, because the five that matter for
+       a forty-minute duʿāʾ \u2014 play, pause, stop, back, forward \u2014 are not the five a
+       native player puts within thumb reach on every platform. */
+    r.audio && this.renderAudioPlayer(st, r, rd, readAccent),
     lang === 'ar' && hasAr && React.createElement("div", {
       style: { background: rd.surf, border: `1px solid ${rd.border}`, borderRadius: 20, padding: '18px 16px' }
     }, mkLines(r.ar).map(L => {
@@ -7037,123 +7144,203 @@ class App extends Component {
       }, 'Downloaded copies are saved by your browser, not inside the app.'));
   }
 
-  /* A PDF gets into the Books section one of two ways, and the two are not equal.
-     An uploaded file is served from the project's own storage, which permits this
-     app to read it, so it can be shown in the reader. A pasted link is shown only
-     if the host it lives on allows that \u2014 many do not. The control says which is
-     which up front rather than leaving an administrator to discover it later. */
-  renderPdfPicker(st, d) {
-    const up = st.adminPdfUp;
+  /* A file gets into the library one of two ways, and the two are not equal. An
+     uploaded file is served from this project's own storage, which permits the
+     app to read it, so it can be played or shown inside the reader. A pasted
+     link works only if the host it lives on allows that \u2014 many do not. The
+     control says which is which up front rather than leaving an administrator to
+     find out from a reader. */
+  renderMediaPicker(st, d, o) {
+    const kind = o.kind;
+    const spec = MEDIA_KINDS[kind];
+    const field = o.field;
+    const up = st.adminUpload && st.adminUpload.kind === kind ? st.adminUpload : null;
     const busy = !!up && (up.state === 'reading' || up.state === 'sending');
     const tone = !up ? null
       : up.state === 'error' ? { bg: '#fdf0f2', edge: '#dfc4ca', ink: '#6e2230' }
       : up.state === 'done' ? { bg: '#eef7f4', edge: '#c4ddd7', ink: '#1f5145' }
       : { bg: '#f4ede0', edge: '#e2d3b4', ink: '#7d6220' };
+    const inputId = 'abi-up-' + kind;
+    const inp2 = {
+      width: '100%', border: NEU.edge, background: NEU.sunk, boxShadow: neuIn(.7),
+      borderRadius: 11, padding: '11px 13px', minHeight: 44, fontSize: 14,
+      color: '#2c2823', outline: 'none', boxSizing: 'border-box'
+    };
     return /*#__PURE__*/React.createElement("div", {
       style: {
-        border: NEU.edge,
-        background: NEU.surf,
-        boxShadow: neuUp(.6),
-        borderRadius: 14,
-        padding: 13,
-        marginBottom: 11
+        border: NEU.edge, background: NEU.surf, boxShadow: neuUp(.6),
+        borderRadius: 14, padding: 13, marginBottom: 11
       }
     }, /*#__PURE__*/React.createElement("div", {
       style: {
-        fontSize: 11,
-        letterSpacing: 1,
-        textTransform: 'uppercase',
-        fontWeight: 700,
-        color: '#6b6252',
-        marginBottom: 9
+        fontSize: 11, letterSpacing: 1, textTransform: 'uppercase',
+        fontWeight: 700, color: '#6b6252', marginBottom: 9
       }
-    }, "PDF (optional)"), /*#__PURE__*/React.createElement("label", {
-      htmlFor: "abi-pdf-file",
+    }, o.heading), /*#__PURE__*/React.createElement("label", {
+      htmlFor: inputId,
       style: {
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: 8,
-        minHeight: 46,
-        padding: '12px 14px',
-        borderRadius: 12,
+        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+        minHeight: 46, padding: '12px 14px', borderRadius: 12,
         border: '1.5px dashed #c4ddd7',
         background: busy ? '#f0e8d6' : '#eef7f4',
         color: busy ? '#7d6220' : '#1f5145',
-        fontSize: 13.5,
-        fontWeight: 700,
-        cursor: busy ? 'default' : 'pointer'
+        fontSize: 13.5, fontWeight: 700, cursor: busy ? 'default' : 'pointer'
       }
-    }, icon('book-open', { size: 16 }), busy ? up.msg : 'Upload a PDF from this device'),
+    }, icon(kind === 'audio' ? 'book-heart' : 'book-open', { size: 16 }),
+       busy ? up.msg : 'Upload ' + (kind === 'audio' ? 'audio' : 'a PDF') + ' from this device'),
     /*#__PURE__*/React.createElement("input", {
-      id: "abi-pdf-file",
+      id: inputId,
       type: "file",
-      accept: "application/pdf,.pdf",
+      accept: spec.accept,
       disabled: busy,
       onChange: e => {
         const f = e.target.files && e.target.files[0];
         e.target.value = '';
-        this.uploadPdf(f);
+        this.uploadMedia(kind, f, url => this.setDraft({ [field]: url }));
       },
+      style: { position: 'absolute', width: 1, height: 1, opacity: 0, pointerEvents: 'none' }
+    }),
+    /* A bar rather than a percentage alone: 60 MB over a phone connection is long
+       enough that a number which has not moved looks the same as one that never
+       will. */
+    busy && typeof up.pct === 'number' && /*#__PURE__*/React.createElement("div", {
+      role: "progressbar",
+      "aria-valuenow": up.pct,
+      "aria-valuemin": 0,
+      "aria-valuemax": 100,
+      "aria-label": 'Upload progress',
+      style: { height: 5, borderRadius: 3, background: '#e6ded0', marginTop: 9, overflow: 'hidden' }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: { height: '100%', width: up.pct + '%', background: '#1f5145', transition: 'width .2s linear' }
+    })),
+    busy && /*#__PURE__*/React.createElement("div", {
+      onClick: this.cancelUpload,
       style: {
-        position: 'absolute',
-        width: 1,
-        height: 1,
-        opacity: 0,
-        pointerEvents: 'none'
+        marginTop: 9, textAlign: 'center', minHeight: 40, padding: '10px',
+        borderRadius: 11, border: '1px solid rgba(110,34,48,.3)',
+        color: '#6e2230', fontSize: 12.5, fontWeight: 600, cursor: 'pointer'
       }
-    }), up && !busy && /*#__PURE__*/React.createElement("div", {
+    }, 'Cancel upload'),
+    up && !busy && /*#__PURE__*/React.createElement("div", {
       role: "status",
       style: {
-        marginTop: 9,
-        padding: '9px 11px',
-        borderRadius: 11,
-        background: tone.bg,
-        border: `1px solid ${tone.edge}`,
-        color: tone.ink,
-        fontSize: 12,
-        lineHeight: 1.5
+        marginTop: 9, padding: '9px 11px', borderRadius: 11,
+        background: tone.bg, border: `1px solid ${tone.edge}`,
+        color: tone.ink, fontSize: 12, lineHeight: 1.5
       }
     }, up.msg), /*#__PURE__*/React.createElement("div", {
-      style: {
-        fontSize: 11,
-        color: NEU.muted,
-        margin: '11px 0 7px',
-        lineHeight: 1.5
-      }
-    }, "\u2026 or paste a link. A linked PDF opens in the browser, but only shows inside the app if its host allows other sites to read it."),
-    /*#__PURE__*/React.createElement("input", {
-      value: d.pdf || '',
-      onChange: e => this.setDraft({ pdf: e.target.value }),
+      style: { fontSize: 11, color: NEU.muted, margin: '11px 0 7px', lineHeight: 1.5 }
+    }, o.hint), /*#__PURE__*/React.createElement("input", {
+      value: d[field] || '',
+      onChange: e => this.setDraft({ [field]: e.target.value }),
       placeholder: "https://\u2026",
+      style: inp2
+    }), o.extraField && /*#__PURE__*/React.createElement("input", {
+      value: d[o.extraField] || '',
+      onChange: e => this.setDraft({ [o.extraField]: e.target.value }),
+      placeholder: o.extraPlaceholder,
+      maxLength: 60,
+      style: { ...inp2, marginTop: 9 }
+    }), d[field] && /*#__PURE__*/React.createElement("div", {
+      onClick: () => this.setDraft({ [field]: '' }),
       style: {
-        width: '100%',
-        border: NEU.edge,
-        background: NEU.sunk,
-        boxShadow: neuIn(.7),
-        borderRadius: 11,
-        padding: '11px 13px',
-        minHeight: 44,
-        fontSize: 14,
-        color: '#2c2823',
-        outline: 'none',
-        boxSizing: 'border-box'
+        marginTop: 9, textAlign: 'center', minHeight: 40, padding: '10px',
+        borderRadius: 11, border: '1px solid rgba(110,34,48,.3)',
+        color: '#6e2230', fontSize: 12.5, fontWeight: 600, cursor: 'pointer'
       }
-    }), d.pdf && /*#__PURE__*/React.createElement("div", {
-      onClick: () => this.setDraft({ pdf: '' }),
+    }, 'Remove this ' + spec.label));
+  }
+
+  /* Shorthands, so every editor asks for the same two blocks the same way. */
+  renderPdfPicker(st, d) {
+    return this.renderMediaPicker(st, d, {
+      kind: 'pdf', field: 'pdf', heading: 'PDF (optional)',
+      hint: '\u2026 or paste a link. A linked PDF opens in the browser, but only shows inside the app if its host allows other sites to read it.'
+    });
+  }
+  renderAudioPicker(st, d) {
+    return this.renderMediaPicker(st, d, {
+      kind: 'audio', field: 'audio', heading: 'Recitation (optional)',
+      extraField: 'reciter', extraPlaceholder: 'Reciter (optional)',
+      hint: '\u2026 or paste a direct link to an MP3 or M4A file, not a page it sits on. The player appears at the top of the reader.'
+    });
+  }
+
+  renderAudioPlayer(st, r, rd, accent) {
+    const at = st.audioAt || 0;
+    const dur = st.audioDur || 0;
+    const playing = !!st.audioPlaying;
+    const clock = t => {
+      if (!isFinite(t) || t < 0) t = 0;
+      const m = Math.floor(t / 60), sec = Math.floor(t % 60);
+      return m + ':' + String(sec).padStart(2, '0');
+    };
+    const btn = (label, mark, onClick, big) => /*#__PURE__*/React.createElement("div", {
+      onClick,
+      "aria-label": label,
       style: {
-        marginTop: 9,
-        textAlign: 'center',
-        minHeight: 40,
-        padding: '10px',
-        borderRadius: 11,
-        border: '1px solid rgba(110,34,48,.3)',
-        color: '#6e2230',
-        fontSize: 12.5,
-        fontWeight: 600,
-        cursor: 'pointer'
+        width: big ? 52 : 44, height: big ? 52 : 44, borderRadius: big ? 16 : 13,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        cursor: 'pointer', flexShrink: 0,
+        border: big ? 'none' : `1px solid ${rd.border}`,
+        background: big ? accent : rd.surf,
+        color: big ? '#fff' : accent,
+        fontSize: big ? 19 : 15, fontWeight: 700,
+        boxShadow: big ? '0 6px 16px -8px rgba(0,0,0,.5)' : 'none'
       }
-    }, "Remove this PDF"));
+    }, mark);
+
+    return /*#__PURE__*/React.createElement("div", {
+      style: {
+        background: rd.surf, border: `1px solid ${rd.border}`, borderRadius: 16,
+        padding: '13px 14px 14px', marginBottom: 14
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: { display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }
+    }, icon('book-heart', { size: 15, stroke: accent, style: { flexShrink: 0 } }),
+       /*#__PURE__*/React.createElement("div", {
+         style: { fontSize: 11, letterSpacing: 1, textTransform: 'uppercase', fontWeight: 700, color: rd.muted }
+       }, 'Recitation'),
+       r.reciter && /*#__PURE__*/React.createElement("div", {
+         style: {
+           fontSize: 11.5, color: rd.muted, marginLeft: 'auto', minWidth: 0,
+           overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'
+         }
+       }, r.reciter)),
+
+    /*#__PURE__*/React.createElement("audio", {
+      ref: this.bindAudio,
+      src: r.audio,
+      preload: "metadata",
+      style: { display: 'none' }
+    }),
+
+    /* The bar is a slider so it can be dragged with a thumb and moved with the
+       arrow keys, which a row of div buttons cannot be. */
+    /*#__PURE__*/React.createElement("input", {
+      type: "range",
+      className: "abi-seek",
+      min: 0, max: 1000,
+      value: dur ? Math.round(at / dur * 1000) : 0,
+      onChange: e => this.audioSeek(+e.target.value / 1000),
+      "aria-label": 'Seek within the recitation',
+      "aria-valuetext": clock(at) + ' of ' + clock(dur),
+      style: { width: '100%', display: 'block', accentColor: accent }
+    }),
+    /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: 'flex', justifyContent: 'space-between',
+        fontSize: 11, color: rd.muted, marginTop: 2, fontVariantNumeric: 'tabular-nums'
+      }
+    }, /*#__PURE__*/React.createElement("span", null, clock(at)),
+       /*#__PURE__*/React.createElement("span", null, dur ? clock(dur) : '\u2014')),
+
+    /*#__PURE__*/React.createElement("div", {
+      style: { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, marginTop: 10 }
+    }, btn('Back 15 seconds', '\u21ba15', () => this.audioSkip(-15)),
+       btn(playing ? 'Pause' : 'Play', playing ? '\u2016' : '\u25b6', this.audioToggle, true),
+       btn('Stop', '\u25a0', this.audioStop),
+       btn('Forward 15 seconds', '15\u21bb', () => this.audioSkip(15))));
   }
 
   /* ── CLASSIFIEDS ── */
@@ -8552,6 +8739,9 @@ class App extends Component {
     }, {
       id: 'ads',
       label: 'Billboard'
+    }, {
+      id: 'azans',
+      label: 'Adhan'
     }, {
       id: 'kids',
       label: 'Kids'
@@ -10393,6 +10583,117 @@ class App extends Component {
       }, liveCount ? `● Live — ${liveCount} ad${liveCount > 1 ? 's' : ''} rotating every 5 seconds under Ask Your Maulana` : 'No live ads — the billboard is hidden on the home page.'));
     };
 
+    /* \u2500 ADHAN \u2500 */
+    /* The shipped adhan is not in this list and cannot be removed. It is the only
+       one already in the service-worker cache, so it is the one that still plays
+       when the phone is offline at Fajr \u2014 an uploaded azan is a choice on top of
+       it, never a replacement for it. */
+    const renderAzansSection = () => {
+      const d = st.adminEditDraft;
+      const list = st.liveAzans || [];
+      if (editing) {
+        const isNew = st.adminEditIdx === -1;
+        const saveAzan = () => {
+          if (!(d.name || '').trim()) {
+            this.showToast('Give the adhan a name');
+            return;
+          }
+          if (!(d.url || '').trim()) {
+            this.showToast('Upload an audio file or paste a link');
+            return;
+          }
+          if (!/^https?:\/\//.test(d.url.trim())) {
+            this.showToast('Audio link must start with http(s)://');
+            return;
+          }
+          const item = {
+            id: d.id || randomId(),
+            name: (d.name || '').trim().slice(0, 40),
+            reciter: (d.reciter || '').trim().slice(0, 40),
+            url: (d.url || '').trim()
+          };
+          const a = [...list];
+          if (isNew) a.push(item);else a[st.adminEditIdx] = item;
+          save('azans', 'liveAzans', a, isNew ? 'Adhan added!' : 'Adhan updated!');
+        };
+        return /*#__PURE__*/React.createElement("div", {
+          style: { padding: '0 0 20px' }
+        }, /*#__PURE__*/React.createElement("div", {
+          style: { fontSize: 13, fontWeight: 700, color: '#27241f', marginBottom: 14 }
+        }, isNew ? 'Add Adhan' : 'Edit Adhan'), /*#__PURE__*/React.createElement("input", {
+          value: d.name || '',
+          onChange: e => this.setDraft({ name: e.target.value }),
+          placeholder: "Name shown to listeners (e.g. Makkah Adhan)",
+          maxLength: 40,
+          style: inp
+        }), this.renderMediaPicker(st, d, {
+          kind: 'audio', field: 'url', heading: 'Adhan audio',
+          extraField: 'reciter', extraPlaceholder: 'Muadhdhin (optional)',
+          hint: '\u2026 or paste a direct link to an MP3 or M4A file.'
+        }), /*#__PURE__*/React.createElement("div", {
+          style: { display: 'flex', gap: 10 }
+        }, btn('Save', saveAzan, {
+          flex: 1, background: '#1f5145', color: '#f3ead4'
+        }), btn('Cancel', this.cancelEdit, {
+          flex: 1, border: NEU.edge, background: NEU.surf, boxShadow: neuUp(), color: '#3f3a32'
+        })));
+      }
+      return /*#__PURE__*/React.createElement("div", null, btn('+ Add Adhan', () => this.startEdit(-1, {
+        name: '', reciter: '', url: ''
+      }), {
+        background: '#1f5145', color: '#f3ead4', marginBottom: 14, width: '100%'
+      }), /*#__PURE__*/React.createElement("div", {
+        style: {
+          display: 'flex', alignItems: 'center', gap: 11,
+          background: '#eef7f4', border: '1px solid #c4ddd7', borderRadius: 13,
+          padding: '11px 13px', marginBottom: 9
+        }
+      }, icon('check', { size: 16, stroke: '#1f5145', style: { flexShrink: 0 } }),
+         /*#__PURE__*/React.createElement("div", {
+           style: { flex: 1, minWidth: 0 }
+         }, /*#__PURE__*/React.createElement("div", {
+           style: { fontSize: 13, fontWeight: 600, color: '#1f5145' }
+         }, 'Classic Adhan'), /*#__PURE__*/React.createElement("div", {
+           style: { fontSize: 10.5, color: '#4a6b62', marginTop: 1 }
+         }, 'Shipped with the app \u00b7 always available offline'))),
+      list.map((a, i) => /*#__PURE__*/React.createElement("div", {
+        key: i,
+        style: {
+          display: 'flex', alignItems: 'center', gap: 10,
+          background: NEU.surf, boxShadow: neuUp(), border: NEU.edge,
+          borderRadius: 14, padding: '10px 12px', marginBottom: 8
+        }
+      }, /*#__PURE__*/React.createElement("div", {
+        style: { flex: 1, minWidth: 0 }
+      }, /*#__PURE__*/React.createElement("div", {
+        style: {
+          fontSize: 13, fontWeight: 600, color: '#2c2823',
+          whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'
+        }
+      }, a.name || 'Untitled'), /*#__PURE__*/React.createElement("div", {
+        style: {
+          fontSize: 10.5, color: NEU.muted, marginTop: 1,
+          whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'
+        }
+      }, a.reciter || 'Uploaded')), btn('Play', () => {
+        this.stopAdhan();
+        this.adhanAudio = new Audio(a.url);
+        this.adhanAudio.play().catch(() => this.showToast('That file could not be played'));
+      }, {
+        background: '#f3ecd9', color: '#7d6220', fontSize: 12, padding: '6px 10px'
+      }), btn('Edit', () => this.startEdit(i, { ...a }), {
+        background: '#e6efe9', color: '#1f5145', fontSize: 12, padding: '6px 12px'
+      }), btn('\u2715', () => {
+        const arr = [...list];
+        arr.splice(i, 1);
+        save('azans', 'liveAzans', arr, 'Adhan removed');
+      }, {
+        background: '#fdf0f2', color: '#6e2230', fontSize: 12, padding: '6px 10px'
+      }))), /*#__PURE__*/React.createElement("div", {
+        style: { fontSize: 11.5, color: NEU.muted, marginTop: 10, lineHeight: 1.6 }
+      }, 'Everyone chooses their own from this list under Prayer Times, and the choice stays on their device. Removing one here sends anyone who had chosen it back to the Classic Adhan.'));
+    };
+
     /* ─ PINNED MESSAGE ─ */
     const renderPinnedSection = () => {
       const d = st.adminEditDraft;
@@ -11561,54 +11862,7 @@ class App extends Component {
               overflowY: 'auto',
               resize: 'vertical'
             }
-          }), /*#__PURE__*/React.createElement("input", {
-            value: d.pdf || '',
-            onChange: e => this.setDraft({
-              pdf: e.target.value
-            }),
-            placeholder: "PDF link (optional — adds a Read PDF button)",
-            style: inp
-          }), /*#__PURE__*/React.createElement("div", {
-            style: {
-              border: NEU.edge,
-              background: NEU.surf,
-              boxShadow: neuUp(.6),
-              borderRadius: 14,
-              padding: 13,
-              marginBottom: 11
-            }
-          }, /*#__PURE__*/React.createElement("div", {
-            style: {
-              fontSize: 11,
-              letterSpacing: 1,
-              textTransform: 'uppercase',
-              fontWeight: 700,
-              color: '#6b6252',
-              marginBottom: 9
-            }
-          }, "Recitation (optional)"), /*#__PURE__*/React.createElement("input", {
-            value: d.audio || '',
-            onChange: e => this.setDraft({
-              audio: e.target.value
-            }),
-            placeholder: "Audio link — https://…mp3",
-            style: { ...inp, marginBottom: 9 }
-          }), /*#__PURE__*/React.createElement("input", {
-            value: d.reciter || '',
-            onChange: e => this.setDraft({
-              reciter: e.target.value
-            }),
-            placeholder: "Reciter (optional)",
-            maxLength: 60,
-            style: { ...inp, marginBottom: 0 }
-          }), /*#__PURE__*/React.createElement("div", {
-            style: {
-              fontSize: 11,
-              color: NEU.muted,
-              marginTop: 9,
-              lineHeight: 1.5
-            }
-          }, "A direct link to an MP3 or M4A file, not a page it sits on. The player appears at the top of the reader.")),
+          }), this.renderPdfPicker(st, d), this.renderAudioPicker(st, d),
           /*#__PURE__*/React.createElement("div", {
             style: {
               display: 'flex',
@@ -11680,13 +11934,19 @@ class App extends Component {
             this.showToast('PDF link must start with http(s)://');
             return;
           }
+          if (d.audio && !/^https?:\/\//.test(d.audio.trim())) {
+            this.showToast('Audio link must start with http(s)://');
+            return;
+          }
           const item = {
             ref: d.ref || '',
             title: d.title || '',
             sum: d.sum || '',
             ar: d.ar || '',
             tr: d.tr || '',
-            pdf: (d.pdf || '').trim()
+            pdf: (d.pdf || '').trim(),
+            audio: (d.audio || '').trim(),
+            reciter: (d.reciter || '').trim()
           };
           if (isNew) next[g].unshift(item);else next[g][st.adminEditIdx] = item;
           save('nahj', 'liveNahj', next, isNew ? 'Entry added!' : 'Entry updated!');
@@ -11764,7 +12024,7 @@ class App extends Component {
             overflowY: 'auto',
             resize: 'vertical'
           }
-        }), this.renderPdfPicker(st, d), /*#__PURE__*/React.createElement("div", {
+        }), this.renderPdfPicker(st, d), this.renderAudioPicker(st, d), /*#__PURE__*/React.createElement("div", {
           style: {
             display: 'flex',
             gap: 10
@@ -11834,6 +12094,7 @@ class App extends Component {
     const sectionContent = {
       stories: renderStoriesSection,
       library: renderLibrarySection,
+      azans: renderAzansSection,
       classifieds: renderClassifiedsSection,
       events: renderEventsSection,
       prayers: renderPrayersSection,
