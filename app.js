@@ -6823,7 +6823,7 @@ class App extends Component {
         this.saveReadPos();
         this.destroyPdf();
         // a Learning chapter was opened from Madrasa, and back means where you were
-        this.setState({ screen: rtype === 'learning' ? 'kids' : 'library', readingItem: null, readingType: null, readingLang: null });
+        this.setState({ screen: rtype === 'learning' ? 'kids' : 'library', kidsTab: rtype === 'learning' ? 'books' : this.state.kidsTab, readingItem: null, readingType: null, readingLang: null });
         const sc = document.querySelector('.app > .s');
         if (sc) sc.scrollTop = 0;
       },
@@ -12413,7 +12413,7 @@ class App extends Component {
         gap: 9,
         marginBottom: 18
       }
-    }, [['learning', 'Learning', '🎓', '#1f5145', '#e6efe9'], ['videos', this.t('kids.videos'), '🎬', '#3a4a78', '#e8ebf4'], ['books', this.t('kids.books'), '📚', '#8a4b2c', '#f6ebe4'], ['wisdom', this.t('kids.wisdom'), '💡', '#7d6220', '#f7f0dc'], ['quiz', 'Quiz', '🎯', '#6e2230', '#f7e7ea']].map(([k, label, icon, ink, tint]) => {
+    }, [['videos', this.t('kids.videos'), '🎬', '#3a4a78', '#e8ebf4'], ['books', this.t('kids.books'), '📚', '#8a4b2c', '#f6ebe4'], ['wisdom', this.t('kids.wisdom'), '💡', '#7d6220', '#f7f0dc'], ['quiz', 'Quiz', '🎯', '#6e2230', '#f7e7ea']].map(([k, label, icon, ink, tint]) => {
       const on = kt === k;
       return /*#__PURE__*/React.createElement("div", {
         key: k,
@@ -12458,7 +12458,7 @@ class App extends Component {
           textAlign: 'center'
         }
       }, label));
-    })), kt === 'learning' && this.renderLearning(st), kt === 'videos' && /*#__PURE__*/React.createElement(React.Fragment, null, !heroV && /*#__PURE__*/React.createElement("div", {
+    })), kt === 'videos' && /*#__PURE__*/React.createElement(React.Fragment, null, !heroV && /*#__PURE__*/React.createElement("div", {
       style: {
         position: 'relative',
         overflow: 'hidden',
@@ -12691,7 +12691,7 @@ class App extends Component {
         color: '#bcae8d',
         marginTop: 6
       }
-    }, "— ", q.who)))), kt === 'books' && /*#__PURE__*/React.createElement(React.Fragment, null,
+    }, "— ", q.who)))), kt === 'books' && !st.learnBook && /*#__PURE__*/React.createElement(React.Fragment, null,
     /* ANCHOR: MADRASA_CONTENT render — mirrors ahlulbait.ie/madrasa (data in MADRASA_INFO) */
     /*#__PURE__*/React.createElement("div", {
       style: {
@@ -12844,7 +12844,7 @@ class App extends Component {
         cursor: 'pointer',
         marginBottom: 24
       }
-    }, "Register your child ↗")), kt === 'quiz' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+    }, "Register your child ↗")), kt === 'books' && this.renderLearning(st), kt === 'quiz' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
       style: {
         fontFamily: 'Spectral,serif',
         fontSize: 17,
@@ -13296,8 +13296,16 @@ class App extends Component {
 
     if (!open) {
       return /*#__PURE__*/React.createElement("div", {
-        style: { display: 'flex', flexDirection: 'column', gap: 12 }
-      }, books.map(b => /*#__PURE__*/React.createElement("div", {
+        style: { display: 'flex', flexDirection: 'column', gap: 12, marginTop: 20 }
+      }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+        style: {
+          fontSize: 11, letterSpacing: 1.2, textTransform: 'uppercase',
+          fontWeight: 700, color: '#1f5145'
+        }
+      }, 'Learning'), /*#__PURE__*/React.createElement("div", {
+        style: { fontSize: 12.5, color: NEU.muted, marginTop: 3, lineHeight: 1.5 }
+      }, 'Read the course books here, chapter by chapter.')),
+      books.map(b => /*#__PURE__*/React.createElement("div", {
         key: b.id,
         onClick: () => this.setState({ learnBook: b.id, learnQuery: '' }),
         style: {
