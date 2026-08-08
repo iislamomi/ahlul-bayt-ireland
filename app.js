@@ -2016,6 +2016,25 @@ const AUDIO_RATES = [0.75, 1, 1.5, 2];
    plays when the phone is offline at Fajr. */
 
 const ADHAN_DEFAULT = { key: 'default', label: 'Classic Adhan', sub: 'Shipped with the app', file: './adhan.mp3' };
+
+/* The Shia adhan recordings published by praytimes.org, served from this app
+   rather than linked: three megabytes for all twelve, which buys playback with
+   no third-party host in the path, nothing to add to the media-src policy, and
+   an adhan that still sounds when the phone is offline. They are named for the
+   muadhdhin, because that is the only thing that distinguishes one from another
+   until you have heard it — which is what the preview button beside each is for.
+   Built in rather than uploaded: they need no administrator, and they survive an
+   empty database. */
+const BUILTIN_ADHANS = [
+  'Aghati', 'Ghalwash', 'Kazem-Zadeh', 'Moazzen-Zadeh', 'Mohammad-Zadeh',
+  'Rezaeian', 'Rowhani-Nejad', 'Salimi', 'Sharif', 'Sobhdel', 'Tasvieh-Chi', 'Tookhi'
+].map(f => ({
+  key: 'builtin:' + f,
+  label: f.replace(/-/g, ' '),
+  sub: 'Shia adhan',
+  file: './adhan/' + f + '.mp3'
+}));
+
 function adhanSounds(list) {
   const extra = (list || [])
     .filter(a => a && a.url && a.name)
@@ -2028,7 +2047,7 @@ function adhanSounds(list) {
       sub: String(a.reciter || 'Uploaded').slice(0, 40),
       file: a.url
     }));
-  return [ADHAN_DEFAULT, ...extra];
+  return [ADHAN_DEFAULT, ...BUILTIN_ADHANS, ...extra];
 }
 
 /* ── SUPABASE SYNC ── */
@@ -2843,6 +2862,7 @@ class App extends Component {
       notifEnabled: lsGet('notifEnabled', false),
       adhanPlaying: false,
       adhanPending: false,
+      adhanPreview: null,
       notifPermission: typeof Notification !== 'undefined' ? Notification.permission : 'default',
       qiblaStatus: 'idle',
       qiblaBearing: null,
@@ -3679,6 +3699,24 @@ class App extends Component {
       });
       // Warm the service-worker cache so the chosen adhan still plays offline
       fetch(pick.file).catch(() => {});
+    });
+    /* Hearing one before living with it. Tapping the playing one stops it, and
+       starting another stops the first, so only ever one is sounding. This runs
+       through the same handle as the real adhan so that a preview left playing
+       cannot end up layered under a call to prayer. */
+    _defineProperty(this, "previewAdhan", snd => {
+      if (this.state.adhanPreview === snd.key) {
+        this.stopAdhan();
+        this.setState({ adhanPreview: null });
+        return;
+      }
+      this.stopAdhan();
+      this.adhanAudio = new Audio(snd.file);
+      this.adhanAudio.onended = () => this.setState({ adhanPreview: null });
+      this.adhanAudio.play().then(() => this.setState({ adhanPreview: snd.key })).catch(() => {
+        this.setState({ adhanPreview: null });
+        this.showToast('That adhan could not be played');
+      });
     });
     _defineProperty(this, "setAdhanEnabled", on => {
       lsSet('adhanEnabled', on);
@@ -8341,6 +8379,16 @@ class App extends Component {
             whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'
           }
         }, snd.sub)), /*#__PURE__*/React.createElement("div", {
+          onClick: e => { e.stopPropagation(); this.previewAdhan(snd); },
+          role: "button",
+          "aria-label": (st.adhanPreview === snd.key ? 'Stop ' : 'Preview ') + snd.label,
+          style: {
+            flexShrink: 0, width: 34, height: 34, borderRadius: '50%',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            border: NEU.edge, background: NEU.sunk,
+            color: onSurf('#1f5145'), fontSize: 12, cursor: 'pointer'
+          }
+        }, st.adhanPreview === snd.key ? '■' : '▶'), /*#__PURE__*/React.createElement("div", {
           "aria-hidden": "true",
           style: {
             flexShrink: 0, width: 44, height: 26, borderRadius: 15,
@@ -8362,11 +8410,10 @@ class App extends Component {
       })), /*#__PURE__*/React.createElement("div", {
         key: 'azan-note',
         style: { fontSize: 11.5, color: NEU.muted, marginBottom: 24, paddingLeft: 2, lineHeight: 1.5 }
-      }, !st.adhanEnabled
+      }, (!st.adhanEnabled
         ? 'No adhan will sound. Switch one on to hear it at every prayer time you have not silenced.'
-        : sounds.length > 1
-          ? 'Only one plays at a time — switching one on switches the others off. Kept on this device.'
-          : 'The one that ships with the app, played at every prayer time you have not silenced. More appear here as they are added.')];
+        : 'Tap ▶ to hear one, and the switch to keep it. Only one plays at a time — switching one on switches the others off. Kept on this device.')
+        + ' Shia adhan recordings courtesy of praytimes.org.')];
     })(), /*#__PURE__*/React.createElement("div", {
       style: {
         fontSize: 11,
