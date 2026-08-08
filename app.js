@@ -5844,7 +5844,6 @@ class App extends Component {
          left here is the answer to "which one is playing", and a way through to
          change it — a label with a chevron, not a second copy of the control. */
       const sounds = adhanSounds(st.liveAzans);
-      if (sounds.length < 2) return null;
       const chosen = sounds.find(x => x.key === st.adhanSound) || sounds[0];
       return /*#__PURE__*/React.createElement("div", {
         onClick: () => this.go('more'),
@@ -8269,9 +8268,13 @@ class App extends Component {
          comes looking for one — it used to sit under a toggle inside the prayer
          screen, which is where you go to read times, not to change preferences.
          Rendered as the same rows as Language rather than as radio cards, so this
-         screen stays one list rather than a list and a widget. */
+         screen stays one list rather than a list and a widget.
+
+         Shown even when the shipped adhan is the only one. Hiding it until a
+         second arrives means the first person to look for the setting concludes
+         there isn't one — and nobody asks for an azan to be uploaded to a screen
+         they have no reason to believe exists. */
       const sounds = adhanSounds(st.liveAzans);
-      if (sounds.length < 2) return null;
       const chosen = sounds.find(x => x.key === st.adhanSound) ? st.adhanSound : sounds[0].key;
       return [/*#__PURE__*/React.createElement("div", {
         key: 'azan-head',
@@ -8317,7 +8320,9 @@ class App extends Component {
       })), /*#__PURE__*/React.createElement("div", {
         key: 'azan-note',
         style: { fontSize: 11.5, color: NEU.muted, marginBottom: 24, paddingLeft: 2, lineHeight: 1.5 }
-      }, 'Kept on this device, and played at every prayer time you have not silenced.')];
+      }, sounds.length > 1
+        ? 'Kept on this device, and played at every prayer time you have not silenced.'
+        : 'The one that ships with the app, played at every prayer time you have not silenced. More appear here as they are added.')];
     })(), /*#__PURE__*/React.createElement("div", {
       style: {
         fontSize: 11,
@@ -10933,7 +10938,7 @@ class App extends Component {
         background: '#fdf0f2', color: onSurf('#6e2230'), fontSize: 12, padding: '6px 10px'
       }))), /*#__PURE__*/React.createElement("div", {
         style: { fontSize: 11.5, color: NEU.muted, marginTop: 10, lineHeight: 1.6 }
-      }, 'Everyone chooses their own from this list under Prayer Times, and the choice stays on their device. Removing one here sends anyone who had chosen it back to the Classic Adhan.'));
+      }, 'Everyone chooses their own from this list under More → Adhan Sound, and the choice stays on their device. Removing one here sends anyone who had chosen it back to the Classic Adhan.'));
     };
 
     /* ─ PINNED MESSAGE ─ */
