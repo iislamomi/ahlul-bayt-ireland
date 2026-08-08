@@ -2836,7 +2836,8 @@ class App extends Component {
       lang: 'English',
       notifDismissed: false,
       prayerPreset: 'ahlulbayt',
-      adhanEnabled: true,
+      // was hardcoded true, so turning the adhan off lasted until the next reload
+      adhanEnabled: lsGet('adhanEnabled', true),
       adhanMuted: lsGet('adhanMuted', {}),
       adhanSound: lsGet('adhanSound', 'default'),
       notifEnabled: lsGet('notifEnabled', false),
@@ -3678,6 +3679,28 @@ class App extends Component {
       });
       // Warm the service-worker cache so the chosen adhan still plays offline
       fetch(pick.file).catch(() => {});
+    });
+    _defineProperty(this, "setAdhanEnabled", on => {
+      lsSet('adhanEnabled', on);
+      if (!on) this.stopAdhan();
+      this.setState({
+        adhanEnabled: on
+      });
+    });
+    /* One switch per adhan, and they are exclusive: switching one on switches
+       whichever was on off, and switching the last one off means no adhan
+       sounds at all. That second state is the same thing the "Adhan (Prayer
+       Call)" switch has always controlled, so it is set here rather than
+       duplicated — a person who has turned every adhan off has turned the adhan
+       off, and finding the prayer screen still claiming it is on would be a lie. */
+    _defineProperty(this, "toggleAdhanChoice", key => {
+      const playing = this.state.adhanEnabled && this.state.adhanSound === key;
+      if (playing) {
+        this.setAdhanEnabled(false);
+        return;
+      }
+      this.setAdhanSound(key);
+      this.setAdhanEnabled(true);
     });
     _defineProperty(this, "playAdhan", () => {
       this.stopAdhan();
@@ -5805,9 +5828,7 @@ class App extends Component {
         marginTop: 1
       }
     }, this.t('prayer.adhanSub'))), /*#__PURE__*/React.createElement("div", {
-      onClick: () => this.setState(s => ({
-        adhanEnabled: !s.adhanEnabled
-      })),
+      onClick: () => this.setAdhanEnabled(!st.adhanEnabled),
       role: "switch",
       "aria-checked": st.adhanEnabled ? 'true' : 'false',
       "aria-label": 'Adhan sound',
@@ -8284,19 +8305,22 @@ class App extends Component {
         }
       }, this.t('prayer.adhanSound')), /*#__PURE__*/React.createElement("div", {
         key: 'azan-card',
-        role: "radiogroup",
+        role: "group",
         "aria-label": this.t('prayer.adhanSound'),
         style: {
           background: NEU.surf, boxShadow: neuUp(), border: NEU.edge,
           borderRadius: 16, padding: '6px 16px', marginBottom: 9
         }
       }, sounds.map((snd, i) => {
-        const on = chosen === snd.key;
+        /* A switch rather than a tick, because there is a real off here: with
+           every one of them off, no adhan sounds. A tick cannot say that. */
+        const on = st.adhanEnabled && chosen === snd.key;
         return /*#__PURE__*/React.createElement("div", {
           key: snd.key,
-          onClick: () => this.setAdhanSound(snd.key),
-          role: "radio",
+          onClick: () => this.toggleAdhanChoice(snd.key),
+          role: "switch",
           "aria-checked": on ? 'true' : 'false',
+          "aria-label": snd.label,
           style: {
             display: 'flex', alignItems: 'center', gap: 12,
             padding: '10px 0', minHeight: 48, boxSizing: 'border-box',
@@ -8316,13 +8340,33 @@ class App extends Component {
             fontSize: 11.5, color: NEU.muted, marginTop: 1,
             whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'
           }
-        }, snd.sub)), on && icon('check', { size: 18, stroke: NEU.accent, sw: 2.4 }));
+        }, snd.sub)), /*#__PURE__*/React.createElement("div", {
+          "aria-hidden": "true",
+          style: {
+            flexShrink: 0, width: 44, height: 26, borderRadius: 15,
+            /* Same track as the Dark mode switch two sections down. Its own sunk
+               token measured 1.06:1 against the card in light mode — an off
+               switch you can only find by its inset shadow. */
+            background: on ? onSurf('#1f5145') : st.dark ? '#3b4247' : '#d8d0bf',
+            position: 'relative', transition: 'background .2s'
+          }
+        }, /*#__PURE__*/React.createElement("div", {
+          style: {
+            position: 'absolute', top: 3, left: 3,
+            transform: on ? 'translateX(18px)' : 'none',
+            width: 20, height: 20, borderRadius: '50%',
+            background: '#fff',
+            boxShadow: '0 1px 3px rgba(0,0,0,.2)', transition: 'transform .2s ease'
+          }
+        })));
       })), /*#__PURE__*/React.createElement("div", {
         key: 'azan-note',
         style: { fontSize: 11.5, color: NEU.muted, marginBottom: 24, paddingLeft: 2, lineHeight: 1.5 }
-      }, sounds.length > 1
-        ? 'Kept on this device, and played at every prayer time you have not silenced.'
-        : 'The one that ships with the app, played at every prayer time you have not silenced. More appear here as they are added.')];
+      }, !st.adhanEnabled
+        ? 'No adhan will sound. Switch one on to hear it at every prayer time you have not silenced.'
+        : sounds.length > 1
+          ? 'Only one plays at a time — switching one on switches the others off. Kept on this device.'
+          : 'The one that ships with the app, played at every prayer time you have not silenced. More appear here as they are added.')];
     })(), /*#__PURE__*/React.createElement("div", {
       style: {
         fontSize: 11,
