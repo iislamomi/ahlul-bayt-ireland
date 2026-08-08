@@ -2661,6 +2661,26 @@ function storyIsLive(s) {
 }
 const activeStories = list => (list || []).filter(storyIsLive);
 
+/* A short fade for the chrome at the top of a photo story. It reaches nothing by
+   a quarter of the way down: whatever the picture is of, that part of it is shown
+   as it was posted. */
+const TOP_FADE = 'linear-gradient(180deg,rgba(0,0,0,.42) 0%,rgba(0,0,0,.14) 12%,rgba(0,0,0,0) 24%)';
+/* The caption's own backing. It is painted on the caption block rather than on
+   the frame, so it is exactly as tall as there is writing to protect — a two-line
+   announcement darkens the bottom fifth of the photograph and nothing else. A
+   fixed band cannot do that: sized for a title it buried a quiz, and sized for a
+   quiz it dimmed two thirds of every picture. A quiz gets the deeper of the two
+   because its answer chips are translucent, and a chip is only as readable as
+   what shows through it. */
+const captionScrim = quiz => quiz
+  ? 'linear-gradient(180deg,rgba(0,0,0,0) 0%,rgba(0,0,0,.55) 22%,rgba(0,0,0,.78) 52%,rgba(0,0,0,.84) 100%)'
+  : 'linear-gradient(180deg,rgba(0,0,0,0) 0%,rgba(0,0,0,.45) 28%,rgba(0,0,0,.7) 62%,rgba(0,0,0,.8) 100%)';
+/* Backing for the name and the close ×, which have no band tall enough to sit
+   in. Set by measurement rather than by eye: at .34 the close button fell to
+   3.5:1 over the brightest photograph currently posted, and this is the control
+   that gets a reader out of the story. */
+const CHROME_PAD = 'rgba(0,0,0,.5)';
+
 function ytId(url) {
   if (!url) return null;
   const m = String(url).match(/(?:youtube\.com\/(?:watch\?(?:.*&)?v=|shorts\/|embed\/|live\/)|youtu\.be\/)([\w-]{11})/);
@@ -4875,7 +4895,10 @@ class App extends Component {
       style: {
         position: 'absolute',
         inset: 0,
-        background: 'radial-gradient(120% 80% at 30% 22%, rgba(255,255,255,.22), transparent 62%)'
+        /* The sheen gives a flat colour tile some curvature. On a photograph it
+           is just a white haze over the one thing worth looking at. */
+        background: s.photo ? 'none'
+          : 'radial-gradient(120% 80% at 30% 22%, rgba(255,255,255,.22), transparent 62%)'
       }
     }))), /*#__PURE__*/React.createElement("div", {
       style: {
@@ -14857,15 +14880,21 @@ class App extends Component {
       style: {
         position: 'absolute',
         inset: 0,
-        /* The scrim exists to keep white text readable over a photograph. A
-           picture posted on its own has no text to keep readable, so it is shown
-           as it was taken. The short fade at the top stays either way: the
-           progress bars and the close button are white, and without it a bright
-           photograph would leave no way out of the story. */
-        background: photoOnly
-          ? 'linear-gradient(180deg,rgba(0,0,0,.42) 0%,rgba(0,0,0,.14) 12%,rgba(0,0,0,0) 24%)'
-          : cur.photo ? 'linear-gradient(180deg,rgba(0,0,0,.5) 0%,rgba(0,0,0,.22) 42%,rgba(0,0,0,.68) 100%)'
-          : 'radial-gradient(120% 90% at 50% 0%,rgba(255,255,255,.1),rgba(0,0,0,.35))'
+        /* This layer used to darken the whole frame to keep white text readable
+           over a photograph — including the middle, by a fifth, to protect words
+           that were never there. Most posts here are a poster or a flyer, and the
+           middle of one of those is the whole point of posting it.
+
+           Nothing is dimmed now except to make something specific readable, and
+           each piece carries its own: captionScrim on the caption block, which is
+           as tall as the writing in it; a backing behind the name and the close ×
+           (a fade alone left the way out of a bright photograph at 3:1); a
+           drop-shadow on the progress bars. All that is left here is a short fade
+           under the chrome, and on a solid-colour story the vignette it has
+           always had. */
+        background: cur.photo
+          ? TOP_FADE
+          : 'radial-gradient(120% 90% at 50% 0%,rgba(255,255,255,.14),rgba(0,0,0,.2))'
       }
     }), !photoOnly && /*#__PURE__*/React.createElement("div", {
       style: {
@@ -14883,7 +14912,10 @@ class App extends Component {
         zIndex: 2,
         display: 'flex',
         gap: 5,
-        padding: '54px 16px 0'
+        padding: '54px 16px 0',
+        // outlines both the track and the fill, so the count of stories survives
+        // a photograph that is white where the bars sit
+        filter: cur.photo ? 'drop-shadow(0 1px 2px rgba(0,0,0,.6))' : 'none'
       }
     }, bars.map((b, i) => /*#__PURE__*/React.createElement("div", {
       key: i,
@@ -14911,13 +14943,20 @@ class App extends Component {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        padding: '16px 18px 0'
+        padding: '16px 18px 0',
+        // inherited by the name, the tag and the close ×, which sit on the thin
+        // top fade rather than on a wash
+        textShadow: cur.photo ? '0 1px 4px rgba(0,0,0,.6)' : 'none'
       }
     }, /*#__PURE__*/React.createElement("div", {
       style: {
         display: 'flex',
         alignItems: 'center',
-        gap: 10
+        gap: 10,
+        background: cur.photo ? CHROME_PAD : 'transparent',
+        borderRadius: 22,
+        padding: cur.photo ? '3px 13px 3px 3px' : 0,
+        margin: cur.photo ? '-3px 0 -3px -3px' : 0
       }
     }, /*#__PURE__*/React.createElement("div", {
       style: {
@@ -14960,7 +14999,9 @@ class App extends Component {
         cursor: 'pointer',
         color: '#fff',
         fontSize: 24,
-        lineHeight: 1
+        lineHeight: 1,
+        borderRadius: '50%',
+        background: cur.photo ? CHROME_PAD : 'transparent'
       }
     }, "×")), /*#__PURE__*/React.createElement("div", {
       onClick: preview ? closePreview : this.prevStory,
@@ -14986,19 +15027,25 @@ class App extends Component {
       style: {
         position: 'relative',
         zIndex: 4,
-        flex: 1,
+        /* marginTop rather than flex:1 so the block is only as tall as the words
+           in it — its scrim is a background, and a background can only hug the
+           text if the box does. It still sits at the foot of the frame. */
+        marginTop: 'auto',
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'flex-end',
-        padding: '0 26px 40px',
-        pointerEvents: 'none'
+        padding: '80px 26px 40px',
+        pointerEvents: 'none',
+        background: cur.photo && !photoOnly ? captionScrim(isQuiz) : 'none',
+        // inherited by every caption below; the CTA opts out, being dark on white
+        textShadow: cur.photo ? '0 1px 3px rgba(0,0,0,.55), 0 2px 14px rgba(0,0,0,.4)' : 'none'
       }
     }, /*#__PURE__*/React.createElement("div", {
       style: {
         fontSize: 11,
         letterSpacing: 1.4,
         textTransform: 'uppercase',
-        color: 'rgba(255,255,255,.7)',
+        color: 'rgba(255,255,255,.88)',
         fontWeight: 700,
         marginBottom: 8
       }
@@ -15013,7 +15060,7 @@ class App extends Component {
     }, cur.title), /*#__PURE__*/React.createElement("div", {
       style: {
         fontSize: 13.5,
-        color: 'rgba(255,255,255,.82)',
+        color: 'rgba(255,255,255,.93)',
         marginTop: 4,
         fontWeight: 500
       }
@@ -15118,7 +15165,8 @@ class App extends Component {
         color: NEU.head,
         fontSize: 14,
         fontWeight: 600,
-        cursor: 'pointer'
+        cursor: 'pointer',
+        textShadow: 'none' // dark label on a white pill, so the inherited shadow would only smudge it
       }
     }, cur.link, " ", /*#__PURE__*/React.createElement("span", {
       style: {
