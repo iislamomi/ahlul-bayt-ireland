@@ -2832,6 +2832,7 @@ class App extends Component {
       audioPlaying: false,
       audioAt: 0,
       audioDur: 0,
+      audioRate: lsGet('audioRate', 1),
       adminUpload: null,
       // the live compass reading, and the accumulated dial angle that follows it
       qiblaHeading: null,
@@ -3965,7 +3966,16 @@ class App extends Component {
       el.onplay = () => this.setState({ audioPlaying: true });
       el.onpause = () => this.setState({ audioPlaying: false });
       el.onended = () => this.setState({ audioPlaying: false, audioAt: 0 });
-      el.onloadedmetadata = () => this.setState({ audioDur: el.duration || 0 });
+      /* A chosen pace outlives the file it was chosen on. Applied twice on
+         purpose: setting src resets the rate to 1, and applying it only from
+         loadedmetadata leaves a window where a reader who pressed play early
+         hears the first seconds at full speed. */
+      const rate = () => { el.playbackRate = this.state.audioRate || 1; };
+      rate();
+      el.onloadedmetadata = () => {
+        rate();
+        this.setState({ audioDur: el.duration || 0 });
+      };
       /* timeupdate fires about four times a second and this component re-renders
          its whole tree, so the seek bar is stepped rather than followed exactly. */
       el.ontimeupdate = () => {
@@ -3994,6 +4004,11 @@ class App extends Component {
       const to = Math.min(dur || Infinity, Math.max(0, (el.currentTime || 0) + secs));
       el.currentTime = to;
       this.setState({ audioAt: to });
+    });
+    _defineProperty(this, "setAudioRate", rate => {
+      lsSet('audioRate', rate);
+      if (this._audioEl) this._audioEl.playbackRate = rate;
+      this.setState({ audioRate: rate });
     });
     _defineProperty(this, "audioSeek", frac => {
       const el = this._audioEl;
@@ -6921,7 +6936,10 @@ class App extends Component {
     };
     const arSize = Math.round(30 * st.textSize) + 'px';
     const trSize = Math.round(17 * st.textSize) + 'px';
-    const readAccent = rtype === 'ziyarah' ? '#6e2230' : rtype === 'nahj' ? '#2c5d52' : rtype === 'aamal' ? '#8a4b2c' : rtype === 'learning' ? '#3a4a78' : '#7d6220';
+    /* The section's own colour, lifted for the dark reader. It marks the kicker, the
+       language pills and the skip buttons — crimson on near-black measured 1.56:1,
+       which is the label on the page you are least able to do without. */
+    const readAccent = onSurf(rtype === 'ziyarah' ? '#6e2230' : rtype === 'nahj' ? '#2c5d52' : rtype === 'aamal' ? '#8a4b2c' : rtype === 'learning' ? '#3a4a78' : '#7d6220');
     // per-language content: items may carry body_ur / body_fa / body_hi alongside the English body
     const TR_CODES = { 'हिन्दी': 'hi', 'فارسی': 'fa', 'Urdu': 'ur' };
     const trCode = TR_CODES[st.lang];
@@ -7059,7 +7077,7 @@ class App extends Component {
           React.createElement("div", { style: { fontSize: 10, letterSpacing: .9, textTransform: 'uppercase', fontWeight: 700, color: readAccent } }, kicker),
           React.createElement("div", { style: { fontFamily: 'Spectral,serif', fontSize: 15, fontWeight: 600, color: rd.text, marginTop: 1, lineHeight: 1.2 } }, r.title),
           r.note && React.createElement("div", { style: { fontSize: 10.5, color: rd.muted, marginTop: 2, fontStyle: 'italic' } }, r.note)),
-        shareBtn, bookmarkBtn, favouriteBtn),
+        ),
       tabs.length > 1 && React.createElement("div", { style: { display: 'flex', gap: 8, marginTop: 8 } }, tabs.map(pill))),
     /* The recitation sits above the text and outside the language tabs: it is the
        same recitation whichever script is on screen, and a reader following along
@@ -7069,6 +7087,13 @@ class App extends Component {
        a forty-minute duʿāʾ \u2014 play, pause, stop, back, forward \u2014 are not the five a
        native player puts within thumb reach on every platform. */
     r.audio && this.renderAudioPlayer(st, r, rd, readAccent),
+    /* Under the player rather than beside the title. Up there they crowded a long
+       name into a column half the width of the screen, and they are things you
+       reach for once you have decided about the text — not before you have read
+       the first line of it. */
+    React.createElement("div", {
+      style: { display: 'flex', gap: 9, justifyContent: 'flex-end', marginBottom: 14 }
+    }, shareBtn, bookmarkBtn, favouriteBtn),
     lang === 'ar' && hasAr && React.createElement("div", {
       style: { background: rd.surf, border: `1px solid ${rd.border}`, borderRadius: 20, padding: '18px 16px' }
     }, mkLines(r.ar).map(L => {
@@ -7472,7 +7497,40 @@ class App extends Component {
     }, btn('Back 15 seconds', '\u21ba15', () => this.audioSkip(-15)),
        btn(playing ? 'Pause' : 'Play', playing ? '\u2016' : '\u25b6', this.audioToggle, true),
        btn('Stop', '\u25a0', this.audioStop),
-       btn('Forward 15 seconds', '15\u21bb', () => this.audioSkip(15))));
+       btn('Forward 15 seconds', '15\u21bb', () => this.audioSkip(15))),
+
+    /* Named speeds rather than a button that cycles through them: a reader
+       following the Arabic wants to pick a pace and see that they have it, not
+       tap four times to get back to the one they started from. Slower than normal
+       is the point \u2014 this is a text people are learning to say. */
+    React.createElement("div", {
+      role: "radiogroup",
+      "aria-label": "Playback speed",
+      style: { display: 'flex', alignItems: 'center', gap: 6, marginTop: 11 }
+    }, React.createElement("div", {
+      style: {
+        fontSize: 10, letterSpacing: 1, textTransform: 'uppercase',
+        fontWeight: 700, color: rd.muted, marginRight: 2
+      }
+    }, 'Speed'), [0.75, 1, 1.25, 1.5].map(v => {
+      const on = Math.abs((st.audioRate || 1) - v) < 0.01;
+      return React.createElement("div", {
+        key: v,
+        onClick: () => this.setAudioRate(v),
+        role: "radio",
+        "aria-checked": on ? 'true' : 'false',
+        "aria-label": v + ' times speed',
+        style: {
+          flex: 1, textAlign: 'center', minHeight: 34,
+          padding: '8px 0', borderRadius: 10,
+          border: `1px solid ${on ? accent : rd.border}`,
+          background: on ? accent : rd.surf,
+          color: on ? '#fff' : rd.muted,
+          fontSize: 12, fontWeight: 700, cursor: 'pointer',
+          fontVariantNumeric: 'tabular-nums'
+        }
+      }, (v === 1 ? '1' : String(v)) + '\u00d7');
+    })));
   }
 
   /* ── CLASSIFIEDS ── */
@@ -12635,25 +12693,25 @@ class App extends Component {
     }, /*#__PURE__*/React.createElement("div", {
       style: { display: 'flex', alignItems: 'center', gap: 9 }
     }, calIcon, /*#__PURE__*/React.createElement("div", {
-      style: { fontSize: 15, fontWeight: 700, color: onSurf('#1f5145') }
+      style: { fontSize: 16.5, fontWeight: 700, color: onSurf('#1f5145') }
     }, "On this day")), /*#__PURE__*/React.createElement("div", {
-      style: { fontSize: 12.5, fontWeight: 600, color: onSurf('#1f5145') }
+      style: { fontSize: 13.5, fontWeight: 600, color: onSurf('#1f5145') }
     }, dayLabelShort)), /*#__PURE__*/React.createElement("div", {
       style: { padding: '2px 16px 12px' }
     }, selEvents.length > 0 ? selEvents.map((ev, si) => /*#__PURE__*/React.createElement("div", {
       key: si,
       style: { padding: '12px 0', borderTop: si > 0 ? '1px solid #f1ebdd' : 'none' }
     }, /*#__PURE__*/React.createElement("div", {
-      style: { fontSize: 10.5, letterSpacing: .7, textTransform: 'uppercase', fontWeight: 700, color: onSurf(ev.color) }
+      style: { fontSize: 11.5, letterSpacing: .7, textTransform: 'uppercase', fontWeight: 700, color: onSurf(ev.color) }
     }, ev.type), /*#__PURE__*/React.createElement("div", {
-      style: { fontSize: 15, fontWeight: 600, color: NEU.ink, marginTop: 2 }
+      style: { fontSize: 17, fontWeight: 600, color: NEU.ink, marginTop: 2, lineHeight: 1.3 }
     }, ev.title), ev.desc && /*#__PURE__*/React.createElement("div", {
-      style: { fontSize: 12.5, color: NEU.muted, marginTop: 4, lineHeight: 1.5 }
+      style: { fontSize: 14, color: NEU.muted, marginTop: 4, lineHeight: 1.55 }
     }, ev.desc), st.adminLoggedIn && /*#__PURE__*/React.createElement("div", {
       onClick: () => this.setState({ screen: 'admin', adminSection: 'events', adminEditIdx: (st.liveCalEvents || []).indexOf(ev), adminEditDraft: { ...ev } }),
       style: { marginTop: 8, display: 'inline-block', fontSize: 11, color: onSurf('#1f5145'), fontWeight: 600, cursor: 'pointer', padding: '4px 10px', border: '1px solid #c4ddd7', borderRadius: 8, background: '#eef7f4' }
     }, "Edit"))) : /*#__PURE__*/React.createElement("div", {
-      style: { fontSize: 13, color: NEU.muted, padding: '12px 0 4px' }
+      style: { fontSize: 14, color: NEU.muted, padding: '12px 0 4px' }
     }, this.t('cal.noEvent')), /*#__PURE__*/React.createElement("div", {
       style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 4, paddingTop: 10, borderTop: '1px solid #f1ebdd' }
     }, /*#__PURE__*/React.createElement("div", {
@@ -12669,9 +12727,9 @@ class App extends Component {
     }, /*#__PURE__*/React.createElement("div", {
       style: { display: 'flex', alignItems: 'center', gap: 9 }
     }, bellIcon, /*#__PURE__*/React.createElement("div", {
-      style: { fontSize: 15, fontWeight: 700, color: onSurf('#1f5145') }
+      style: { fontSize: 16.5, fontWeight: 700, color: onSurf('#1f5145') }
     }, "Reminder (" + dayReminders.length + ")")), /*#__PURE__*/React.createElement("div", {
-      style: { fontSize: 12.5, fontWeight: 600, color: onSurf('#1f5145') }
+      style: { fontSize: 13.5, fontWeight: 600, color: onSurf('#1f5145') }
     }, dayLabelShort)), /*#__PURE__*/React.createElement("div", {
       style: { padding: '12px 16px 14px' }
     }, dayReminders.length > 0 && /*#__PURE__*/React.createElement("div", {
@@ -12682,11 +12740,11 @@ class App extends Component {
     }, /*#__PURE__*/React.createElement("span", {
       style: { flexShrink: 0, marginTop: 5, width: 7, height: 7, borderRadius: '50%', background: '#1f5145' }
     }), /*#__PURE__*/React.createElement("div", {
-      style: { flex: 1, fontSize: 13.5, color: NEU.ink, lineHeight: 1.45 }
+      style: { flex: 1, fontSize: 15, color: NEU.ink, lineHeight: 1.45 }
     }, /*#__PURE__*/React.createElement("span", {
       style: { fontWeight: 600 }
     }, rm.title), rm.desc && /*#__PURE__*/React.createElement("div", {
-      style: { fontSize: 12, color: '#8c8270', marginTop: 1 }
+      style: { fontSize: 13.5, color: NEU.muted, marginTop: 2, lineHeight: 1.4 }
     }, rm.desc)), st.adminLoggedIn && /*#__PURE__*/React.createElement("span", {
       onClick: () => this.setState({ screen: 'admin', adminSection: 'events', adminEditIdx: (st.liveCalEvents || []).indexOf(rm), adminEditDraft: { ...rm } }),
       style: { flexShrink: 0, fontSize: 11, color: onSurf('#1f5145'), fontWeight: 600, cursor: 'pointer' }
@@ -12694,7 +12752,7 @@ class App extends Component {
       onClick: () => this.setState({ screen: 'admin', adminSection: 'events', adminEditIdx: -1, adminEditDraft: { date: selDayStr, type: 'Community', notice: 'reminder' } }),
       style: { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, padding: '11px', borderRadius: 12, border: '1px dashed #c4ddd7', background: '#f4fbf8', color: onSurf('#1f5145'), fontSize: 13.5, fontWeight: 600, cursor: 'pointer' }
     }, "+ Add A Reminder") : dayReminders.length === 0 && /*#__PURE__*/React.createElement("div", {
-      style: { fontSize: 13, color: NEU.muted, textAlign: 'center', padding: '4px 0' }
+      style: { fontSize: 14, color: NEU.muted, textAlign: 'center', padding: '4px 0' }
     }, "No reminders for this day."))),
     st.adminLoggedIn && /*#__PURE__*/React.createElement("div", {
       onClick: () => this.setState({ screen: 'admin', adminSection: 'events', adminEditIdx: null, adminEditDraft: {} }),
