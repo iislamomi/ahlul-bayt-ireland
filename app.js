@@ -5870,20 +5870,25 @@ class App extends Component {
       role: "switch",
       "aria-checked": st.adhanEnabled ? 'true' : 'false',
       "aria-label": 'Adhan sound',
+      /* The padding is the tap target and the child is the switch. Putting both
+         on one element meant border-radius rounded the padded box while
+         background-clip painted only the middle band of it — below where the
+         corners curve, so the pill came out square-ended. */
+      style: {
+        padding: '9px 0',
+        margin: '-9px 0',
+        cursor: 'pointer',
+        flexShrink: 0
+      }
+    }, /*#__PURE__*/React.createElement("div", {
       style: {
         width: 48,
         height: 26,
         borderRadius: 13,
-        boxSizing: 'content-box',
-        padding: '9px 0',
-        margin: '-9px 0',
-        backgroundClip: 'content-box',
         background: st.adhanEnabled ? NEU.accent : NEU.sunk,
         boxShadow: st.adhanEnabled ? 'none' : neuIn(.3),
         position: 'relative',
-        cursor: 'pointer',
-        transition: 'background .2s',
-        flexShrink: 0
+        transition: 'background .2s'
       }
     }, /*#__PURE__*/React.createElement("div", {
       style: {
@@ -5898,7 +5903,7 @@ class App extends Component {
         transition: 'transform .2s ease',
         boxShadow: neuUp(.35)
       }
-    }))), st.adhanEnabled && (() => {
+    })))), st.adhanEnabled && (() => {
       /* The choice itself lives in More, where a setting is looked for. What is
          left here is the answer to "which one is playing", and a way through to
          change it — a label with a chevron, not a second copy of the control. */
@@ -6012,20 +6017,22 @@ class App extends Component {
       role: "switch",
       "aria-checked": st.notifEnabled ? 'true' : 'false',
       "aria-label": 'Prayer notifications',
+      // padding is the tap target, the child is the switch — see the adhan one above
+      style: {
+        padding: '9px 0',
+        margin: '-9px 0',
+        cursor: 'pointer',
+        flexShrink: 0
+      }
+    }, /*#__PURE__*/React.createElement("div", {
       style: {
         width: 48,
         height: 26,
         borderRadius: 13,
-        boxSizing: 'content-box',
-        padding: '9px 0',
-        margin: '-9px 0',
-        backgroundClip: 'content-box',
         background: st.notifEnabled ? NEU.accent : NEU.sunk,
         boxShadow: st.notifEnabled ? 'none' : neuIn(.3),
         position: 'relative',
-        cursor: 'pointer',
-        transition: 'background .2s',
-        flexShrink: 0
+        transition: 'background .2s'
       }
     }, /*#__PURE__*/React.createElement("div", {
       style: {
@@ -6040,7 +6047,7 @@ class App extends Component {
         transition: 'transform .2s ease',
         boxShadow: neuUp(.35)
       }
-    })) : /*#__PURE__*/React.createElement("div", {
+    }))) : /*#__PURE__*/React.createElement("div", {
       style: {
         width: 48,
         height: 26,
@@ -8347,7 +8354,7 @@ class App extends Component {
         "aria-label": this.t('prayer.adhanSound'),
         style: {
           background: NEU.surf, boxShadow: neuUp(), border: NEU.edge,
-          borderRadius: 16, padding: '6px 16px', marginBottom: 9
+          borderRadius: 16, padding: '6px 16px', marginBottom: 24
         }
       }, sounds.map((snd, i) => {
         /* A switch rather than a tick, because there is a real off here: with
@@ -8407,13 +8414,7 @@ class App extends Component {
             boxShadow: '0 1px 3px rgba(0,0,0,.2)', transition: 'transform .2s ease'
           }
         })));
-      })), /*#__PURE__*/React.createElement("div", {
-        key: 'azan-note',
-        style: { fontSize: 11.5, color: NEU.muted, marginBottom: 24, paddingLeft: 2, lineHeight: 1.5 }
-      }, (!st.adhanEnabled
-        ? 'No adhan will sound. Switch one on to hear it at every prayer time you have not silenced.'
-        : 'Tap ▶ to hear one, and the switch to keep it. Only one plays at a time — switching one on switches the others off. Kept on this device.')
-        + ' Shia adhan recordings courtesy of praytimes.org.')];
+      }))];
     })(), /*#__PURE__*/React.createElement("div", {
       style: {
         fontSize: 11,
@@ -8486,17 +8487,20 @@ class App extends Component {
       role: "switch",
       "aria-checked": st.dark ? 'true' : 'false',
       "aria-label": this.t('more.dark'),
+      // padding is the tap target, the child is the switch — see the adhan one
       style: {
-        boxSizing: 'content-box',
         padding: '8px 0',
         margin: '-8px 0',
-        backgroundClip: 'content-box',
+        cursor: 'pointer',
+        flexShrink: 0
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
         width: 48,
         height: 28,
         borderRadius: 16,
         background: st.dark ? '#1f5145' : '#d8d0bf',
         position: 'relative',
-        cursor: 'pointer',
         transition: 'background .2s'
       }
     }, /*#__PURE__*/React.createElement("div", {
@@ -8512,7 +8516,7 @@ class App extends Component {
         boxShadow: '0 1px 3px rgba(0,0,0,.2)',
         transition: 'transform .2s ease'
       }
-    }))), /*#__PURE__*/React.createElement("div", {
+    })))), /*#__PURE__*/React.createElement("div", {
       style: {
         display: 'flex',
         alignItems: 'center',
