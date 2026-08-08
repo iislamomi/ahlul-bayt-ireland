@@ -2035,7 +2035,19 @@ const BUILTIN_ADHANS = [
   file: './adhan/' + f + '.mp3'
 }));
 
-function adhanSounds(list) {
+/* Administrators can rename a built-in adhan or take it off the list, but not
+   delete it: the file ships inside the app. Both are stored as an override
+   keyed by the built-in, so a rename is undoable and a hidden one comes back
+   the moment it is shown again. Hiding is enough — the point of removing one is
+   that nobody sees it, and that is exactly what this does. */
+function adhanSounds(list, overrides) {
+  const ov = overrides || {};
+  const builtin = BUILTIN_ADHANS
+    .filter(a => !(ov[a.key] || {}).hidden)
+    .map(a => {
+      const o = ov[a.key] || {};
+      return o.name ? { ...a, label: o.name } : a;
+    });
   const extra = (list || [])
     .filter(a => a && a.url && a.name)
     .map(a => ({
@@ -2047,7 +2059,7 @@ function adhanSounds(list) {
       sub: String(a.reciter || 'Uploaded').slice(0, 40),
       file: a.url
     }));
-  return [ADHAN_DEFAULT, ...BUILTIN_ADHANS, ...extra];
+  return [ADHAN_DEFAULT, ...builtin, ...extra];
 }
 
 /* ── SUPABASE SYNC ── */
@@ -2309,6 +2321,7 @@ const PUSH_MSG = {
   pinned: 'Featured message has been updated',
   classifieds: 'New listing in community classifieds',
   ads: null, // billboard changes are not worth a notification
+  azanOverrides: null, // renaming or hiding an adhan is housekeeping, not news
   calEvents: 'Islamic calendar updated',
   reminders: 'A new reminder has been added',
   prayerPresets: 'Prayer times updated',
@@ -2378,7 +2391,7 @@ const SB_KEY_MAP = {
   healthTips: 'liveHealthTips', healthVideos: 'liveHealthVideos',
   duas: 'liveDuas', ziyarat: 'liveZiyarat', nahj: 'liveNahj', aamals: 'liveAamals',
   reminders: 'liveReminders', ads: 'liveAds', learning: 'liveLearning',
-  azans: 'liveAzans'
+  azans: 'liveAzans', azanOverrides: 'liveAzanOverrides'
 };
 
 /* Category ink for classifieds badges. Listings store the colour they were saved
@@ -2939,6 +2952,9 @@ class App extends Component {
       liveNahj: lsGet('nahj', NAHJ),
       liveLearning: lsGet('learning', LEARNING),
       liveAzans: lsGet('azans', []),
+      liveAzanOverrides: lsGet('azanOverrides', {}),
+      azanRenaming: null,
+      azanRenameText: '',
       liveKidsQuizzes: migrateQuizzes(lsGet('kidsQuizzes', KIDS_QUIZZES)),
       quizRun: null,
       /* The name is remembered so the next quiz does not ask again, and stays
@@ -3690,7 +3706,7 @@ class App extends Component {
       }
     })));
     _defineProperty(this, "setAdhanSound", key => {
-      const pick = adhanSounds(this.state.liveAzans).find(s => s.key === key);
+      const pick = adhanSounds(this.state.liveAzans, this.state.liveAzanOverrides).find(s => s.key === key);
       if (!pick) return;
       this.stopAdhan();
       lsSet('adhanSound', key);
@@ -3745,7 +3761,7 @@ class App extends Component {
       /* A remembered choice can outlive the file it named \u2014 an azan removed by an
          administrator, or a device that has never seen it. Falling back to the
          shipped one means the adhan still sounds at the right minute. */
-      const all = adhanSounds(this.state.liveAzans);
+      const all = adhanSounds(this.state.liveAzans, this.state.liveAzanOverrides);
       const pick = all.find(s => s.key === this.state.adhanSound) || all[0];
       this.adhanAudio = new Audio(pick.file);
       this.adhanAudio.onended = () => this.setState({
@@ -5907,7 +5923,7 @@ class App extends Component {
       /* The choice itself lives in More, where a setting is looked for. What is
          left here is the answer to "which one is playing", and a way through to
          change it — a label with a chevron, not a second copy of the control. */
-      const sounds = adhanSounds(st.liveAzans);
+      const sounds = adhanSounds(st.liveAzans, st.liveAzanOverrides);
       const chosen = sounds.find(x => x.key === st.adhanSound) || sounds[0];
       return /*#__PURE__*/React.createElement("div", {
         onClick: () => this.go('more'),
@@ -8340,7 +8356,7 @@ class App extends Component {
          second arrives means the first person to look for the setting concludes
          there isn't one — and nobody asks for an azan to be uploaded to a screen
          they have no reason to believe exists. */
-      const sounds = adhanSounds(st.liveAzans);
+      const sounds = adhanSounds(st.liveAzans, st.liveAzanOverrides);
       const chosen = sounds.find(x => x.key === st.adhanSound) ? st.adhanSound : sounds[0].key;
       return [/*#__PURE__*/React.createElement("div", {
         key: 'azan-head',
@@ -10980,6 +10996,67 @@ class App extends Component {
           flex: 1, border: NEU.edge, background: NEU.surf, boxShadow: neuUp(), color: NEU.ink2
         })));
       }
+      const ov = st.liveAzanOverrides || {};
+      const setOv = (key, patch, msg) => {
+        const next = { ...ov, [key]: { ...(ov[key] || {}), ...patch } };
+        if (!next[key].name && !next[key].hidden) delete next[key];
+        this.setState({ azanRenaming: null });
+        this.saveContent('azanOverrides', 'liveAzanOverrides', next);
+        this.showToast(msg);
+      };
+      /* The twelve that ship with the app. They cannot be deleted \u2014 the files are
+         inside the build \u2014 so removing one means taking it off the list everyone
+         sees, which comes to the same thing. Anyone who had chosen a hidden adhan
+         falls back to the Classic, as playAdhan already does for a missing one. */
+      const builtinRow = a => {
+        const o = ov[a.key] || {};
+        const hidden = !!o.hidden;
+        const renaming = st.azanRenaming === a.key;
+        return /*#__PURE__*/React.createElement("div", {
+          key: a.key,
+          style: {
+            display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap',
+            background: NEU.surf, boxShadow: neuUp(), border: NEU.edge,
+            borderRadius: 14, padding: '10px 12px', marginBottom: 8,
+            opacity: hidden ? .55 : 1
+          }
+        }, /*#__PURE__*/React.createElement("div", {
+          style: { flex: 1, minWidth: 120 }
+        }, /*#__PURE__*/React.createElement("div", {
+          style: {
+            fontSize: 13, fontWeight: 600, color: NEU.ink,
+            textDecoration: hidden ? 'line-through' : 'none',
+            whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'
+          }
+        }, o.name || a.label), /*#__PURE__*/React.createElement("div", {
+          style: { fontSize: 10.5, color: NEU.muted, marginTop: 1 }
+        }, hidden ? 'Hidden from the app' : 'Built in \u00b7 Shia adhan')),
+        btn('Play', () => {
+          this.stopAdhan();
+          this.adhanAudio = new Audio(a.file);
+          this.adhanAudio.play().catch(() => this.showToast('That file could not be played'));
+        }, { background: '#f3ecd9', color: onSurf('#7d6220'), fontSize: 12, padding: '6px 10px' }),
+        btn(renaming ? 'Close' : 'Rename', () => this.setState({
+          azanRenaming: renaming ? null : a.key,
+          azanRenameText: o.name || a.label
+        }), { background: '#e6efe9', color: onSurf('#1f5145'), fontSize: 12, padding: '6px 12px' }),
+        btn(hidden ? 'Show' : 'Hide', () => setOv(a.key, { hidden: !hidden },
+          hidden ? 'Shown again' : 'Hidden from the app'),
+          { background: hidden ? '#e6efe9' : '#fdf0f2', color: onSurf(hidden ? '#1f5145' : '#6e2230'),
+            fontSize: 12, padding: '6px 10px' }),
+        renaming && /*#__PURE__*/React.createElement("div", {
+          style: { display: 'flex', gap: 8, width: '100%', marginTop: 2 }
+        }, /*#__PURE__*/React.createElement("input", {
+          value: st.azanRenameText || '',
+          onChange: e => this.setState({ azanRenameText: e.target.value }),
+          placeholder: a.label,
+          maxLength: 40,
+          style: { ...inp, marginBottom: 0, flex: 1 }
+        }), btn('Save', () => setOv(a.key, { name: (st.azanRenameText || '').trim().slice(0, 40) },
+          'Renamed'), { background: '#1f5145', color: '#f3ead4', fontSize: 12, padding: '6px 12px' }),
+          o.name && btn('Reset', () => setOv(a.key, { name: '' }, 'Name reset'),
+            { background: NEU.surf, border: NEU.edge, color: NEU.ink2, fontSize: 12, padding: '6px 10px' })));
+      };
       return /*#__PURE__*/React.createElement("div", null, btn('+ Add Adhan', () => this.startEdit(-1, {
         name: '', reciter: '', url: ''
       }), {
@@ -10997,7 +11074,20 @@ class App extends Component {
            style: { fontSize: 13, fontWeight: 600, color: onSurf('#1f5145') }
          }, 'Classic Adhan'), /*#__PURE__*/React.createElement("div", {
            style: { fontSize: 10.5, color: '#4a6b62', marginTop: 1 }
-         }, 'Shipped with the app \u00b7 always available offline'))),
+         }, 'Shipped with the app \u00b7 always available offline \u00b7 cannot be hidden'))),
+      /*#__PURE__*/React.createElement("div", {
+        style: {
+          fontSize: 10, letterSpacing: 1, textTransform: 'uppercase',
+          fontWeight: 700, color: NEU.muted, margin: '14px 0 8px'
+        }
+      }, 'Built in \u00b7 ' + BUILTIN_ADHANS.length + ' Shia adhan'),
+      BUILTIN_ADHANS.map(builtinRow),
+      /*#__PURE__*/React.createElement("div", {
+        style: {
+          fontSize: 10, letterSpacing: 1, textTransform: 'uppercase',
+          fontWeight: 700, color: NEU.muted, margin: '18px 0 8px'
+        }
+      }, 'Uploaded \u00b7 ' + list.length),
       list.map((a, i) => /*#__PURE__*/React.createElement("div", {
         key: i,
         style: {
