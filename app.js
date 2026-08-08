@@ -1206,20 +1206,6 @@ const STRINGS = {
     'فارسی': '■ توقف',
     Urdu: '■ بند کریں'
   },
-  'prayer.pdf': {
-    English: 'Yearly prayer calendar',
-    'العربية': 'التقويم السنوي للصلاة',
-    'हिन्दी': 'वार्षिक नमाज़ कैलेंडर',
-    'فارسی': 'تقویم سالانه نماز',
-    'Urdu': 'سالانہ نماز کیلنڈر'
-  },
-  'prayer.pdfSub': {
-    English: 'Download the full 1447 timetable',
-    'العربية': 'تنزيل جدول 1447 كاملاً',
-    'हिन्दी': 'पूरी 1447 समय-सारणी डाउनलोड करें',
-    'فارسی': 'دانلود جدول کامل ۱۴۴۷',
-    'Urdu': 'مکمل 1447 جدول ڈاؤنلوڈ کریں'
-  },
   'prayer.date': {
     English: 'Date',
     'العربية': 'التاريخ',
@@ -4277,10 +4263,6 @@ class App extends Component {
       clearTimeout(this._jumpTimer);
       this._jumpTimer = setTimeout(() => this.setState({ jumpLine: null }), 2600);
     });
-    _defineProperty(this, "handlePDF", () => {
-      this.showToast('Opening prayer calendar…');
-      setTimeout(() => window.open('https://ahlulbaytireland.com/prayer-calendar.pdf', '_blank', 'noopener,noreferrer'), 300);
-    });
     _defineProperty(this, "openStory", (i, manual) => {
       clearInterval(this.storyTimer);
       this.setState({
@@ -6040,57 +6022,7 @@ class App extends Component {
         fontSize: 11.5,
         color: NEU.muted
       }
-    }, this.t('prayer.noNotif'))))), tab !== 'settings' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("a", {
-      href: "https://ahlulbaytireland.com/prayer-calendar.pdf",
-      target: "_blank",
-      rel: "noopener noreferrer",
-      style: {
-        display: 'flex',
-        alignItems: 'center',
-        gap: 12,
-        background: NEU.surf, boxShadow: neuUp(),
-        border: NEU.edge,
-        borderRadius: 16,
-        padding: '15px 16px',
-        cursor: 'pointer',
-        marginBottom: 14,
-        textDecoration: 'none'
-      }
-    }, /*#__PURE__*/React.createElement("div", {
-      style: {
-        width: 36,
-        height: 36,
-        borderRadius: 10,
-        background: '#f0e7d3',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        color: onSurf('#7d6220'),
-        fontWeight: 700,
-        fontSize: 11
-      }
-    }, "PDF"), /*#__PURE__*/React.createElement("div", {
-      style: {
-        flex: 1
-      }
-    }, /*#__PURE__*/React.createElement("div", {
-      style: {
-        fontSize: 14,
-        fontWeight: 600,
-        color: NEU.ink
-      }
-    }, this.t('prayer.pdf')), /*#__PURE__*/React.createElement("div", {
-      style: {
-        fontSize: 11.5,
-        color: NEU.muted,
-        marginTop: 1
-      }
-    }, this.t('prayer.pdfSub'))), /*#__PURE__*/React.createElement("span", {
-      style: {
-        color: onSurf('#75601f'),
-        fontSize: 20
-      }
-    }, "↓")), /*#__PURE__*/React.createElement("div", {
+    }, this.t('prayer.noNotif'))))), tab !== 'settings' && /*#__PURE__*/React.createElement("div", {
       style: {
         textAlign: 'center',
         fontSize: 11.5,
@@ -6098,7 +6030,7 @@ class App extends Component {
         lineHeight: 1.5,
         padding: '6px 20px'
       }
-    }, this.t('prayer.note'))));
+    }, this.t('prayer.note')));
   }
 
   /* ── LIBRARY ── */
