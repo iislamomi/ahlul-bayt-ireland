@@ -92,6 +92,19 @@ const ACCENT_ON_DARK = {
   '#3a4a78': '#a3b3e8'
 };
 const onSurf = c => (THEME_DARK && ACCENT_ON_DARK[c]) || c;
+/* Ink for a filled accent. White is right on the deep greens and crimsons the
+   light theme uses, and wrong on every one of their dark-theme counterparts —
+   those are pale by construction, and the gold reader accent put white text at
+   1.9:1 on its own selected control. Whichever of the two contrasts better with
+   the fill wins, so a filled button is legible whatever the accent turns into. */
+function inkOn(bg) {
+  const m = String(bg).match(/^#?([0-9a-f]{6})$/i);
+  if (!m) return '#fff';
+  const n = parseInt(m[1], 16);
+  const ch = v => { v /= 255; return v <= .03928 ? v / 12.92 : Math.pow((v + .055) / 1.055, 2.4); };
+  const L = .2126 * ch(n >> 16 & 255) + .7152 * ch(n >> 8 & 255) + .0722 * ch(n & 255);
+  return (1.05 / (L + .05)) >= ((L + .05) / .05) ? '#fff' : '#14120d';
+}
 
 /* An explicit flag still wins \u2014 the reader passes one \u2014 but leaving it out now
    means "whatever the theme is", not "light". */
@@ -2005,11 +2018,17 @@ function wallpapersFor(date) {
   return pool.slice(0, 10);
 }
 
+/* Playback speeds for the recitation player. Below normal for someone learning
+   to say the words, above it for someone who already knows them and is listening
+   through. Four is as many as fit a row without the labels crowding. */
+const AUDIO_RATES = [0.75, 1, 1.5, 2];
+
 /* \u2500\u2500 ADHAN SOUNDS \u2500\u2500
    One shipped with the app and whatever the administrators have uploaded since.
    The shipped one is always first and cannot be removed: it is the only adhan
    that is in the service-worker cache from the start, so it is the one that still
    plays when the phone is offline at Fajr. */
+
 const ADHAN_DEFAULT = { key: 'default', label: 'Classic Adhan', sub: 'Shipped with the app', file: './adhan.mp3' };
 function adhanSounds(list) {
   const extra = (list || [])
@@ -2852,7 +2871,9 @@ class App extends Component {
       audioPlaying: false,
       audioAt: 0,
       audioDur: 0,
-      audioRate: lsGet('audioRate', 1),
+      /* A rate saved before this list changed would match no pill, leaving the
+         group with nothing selected and the audio at a speed nobody chose. */
+      audioRate: AUDIO_RATES.includes(lsGet('audioRate', 1)) ? lsGet('audioRate', 1) : 1,
       adminUpload: null,
       // the live compass reading, and the accumulated dial angle that follows it
       qiblaHeading: null,
@@ -5837,57 +5858,37 @@ class App extends Component {
         boxShadow: neuUp(.35)
       }
     }))), st.adhanEnabled && (() => {
+      /* The choice itself lives in More, where a setting is looked for. What is
+         left here is the answer to "which one is playing", and a way through to
+         change it — a label with a chevron, not a second copy of the control. */
       const sounds = adhanSounds(st.liveAzans);
       if (sounds.length < 2) return null;
-      const chosen = sounds.find(x => x.key === st.adhanSound) ? st.adhanSound : sounds[0].key;
+      const chosen = sounds.find(x => x.key === st.adhanSound) || sounds[0];
       return /*#__PURE__*/React.createElement("div", {
-        style: { marginTop: 12 }
+        onClick: () => this.go('more'),
+        className: "neu-press",
+        style: {
+          display: 'flex', alignItems: 'center', gap: 10, marginTop: 12,
+          padding: '11px 13px', minHeight: 48, boxSizing: 'border-box',
+          borderRadius: 13, cursor: 'pointer',
+          background: NEU.surf, border: NEU.edge, boxShadow: neuUp(.6)
+        }
+      }, /*#__PURE__*/React.createElement("div", {
+        style: { flex: 1, minWidth: 0 }
       }, /*#__PURE__*/React.createElement("div", {
         style: {
           fontSize: 10, letterSpacing: 1, textTransform: 'uppercase',
-          fontWeight: 700, color: NEU.muted, marginBottom: 7
+          fontWeight: 700, color: NEU.muted
         }
       }, this.t('prayer.adhanSound')), /*#__PURE__*/React.createElement("div", {
-        style: { display: 'flex', flexDirection: 'column', gap: 7 }
-      }, sounds.map(snd => {
-        const on = chosen === snd.key;
-        return /*#__PURE__*/React.createElement("div", {
-          key: snd.key,
-          onClick: () => this.setAdhanSound(snd.key),
-          role: "radio",
-          "aria-checked": on ? 'true' : 'false',
-          style: {
-            display: 'flex', alignItems: 'center', gap: 11,
-            padding: '11px 13px', minHeight: 48, boxSizing: 'border-box',
-            borderRadius: 13, cursor: 'pointer',
-            background: NEU.surf, border: NEU.edge,
-            boxShadow: on ? neuIn(.6) : neuUp(.6)
-          }
-        }, /*#__PURE__*/React.createElement("div", {
-          "aria-hidden": "true",
-          style: {
-            flexShrink: 0, width: 18, height: 18, borderRadius: '50%',
-            border: `2px solid ${on ? '#1f5145' : '#cbc3b2'}`,
-            display: 'flex', alignItems: 'center', justifyContent: 'center'
-          }
-        }, on && /*#__PURE__*/React.createElement("div", {
-          style: { width: 8, height: 8, borderRadius: '50%', background: '#1f5145' }
-        })), /*#__PURE__*/React.createElement("div", {
-          style: { flex: 1, minWidth: 0 }
-        }, /*#__PURE__*/React.createElement("div", {
-          style: {
-            fontSize: 13, fontWeight: 700, color: on ? '#1f5145' : NEU.ink,
-            whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'
-          }
-        }, snd.label), /*#__PURE__*/React.createElement("div", {
-          style: {
-            fontSize: 10.5, marginTop: 1, color: NEU.muted,
-            whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'
-          }
-        }, snd.sub)));
-      })), /*#__PURE__*/React.createElement("div", {
-        style: { fontSize: 11, color: NEU.muted, marginTop: 8, lineHeight: 1.5 }
-      }, 'Your choice is kept on this device and plays at every prayer time.'));
+        style: {
+          fontSize: 13, fontWeight: 700, color: NEU.ink, marginTop: 2,
+          whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'
+        }
+      }, chosen.label)), /*#__PURE__*/React.createElement("span", {
+        "aria-hidden": "true",
+        style: { color: NEU.muted, fontSize: 20, flexShrink: 0 }
+      }, "›"));
     })(), st.adhanEnabled && /*#__PURE__*/React.createElement("div", {
       style: {
         display: 'flex',
@@ -7465,31 +7466,33 @@ class App extends Component {
       onClick,
       "aria-label": label,
       style: {
-        width: big ? 52 : 44, height: big ? 52 : 44, borderRadius: big ? 16 : 13,
+        // play keeps 44; the three around it come down to 40, still well clear
+        // of the 24px minimum and enough to let the row read as one control
+        width: big ? 44 : 40, height: big ? 44 : 40, borderRadius: big ? 14 : 12,
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         cursor: 'pointer', flexShrink: 0,
         border: big ? 'none' : `1px solid ${rd.border}`,
         background: big ? accent : rd.surf,
-        color: big ? '#fff' : accent,
-        fontSize: big ? 19 : 15, fontWeight: 700,
-        boxShadow: big ? '0 6px 16px -8px rgba(0,0,0,.5)' : 'none'
+        color: big ? inkOn(accent) : accent,
+        fontSize: big ? 17 : 13.5, fontWeight: 700,
+        boxShadow: big ? '0 5px 13px -8px rgba(0,0,0,.5)' : 'none'
       }
     }, mark);
 
     return /*#__PURE__*/React.createElement("div", {
       style: {
-        background: rd.surf, border: `1px solid ${rd.border}`, borderRadius: 16,
-        padding: '13px 14px 14px', marginBottom: 14
+        background: rd.surf, border: `1px solid ${rd.border}`, borderRadius: 15,
+        padding: '10px 12px 11px', marginBottom: 12
       }
     }, /*#__PURE__*/React.createElement("div", {
-      style: { display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }
-    }, icon('book-heart', { size: 15, stroke: accent, style: { flexShrink: 0 } }),
+      style: { display: 'flex', alignItems: 'center', gap: 7, marginBottom: 3 }
+    }, icon('book-heart', { size: 14, stroke: accent, style: { flexShrink: 0 } }),
        /*#__PURE__*/React.createElement("div", {
-         style: { fontSize: 11, letterSpacing: 1, textTransform: 'uppercase', fontWeight: 700, color: rd.muted }
+         style: { fontSize: 10, letterSpacing: 1, textTransform: 'uppercase', fontWeight: 700, color: rd.muted }
        }, 'Recitation'),
        r.reciter && /*#__PURE__*/React.createElement("div", {
          style: {
-           fontSize: 11.5, color: rd.muted, marginLeft: 'auto', minWidth: 0,
+           fontSize: 11, color: rd.muted, marginLeft: 'auto', minWidth: 0,
            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'
          }
        }, r.reciter)),
@@ -7501,6 +7504,15 @@ class App extends Component {
       style: { display: 'none' }
     }),
 
+    /* The clock sits on the bar's own line rather than under it. Two numbers
+       need a line of their own only when they are being read; here they are
+       glanced at, and the row they had cost more height than the bar. */
+    /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: 'flex', alignItems: 'center', gap: 9,
+        fontSize: 10.5, color: rd.muted, fontVariantNumeric: 'tabular-nums'
+      }
+    }, /*#__PURE__*/React.createElement("span", { style: { flexShrink: 0 } }, clock(at)),
     /* The bar is a slider so it can be dragged with a thumb and moved with the
        arrow keys, which a row of div buttons cannot be. */
     /*#__PURE__*/React.createElement("input", {
@@ -7511,18 +7523,12 @@ class App extends Component {
       onChange: e => this.audioSeek(+e.target.value / 1000),
       "aria-label": 'Seek within the recitation',
       "aria-valuetext": clock(at) + ' of ' + clock(dur),
-      style: { width: '100%', display: 'block', accentColor: accent }
+      style: { flex: 1, minWidth: 0, display: 'block', accentColor: accent }
     }),
-    /*#__PURE__*/React.createElement("div", {
-      style: {
-        display: 'flex', justifyContent: 'space-between',
-        fontSize: 11, color: rd.muted, marginTop: 2, fontVariantNumeric: 'tabular-nums'
-      }
-    }, /*#__PURE__*/React.createElement("span", null, clock(at)),
-       /*#__PURE__*/React.createElement("span", null, dur ? clock(dur) : '\u2014')),
+       /*#__PURE__*/React.createElement("span", { style: { flexShrink: 0 } }, dur ? clock(dur) : '\u2014')),
 
     /*#__PURE__*/React.createElement("div", {
-      style: { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, marginTop: 10 }
+      style: { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 9, marginTop: 5 }
     }, btn('Back 15 seconds', '\u21ba15', () => this.audioSkip(-15)),
        btn(playing ? 'Pause' : 'Play', playing ? '\u2016' : '\u25b6', this.audioToggle, true),
        btn('Stop', '\u25a0', this.audioStop),
@@ -7530,18 +7536,16 @@ class App extends Component {
 
     /* Named speeds rather than a button that cycles through them: a reader
        following the Arabic wants to pick a pace and see that they have it, not
-       tap four times to get back to the one they started from. Slower than normal
-       is the point \u2014 this is a text people are learning to say. */
+       tap four times to get back to the one they started from.
+
+       They keep a row to themselves. Sharing one with the transport left each
+       pill 26px wide, which neither holds "0.75\u00d7" nor gives a thumb anything to
+       aim at \u2014 the row of height that buys is not worth either. */
     React.createElement("div", {
       role: "radiogroup",
       "aria-label": "Playback speed",
-      style: { display: 'flex', alignItems: 'center', gap: 6, marginTop: 11 }
-    }, React.createElement("div", {
-      style: {
-        fontSize: 10, letterSpacing: 1, textTransform: 'uppercase',
-        fontWeight: 700, color: rd.muted, marginRight: 2
-      }
-    }, 'Speed'), [0.75, 1, 1.25, 1.5].map(v => {
+      style: { display: 'flex', alignItems: 'stretch', gap: 5, marginTop: 6 }
+    }, AUDIO_RATES.map(v => {
       const on = Math.abs((st.audioRate || 1) - v) < 0.01;
       return React.createElement("div", {
         key: v,
@@ -7550,12 +7554,12 @@ class App extends Component {
         "aria-checked": on ? 'true' : 'false',
         "aria-label": v + ' times speed',
         style: {
-          flex: 1, textAlign: 'center', minHeight: 34,
-          padding: '8px 0', borderRadius: 10,
+          flex: 1, minWidth: 0, height: 36, borderRadius: 10,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
           border: `1px solid ${on ? accent : rd.border}`,
           background: on ? accent : rd.surf,
-          color: on ? '#fff' : rd.muted,
-          fontSize: 12, fontWeight: 700, cursor: 'pointer',
+          color: on ? inkOn(accent) : rd.muted,
+          fontSize: 11.5, fontWeight: 700, cursor: 'pointer',
           fontVariantNumeric: 'tabular-nums'
         }
       }, (v === 1 ? '1' : String(v)) + '\u00d7');
@@ -8328,7 +8332,61 @@ class App extends Component {
         color: NEU.muted,
         fontSize: 20
       }
-    }, "›")))), /*#__PURE__*/React.createElement("div", {
+    }, "›")))), (() => {
+      /* The azan a person wants to hear is a setting, and this is where someone
+         comes looking for one — it used to sit under a toggle inside the prayer
+         screen, which is where you go to read times, not to change preferences.
+         Rendered as the same rows as Language rather than as radio cards, so this
+         screen stays one list rather than a list and a widget. */
+      const sounds = adhanSounds(st.liveAzans);
+      if (sounds.length < 2) return null;
+      const chosen = sounds.find(x => x.key === st.adhanSound) ? st.adhanSound : sounds[0].key;
+      return [/*#__PURE__*/React.createElement("div", {
+        key: 'azan-head',
+        style: {
+          fontSize: 11, letterSpacing: 1.2, textTransform: 'uppercase',
+          fontWeight: 700, color: NEU.muted, marginBottom: 12, paddingLeft: 2
+        }
+      }, this.t('prayer.adhanSound')), /*#__PURE__*/React.createElement("div", {
+        key: 'azan-card',
+        role: "radiogroup",
+        "aria-label": this.t('prayer.adhanSound'),
+        style: {
+          background: NEU.surf, boxShadow: neuUp(), border: NEU.edge,
+          borderRadius: 16, padding: '6px 16px', marginBottom: 9
+        }
+      }, sounds.map((snd, i) => {
+        const on = chosen === snd.key;
+        return /*#__PURE__*/React.createElement("div", {
+          key: snd.key,
+          onClick: () => this.setAdhanSound(snd.key),
+          role: "radio",
+          "aria-checked": on ? 'true' : 'false',
+          style: {
+            display: 'flex', alignItems: 'center', gap: 12,
+            padding: '10px 0', minHeight: 48, boxSizing: 'border-box',
+            borderBottom: i < sounds.length - 1 ? NEU.rule : 'none',
+            cursor: 'pointer'
+          }
+        }, /*#__PURE__*/React.createElement("div", {
+          style: { flex: 1, minWidth: 0 }
+        }, /*#__PURE__*/React.createElement("div", {
+          style: {
+            fontSize: 14.5, color: on ? onSurf('#1f5145') : NEU.ink2,
+            fontWeight: on ? 700 : 400,
+            whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'
+          }
+        }, snd.label), /*#__PURE__*/React.createElement("div", {
+          style: {
+            fontSize: 11.5, color: NEU.muted, marginTop: 1,
+            whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'
+          }
+        }, snd.sub)), on && icon('check', { size: 18, stroke: NEU.accent, sw: 2.4 }));
+      })), /*#__PURE__*/React.createElement("div", {
+        key: 'azan-note',
+        style: { fontSize: 11.5, color: NEU.muted, marginBottom: 24, paddingLeft: 2, lineHeight: 1.5 }
+      }, 'Kept on this device, and played at every prayer time you have not silenced.')];
+    })(), /*#__PURE__*/React.createElement("div", {
       style: {
         fontSize: 11,
         letterSpacing: 1.2,
@@ -8338,7 +8396,7 @@ class App extends Component {
         marginBottom: 12,
         paddingLeft: 2
       }
-    }, this.t('more.language')), /*#__PURE__*/React.createElement("div", {
+    }, this.t('more.language')),/*#__PURE__*/React.createElement("div", {
       style: {
         background: NEU.surf, boxShadow: neuUp(),
         border: NEU.edge,
