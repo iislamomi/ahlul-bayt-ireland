@@ -4214,7 +4214,12 @@ class App extends Component {
     });
     _defineProperty(this, "handleShare", () => {
       const r = this.state.readingItem || {};
-      const text = r.body || r.tr || '';
+      /* The Arabic is what gets shared. It is the text itself rather than one
+         reading of it, and it is the same words whoever receives it. A
+         translation goes only when there is no Arabic, and the summary only when
+         there is neither. An entry that is purely a PDF has none of the three and
+         shares as its title and link, which is what it is. */
+      const text = r.ar || r.body || r.tr || r.sum || '';
       if (navigator.share) {
         navigator.share({
           title: r.title,
