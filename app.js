@@ -4738,7 +4738,13 @@ class App extends Component {
         justifyContent: 'center'
       }
     }, /*#__PURE__*/React.createElement("img", {
-      src: "./app-title-logo.png",
+      /* Two files rather than a CSS filter. The mark is forest green and gold on
+         transparency; the green sits at 1.3:1 on the dark page and simply is not
+         there, while the gold reads fine. No single filter lifts one and leaves
+         the other — brightness enough to rescue the green blows the gold out to
+         white. The dark file is the same artwork with its green mapped to the
+         value the theme already uses for that green, and nothing else changed. */
+      src: st.dark ? "./app-title-logo-dark.png" : "./app-title-logo.png",
       alt: "Ahlul Bayt Ireland",
       style: {
         height: 82,
