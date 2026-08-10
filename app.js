@@ -14300,14 +14300,19 @@ class App extends Component {
           display: 'flex', flexDirection: 'column', gap: 8, minHeight: 96
         }
       }, /*#__PURE__*/React.createElement("div", {
-        style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6 }
-      }, /*#__PURE__*/React.createElement("span", {
+        style: { display: 'flex', alignItems: 'center', gap: 6, minHeight: 20 }
+      }, /* The badge carries the chapter number. Teaching Jurisprudence has no
+           numbering, so every one of its tiles fell through to the word PDF —
+           which every tile in the section is, so it distinguished nothing and
+           just repeated itself down the grid. Numbered courses keep the badge;
+           unnumbered ones show the title and the icon and nothing else. */
+      typeof c.no === 'number' && /*#__PURE__*/React.createElement("span", {
         style: {
           fontSize: 10, letterSpacing: .7, textTransform: 'uppercase', fontWeight: 700,
           color: onSurf('#1f5145'), background: '#e6efe9', padding: '3px 7px', borderRadius: 6,
           whiteSpace: 'nowrap'
         }
-      }, typeof c.no === 'number' ? 'Ch ' + c.no : 'PDF'), icon('book-open', { size: 14, stroke: '#8a8272' })),
+      }, 'Ch ' + c.no), icon('book-open', { size: 14, stroke: '#8a8272', style: { marginLeft: 'auto', flexShrink: 0 } })),
       /*#__PURE__*/React.createElement("div", {
         style: {
           fontFamily: 'Spectral,serif', fontSize: 14, fontWeight: 600, color: NEU.ink,
