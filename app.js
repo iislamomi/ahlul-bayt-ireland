@@ -29,6 +29,13 @@ const NEU_L = {
   bg: '#ece5d8',
   surf: '#ece5d8',
   sunk: '#e6dfd1',
+  /* The same two surfaces as panes over the wallpaper. The alpha is the setting
+     that matters and it was measured, not picked: the drawing has to come
+     through, and the quietest text the app prints — muted, its own 4.8:1 on the
+     opaque page — still has to clear AA over the darkest thing the wallpaper
+     can put behind a card. */
+  glass: 'rgba(238,232,220,.90)',
+  glassSunk: 'rgba(231,225,212,.86)',
   hi: '#fffbf0',
   lo: '#cbc3b2',
   edge: '1px solid rgba(255,255,255,.55)',
@@ -48,6 +55,8 @@ const NEU_D = {
   bg: '#1a1d1f',
   surf: '#1a1d1f',
   sunk: '#171a1b',
+  glass: 'rgba(26,29,31,.82)',
+  glassSunk: 'rgba(23,26,27,.78)',
   /* Barely lighter and barely darker than the surface. A dark room does not
      contain a cream-coloured light source, and the moment the highlight is much
      brighter than the material it stops reading as light on a surface and starts
@@ -67,11 +76,20 @@ const NEU_D = {
   faint: '#949a97',
   accent: '#d8b863'
 };
+/* The two quietest rungs, moved up one over the wallpaper. Muted is 4.8:1 on the
+   opaque page — it was written to pass AA with almost nothing to spare, and a
+   frosted pane over a mosque at dusk is darker than the page by exactly the
+   margin that spare was. Nothing else on the ladder needs this: ink and head
+   have headroom to give away. */
+const GLASS_INK = {
+  false: { muted: '#5d564a', faint: '#635b4d' },
+  true: { muted: '#a8a196', faint: '#9aa19d' }
+};
 const NEU = {};
-['bg', 'surf', 'sunk', 'hi', 'lo', 'edge', 'rule',
+['bg', 'surf', 'sunk', 'glass', 'glassSunk', 'hi', 'lo', 'edge', 'rule',
  'head', 'ink', 'ink2', 'muted', 'label', 'faint', 'accent'].forEach(k => {
   Object.defineProperty(NEU, k, {
-    get: () => (THEME_DARK ? NEU_D : NEU_L)[k],
+    get: () => (GLASS && GLASS_INK[THEME_DARK][k]) || (THEME_DARK ? NEU_D : NEU_L)[k],
     enumerable: true
   });
 });
@@ -87,9 +105,14 @@ const ACCENT_ON_DARK = {
   '#2c5d52': '#7fc9b4',
   '#7d6220': '#d8b863',
   '#75601f': '#d8b863',
+  '#6d5a1c': '#d8b863',
   '#6e2230': '#e39aa6',
   '#8a4b2c': '#e0a780',
-  '#3a4a78': '#a3b3e8'
+  '#3a4a78': '#a3b3e8',
+  // the two home-tile tones that had no dark counterpart, so their kickers were
+  // printed in light-theme crimson on a dark card
+  '#a03a3a': '#e59a9a',
+  '#8a2f52': '#e59ab4'
 };
 const onSurf = c => (THEME_DARK && ACCENT_ON_DARK[c]) || c;
 /* Ink for a filled accent. White is right on the deep greens and crimsons the
@@ -109,6 +132,28 @@ function inkOn(bg) {
 /* An explicit flag still wins \u2014 the reader passes one \u2014 but leaving it out now
    means "whatever the theme is", not "light". */
 const neuTone = dark => (dark === undefined ? THEME_DARK : dark) ? NEU_D : NEU_L;
+/* True only while the home screen is being built. That screen draws over the
+   wallpaper, so its raised surfaces stop being opaque board and become frosted
+   panes — the drawing carries on underneath them, which is the whole difference
+   between a background and a picture with cards stacked on top of it. Set once
+   per render pass in render(), where exactly one screen is built, and read by
+   the two helpers every card on the screen already goes through. */
+let GLASS = false;
+const FROST = { backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)' };
+/* A few things on the home screen are printed straight onto the page rather than
+   onto a card — the section headings between the blocks. Over a wallpaper they
+   have nothing to sit on, and the drawing scrolls under them, so where they were
+   legible at the top of the screen they were not at the bottom. Each gets the
+   same pane the cards get, sized to its own words. The negative margin cancels
+   the padding, so the words do not move when the pane appears behind them. */
+const wallChip = () => GLASS ? {
+  display: 'inline-block',
+  padding: '4px 11px',
+  marginLeft: -11,
+  borderRadius: 10,
+  background: NEU.glass,
+  ...FROST
+} : null;
 const neuUp = (d = 1, dark) => {
   const t = neuTone(dark);
   return `${(6 * d).toFixed(1)}px ${(6 * d).toFixed(1)}px ${(13 * d).toFixed(1)}px ${t.lo}, -${(5 * d).toFixed(1)}px -${(5 * d).toFixed(1)}px ${(11 * d).toFixed(1)}px ${t.hi}`;
@@ -122,18 +167,147 @@ const neuIn = (d = 1, dark) => {
 const neuUpOn = (rgb, d = 1) => `${(6 * d).toFixed(1)}px ${(6 * d).toFixed(1)}px ${(15 * d).toFixed(1)}px rgba(${rgb},.32), -${(4 * d).toFixed(1)}px -${(4 * d).toFixed(1)}px ${(10 * d).toFixed(1)}px ${NEU.hi}`;
 /* Raised card, ready to spread into a style object. */
 const neuCard = (r = 18, d = 1, dark) => ({
-  background: neuTone(dark).surf,
+  background: GLASS ? neuTone(dark).glass : neuTone(dark).surf,
   borderRadius: r,
   border: neuTone(dark).edge,
-  boxShadow: neuUp(d, dark)
+  boxShadow: neuUp(d, dark),
+  ...(GLASS ? FROST : null)
 });
 /* Pressed well — inputs, tracks, and the selected state of a segmented control. */
 const neuWell = (r = 14, d = 1, dark) => ({
-  background: neuTone(dark).sunk,
+  background: GLASS ? neuTone(dark).glassSunk : neuTone(dark).sunk,
   borderRadius: r,
   border: neuTone(dark).edge,
-  boxShadow: neuIn(d, dark)
+  boxShadow: neuIn(d, dark),
+  ...(GLASS ? FROST : null)
 });
+
+/* ── HOME WALLPAPER ──
+   Dusk over a mosque, drawn rather than photographed. Vector because it has to
+   sit under live text: every value here is one a contrast measurement can be
+   run against and adjusted, which a JPEG is not, and because the same drawing
+   can be dusk in one theme and night in the other instead of shipping two
+   images. It also costs nothing — a few kilobytes of path data against a couple
+   of hundred for a photograph that would still be soft on a dense screen. */
+const WALL = {
+  light: {
+    sky: [[0, '#9db7c3'], [.30, '#bcd0d6'], [.52, '#d7ddd9'], [.68, '#e6e2d6'], [1, '#eae4d8']],
+    moon: '#f4efe4',
+    bird: 'rgba(90,86,78,.55)',
+    /* Four ridges, each a little darker and a little less hazy than the one
+       behind it. Distance is carried by value alone; the reference photograph
+       does the same and it is why the range reads as deep rather than as four
+       stacked shapes. */
+    ridge: ['#bbccd1', '#a6bac2', '#8fa6b2', '#7b93a1'],
+    /* Not the near-black of the reference — dark ink has to survive over it —
+       but not the fog either. The first attempt lifted the foreground and then
+       washed it again with a heavy veil, and between the two the mosque stopped
+       being a silhouette and became weather. Legibility is the panes' job; this
+       only has to be light enough that the veil above can be gentle. */
+    fore: '#41535c',
+    /* Settles the drawing back behind the interface. Light, because the frosted
+       panes are what the text actually sits on, and a wash strong enough to
+       carry text on its own is a wash strong enough to erase the picture. */
+    veil: 'linear-gradient(180deg,rgba(236,229,216,.14) 0%,rgba(236,229,216,.20) 45%,rgba(236,229,216,.30) 70%,rgba(236,229,216,.38) 100%)'
+  },
+  dark: {
+    sky: [[0, '#0d1316'], [.30, '#131c1f'], [.52, '#182123'], [.68, '#1b2422'], [1, '#1d2523']],
+    moon: '#d8b863',
+    bird: 'rgba(190,200,198,.30)',
+    ridge: ['#1a2427', '#1f2b2d', '#253133', '#2b393a'],
+    // in the dark theme the silhouette can be what it wants to be: the ink above
+    // it is pale, and the darker the foreground the more the moon carries
+    fore: '#080b0c',
+    veil: 'linear-gradient(180deg,rgba(26,29,31,.18) 0%,rgba(26,29,31,.24) 45%,rgba(26,29,31,.32) 70%,rgba(26,29,31,.40) 100%)'
+  }
+};
+
+/* An onion dome: half-width w, height h, sitting on the line y. */
+const dome = (cx, y, w, h) =>
+  `M${cx - w} ${y}C${cx - w} ${(y - h * .58).toFixed(1)},${(cx - w * .78).toFixed(1)} ${(y - h * .9).toFixed(1)},${cx} ${y - h}` +
+  `C${(cx + w * .78).toFixed(1)} ${(y - h * .9).toFixed(1)},${cx + w} ${(y - h * .58).toFixed(1)},${cx + w} ${y}Z`;
+/* Dome, the drum under it, and the spike on top — the three parts every one of
+   these has, at whatever size. */
+const turret = (cx, y, w, h, drum) =>
+  dome(cx, y, w, h) +
+  `M${cx - w * .82} ${y}h${(w * 1.64).toFixed(1)}v${drum}h-${(w * 1.64).toFixed(1)}Z` +
+  `M${cx - .9} ${y - h}h1.8v-${(h * .34).toFixed(1)}h-1.8Z`;
+const minaret = (cx, base, w, top) =>
+  `M${cx - w} ${base}h${w * 2}V${top + 16}h-${w * 2}Z` +
+  dome(cx, top + 16, w * 1.5, 13) +
+  `M${cx - w * 1.5} ${top + 16}h${w * 3}v3h-${w * 3}Z` +
+  `M${cx - 1} ${top + 3}h2v-9h-2Z`;
+
+function wallpaperSvg(dark) {
+  const p = dark ? WALL.dark : WALL.light;
+  const stops = p.sky.map(([o, c]) => `<stop offset="${o}" stop-color="${c}"/>`).join('');
+  /* Each ridge is one curve across the frame, dropped to the foot of the picture
+     so the layer behind never shows through the layer in front. */
+  const ridges = [
+    [418, 'C60 392 96 386 138 402C184 420 214 388 262 380C322 370 366 392 450 384'],
+    [446, 'C48 424 88 438 128 428C176 416 206 448 254 442C312 434 368 412 450 424'],
+    [478, 'C56 462 92 452 140 466C190 480 224 458 272 466C330 476 382 458 450 470'],
+    [512, 'C64 500 104 490 152 502C206 516 246 494 296 502C352 512 396 496 450 506']
+  ].map(([y, d], i) => `<path d="M0 ${y}${d}V800H0Z" fill="${p.ridge[i]}"/>`).join('');
+  const birds = [[88, 406, 1], [208, 400, .85], [186, 438, .7], [274, 456, .8], [64, 462, .65], [232, 470, .55]]
+    .map(([x, y, s]) => `<path d="M${x} ${y}q${(5 * s).toFixed(1)} -${(4.4 * s).toFixed(1)} ${(9.5 * s).toFixed(1)} 0q${(4.5 * s).toFixed(1)} -${(4.4 * s).toFixed(1)} ${(9.5 * s).toFixed(1)} 0" fill="none" stroke="${p.bird}" stroke-width="${(1.9 * s).toFixed(1)}" stroke-linecap="round"/>`)
+    .join('');
+  /* The skyline, left to right: a corner pavilion, a minaret, two small domes,
+     the great dome on its drum, two more small domes, the second minaret and a
+     last pavilion — the arrangement in the reference, at its proportions. */
+  const sky_line =
+    turret(24, 590, 17, 26, 22) +
+    `M14 574h1.6v-8h-1.6Z` +
+    minaret(104, 592, 6, 448) +
+    turret(133, 592, 15, 22, 20) +
+    turret(163, 588, 17, 25, 24) +
+    turret(225, 576, 40, 62, 36) +
+    `M191 576h68v6h-68Z` +
+    turret(287, 588, 17, 25, 24) +
+    minaret(279, 592, 6, 458) +
+    turret(317, 592, 15, 22, 20) +
+    turret(352, 590, 17, 26, 22) +
+    turret(404, 592, 15, 22, 20) +
+    `M0 612h450v188H0Z`;
+  return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 450 800" preserveAspectRatio="xMidYMax slice">' +
+    `<defs><linearGradient id="s" x1="0" y1="0" x2="0" y2="1">${stops}</linearGradient>` +
+    `<mask id="m"><circle cx="120" cy="318" r="58" fill="#fff"/><circle cx="148" cy="300" r="51" fill="#000"/></mask></defs>` +
+    '<rect width="450" height="800" fill="url(#s)"/>' +
+    `<circle cx="120" cy="318" r="58" fill="${p.moon}" mask="url(#m)"/>` +
+    birds + ridges +
+    `<path d="${sky_line}" fill="${p.fore}"/>` +
+    '</svg>';
+}
+
+/* Drawn once per theme and kept. The home screen re-renders every second for the
+   countdown, and rebuilding four kilobytes of path data and URI-encoding it on
+   every tick is work for nothing — the picture is the same picture. */
+const WALL_URL = {};
+const wallpaperUrl = dark => {
+  const k = dark ? 'dark' : 'light';
+  return WALL_URL[k] || (WALL_URL[k] = `url("data:image/svg+xml,${encodeURIComponent(wallpaperSvg(dark))}")`);
+};
+
+/* The wallpaper and the wash over it, behind everything the home screen draws.
+   Fixed to the frame rather than scrolled with the content: it is the wall the
+   screen hangs on, and a wall that slides upward as you read is a parallax
+   trick, not a background. */
+function homeBackdrop(dark) {
+  return React.createElement('div', {
+    'aria-hidden': 'true',
+    style: { position: 'absolute', inset: 0, zIndex: 0, pointerEvents: 'none', overflow: 'hidden' }
+  }, React.createElement('div', {
+    style: {
+      position: 'absolute', inset: 0,
+      backgroundImage: wallpaperUrl(dark),
+      backgroundSize: 'cover',
+      backgroundPosition: 'center bottom',
+      backgroundRepeat: 'no-repeat'
+    }
+  }), React.createElement('div', {
+    style: { position: 'absolute', inset: 0, background: (dark ? WALL.dark : WALL.light).veil }
+  }));
+}
 
 /* ── HIJRI DATE ── */
 const HIJRI_MONTHS = ['Muḥarram', 'Ṣafar', 'Rabīʿ al-Awwal', 'Rabīʿ al-Thānī', 'Jumādā al-Ūlā', 'Jumādā al-Ākhira', 'Rajab', 'Shaʿbān', 'Ramaḍān', 'Shawwāl', 'Dhū al-Qaʿda', 'Dhū al-Ḥijja'];
@@ -4695,7 +4869,8 @@ class App extends Component {
         fontSize: 18,
         fontWeight: 600,
         color: NEU.ink,
-        marginBottom: 12
+        marginBottom: 12,
+        ...wallChip()
       }
     }, label);
     const maulanas = Array.isArray(st.liveAskImam) ? st.liveAskImam.filter(m => m && m.number) : st.liveAskImam && st.liveAskImam.number ? [{
@@ -4858,7 +5033,11 @@ class App extends Component {
         gap: 8,
         marginBottom: 10
       }
-    }, [['Gregorian', '#6b6252', gregShort], ['Hijri', '#75601f', hijri]].map(([label, tone, value]) => /*#__PURE__*/React.createElement("div", {
+    /* Both kickers were literals, and both came up a tenth short of AA once the
+       card under them became a pane over the wallpaper. The neutral one is just
+       the muted rung, which already steps down over glass; the gold is a shade
+       deeper than the one used elsewhere for the same reason. */
+    }, [['Gregorian', NEU.muted, gregShort], ['Hijri', onSurf('#6d5a1c'), hijri]].map(([label, tone, value]) => /*#__PURE__*/React.createElement("div", {
       key: label,
       onClick: () => this.go('calendar'),
       style: {
@@ -4940,7 +5119,8 @@ class App extends Component {
         fontFamily: 'Spectral,serif',
         fontSize: 17,
         fontWeight: 600,
-        color: NEU.ink
+        color: NEU.ink,
+        ...wallChip()
       }
     }, "Today's Updates"), /*#__PURE__*/React.createElement("div", {
       onClick: () => { if (activeStories(this.state.liveStories).length) this.openStory(0); },
@@ -4953,7 +5133,11 @@ class App extends Component {
         margin: '-12px -10px',
         minHeight: 44,
         display: 'flex',
-        alignItems: 'center'
+        alignItems: 'center',
+        /* Not wallChip: this one's padding is a 44px tap target and must stay
+           that size. It takes the pane and the radius only, so the target it
+           already had becomes the shape you can see. */
+        ...(GLASS ? { background: NEU.glass, borderRadius: 12, ...FROST } : null)
       }
     }, "View all")), /*#__PURE__*/React.createElement("div", {
       className: "s",
@@ -5011,7 +5195,19 @@ class App extends Component {
         color: NEU.muted,
         marginTop: 6,
         lineHeight: 1.2,
-        fontWeight: 600
+        fontWeight: 600,
+        /* Not wallChip either. These three sit side by side under their tiles,
+           and a pane shrunk to each caption's own words gives three plates of
+           three different sizes. Full tile width, and two lines tall whether the
+           caption needs two or one, so the row stays a row. In em, because the
+           text-size setting scales the caption and the plate has to go with it. */
+        ...(GLASS ? {
+          // two lines of 1.2 plus the padding, all in em so the text-size
+          // setting moves the plate and the words together
+          display: 'block', boxSizing: 'border-box', minHeight: '3.2em',
+          padding: '.38em .67em', margin: '6px -.67em 0',
+          borderRadius: 9, background: NEU.glass, ...FROST
+        } : null)
       }
     }, s.short)))), /*#__PURE__*/React.createElement("div", {
       onClick: () => this.go('prayer'),
@@ -5209,7 +5405,8 @@ class App extends Component {
         fontSize: 18,
         fontWeight: 600,
         color: NEU.ink,
-        margin: '18px 0 12px'
+        margin: '18px 0 12px',
+        ...wallChip()
       }
     }, this.t('home.explore')), iconGrid(quickCards),
     sectionHead('Tools'), iconGrid(toolCards),
@@ -5324,7 +5521,8 @@ class App extends Component {
         fontWeight: 700,
         color: NEU.muted,
         marginBottom: 5,
-        paddingLeft: 2
+        paddingLeft: 2,
+        ...wallChip()
       }
     }, this.t('home.sponsored')), /*#__PURE__*/React.createElement("div", {
       style: {
@@ -15485,7 +15683,14 @@ class App extends Component {
      chevron on the right. The home page leads with these so a first visit has
      somewhere obvious to start instead of a wall of equal choices. */
   renderHomeTile(o) {
+    /* The tone is a pair picked for a pale page: a saturated accent and the wash
+       that goes under it. The wash still works as the glyph on the filled circle
+       in either theme, but the accent is printed straight onto the card for the
+       kicker and the chevron, and on a dark card it was 2.2:1 — dark ink on dark
+       board. It has always been that; the wallpaper is what made it worth
+       looking at. onSurf is the mechanism already built for exactly this. */
     const [ink, tint] = o.tone;
+    const kick = onSurf(ink);
     return /*#__PURE__*/React.createElement("div", {
       onClick: o.onClick,
       className: "neu-press",
@@ -15527,7 +15732,7 @@ class App extends Component {
         letterSpacing: .9,
         textTransform: 'uppercase',
         fontWeight: 800,
-        color: ink
+        color: kick
       }
     }, o.kicker), /*#__PURE__*/React.createElement("div", {
       style: {
@@ -15556,7 +15761,7 @@ class App extends Component {
       style: {
         flexShrink: 0,
         fontSize: 20,
-        color: ink,
+        color: kick,
         opacity: .7
       }
     }, "›"));
@@ -16181,12 +16386,17 @@ class App extends Component {
       label: this.t('nav.more'),
       d: NAV_ICONS.more
     }];
+    /* The mosque in the wallpaper stands where the bar does. An opaque bar cut it
+       off at the knees, so on home the bar is frosted too and the silhouette
+       carries on behind the labels. */
+    const glass = st.screen === 'home';
     return /*#__PURE__*/React.createElement("nav", {
       className: "abi-nav",
       "aria-label": "Primary",
       style: {
         flexShrink: 0,
-        background: st.dark ? NEU_D.bg : NEU.bg,
+        background: glass ? (st.dark ? NEU_D.glass : NEU_L.glass) : st.dark ? NEU_D.bg : NEU.bg,
+        ...(glass ? FROST : null),
         boxShadow: `0 -7px 16px ${st.dark ? NEU_D.lo : NEU.lo}, 0 -1px 0 ${st.dark ? NEU_D.hi : NEU.hi}`,
         padding: '6px 14px 6px',
         display: 'flex',
@@ -16382,6 +16592,12 @@ class App extends Component {
     const showNav = st.story === null;
     // Reader draws its own logo in the toolbar; admin login draws it centred.
     const showBrand = st.screen !== 'reading' && st.screen !== 'home' && !(st.screen === 'admin' && !st.adminLoggedIn);
+    /* Exactly one screen is built below, so this names the one being built. The
+       wallpaper is the home screen's alone: every other screen is a working
+       surface — a timetable, a reader, an admin form — and a picture behind a
+       form is something to see past rather than something to look at. */
+    const onHome = st.screen === 'home';
+    GLASS = onHome;
     return /*#__PURE__*/React.createElement("div", {
       className: "app",
       dir: isRtl ? 'rtl' : 'ltr',
@@ -16391,7 +16607,7 @@ class App extends Component {
     }, /*#__PURE__*/React.createElement("a", {
       href: "#abi-main",
       className: "abi-skip"
-    }, "Skip to content"), /*#__PURE__*/React.createElement("main", {
+    }, "Skip to content"), onHome && homeBackdrop(st.dark), /*#__PURE__*/React.createElement("main", {
       id: "abi-main",
       className: "s",
       style: {
@@ -16399,7 +16615,9 @@ class App extends Component {
         overflowY: 'auto',
         overflowX: 'hidden',
         position: 'relative',
-        background: st.dark ? NEU_D.bg : NEU.bg
+        // transparent on home, or the scroller would paint the page tone straight
+        // over the wallpaper sitting behind it
+        background: onHome ? 'transparent' : st.dark ? NEU_D.bg : NEU.bg
       }
     }, showBrand && this.renderBrandMark(), st.screen === 'home' && this.renderHome(st, next, cd, greg, hijri, salaam), st.screen === 'prayer' && this.renderPrayer(st, next, cd, greg), st.screen === 'library' && this.renderLibrary(st), st.screen === 'reading' && this.renderReading(st), st.screen === 'classifieds' && this.renderClassifieds(st), st.screen === 'more' && this.renderMore(st), st.screen === 'about' && this.renderAbout(), st.screen === 'location' && this.renderLocation(st), st.screen === 'offline' && this.renderOffline(), st.screen === 'admin' && this.renderAdmin(st), st.screen === 'calendar' && this.renderCalendar(st), st.screen === 'kids' && this.renderKids(st), st.screen === 'health' && this.renderHealth(st), st.screen === 'qibla' && this.renderQibla(st), st.screen === 'khums' && this.renderKhums(st), st.screen === 'tasbeeh' && this.renderTasbeeh(st), st.screen === 'wallpaper' && this.renderWallpaper(st), st.screen === 'stories' && this.renderStories(st)), st.adhanPending && /*#__PURE__*/React.createElement("div", {
       onClick: this.playAdhan,
