@@ -150,7 +150,7 @@ const wallChip = () => GLASS ? {
   display: 'inline-block',
   padding: '4px 11px',
   marginLeft: -11,
-  borderRadius: 10,
+  borderRadius: R.chip,
   background: NEU.glass,
   ...FROST
 } : null;
@@ -180,6 +180,22 @@ const neuWell = (r = 14, d = 1, dark) => ({
   border: neuTone(dark).edge,
   boxShadow: neuIn(d, dark),
   ...(GLASS ? FROST : null)
+});
+/* One rung per level of nesting, because the home screen had grown nine
+   different corner radii — 9, 10, 11, 12, 13, 15.5, 16, 18 and 20 — and at that
+   spread the rounding stops being a decision and starts being noise. A card and
+   the card beside it have to agree; a chip and the chip beside it have to agree;
+   anything sitting inside a card is one rung tighter than the card holding it,
+   which is what makes the nesting read. */
+const R = { card: 18, tile: 16, inner: 13, pill: 12, chip: 10 };
+/* A filled disc that reads as a sphere: lit from the top-left inside its own
+   edge, shaded at the bottom-right, and casting a soft shadow in the fill's own
+   hue. The pale embossed badges on the Explore and Tools grids were already
+   built this way; these were a flat disc with a modern drop shadow under it, so
+   one screen was speaking two languages a few hundred pixels apart. */
+const neuDisc = ink => ({
+  background: `linear-gradient(145deg, ${ink}e0, ${ink})`,
+  boxShadow: `inset 2px 2px 5px rgba(255,255,255,.26), inset -2px -2px 6px rgba(0,0,0,.22), 0 4px 11px -6px ${ink}, 0 1px 2px rgba(0,0,0,.12)`
 });
 
 /* ── HOME WALLPAPER ──
@@ -4765,7 +4781,7 @@ class App extends Component {
         onClick: q.go,
         className: "neu-press",
         style: {
-          ...neuCard(16, .85),
+          ...neuCard(R.tile, .85),
           padding: '13px 6px 11px',
           cursor: 'pointer',
           display: 'flex',
@@ -5074,7 +5090,7 @@ class App extends Component {
         /* Not wallChip: this one's padding is a 44px tap target and must stay
            that size. It takes the pane and the radius only, so the target it
            already had becomes the shape you can see. */
-        ...(GLASS ? { background: NEU.glass, borderRadius: 12, ...FROST } : null)
+        ...(GLASS ? { background: NEU.glass, borderRadius: R.chip, ...FROST } : null)
       }
     }, "View all")), /*#__PURE__*/React.createElement("div", {
       className: "s",
@@ -5100,20 +5116,25 @@ class App extends Component {
       style: {
         width: 66,
         height: 92,
-        borderRadius: 18,
+        borderRadius: R.tile,
         padding: 2.5,
-        background: 'conic-gradient(from 210deg,#d8b863,#1f5145,#6e2230,#d8b863)'
+        background: 'conic-gradient(from 210deg,#d8b863,#1f5145,#6e2230,#d8b863)',
+        // the rail was the one row on this screen with no depth under it at all
+        boxShadow: neuUp(.6)
       }
     }, /*#__PURE__*/React.createElement("div", {
       style: {
         width: '100%',
         height: '100%',
-        borderRadius: 15.5,
+        borderRadius: R.inner,
         background: s.photo ? `url(${s.photo}) center/cover` : s.img || s.color,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        border: `2.5px solid ${NEU.bg}`,
+        /* The gap between the ring and the photograph was the opaque page tone,
+           left over from when the page was a flat cream field. Over a wallpaper
+           that is a cream hoop floating on a sunset. */
+        border: `2.5px solid ${GLASS ? NEU.glass : NEU.bg}`,
         position: 'relative',
         overflow: 'hidden'
       }
@@ -5143,7 +5164,7 @@ class App extends Component {
           // setting moves the plate and the words together
           display: 'block', boxSizing: 'border-box', minHeight: '3.2em',
           padding: '.38em .67em', margin: '6px -.67em 0',
-          borderRadius: 9, background: NEU.glass, ...FROST
+          borderRadius: R.chip, background: NEU.glass, ...FROST
         } : null)
       }
     }, s.short)))), /*#__PURE__*/React.createElement("div", {
@@ -5153,7 +5174,7 @@ class App extends Component {
         position: 'relative',
         overflow: 'hidden',
         border: sc.night ? '1px solid rgba(255,255,255,.08)' : '1px solid rgba(255,255,255,.6)',
-        borderRadius: 20,
+        borderRadius: R.card,
         padding: '15px 17px',
         color: sc.ink,
         boxShadow: neuUpOn(sc.shadowRgb, 1.15),
@@ -5254,10 +5275,11 @@ class App extends Component {
       }
     }, "Saved timetable")), prayerDial(next.name, sc, prog))), /*#__PURE__*/React.createElement("div", {
       style: {
-        background: NEU.surf,
-        boxShadow: neuUp(),
-        border: NEU.edge,
-        borderRadius: 18,
+        /* Was the page tone and its shadow written out by hand, which is why it
+           was the one card on this screen that stayed opaque when the wallpaper
+           landed: a solid cream slab between two frosted panes, with the picture
+           visibly stopping at its top edge and starting again below it. */
+        ...neuCard(R.card),
         padding: 5,
         marginBottom: 18,
         display: 'grid',
@@ -5272,7 +5294,7 @@ class App extends Component {
         alignItems: 'center',
         gap: 5,
         padding: '9px 1px 8px',
-        borderRadius: 13,
+        borderRadius: R.inner,
         background: p.isNext ? NEU.accent : 'transparent',
         boxShadow: p.isNext ? neuUpOn('31,81,69', .7) : 'none'
       }
@@ -5350,10 +5372,15 @@ class App extends Component {
     maulanas.length > 0 && /*#__PURE__*/React.createElement("div", {
       style: {
         background: 'linear-gradient(120deg,#1f5145,#163b30)',
-        borderRadius: 16,
+        border: '1px solid rgba(255,255,255,.08)',
+        borderRadius: R.card,
         padding: '12px 14px',
         marginTop: 14,
-        boxShadow: '0 8px 22px -10px rgba(22,59,48,.55)'
+        /* One flat drop shadow, on the only full-width block of this screen that
+           had no soft-3D treatment at all. neuUpOn is the helper built for a
+           raised surface carrying an accent, and the On this day banner further
+           up this same screen already uses it. */
+        boxShadow: neuUpOn('22,59,48', .95)
       }
     }, /*#__PURE__*/React.createElement("div", {
       style: {
@@ -5366,8 +5393,11 @@ class App extends Component {
         flexShrink: 0,
         width: 30,
         height: 30,
-        borderRadius: 9,
+        borderRadius: R.chip,
         background: 'rgba(216,184,99,.18)',
+        // pressed into the card rather than sitting flat on it, like every other
+        // small well in the app
+        boxShadow: 'inset 2px 2px 5px rgba(8,22,18,.45), inset -1.5px -1.5px 4px rgba(216,184,99,.16)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -5424,8 +5454,13 @@ class App extends Component {
         boxSizing: 'border-box',
         display: 'flex',
         alignItems: 'center',
-        borderRadius: 11,
-        background: '#d8b863',
+        borderRadius: R.pill,
+        background: 'linear-gradient(145deg,#e2c67c,#d8b863)',
+        /* Written out rather than taken from neuUpOn, whose lit edge is the page
+           highlight: an opaque cream edge is right on a cream page and far too
+           bright on a gold pill sitting on dark green. Same two-sided light,
+           pitched for where this actually sits. */
+        boxShadow: '3.5px 3.5px 9px rgba(8,22,18,.45), -2px -2px 6px rgba(243,234,212,.14)',
         color: '#163b30',
         fontSize: 12.5,
         fontWeight: 700,
@@ -5466,11 +5501,12 @@ class App extends Component {
         position: 'relative',
         width: '100%',
         aspectRatio: '16 / 7',
-        borderRadius: 16,
         overflow: 'hidden',
-        background: NEU.sunk,
-        border: NEU.edge,
-        boxShadow: '0 8px 22px -14px rgba(60,50,30,.6)'
+        /* The frame behind the slide was the opaque sunk tone with a flat drop
+           shadow, so on the wallpaper it read as a hole cut in the picture while
+           an image loaded or cross-faded. Same raised pane as every other card
+           here; the slide covers it once it arrives. */
+        ...neuCard(R.card, .9)
       }
     }, ads.map((a, i) => /*#__PURE__*/React.createElement("img", {
       key: i,
@@ -15632,7 +15668,7 @@ class App extends Component {
       onClick: o.onClick,
       className: "neu-press",
       style: {
-        ...neuCard(16, .85),
+        ...neuCard(R.tile, .85),
         display: 'flex',
         alignItems: 'center',
         gap: 13,
@@ -15651,8 +15687,7 @@ class App extends Component {
         alignItems: 'center',
         justifyContent: 'center',
         color: tint,
-        background: `linear-gradient(145deg, ${ink}e6, ${ink})`,
-        boxShadow: `inset 0 1px 0 rgba(255,255,255,.3), 0 5px 12px -6px ${ink}, 0 1px 2px rgba(0,0,0,.14)`
+        ...neuDisc(ink)
       },
       "aria-hidden": "true"
     }, LUCIDE[o.icon] ? icon(o.icon, {
@@ -15742,7 +15777,7 @@ class App extends Component {
       onClick: openCal,
       className: "neu-press",
       style: {
-        ...neuCard(16, .85),
+        ...neuCard(R.tile, .85),
         padding: '12px 13px',
         cursor: 'pointer',
         display: 'flex',
@@ -15800,7 +15835,7 @@ class App extends Component {
       chip: '#d8b863',
       kicker: s.label || 'Upcoming'
     } : {
-      ...neuCard(16, .85),
+      ...neuCard(R.tile, .85),
       ink: NEU.ink,
       sub: NEU.muted,
       chip: '#8a4b2c',
@@ -15816,7 +15851,7 @@ class App extends Component {
       style: {
         position: 'relative',
         overflow: 'hidden',
-        borderRadius: 16,
+        borderRadius: R.tile,
         padding: compact ? '12px 13px' : '12px 14px',
         marginBottom: compact ? 0 : 12,
         cursor: playable ? 'pointer' : 'default',
