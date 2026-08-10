@@ -141,19 +141,24 @@ const neuTone = dark => (dark === undefined ? THEME_DARK : dark) ? NEU_D : NEU_L
 let GLASS = false;
 const FROST = { backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)' };
 /* A few things on the home screen are printed straight onto the page rather than
-   onto a card — the section headings between the blocks. Over a wallpaper they
-   have nothing to sit on, and the picture scrolls under them, so where they were
-   legible at the top of the screen they were not at the bottom. Each gets the
-   same pane the cards get, sized to its own words. The negative margin cancels
-   the padding, so the words do not move when the pane appears behind them. */
-const wallChip = () => GLASS ? {
-  display: 'inline-block',
-  padding: '4px 11px',
-  marginLeft: -11,
-  borderRadius: R.chip,
-  background: NEU.glass,
-  ...FROST
-} : null;
+   onto a card — the section headings between the blocks, and the captions under
+   the story rail. Over a wallpaper they have nothing to sit on, and the picture
+   scrolls under them: dark ink on the mosque silhouette is 1.4 to 1.
+
+   These carried a frosted chip each, which worked and which read as a row of
+   little boxes floating over the photograph. This is the same job done without
+   drawing anything: four one-pixel copies of the page tone laid around every
+   glyph, so the colour immediately touching each stroke is the page tone rather
+   than whatever the wallpaper is doing there, then two soft falloffs to keep the
+   edge from looking cut out. No box, no padding, nothing that moves the words. */
+const wallHalo = () => {
+  if (!GLASS) return null;
+  const c = THEME_DARK ? '26,29,31' : '236,229,216';
+  return {
+    textShadow: `0 1px 0 rgba(${c},.96),0 -1px 0 rgba(${c},.96),1px 0 0 rgba(${c},.96),` +
+      `-1px 0 0 rgba(${c},.96),0 0 7px rgba(${c},.88),0 0 16px rgba(${c},.62)`
+  };
+};
 const neuUp = (d = 1, dark) => {
   const t = neuTone(dark);
   return `${(6 * d).toFixed(1)}px ${(6 * d).toFixed(1)}px ${(13 * d).toFixed(1)}px ${t.lo}, -${(5 * d).toFixed(1)}px -${(5 * d).toFixed(1)}px ${(11 * d).toFixed(1)}px ${t.hi}`;
@@ -188,6 +193,12 @@ const neuWell = (r = 14, d = 1, dark) => ({
    anything sitting inside a card is one rung tighter than the card holding it,
    which is what makes the nesting read. */
 const R = { card: 18, tile: 16, inner: 13, pill: 12, chip: 10 };
+/* The same pane with no lift under it. When every block on a screen is raised,
+   nothing is: twenty soft shadows over a photograph read as haze rather than as
+   depth. Three surfaces keep theirs — the next prayer, today's reminder and the
+   times ribbon — and the rest lie flat against the wallpaper, which is what
+   makes those three look like they are sitting forward. */
+const neuFlat = (r, dark) => ({ ...neuCard(r, 1, dark), boxShadow: 'none' });
 /* A filled disc that reads as a sphere: lit from the top-left inside its own
    edge, shaded at the bottom-right, and casting a soft shadow in the fill's own
    hue. The pale embossed badges on the Explore and Tools grids were already
@@ -4781,7 +4792,7 @@ class App extends Component {
         onClick: q.go,
         className: "neu-press",
         style: {
-          ...neuCard(R.tile, .85),
+          ...neuFlat(R.tile),
           padding: '13px 6px 11px',
           cursor: 'pointer',
           display: 'flex',
@@ -4823,7 +4834,7 @@ class App extends Component {
         fontWeight: 600,
         color: NEU.ink,
         marginBottom: 12,
-        ...wallChip()
+        ...wallHalo()
       }
     }, label);
     const maulanas = Array.isArray(st.liveAskImam) ? st.liveAskImam.filter(m => m && m.number) : st.liveAskImam && st.liveAskImam.number ? [{
@@ -4994,7 +5005,7 @@ class App extends Component {
       key: label,
       onClick: () => this.go('calendar'),
       style: {
-        ...neuCard(13, .62),
+        ...neuFlat(R.inner),
         flex: 1,
         minWidth: 0,
         display: 'flex',
@@ -5029,8 +5040,7 @@ class App extends Component {
         borderRadius: 13,
         padding: '8px 12px',
         marginBottom: 10,
-        cursor: 'pointer',
-        boxShadow: neuUpOn('25,63,52', .8)
+        cursor: 'pointer'
       }
     }, /*#__PURE__*/React.createElement("div", {
       style: {
@@ -5073,7 +5083,7 @@ class App extends Component {
         fontSize: 17,
         fontWeight: 600,
         color: NEU.ink,
-        ...wallChip()
+        ...wallHalo()
       }
     }, "Today's Updates"), /*#__PURE__*/React.createElement("div", {
       onClick: () => { if (activeStories(this.state.liveStories).length) this.openStory(0); },
@@ -5087,10 +5097,8 @@ class App extends Component {
         minHeight: 44,
         display: 'flex',
         alignItems: 'center',
-        /* Not wallChip: this one's padding is a 44px tap target and must stay
-           that size. It takes the pane and the radius only, so the target it
-           already had becomes the shape you can see. */
-        ...(GLASS ? { background: NEU.glass, borderRadius: R.chip, ...FROST } : null)
+        // the padding here is a 44px tap target, not decoration; it stays
+        ...wallHalo()
       }
     }, "View all")), /*#__PURE__*/React.createElement("div", {
       className: "s",
@@ -5118,9 +5126,7 @@ class App extends Component {
         height: 92,
         borderRadius: R.tile,
         padding: 2.5,
-        background: 'conic-gradient(from 210deg,#d8b863,#1f5145,#6e2230,#d8b863)',
-        // the rail was the one row on this screen with no depth under it at all
-        boxShadow: neuUp(.6)
+        background: 'conic-gradient(from 210deg,#d8b863,#1f5145,#6e2230,#d8b863)'
       }
     }, /*#__PURE__*/React.createElement("div", {
       style: {
@@ -5154,18 +5160,11 @@ class App extends Component {
         marginTop: 6,
         lineHeight: 1.2,
         fontWeight: 600,
-        /* Not wallChip either. These three sit side by side under their tiles,
-           and a pane shrunk to each caption's own words gives three plates of
-           three different sizes. Full tile width, and two lines tall whether the
-           caption needs two or one, so the row stays a row. In em, because the
-           text-size setting scales the caption and the plate has to go with it. */
-        ...(GLASS ? {
-          // two lines of 1.2 plus the padding, all in em so the text-size
-          // setting moves the plate and the words together
-          display: 'block', boxSizing: 'border-box', minHeight: '3.2em',
-          padding: '.38em .67em', margin: '6px -.67em 0',
-          borderRadius: R.chip, background: NEU.glass, ...FROST
-        } : null)
+        /* The plate these carried had to be forced to a uniform height, or
+           three captions of different lengths gave three different-sized boxes
+           in a row. With the halo there is no box to keep level, so the height
+           goes back to whatever the words need. */
+        ...wallHalo()
       }
     }, s.short)))), /*#__PURE__*/React.createElement("div", {
       onClick: () => this.go('prayer'),
@@ -5365,7 +5364,7 @@ class App extends Component {
         fontWeight: 600,
         color: NEU.ink,
         margin: '18px 0 12px',
-        ...wallChip()
+        ...wallHalo()
       }
     }, this.t('home.explore')), iconGrid(quickCards),
     sectionHead('Tools'), iconGrid(toolCards),
@@ -5375,12 +5374,7 @@ class App extends Component {
         border: '1px solid rgba(255,255,255,.08)',
         borderRadius: R.card,
         padding: '12px 14px',
-        marginTop: 14,
-        /* One flat drop shadow, on the only full-width block of this screen that
-           had no soft-3D treatment at all. neuUpOn is the helper built for a
-           raised surface carrying an accent, and the On this day banner further
-           up this same screen already uses it. */
-        boxShadow: neuUpOn('22,59,48', .95)
+        marginTop: 14
       }
     }, /*#__PURE__*/React.createElement("div", {
       style: {
@@ -5494,7 +5488,7 @@ class App extends Component {
         color: NEU.muted,
         marginBottom: 5,
         paddingLeft: 2,
-        ...wallChip()
+        ...wallHalo()
       }
     }, this.t('home.sponsored')), /*#__PURE__*/React.createElement("div", {
       style: {
@@ -5502,11 +5496,11 @@ class App extends Component {
         width: '100%',
         aspectRatio: '16 / 7',
         overflow: 'hidden',
-        /* The frame behind the slide was the opaque sunk tone with a flat drop
-           shadow, so on the wallpaper it read as a hole cut in the picture while
-           an image loaded or cross-faded. Same raised pane as every other card
-           here; the slide covers it once it arrives. */
-        ...neuCard(R.card, .9)
+        /* The frame behind the slide was the opaque sunk tone, so on the
+           wallpaper it read as a hole cut in the picture while an image loaded
+           or cross-faded. Same pane as every other card here; the slide covers
+           it once it arrives. */
+        ...neuFlat(R.card)
       }
     }, ads.map((a, i) => /*#__PURE__*/React.createElement("img", {
       key: i,
@@ -15668,7 +15662,9 @@ class App extends Component {
       onClick: o.onClick,
       className: "neu-press",
       style: {
-        ...neuCard(R.tile, .85),
+        /* Today's reminder is one of the three surfaces that stay raised; the
+           rest of these rows lie flat. */
+        ...(o.lift ? neuCard(R.tile, .85) : neuFlat(R.tile)),
         display: 'flex',
         alignItems: 'center',
         gap: 13,
@@ -15754,6 +15750,7 @@ class App extends Component {
     if (!majlis) {
       const first = todayRems[0];
       return this.renderHomeTile({
+        lift: true,
         icon: 'bell',
         kicker: todayRems.length > 1 ? `Reminders · ${todayRems.length}` : 'Reminders',
         title: first ? first.title : 'No reminders today',
@@ -15777,7 +15774,7 @@ class App extends Component {
       onClick: openCal,
       className: "neu-press",
       style: {
-        ...neuCard(R.tile, .85),
+        ...neuFlat(R.tile),
         padding: '12px 13px',
         cursor: 'pointer',
         display: 'flex',
@@ -15822,20 +15819,20 @@ class App extends Component {
     const ahead = s.kind === 'soon' || s.kind === 'today' || s.kind === 'upcoming';
     const tone = live ? {
       bg: 'linear-gradient(135deg,#7d2432 0%,#48111b 100%)',
-      shadow: neuUpOn('92,24,34', .95),
+      shadow: 'none',
       ink: '#f9ece7',
       sub: 'rgba(249,236,231,.74)',
       chip: '#ff7566',
       kicker: 'Live now'
     } : ahead ? {
       bg: 'linear-gradient(135deg,#24604f 0%,#193f34 100%)',
-      shadow: neuUpOn('25,63,52', .9),
+      shadow: 'none',
       ink: '#f3ead4',
       sub: 'rgba(243,234,212,.72)',
       chip: '#d8b863',
       kicker: s.label || 'Upcoming'
     } : {
-      ...neuCard(R.tile, .85),
+      ...neuFlat(R.tile),
       ink: NEU.ink,
       sub: NEU.muted,
       chip: '#8a4b2c',
