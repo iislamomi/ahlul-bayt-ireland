@@ -762,6 +762,12 @@ const NAHJ_PARTS = [['sermons', 'Sermons'], ['letters', 'Letters'], ['sayings', 
 const SAHIFA_PARTS = [['sahifa', 'Supplications'], ['munajat', 'Munājāt']];
 const BOOK_PARTS = { nahj: NAHJ_PARTS, sahifa: SAHIFA_PARTS };
 
+/* What the Library holds, and so what Continue reading is allowed to name. The
+   reader is also used for Learning chapters, which are not in the Library and
+   which findContent cannot look up — offering one on the home screen produced a
+   tile that said "no longer in the library" when it was tapped. */
+const LIB_TYPES = ['dua', 'ziyarah', 'aamal', 'nahj'];
+
 /* Every part of both books is numbered — Duʿāʾ 1 to 54, Sermon 1, Letter 31 — so
    they read in that order rather than in the order they happened to be typed in,
    which is newest-first and therefore backwards for a book. The number is taken
@@ -893,6 +899,23 @@ const icon = (name, o = {}) => React.createElement('svg', {
   strokeLinejoin: 'round',
   style: o.style,
   dangerouslySetInnerHTML: { __html: LUCIDE[name] || '' }
+});
+
+/* The one drawn glyph among the home tiles, because there is no cube in the
+   emoji set to reach for. Painted as the front face rather than in perspective:
+   at 30px an isometric cube is three grey diamonds, and a flat three-by-three
+   of colours is read as a Rubik's cube instantly. */
+const RUBIKS_CUBE = React.createElement('svg', {
+  width: 30, height: 30, viewBox: '0 0 32 32', 'aria-hidden': 'true',
+  dangerouslySetInnerHTML: {
+    __html: '<rect x="3" y="3" width="26" height="26" rx="5.5" fill="#1c1a17"/>' +
+      [['#c0392b', '#f4f1e8', '#2b6cb0'],
+       ['#e3b52a', '#2e8b57', '#c0392b'],
+       ['#2b6cb0', '#d97a1a', '#f4f1e8']]
+        .map((cells, r) => cells.map((fill, c) =>
+          `<rect x="${5.2 + c * 7.6}" y="${5.2 + r * 7.6}" width="6.4" height="6.4" rx="1.5" fill="${fill}"/>`
+        ).join('')).join('')
+  }
 });
 
 const NAV_ICONS = {
@@ -2978,7 +3001,6 @@ class App extends Component {
       prayerLoc: lsGet('prayerLoc', null),
       autoTimesErr: null,
       autoTimesBusy: false,
-      locQuery: '',
       locBusy: false,
       reportOpen: false,
       reportPrayer: 'Fajr',
@@ -3402,6 +3424,9 @@ class App extends Component {
     _defineProperty(this, "saveReadPos", () => {
       const lr = this.state.lastRead;
       if (!lr) return;
+      // leaving a Learning chapter must not write its scroll offset onto the
+      // library entry the mark is actually pointing at
+      if (this.state.readingType !== lr.type) return;
       const inner = document.querySelector('.app > .s .s');
       const pos = inner ? inner.scrollTop : 0;
       const next = { ...lr, pos };
@@ -3418,16 +3443,20 @@ class App extends Component {
       this._audioEl = null;
       const o = opts || {};
       const prev = this.state.lastRead;
-      const same = prev && prev.title === (item && item.title) && prev.type === type;
+      /* Only the Library is remembered. A Learning chapter is opened in the same
+         reader but is not a library entry, so it neither becomes the Continue
+         reading tile nor displaces the duʿāʾ already sitting there. */
+      const keep = LIB_TYPES.indexOf(type) >= 0;
+      const same = keep && prev && prev.title === (item && item.title) && prev.type === type;
       // a jump to a saved passage wins over the remembered position
       const mark = { type, title: (item && item.title) || '', pos: same && !o.jumpLine ? prev.pos || 0 : 0, at: Date.now() };
-      lsSet('lastRead', mark);
+      if (keep) lsSet('lastRead', mark);
       this.setState({
         screen: 'reading',
         readingType: type,
         readingItem: item,
         readingLang: o.lang || null,
-        lastRead: mark,
+        lastRead: keep ? mark : prev,
         activeLine: null,
         jumpLine: o.jumpLine || null
       }, () => {
@@ -3532,7 +3561,7 @@ class App extends Component {
       lsSet('prayerLoc', next);
       this._autoTimesLastTry = 0;
       this._lastAlertTime = '';
-      this.setState({ prayerLoc: next, autoTimesErr: null, locQuery: '' }, () => {
+      this.setState({ prayerLoc: next, autoTimesErr: null }, () => {
         this.fetchAutoTimes(true).then(ok => {
           const name = this.prayerLocation().name;
           this.showToast(ok ? `Prayer times now for ${name}` : `Set to ${name} — times could not be loaded yet`);
@@ -3626,7 +3655,7 @@ class App extends Component {
         });
       }, err => {
         this.setState({ locBusy: false });
-        const msg = err && err.code === 1 ? 'Location permission refused — pick a town from the list instead' : err && err.code === 2 ? 'Location services are unavailable right now' : err && err.code === 3 ? 'Finding your location took too long' : 'Could not read your location';
+        const msg = err && err.code === 1 ? 'Location permission refused — pick a town from the menu instead' : err && err.code === 2 ? 'Location services are unavailable right now' : err && err.code === 3 ? 'Finding your location took too long' : 'Could not read your location';
         this.showToast(msg);
       }, { enableHighAccuracy: false, timeout: 12000, maximumAge: 600000 });
     });
@@ -3740,21 +3769,6 @@ class App extends Component {
       this.setState({
         adhanEnabled: on
       });
-    });
-    /* One switch per adhan, and they are exclusive: switching one on switches
-       whichever was on off, and switching the last one off means no adhan
-       sounds at all. That second state is the same thing the "Adhan (Prayer
-       Call)" switch has always controlled, so it is set here rather than
-       duplicated — a person who has turned every adhan off has turned the adhan
-       off, and finding the prayer screen still claiming it is on would be a lie. */
-    _defineProperty(this, "toggleAdhanChoice", key => {
-      const playing = this.state.adhanEnabled && this.state.adhanSound === key;
-      if (playing) {
-        this.setAdhanEnabled(false);
-        return;
-      }
-      this.setAdhanSound(key);
-      this.setAdhanEnabled(true);
     });
     _defineProperty(this, "playAdhan", () => {
       this.stopAdhan();
@@ -4581,7 +4595,7 @@ class App extends Component {
       })
     }, {
       title: this.t('kids.title'),
-      icon: '🧸',
+      icon: RUBIKS_CUBE,
       tone: ['#c06014', '#fbe9dc'],
       go: () => this.go('kids')
     }, {
@@ -5171,7 +5185,9 @@ class App extends Component {
         libQuery: ''
       })
     }),
-    lastRead && lastRead.title && this.renderHomeTile({
+    // the type test also retires marks written by older builds, which could name
+    // a Learning chapter and then fail to reopen it
+    lastRead && lastRead.title && LIB_TYPES.indexOf(lastRead.type) >= 0 && this.renderHomeTile({
       icon: 'book-open',
       kicker: 'Continue reading',
       title: lastRead.title,
@@ -7013,7 +7029,12 @@ class App extends Component {
     const enBody = localBody || r.body || r.tr || '';
     const hasEn = !!(enBody || r.sum);
     const hasAr = !!r.ar;
-    const hasPdf = !!r.pdf;
+    /* Books and Learning are PDFs \u2014 the scan is the edition. A du\u02bf\u0101\u02be, ziy\u0101rah or
+       amaal is the text itself, and the PDF beside it was a second and worse
+       copy of the same words: no line numbers, no bookmarks, no language switch,
+       no saving a passage. Every one of those entries that carries a PDF link
+       also carries the Arabic, so the tab goes and nothing goes with it. */
+    const hasPdf = !!r.pdf && (rtype === 'nahj' || rtype === 'learning');
     const tabs = [];
     if (hasAr) tabs.push(['ar', '\u0627\u0644\u0639\u0631\u0628\u064a\u0629']);
     if (hasEn) tabs.push(['en', localBody ? st.lang : 'English']);
@@ -7897,22 +7918,21 @@ class App extends Component {
 
   /* ── MORE ── */
   /* \u2500\u2500 PRAYER LOCATION \u2500\u2500
-     Search, a list, the device, and a way back to the community default. Nothing
+     A menu, the device, and a way back to the community default. Nothing
      here asks for permission until "Use my location" is pressed \u2014 opening the
      screen must not trigger a browser prompt. */
   renderLocation(st) {
     const loc = this.prayerLocation();
     const src = this.prayerSource();
     const isHome = loc.id === ABI_HOME.id;
-    const q = st.locQuery.trim().toLowerCase();
-    /* County counts as a match — "Co. Mayo" is how people look for their town —
-       but a town whose name starts with the query is what they meant, so it
-       sorts first. Otherwise "kil" buries Kilkenny under Co. Kildare. */
-    const rank = l => {
-      const n = l.name.toLowerCase();
-      return n.startsWith(q) ? 0 : n.includes(q) ? 1 : 2;
-    };
-    const hits = q ? IE_LOCATIONS.filter(l => `${l.name} ${l.region}`.toLowerCase().includes(q)).sort((a, b) => rank(a) - rank(b)) : IE_LOCATIONS;
+    /* Forty-three towns as forty-three cards was a screen you scrolled rather
+       than a choice you made, and it needed a search field of its own to be
+       usable at all. One menu replaces both: the phone draws the list, and a
+       phone already knows how to scroll and type into its own menus.
+       Alphabetical, because a menu is scanned by name — the source order runs by
+       size, which tells you nothing when you are looking for Tuam. */
+    const towns = IE_LOCATIONS.filter(l => l.id !== ABI_HOME.id)
+      .slice().sort((a, b) => a.name.localeCompare(b.name));
     const ERR = {
       offline: 'No connection, so the timetable could not be refreshed.',
       api: 'The prayer-time service is not responding.',
@@ -7926,32 +7946,7 @@ class App extends Component {
     /* One banner, saying exactly what the times on screen are. A wrong town shown
        quietly would be worse than no times at all. */
     const status = src.kind === 'live' ? { tone: '#1f5145', bg: '#e4efe9', mark: 'check', text: `Live timetable for ${loc.name}, updated today.` } : src.kind === 'cached' ? { tone: '#7d6220', bg: '#f5eeda', mark: 'info', text: `Showing the last timetable saved for ${loc.name}, from ${dateLabel(src.date)}.` } : src.kind === 'preset' ? { tone: '#1f5145', bg: '#e4efe9', mark: 'info', text: "Showing the centre's own published timetable for Dublin." } : { tone: '#6e2230', bg: '#f5e7e9', mark: 'alert', text: `No timetable loaded for ${loc.name} yet \u2014 the times shown are Dublin's community timetable, not ${loc.name}'s.` };
-    const row = (o) => /*#__PURE__*/React.createElement("div", {
-      key: o.key,
-      onClick: o.onClick,
-      className: "neu-press",
-      style: {
-        ...neuCard(14, .8), padding: '13px 15px', cursor: 'pointer',
-        display: 'flex', alignItems: 'center', gap: 12, minHeight: 44
-      }
-    }, /*#__PURE__*/React.createElement("span", {
-      "aria-hidden": "true",
-      style: {
-        flexShrink: 0, width: 36, height: 36, borderRadius: '50%', display: 'flex',
-        alignItems: 'center', justifyContent: 'center',
-        color: o.on ? '#e4efe9' : '#1f5145',
-        background: o.on ? 'linear-gradient(145deg,#1f5145e6,#1f5145)' : NEU.sunk,
-        boxShadow: o.on ? '0 4px 10px -6px #1f5145' : neuIn(.35)
-      }
-    }, icon(o.icon || 'map-pin', { size: 16 })), /*#__PURE__*/React.createElement("div", {
-      style: { flex: 1, minWidth: 0 }
-    }, /*#__PURE__*/React.createElement("div", {
-      style: { fontSize: 14.5, fontWeight: o.on ? 700 : 600, color: NEU.ink }
-    }, o.name), o.sub && /*#__PURE__*/React.createElement("div", {
-      style: { fontSize: 11.5, color: NEU.muted, marginTop: 1 }
-    }, o.sub)), o.on && /*#__PURE__*/React.createElement("span", {
-      "aria-label": "Selected", style: { color: onSurf('#1f5145'), fontSize: 17, flexShrink: 0 }
-    }, "\u2713"));
+    const townLabel = l => `${l.name} \u00b7 ${l.region}`;
     return /*#__PURE__*/React.createElement("div", {
       style: { padding: '8px 20px 100px' },
       className: "afu"
@@ -8032,47 +8027,60 @@ class App extends Component {
       style: { fontSize: 14.5, fontWeight: 700, color: NEU.ink }
     }, st.locBusy ? "Finding you\u2026" : "Use my location"), /*#__PURE__*/React.createElement("div", {
       style: { fontSize: 11.5, color: NEU.muted, marginTop: 1, lineHeight: 1.4 }
-    }, "Your device will ask permission first. Refusing is fine \u2014 pick a town below instead.")),
+    }, "Your device will ask permission first. Refusing is fine \u2014 pick a town from the menu below instead.")),
     /*#__PURE__*/React.createElement("span", { "aria-hidden": "true", style: { color: NEU.muted, fontSize: 18 } }, "\u203a")),
     /*#__PURE__*/React.createElement("div", {
-      style: {
-        display: 'flex', alignItems: 'center', gap: 10, ...neuWell(14, .8),
-        padding: '0 14px', marginBottom: 14
-      }
-    }, icon('search', { size: 17, stroke: NEU.muted }), /*#__PURE__*/React.createElement("input", {
-      value: st.locQuery,
-      onChange: e => this.setState({ locQuery: e.target.value }),
-      "aria-label": "Search Irish cities and towns",
-      placeholder: "Search a city or town",
-      dir: "auto",
-      // padding on the field, not only on the well around it: a 20px input inside
-      // a 44px box means the top and bottom of the target do not focus anything
-      style: { border: 'none', outline: 'none', background: 'transparent', fontSize: 14, color: NEU.ink2, width: '100%', padding: '12px 0', minHeight: 44, boxSizing: 'border-box' }
-    }), st.locQuery && /*#__PURE__*/React.createElement("div", {
-      onClick: () => this.setState({ locQuery: '' }),
-      "aria-label": "Clear search",
-      style: {
-        color: NEU.muted, cursor: 'pointer', fontSize: 20, lineHeight: 1, width: 44,
-        height: 44, margin: -12, display: 'flex', alignItems: 'center',
-        justifyContent: 'center', flexShrink: 0
-      }
-    }, "\u00d7")),
-    hits.length === 0 && /*#__PURE__*/React.createElement("div", {
-      style: { ...neuCard(16, .85), padding: '26px 20px', textAlign: 'center' }
+      style: { ...neuCard(16, .9), padding: '13px 15px' }
     }, /*#__PURE__*/React.createElement("div", {
-      style: { fontFamily: 'Spectral,serif', fontSize: 15.5, fontWeight: 600, color: NEU.ink }
-    }, `No town matching \u201c${st.locQuery.trim()}\u201d`), /*#__PURE__*/React.createElement("div", {
-      style: { fontSize: 12.5, color: NEU.muted, marginTop: 6, lineHeight: 1.5 }
-    }, "The list covers the island's main towns. If yours is not here, choose the nearest one or use your device location.")),
-    hits.length > 0 && /*#__PURE__*/React.createElement("div", {
-      style: { display: 'flex', flexDirection: 'column', gap: 8 }
-    }, loc.device && !q && row({
-      key: 'device', name: loc.name, sub: loc.region, on: true, icon: 'locate-fixed',
-      onClick: () => {}
-    }), hits.map(l => row({
-      key: l.id, name: l.name, sub: l.id === ABI_HOME.id ? l.region + ' \u00b7 community default' : l.region,
-      on: l.id === loc.id, onClick: () => this.setPrayerLocation(l)
-    }))),
+      style: {
+        fontSize: 10, letterSpacing: 1.1, textTransform: 'uppercase',
+        fontWeight: 800, color: NEU.muted, marginBottom: 9
+      }
+    }, "Choose a town"), /*#__PURE__*/React.createElement("div", {
+      style: { position: 'relative' }
+    }, /*#__PURE__*/React.createElement("select", {
+      value: loc.id,
+      onChange: e => {
+        const pick = IE_LOCATIONS.find(l => l.id === e.target.value);
+        if (pick) this.setPrayerLocation(pick);
+      },
+      "aria-label": "Prayer location",
+      style: {
+        width: '100%', boxSizing: 'border-box', minHeight: 48,
+        appearance: 'none', WebkitAppearance: 'none', MozAppearance: 'none',
+        padding: '13px 36px 13px 14px', borderRadius: 12,
+        border: NEU.edge, background: NEU.sunk, boxShadow: neuIn(.3),
+        fontSize: 14.5, fontWeight: 600, fontFamily: 'inherit',
+        color: NEU.ink, cursor: 'pointer',
+        // the option list is drawn by the OS, and without this it comes up
+        // black-on-white while the app is in dark mode
+        colorScheme: st.dark ? 'dark' : 'light'
+      }
+      /* A device fix is not one of the towns, so it is only in the menu while it
+         is the selection \u2014 without it the select has no option matching its own
+         value, and every browser answers that by showing the first one, which
+         would put Dublin's name over Cork's times. */
+    }, loc.device && /*#__PURE__*/React.createElement("option", {
+      key: 'device',
+      value: 'device'
+    }, townLabel(loc)), /*#__PURE__*/React.createElement("option", {
+      key: ABI_HOME.id,
+      value: ABI_HOME.id
+    }, `${ABI_HOME.name} \u00b7 community default`), /*#__PURE__*/React.createElement("optgroup", {
+      key: 'towns',
+      label: "Cities and towns"
+    }, towns.map(l => /*#__PURE__*/React.createElement("option", {
+      key: l.id,
+      value: l.id
+    }, townLabel(l))))), /*#__PURE__*/React.createElement("span", {
+      "aria-hidden": "true",
+      style: {
+        position: 'absolute', right: 14, top: '50%', marginTop: -6,
+        color: NEU.muted, fontSize: 12, lineHeight: 1, pointerEvents: 'none'
+      }
+    }, "\u25be")), /*#__PURE__*/React.createElement("div", {
+      style: { fontSize: 11.5, color: NEU.muted, marginTop: 9, lineHeight: 1.5 }
+    }, "The menu covers the island's main towns. If yours is not there, choose the nearest one \u2014 a few kilometres makes no difference to a prayer time.")),
     /*#__PURE__*/React.createElement("div", {
       style: { ...neuWell(16, .7), padding: '15px 16px', marginTop: 20 }
     }, /*#__PURE__*/React.createElement("div", {
@@ -8354,15 +8362,20 @@ class App extends Component {
       /* The azan a person wants to hear is a setting, and this is where someone
          comes looking for one — it used to sit under a toggle inside the prayer
          screen, which is where you go to read times, not to change preferences.
-         Rendered as the same rows as Language rather than as radio cards, so this
-         screen stays one list rather than a list and a widget.
+
+         Thirteen switches meant thirteen rows of scrolling past a screen of
+         near-identical names to answer a question with one answer, so the list
+         is a menu. The menu says which adhan; the switch above it says whether
+         any adhan sounds at all, which is the one thing a menu cannot say.
 
          Shown even when the shipped adhan is the only one. Hiding it until a
          second arrives means the first person to look for the setting concludes
          there isn't one — and nobody asks for an azan to be uploaded to a screen
          they have no reason to believe exists. */
       const sounds = adhanSounds(st.liveAzans, st.liveAzanOverrides);
-      const chosen = sounds.find(x => x.key === st.adhanSound) ? st.adhanSound : sounds[0].key;
+      const chosen = sounds.find(x => x.key === st.adhanSound) || sounds[0];
+      const on = st.adhanEnabled;
+      const playing = st.adhanPreview === chosen.key;
       return [/*#__PURE__*/React.createElement("div", {
         key: 'azan-head',
         style: {
@@ -8371,71 +8384,84 @@ class App extends Component {
         }
       }, this.t('prayer.adhanSound')), /*#__PURE__*/React.createElement("div", {
         key: 'azan-card',
-        role: "group",
-        "aria-label": this.t('prayer.adhanSound'),
         style: {
           background: NEU.surf, boxShadow: neuUp(), border: NEU.edge,
-          borderRadius: 16, padding: '6px 16px', marginBottom: 24
+          borderRadius: 16, padding: '6px 16px 4px', marginBottom: 24
         }
-      }, sounds.map((snd, i) => {
-        /* A switch rather than a tick, because there is a real off here: with
-           every one of them off, no adhan sounds. A tick cannot say that. */
-        const on = st.adhanEnabled && chosen === snd.key;
-        return /*#__PURE__*/React.createElement("div", {
-          key: snd.key,
-          onClick: () => this.toggleAdhanChoice(snd.key),
-          role: "switch",
-          "aria-checked": on ? 'true' : 'false',
-          "aria-label": snd.label,
-          style: {
-            display: 'flex', alignItems: 'center', gap: 12,
-            padding: '10px 0', minHeight: 48, boxSizing: 'border-box',
-            borderBottom: i < sounds.length - 1 ? NEU.rule : 'none',
-            cursor: 'pointer'
-          }
-        }, /*#__PURE__*/React.createElement("div", {
-          style: { flex: 1, minWidth: 0 }
-        }, /*#__PURE__*/React.createElement("div", {
-          style: {
-            fontSize: 14.5, color: on ? onSurf('#1f5145') : NEU.ink2,
-            fontWeight: on ? 700 : 400,
-            whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'
-          }
-        }, snd.label), /*#__PURE__*/React.createElement("div", {
-          style: {
-            fontSize: 11.5, color: NEU.muted, marginTop: 1,
-            whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'
-          }
-        }, snd.sub)), /*#__PURE__*/React.createElement("div", {
-          onClick: e => { e.stopPropagation(); this.previewAdhan(snd); },
-          role: "button",
-          "aria-label": (st.adhanPreview === snd.key ? 'Stop ' : 'Preview ') + snd.label,
-          style: {
-            flexShrink: 0, width: 34, height: 34, borderRadius: '50%',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            border: NEU.edge, background: NEU.sunk,
-            color: onSurf('#1f5145'), fontSize: 12, cursor: 'pointer'
-          }
-        }, st.adhanPreview === snd.key ? '■' : '▶'), /*#__PURE__*/React.createElement("div", {
-          "aria-hidden": "true",
-          style: {
-            flexShrink: 0, width: 44, height: 26, borderRadius: 15,
-            /* Same track as the Dark mode switch two sections down. Its own sunk
-               token measured 1.06:1 against the card in light mode — an off
-               switch you can only find by its inset shadow. */
-            background: on ? onSurf('#1f5145') : st.dark ? '#3b4247' : '#d8d0bf',
-            position: 'relative', transition: 'background .2s'
-          }
-        }, /*#__PURE__*/React.createElement("div", {
-          style: {
-            position: 'absolute', top: 3, left: 3,
-            transform: on ? 'translateX(18px)' : 'none',
-            width: 20, height: 20, borderRadius: '50%',
-            background: '#fff',
-            boxShadow: '0 1px 3px rgba(0,0,0,.2)', transition: 'transform .2s ease'
-          }
-        })));
-      }))];
+      }, /*#__PURE__*/React.createElement("div", {
+        onClick: () => this.setAdhanEnabled(!on),
+        role: "switch",
+        "aria-checked": on ? 'true' : 'false',
+        "aria-label": "Play the adhan",
+        style: {
+          display: 'flex', alignItems: 'center', gap: 12,
+          padding: '12px 0', minHeight: 48, boxSizing: 'border-box',
+          borderBottom: NEU.rule, cursor: 'pointer'
+        }
+      }, /*#__PURE__*/React.createElement("div", {
+        style: { flex: 1, minWidth: 0 }
+      }, /*#__PURE__*/React.createElement("div", {
+        style: { fontSize: 14.5, color: NEU.ink2, fontWeight: 600 }
+      }, "Play the adhan"), /*#__PURE__*/React.createElement("div", {
+        style: { fontSize: 11.5, color: NEU.muted, marginTop: 1 }
+      }, on ? "Sounds at each prayer time" : "Silent at prayer times")), /*#__PURE__*/React.createElement("div", {
+        "aria-hidden": "true",
+        style: {
+          flexShrink: 0, width: 44, height: 26, borderRadius: 15,
+          /* Same track as the Dark mode switch further down. The sunk token
+             measured 1.06:1 against the card in light mode — an off switch you
+             could only find by its inset shadow. */
+          background: on ? onSurf('#1f5145') : st.dark ? '#3b4247' : '#d8d0bf',
+          position: 'relative', transition: 'background .2s'
+        }
+      }, /*#__PURE__*/React.createElement("div", {
+        style: {
+          position: 'absolute', top: 3, left: 3,
+          transform: on ? 'translateX(18px)' : 'none',
+          width: 20, height: 20, borderRadius: '50%', background: '#fff',
+          boxShadow: '0 1px 3px rgba(0,0,0,.2)', transition: 'transform .2s ease'
+        }
+      }))), /*#__PURE__*/React.createElement("div", {
+        style: { display: 'flex', alignItems: 'center', gap: 10, padding: '12px 0 4px' }
+      }, /*#__PURE__*/React.createElement("div", {
+        style: { flex: 1, minWidth: 0, position: 'relative' }
+      }, /*#__PURE__*/React.createElement("select", {
+        value: chosen.key,
+        onChange: e => this.setAdhanSound(e.target.value),
+        "aria-label": this.t('prayer.adhanSound'),
+        style: {
+          width: '100%', boxSizing: 'border-box', minHeight: 48,
+          appearance: 'none', WebkitAppearance: 'none', MozAppearance: 'none',
+          padding: '13px 34px 13px 13px', borderRadius: 12,
+          border: NEU.edge, background: NEU.sunk, boxShadow: neuIn(.3),
+          fontSize: 14, fontWeight: 600, fontFamily: 'inherit',
+          color: on ? NEU.ink : NEU.muted, cursor: 'pointer',
+          // the option list is drawn by the OS, and without this it comes up
+          // black-on-white while the app is in dark mode
+          colorScheme: st.dark ? 'dark' : 'light'
+        }
+      }, sounds.map(snd => /*#__PURE__*/React.createElement("option", {
+        key: snd.key,
+        value: snd.key
+      }, snd.label))), /*#__PURE__*/React.createElement("span", {
+        "aria-hidden": "true",
+        style: {
+          position: 'absolute', right: 13, top: '50%', marginTop: -6,
+          color: NEU.muted, fontSize: 12, lineHeight: 1, pointerEvents: 'none'
+        }
+      }, "▾")), /*#__PURE__*/React.createElement("div", {
+        onClick: () => this.previewAdhan(chosen),
+        role: "button",
+        "aria-label": (playing ? 'Stop ' : 'Preview ') + chosen.label,
+        style: {
+          flexShrink: 0, width: 48, height: 48, borderRadius: '50%',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          border: NEU.edge, background: NEU.sunk, boxShadow: neuUp(.4),
+          color: onSurf('#1f5145'), fontSize: 13, cursor: 'pointer'
+        }
+      }, playing ? '■' : '▶')), /*#__PURE__*/React.createElement("div", {
+        style: { fontSize: 11.5, color: NEU.muted, padding: '0 0 12px' }
+      }, chosen.sub))];
     })(), /*#__PURE__*/React.createElement("div", {
       style: {
         fontSize: 11,
@@ -12299,7 +12325,11 @@ class App extends Component {
               overflowY: 'auto',
               resize: 'vertical'
             }
-          }), this.renderPdfPicker(st, d), this.renderAudioPicker(st, d),
+          /* No PDF picker here any more: the reader stopped offering a PDF tab
+             on these three sections, so anything uploaded from this form would
+             go where nobody could open it. Links already saved are left in the
+             draft untouched — this only stops new ones being added. */
+          }), this.renderAudioPicker(st, d),
           /*#__PURE__*/React.createElement("div", {
             style: {
               display: 'flex',
