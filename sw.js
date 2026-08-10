@@ -1,8 +1,11 @@
-const CACHE = 'abi-v104';
+const CACHE = 'abi-v105';
 const SHELL = ['/', '/index.html', '/manifest.json',
   '/vendor/react.min.js', '/vendor/react-dom.min.js', '/app.js',
   '/adhan.mp3', '/app-title-logo.png', '/app-title-logo-dark.png',
-  '/icon-192.png', '/icon-512.png', '/favicon.png'];
+  '/icon-192.png', '/icon-512.png', '/favicon.png',
+  // both, not just the current theme's: the switch is a tap away and 40kB of
+  // wallpaper arriving over a bad connection is a home screen with a hole in it
+  '/day.jpg', '/night.jpg'];
 
 self.addEventListener('install', e => {
   e.waitUntil(

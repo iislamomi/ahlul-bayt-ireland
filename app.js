@@ -30,7 +30,7 @@ const NEU_L = {
   surf: '#ece5d8',
   sunk: '#e6dfd1',
   /* The same two surfaces as panes over the wallpaper. The alpha is the setting
-     that matters and it was measured, not picked: the drawing has to come
+     that matters and it was measured, not picked: the picture has to come
      through, and the quietest text the app prints — muted, its own 4.8:1 on the
      opaque page — still has to clear AA over the darkest thing the wallpaper
      can put behind a card. */
@@ -134,7 +134,7 @@ function inkOn(bg) {
 const neuTone = dark => (dark === undefined ? THEME_DARK : dark) ? NEU_D : NEU_L;
 /* True only while the home screen is being built. That screen draws over the
    wallpaper, so its raised surfaces stop being opaque board and become frosted
-   panes — the drawing carries on underneath them, which is the whole difference
+   panes — the picture carries on underneath them, which is the whole difference
    between a background and a picture with cards stacked on top of it. Set once
    per render pass in render(), where exactly one screen is built, and read by
    the two helpers every card on the screen already goes through. */
@@ -142,7 +142,7 @@ let GLASS = false;
 const FROST = { backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)' };
 /* A few things on the home screen are printed straight onto the page rather than
    onto a card — the section headings between the blocks. Over a wallpaper they
-   have nothing to sit on, and the drawing scrolls under them, so where they were
+   have nothing to sit on, and the picture scrolls under them, so where they were
    legible at the top of the screen they were not at the bottom. Each gets the
    same pane the cards get, sized to its own words. The negative margin cancels
    the padding, so the words do not move when the pane appears behind them. */
@@ -183,109 +183,36 @@ const neuWell = (r = 14, d = 1, dark) => ({
 });
 
 /* ── HOME WALLPAPER ──
-   Dusk over a mosque, drawn rather than photographed. Vector because it has to
-   sit under live text: every value here is one a contrast measurement can be
-   run against and adjusted, which a JPEG is not, and because the same drawing
-   can be dusk in one theme and night in the other instead of shipping two
-   images. It also costs nothing — a few kilobytes of path data against a couple
-   of hundred for a photograph that would still be soft on a dense screen. */
+   Two photographs, one per theme: sunset over the mosque by day, the same
+   subject at first light by night. Each is 9:16 and each is cropped to the app
+   frame, which is narrower than that, so the anchor below decides what survives
+   the crop rather than leaving it to chance.
+
+   The veil is the only thing between the picture and the interface, and it is
+   as light as the measurements allow. Legibility is the frosted panes' job —
+   they sit at .90 and .82 and carry the text almost on their own, which is why
+   the wash can stay gentle enough to leave the sunset a sunset. */
 const WALL = {
   light: {
-    sky: [[0, '#9db7c3'], [.30, '#bcd0d6'], [.52, '#d7ddd9'], [.68, '#e6e2d6'], [1, '#eae4d8']],
-    moon: '#f4efe4',
-    bird: 'rgba(90,86,78,.55)',
-    /* Four ridges, each a little darker and a little less hazy than the one
-       behind it. Distance is carried by value alone; the reference photograph
-       does the same and it is why the range reads as deep rather than as four
-       stacked shapes. */
-    ridge: ['#bbccd1', '#a6bac2', '#8fa6b2', '#7b93a1'],
-    /* Not the near-black of the reference — dark ink has to survive over it —
-       but not the fog either. The first attempt lifted the foreground and then
-       washed it again with a heavy veil, and between the two the mosque stopped
-       being a silhouette and became weather. Legibility is the panes' job; this
-       only has to be light enough that the veil above can be gentle. */
-    fore: '#41535c',
-    /* Settles the drawing back behind the interface. Light, because the frosted
-       panes are what the text actually sits on, and a wash strong enough to
-       carry text on its own is a wash strong enough to erase the picture. */
-    veil: 'linear-gradient(180deg,rgba(236,229,216,.14) 0%,rgba(236,229,216,.20) 45%,rgba(236,229,216,.30) 70%,rgba(236,229,216,.38) 100%)'
+    src: '/day.jpg',
+    /* The mosque, the minarets and the camels are all in the left third; the
+       right third is sky and an empty ridge. On a tall phone cover crops about
+       a fifth off the width, so the picture is pinned to its left edge and the
+       fifth that goes is the fifth with nothing in it. */
+    pos: 'left bottom',
+    veil: 'linear-gradient(180deg,rgba(236,229,216,.08) 0%,rgba(236,229,216,.14) 45%,rgba(236,229,216,.20) 70%,rgba(236,229,216,.26) 100%)'
   },
   dark: {
-    sky: [[0, '#0d1316'], [.30, '#131c1f'], [.52, '#182123'], [.68, '#1b2422'], [1, '#1d2523']],
-    moon: '#d8b863',
-    bird: 'rgba(190,200,198,.30)',
-    ridge: ['#1a2427', '#1f2b2d', '#253133', '#2b393a'],
-    // in the dark theme the silhouette can be what it wants to be: the ink above
-    // it is pale, and the darker the foreground the more the moon carries
-    fore: '#080b0c',
-    veil: 'linear-gradient(180deg,rgba(26,29,31,.18) 0%,rgba(26,29,31,.24) 45%,rgba(26,29,31,.32) 70%,rgba(26,29,31,.40) 100%)'
+    src: '/night.jpg',
+    // this skyline is centred and runs the full width, so centre is where it goes
+    pos: 'center bottom',
+    /* Heavier than its daylight counterpart, and for a reason that is about the
+       photograph rather than about taste: it is a dawn picture with a pale sky,
+       and pale ink over a pale sky is the one combination the dark theme cannot
+       have. At this strength the ridges and the crescent are still there and the
+       brightest thing on screen has dropped far enough to sit under text. */
+    veil: 'linear-gradient(180deg,rgba(26,29,31,.34) 0%,rgba(26,29,31,.41) 45%,rgba(26,29,31,.47) 70%,rgba(26,29,31,.54) 100%)'
   }
-};
-
-/* An onion dome: half-width w, height h, sitting on the line y. */
-const dome = (cx, y, w, h) =>
-  `M${cx - w} ${y}C${cx - w} ${(y - h * .58).toFixed(1)},${(cx - w * .78).toFixed(1)} ${(y - h * .9).toFixed(1)},${cx} ${y - h}` +
-  `C${(cx + w * .78).toFixed(1)} ${(y - h * .9).toFixed(1)},${cx + w} ${(y - h * .58).toFixed(1)},${cx + w} ${y}Z`;
-/* Dome, the drum under it, and the spike on top — the three parts every one of
-   these has, at whatever size. */
-const turret = (cx, y, w, h, drum) =>
-  dome(cx, y, w, h) +
-  `M${cx - w * .82} ${y}h${(w * 1.64).toFixed(1)}v${drum}h-${(w * 1.64).toFixed(1)}Z` +
-  `M${cx - .9} ${y - h}h1.8v-${(h * .34).toFixed(1)}h-1.8Z`;
-const minaret = (cx, base, w, top) =>
-  `M${cx - w} ${base}h${w * 2}V${top + 16}h-${w * 2}Z` +
-  dome(cx, top + 16, w * 1.5, 13) +
-  `M${cx - w * 1.5} ${top + 16}h${w * 3}v3h-${w * 3}Z` +
-  `M${cx - 1} ${top + 3}h2v-9h-2Z`;
-
-function wallpaperSvg(dark) {
-  const p = dark ? WALL.dark : WALL.light;
-  const stops = p.sky.map(([o, c]) => `<stop offset="${o}" stop-color="${c}"/>`).join('');
-  /* Each ridge is one curve across the frame, dropped to the foot of the picture
-     so the layer behind never shows through the layer in front. */
-  const ridges = [
-    [418, 'C60 392 96 386 138 402C184 420 214 388 262 380C322 370 366 392 450 384'],
-    [446, 'C48 424 88 438 128 428C176 416 206 448 254 442C312 434 368 412 450 424'],
-    [478, 'C56 462 92 452 140 466C190 480 224 458 272 466C330 476 382 458 450 470'],
-    [512, 'C64 500 104 490 152 502C206 516 246 494 296 502C352 512 396 496 450 506']
-  ].map(([y, d], i) => `<path d="M0 ${y}${d}V800H0Z" fill="${p.ridge[i]}"/>`).join('');
-  const birds = [[88, 406, 1], [208, 400, .85], [186, 438, .7], [274, 456, .8], [64, 462, .65], [232, 470, .55]]
-    .map(([x, y, s]) => `<path d="M${x} ${y}q${(5 * s).toFixed(1)} -${(4.4 * s).toFixed(1)} ${(9.5 * s).toFixed(1)} 0q${(4.5 * s).toFixed(1)} -${(4.4 * s).toFixed(1)} ${(9.5 * s).toFixed(1)} 0" fill="none" stroke="${p.bird}" stroke-width="${(1.9 * s).toFixed(1)}" stroke-linecap="round"/>`)
-    .join('');
-  /* The skyline, left to right: a corner pavilion, a minaret, two small domes,
-     the great dome on its drum, two more small domes, the second minaret and a
-     last pavilion — the arrangement in the reference, at its proportions. */
-  const sky_line =
-    turret(24, 590, 17, 26, 22) +
-    `M14 574h1.6v-8h-1.6Z` +
-    minaret(104, 592, 6, 448) +
-    turret(133, 592, 15, 22, 20) +
-    turret(163, 588, 17, 25, 24) +
-    turret(225, 576, 40, 62, 36) +
-    `M191 576h68v6h-68Z` +
-    turret(287, 588, 17, 25, 24) +
-    minaret(279, 592, 6, 458) +
-    turret(317, 592, 15, 22, 20) +
-    turret(352, 590, 17, 26, 22) +
-    turret(404, 592, 15, 22, 20) +
-    `M0 612h450v188H0Z`;
-  return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 450 800" preserveAspectRatio="xMidYMax slice">' +
-    `<defs><linearGradient id="s" x1="0" y1="0" x2="0" y2="1">${stops}</linearGradient>` +
-    `<mask id="m"><circle cx="120" cy="318" r="58" fill="#fff"/><circle cx="148" cy="300" r="51" fill="#000"/></mask></defs>` +
-    '<rect width="450" height="800" fill="url(#s)"/>' +
-    `<circle cx="120" cy="318" r="58" fill="${p.moon}" mask="url(#m)"/>` +
-    birds + ridges +
-    `<path d="${sky_line}" fill="${p.fore}"/>` +
-    '</svg>';
-}
-
-/* Drawn once per theme and kept. The home screen re-renders every second for the
-   countdown, and rebuilding four kilobytes of path data and URI-encoding it on
-   every tick is work for nothing — the picture is the same picture. */
-const WALL_URL = {};
-const wallpaperUrl = dark => {
-  const k = dark ? 'dark' : 'light';
-  return WALL_URL[k] || (WALL_URL[k] = `url("data:image/svg+xml,${encodeURIComponent(wallpaperSvg(dark))}")`);
 };
 
 /* The wallpaper and the wash over it, behind everything the home screen draws.
@@ -293,19 +220,20 @@ const wallpaperUrl = dark => {
    screen hangs on, and a wall that slides upward as you read is a parallax
    trick, not a background. */
 function homeBackdrop(dark) {
+  const p = dark ? WALL.dark : WALL.light;
   return React.createElement('div', {
     'aria-hidden': 'true',
     style: { position: 'absolute', inset: 0, zIndex: 0, pointerEvents: 'none', overflow: 'hidden' }
   }, React.createElement('div', {
     style: {
       position: 'absolute', inset: 0,
-      backgroundImage: wallpaperUrl(dark),
+      backgroundImage: `url("${p.src}")`,
       backgroundSize: 'cover',
-      backgroundPosition: 'center bottom',
+      backgroundPosition: p.pos,
       backgroundRepeat: 'no-repeat'
     }
   }), React.createElement('div', {
-    style: { position: 'absolute', inset: 0, background: (dark ? WALL.dark : WALL.light).veil }
+    style: { position: 'absolute', inset: 0, background: p.veil }
   }));
 }
 
@@ -4739,6 +4667,15 @@ class App extends Component {
       isNext: p.name === next.name,
       last: i === activePrayers.length - 1
     }));
+    /* The next prayer's cell in the strip is filled with the accent, and the two
+       inks on it used to be written out as cream and a dimmer gold. That is
+       right on the light theme's deep green and wrong on the gold the dark theme
+       swaps in: the name landed at 1.9:1 and the time, gold on gold, at 1.15 —
+       not dim, gone. Derived from the fill now, so the pill is legible whatever
+       the accent becomes; the second value keeps the name a step ahead of the
+       icon and the clock, which is what the two literals were for. */
+    const pillInk = inkOn(NEU.accent);
+    const pillInk2 = pillInk === '#fff' ? 'rgba(255,251,240,.82)' : 'rgba(20,18,13,.78)';
     const quickCards = [{
       title: 'Duʿāʾ',
       icon: '🤲',
@@ -5343,7 +5280,7 @@ class App extends Component {
       "aria-hidden": "true",
       style: {
         display: 'flex',
-        color: p.isNext ? '#e2c67c' : onSurf('#75601f')
+        color: p.isNext ? pillInk2 : onSurf('#75601f')
       }
     }, icon(PRAYER_ICONS[p.name] || 'moon', {
       size: 19,
@@ -5351,14 +5288,14 @@ class App extends Component {
     })), /*#__PURE__*/React.createElement("span", {
       style: {
         fontSize: 11,
-        color: p.isNext ? '#fffbf0' : NEU.ink2,
+        color: p.isNext ? pillInk : NEU.ink2,
         fontWeight: p.isNext ? 700 : 600,
         lineHeight: 1
       }
     }, p.name), /*#__PURE__*/React.createElement("span", {
       style: {
         fontSize: 11.5,
-        color: p.isNext ? '#e2c67c' : NEU.muted,
+        color: p.isNext ? pillInk2 : NEU.muted,
         fontWeight: 600,
         fontVariantNumeric: 'tabular-nums',
         lineHeight: 1
