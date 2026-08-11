@@ -372,9 +372,11 @@ const LIB_SORTS = {
   dua: [['az', 'A–Z'], ['day', 'Monday to Sunday']],
   ziyarah: [['az', 'A–Z'], ['day', 'Monday to Sunday']],
   aamal: [['order', 'In order · Fajr to Isha, then Mon to Sun'], ['day', 'Monday to Sunday'], ['az', 'A–Z']],
-  amaal: [['az', 'A–Z']]
+  amaal: [['az', 'A–Z']],
+  // the catalogue order is the order it was given in, so it is offered as one
+  salat: [['given', 'As listed'], ['az', 'A–Z']]
 };
-const LIB_SORT_DEFAULT = { dua: 'az', ziyarah: 'az', aamal: 'order', amaal: 'az' };
+const LIB_SORT_DEFAULT = { dua: 'az', ziyarah: 'az', aamal: 'order', amaal: 'az', salat: 'given' };
 function libBand(mode, it) {
   const t = libText(it);
   if (mode === 'day') return dayRank(t) >= 0 ? 0 : 1;
@@ -893,6 +895,76 @@ const NAHJ_PARTS = [['sermons', 'Sermons'], ['letters', 'Letters'], ['sayings', 
 const SAHIFA_PARTS = [['sahifa', 'Supplications'], ['munajat', 'Munājāt']];
 const BOOK_PARTS = { nahj: NAHJ_PARTS, sahifa: SAHIFA_PARTS };
 
+/* ── SALAT ──
+   The catalogue from the screenshots, transcribed: every title and every
+   subtitle, in the order they appeared. What is NOT here is the method of each
+   prayer — how many rakʿah, what is recited in each, in what order — because
+   that was not in what was sent, and it is not something to fill in by guess.
+   Each entry opens as an empty reading with its own editor, so the method can
+   be pasted in, uploaded as a PDF, or given a recitation, exactly like a duʿāʾ.
+
+   Two things to check against the source: the seventh Days of the Week - Other
+   is Friday by the pattern, its row being cut off mid-screen, and anything
+   between that group and the monthly prayers was never on screen. */
+const SALAT = [
+  { title: 'Namaz-e-Shaab', cat: 'Occasions', sub: 'Tahajjud · Layl' },
+  { title: 'Namaz-e-Ayaat', cat: 'Occasions', sub: '' },
+  { title: 'Namaz-e-Jafer-e-Tayyar', cat: 'Occasions', sub: '' },
+  { title: 'Namaz-e-Wahshat-e-Qabr', cat: 'Occasions', sub: '' },
+  { title: 'Namaz-e-Mayyit', cat: 'Occasions', sub: 'Janaza' },
+  { title: 'Namaz-e-Eid', cat: 'Occasions', sub: 'Eid ul Adha · Eid ul Fitr' },
+  { title: 'Namaz-e-Gufaila', cat: 'Occasions', sub: '' },
+  { title: 'Namaz-e-Isteghfar - 1', cat: 'Isteghfar', sub: '' },
+  { title: 'Namaz-e-Isteghfar - 2', cat: 'Isteghfar', sub: 'Recommended for Saturday' },
+  { title: 'Namaz-e-Isteghfar - 3', cat: 'Isteghfar', sub: '' },
+  { title: 'Namaz-e-Isteghfar - 4', cat: 'Isteghfar', sub: 'Recommended for Tuesday eve' },
+  { title: 'Namaz-e-Isteghfar - 5', cat: 'Isteghfar', sub: 'Recommended for Tuesday' },
+  { title: 'Namaz-e-Isteghfar - 6', cat: 'Isteghfar', sub: '' },
+  { title: 'Namaz-e-Tawbah', cat: 'Isteghfar', sub: '' },
+  { title: 'Namaz-e-Isteghasa', cat: 'Isteghfar', sub: 'Hazrat Fatimah (s.a.)' },
+  { title: 'Days of the Week', cat: 'Days of the week', sub: 'Saturday eve' },
+  { title: 'Days of the Week', cat: 'Days of the week', sub: 'Saturday' },
+  { title: 'Days of the Week', cat: 'Days of the week', sub: 'Sunday eve' },
+  { title: 'Days of the Week', cat: 'Days of the week', sub: 'Sunday' },
+  { title: 'Days of the Week', cat: 'Days of the week', sub: 'Monday eve' },
+  { title: 'Days of the Week', cat: 'Days of the week', sub: 'Monday' },
+  { title: 'Days of the Week', cat: 'Days of the week', sub: 'Tuesday eve' },
+  { title: 'Days of the Week', cat: 'Days of the week', sub: 'Tuesday' },
+  { title: 'Days of the Week', cat: 'Days of the week', sub: 'Wednesday eve' },
+  { title: 'Days of the Week', cat: 'Days of the week', sub: 'Wednesday' },
+  { title: 'Days of the Week', cat: 'Days of the week', sub: 'Thursday eve' },
+  { title: 'Days of the Week', cat: 'Days of the week', sub: 'Thursday' },
+  { title: 'Days of the Week', cat: 'Days of the week', sub: 'Friday eve' },
+  { title: 'Days of the Week', cat: 'Days of the week', sub: 'Friday' },
+  { title: 'Days of the Week - Other', cat: 'Days of the week — other', sub: 'Saturday' },
+  { title: 'Days of the Week - Other', cat: 'Days of the week — other', sub: 'Sunday' },
+  { title: 'Days of the Week - Other', cat: 'Days of the week — other', sub: 'Monday' },
+  { title: 'Days of the Week - Other', cat: 'Days of the week — other', sub: 'Tuesday' },
+  { title: 'Days of the Week - Other', cat: 'Days of the week — other', sub: 'Wednesday' },
+  { title: 'Days of the Week - Other', cat: 'Days of the week — other', sub: 'Thursday' },
+  { title: 'Days of the Week - Other', cat: 'Days of the week — other', sub: 'Friday' },
+  { title: 'Namaz for first eve of every month', cat: 'Monthly', sub: '' },
+  { title: 'Namaz for first day of every month', cat: 'Monthly', sub: '' },
+  { title: 'Prayer for Dead Ones', cat: 'Occasions', sub: '' },
+  { title: 'Lailatul Raghaib', cat: 'Occasions', sub: 'First Thursday of Rajab' },
+  { title: 'Salaat of Masoomeen (as)', cat: 'Masoomeen', sub: 'Holy Prophet (s.a.w.s.)' },
+  { title: 'Salaat of Masoomeen (as)', cat: 'Masoomeen', sub: 'Hazrat Ali (a.s.)' },
+  { title: 'Salaat of Masoomeen (as)', cat: 'Masoomeen', sub: 'Hazrat Fatimah Zahra (s.a.)' },
+  { title: 'Salaat of Masoomeen (as)', cat: 'Masoomeen', sub: 'Hazrat Imam Hasan (as)' },
+  { title: 'Salaat of Masoomeen (as)', cat: 'Masoomeen', sub: 'Imam Hussain (as)' },
+  { title: 'Salaat of Masoomeen (as)', cat: 'Masoomeen', sub: 'Imam Zainul Aabideen (a.s.)' },
+  { title: 'Salaat of Masoomeen (as)', cat: 'Masoomeen', sub: 'Imam Muhammad al-Baqir (a.s.)' },
+  { title: 'Salaat of Masoomeen (as)', cat: 'Masoomeen', sub: 'Imam Jafar as-Sadiq (a.s.)' },
+  { title: 'Salaat of Masoomeen (as)', cat: 'Masoomeen', sub: 'Imam Moosa al-Kazim (a.s.)' },
+  { title: 'Salaat of Masoomeen (as)', cat: 'Masoomeen', sub: 'Imam Ali ar-Reza (a.s.)' },
+  { title: 'Salaat of Masoomeen (as)', cat: 'Masoomeen', sub: 'Imam Mohammad Taqi (a.s.)' },
+  { title: 'Salaat of Masoomeen (as)', cat: 'Masoomeen', sub: 'Imam Ali an-Naqee (a.s.)' },
+  { title: 'Salaat of Masoomeen (as)', cat: 'Masoomeen', sub: 'Imam Hasan al Askaree (a.s.)' },
+  { title: 'Salaat of Masoomeen (as)', cat: 'Masoomeen', sub: 'Imam Mehdi (a.t.f.s)' },
+  { title: 'Duas during Wudhu', cat: 'Other', sub: 'Wuzu · Ablution' },
+  { title: 'Namaz-e-Hadiya Walidain', cat: 'Other', sub: 'For One\'s Parents' }
+];
+
 /* ── THE READING SECTIONS ──
    Two of these are spelled almost the same and mean different things, which is
    a live hazard in a file this size, so nothing below types either key by hand:
@@ -917,7 +989,10 @@ const LIB_KINDS = [
     catHint: 'Category (e.g. Daily, Weekly)' },
   { key: 'amaal', tab: 'Amaal', title: 'Amaal', icon: '🌙',
     accent: '#7a5c9e', tint: '#efe9f5', sb: 'amaalActs', state: 'liveAmaalActs', seed: [],
-    catHint: 'Category (e.g. Ramaḍān, Muḥarram, Laylatul Qadr)' }
+    catHint: 'Category (e.g. Ramaḍān, Muḥarram, Laylatul Qadr)' },
+  { key: 'salat', tab: 'Salat', title: 'Salat', icon: '🕋',
+    accent: '#1f5145', tint: '#e4efe9', sb: 'salat', state: 'liveSalat', seed: SALAT,
+    catHint: 'Category (e.g. Occasions, Isteghfar, Masoomeen)' }
 ];
 const LIB_KIND = {};
 LIB_KINDS.forEach(k => { LIB_KIND[k.key] = k; });
@@ -2571,7 +2646,8 @@ const PUSH_MSG = {
   aamals: 'Taqeebat and Ziyarat updated',
   amaalActs: 'Library updated — new amaal',
   infallibles: null, // biographies are reference material, not news
-  mosques: 'The mosque list has been updated'
+  mosques: 'The mosque list has been updated',
+  salat: 'Library updated — new salat content'
 };
 
 function urlBase64ToUint8Array(b64) {
@@ -2635,7 +2711,8 @@ const SB_KEY_MAP = {
   duas: 'liveDuas', ziyarat: 'liveZiyarat', nahj: 'liveNahj', aamals: 'liveAamals',
   reminders: 'liveReminders', ads: 'liveAds', learning: 'liveLearning',
   azans: 'liveAzans', azanOverrides: 'liveAzanOverrides',
-  amaalActs: 'liveAmaalActs', infallibles: 'liveInfallibles', mosques: 'liveMosques'
+  amaalActs: 'liveAmaalActs', infallibles: 'liveInfallibles', mosques: 'liveMosques',
+  salat: 'liveSalat'
 };
 
 /* Category ink for classifieds badges. Listings store the colour they were saved
@@ -3192,6 +3269,7 @@ class App extends Component {
       liveDuas: lsGet('duas', DUAS),
       liveAamals: lsGet('aamals', []),
       liveAmaalActs: lsGet('amaalActs', []),
+      liveSalat: lsGet('salat', SALAT),
       liveInfallibles: lsGet('infallibles', INFALLIBLES),
       liveMosques: lsGet('mosques', MOSQUES),
       infOpen: null,
@@ -4854,6 +4932,16 @@ class App extends Component {
         libCat: 'All'
       })
     }, {
+      title: 'Salat',
+      icon: '🕋',
+      tone: ['#1f5145', '#e4efe9'],
+      go: () => this.setState({
+        screen: 'library',
+        libTab: 'salat',
+        libCat: 'All',
+        libQuery: ''
+      })
+    }, {
       title: 'Amaal',
       icon: '🌙',
       tone: ['#7a5c9e', '#efe9f5'],
@@ -4891,7 +4979,7 @@ class App extends Component {
     }];
     const toolCards = [{
       title: 'Fourteen Infallibles',
-      icon: '🕋',
+      icon: '🌟',
       tone: ['#6e2230', '#f5e7e9'],
       go: () => this.go('infallibles')
     }, {
@@ -6768,12 +6856,13 @@ class App extends Component {
           libCat: 'All'
         }),
         style: {
-          flex: 1,
+          flexShrink: 0,
+          minWidth: 62,
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
           gap: 5,
-          padding: '10px 3px 8px',
+          padding: '10px 6px 8px',
           borderRadius: 16,
           cursor: 'pointer',
           background: on ? meta.tint : NEU.surf,
@@ -6823,7 +6912,8 @@ class App extends Component {
        dropdown that reshuffles nothing reads as broken, and the day the admin
        adds a "Monday Duʿāʾ" the option appears on its own. */
     const sortOpts = (LIB_SORTS[st.libTab] || []).filter(([k]) =>
-      k === 'az' ? true
+      // 'az' and 'given' need nothing of the data to be true of it
+      k === 'az' || k === 'given' ? true
       : k === 'day' ? lm.list.some(it => dayRank(libText(it)) >= 0)
       : lm.list.some(it => prayerRank(libText(it)) >= 0 || dayRank(libText(it)) >= 0));
     const sortDefault = LIB_SORT_DEFAULT[st.libTab] || 'az';
@@ -6841,9 +6931,14 @@ class App extends Component {
       };
       libCards = lm.list.filter(it => {
         const catOk = st.libCat === 'All' || it.cat === st.libCat;
-        const qOk = !q || (it.title || '').toLowerCase().includes(q) || (it.tr || '').toLowerCase().includes(q);
+        const qOk = !q || (it.title || '').toLowerCase().includes(q) || (it.sub || '').toLowerCase().includes(q)
+          || (it.tr || '').toLowerCase().includes(q);
         return catOk && qOk;
-      }).sort((a, b) => {
+      });
+      /* One section is a catalogue rather than an index: its order groups the
+         occasional prayers, then the isteghfar, then the week, and alphabetising
+         that scatters the groups. 'given' means leave it as it was written. */
+      if (sortMode !== 'given') libCards = libCards.sort((a, b) => {
         // A–Z always breaks the tie, so an entry the title says nothing about
         // still lands somewhere predictable rather than wherever it was typed.
         const ba = libBand(sortMode, a), bb = libBand(sortMode, b);
@@ -6931,9 +7026,15 @@ class App extends Component {
         marginTop: 2
       }
     }, lm.title)), /*#__PURE__*/React.createElement("div", {
+      className: "s",
+      // seven of these will not sit across a phone at a readable size, so the
+      // row scrolls rather than squeezing every label into four characters
       style: {
         display: 'flex',
-        gap: 8
+        gap: 8,
+        overflowX: 'auto',
+        margin: '0 -20px',
+        padding: '0 20px 4px'
       }
     }, [...LIB_KINDS.map(k => [k.key, k.tab, k.icon]),
         ['nahj', 'Books', '📖'], ['saved', 'Saved', '🔖']].map(libTab))), st.libTab === 'saved' && /*#__PURE__*/React.createElement("div", {
@@ -7114,7 +7215,15 @@ class App extends Component {
         color: NEU.ink,
         lineHeight: 1.3
       }
-    }, it2.title), /*#__PURE__*/React.createElement("span", {
+    }, it2.title, it2.sub && /*#__PURE__*/React.createElement("div", {
+      /* Fourteen entries called Salaat of Masoomeen (as) are one entry as far as
+         a list of titles is concerned. Only drawn when there is one, so nothing
+         that already exists gains a line. */
+      style: {
+        fontFamily: 'Hanken Grotesk, system-ui, sans-serif',
+        fontSize: 12, fontWeight: 500, color: NEU.muted, marginTop: 3, lineHeight: 1.35
+      }
+    }, it2.sub)), /*#__PURE__*/React.createElement("span", {
       style: {
         flexShrink: 0,
         color: NEU.muted,
@@ -7314,7 +7423,8 @@ class App extends Component {
       dua: { English: 'Supplication', 'العربية': 'دعاء', 'हिन्दी': 'दुआ', 'فارسی': 'دعا', Urdu: 'دعا' },
       ziyarah: { English: 'Salutation', 'العربية': 'زيارة', 'हिन्दी': 'ज़ियारत', 'فارسی': 'زیارت', Urdu: 'زیارت' },
       aamal: { English: 'Taqeebat & Ziyarat', 'العربية': 'تعقيبات', 'हिन्दी': 'ताक़ीबात', 'فارسی': 'تعقیبات', Urdu: 'تعقیبات' },
-      amaal: { English: 'Amaal', 'العربية': 'أعمال', 'हिन्दी': 'आमाल', 'فارسی': 'اعمال', Urdu: 'اعمال' }
+      amaal: { English: 'Amaal', 'العربية': 'أعمال', 'हिन्दी': 'आमाल', 'فارسی': 'اعمال', Urdu: 'اعمال' },
+      salat: { English: 'Salat', 'العربية': 'صلاة', 'हिन्दी': 'नमाज़', 'فارسی': 'نماز', Urdu: 'نماز' }
     };
     const kicker = KICKERS[rtype] ? KICKERS[rtype][st.lang] || KICKERS[rtype].English : r.ref || 'Books';
     const cId = contentKey(rtype, r);
@@ -7338,7 +7448,7 @@ class App extends Component {
        copy of the same words: no line numbers, no bookmarks, no language switch,
        no saving a passage. Every one of those entries that carries a PDF link
        also carries the Arabic, so the tab goes and nothing goes with it. */
-    const hasPdf = !!r.pdf && (rtype === 'nahj' || rtype === 'learning');
+    const hasPdf = !!r.pdf && (rtype === 'nahj' || rtype === 'learning' || rtype === 'salat');
     const tabs = [];
     if (hasAr) tabs.push(['ar', '\u0627\u0644\u0639\u0631\u0628\u064a\u0629']);
     if (hasEn) tabs.push(['en', localBody ? st.lang : 'English']);
@@ -7459,6 +7569,22 @@ class App extends Component {
        Custom controls rather than the browser's, because the five that matter for
        a forty-minute duʿāʾ \u2014 play, pause, stop, back, forward \u2014 are not the five a
        native player puts within thumb reach on every platform. */
+    /* An entry can exist before its text does — the Salat catalogue arrived as a
+       list of names, and the method of each one has to be typed, pasted or
+       scanned in afterwards. Without this the reader draws a title and then
+       nothing at all, which reads as a broken page rather than an empty one. */
+    tabs.length === 0 && !r.audio && React.createElement("div", {
+      style: {
+        ...neuWell(18), padding: '30px 22px', textAlign: 'center', marginBottom: 14
+      }
+    }, React.createElement("div", {
+      style: { fontSize: 14.5, color: rd.ink, lineHeight: 1.6 }
+    }, 'The text for this one has not been added yet.'),
+      React.createElement("div", {
+        style: { fontSize: 12.5, color: rd.muted, lineHeight: 1.6, marginTop: 7 }
+      }, st.adminLoggedIn
+        ? 'Add it under Admin › Library › Salat — as text, or as a PDF of the page it is printed on.'
+        : 'It is on its way. Everything else in this section is listed and ready.')),
     r.audio && this.renderAudioPlayer(st, r, rd, readAccent),
     /* Under the player rather than beside the title. Up there they crowded a long
        name into a column half the width of the screen, and they are things you
@@ -12804,6 +12930,7 @@ class App extends Component {
             }
             const item = {
               title: d.title || '',
+              sub: (d.sub || '').trim(),
               cat: (d.cat || '').trim() || 'General',
               ar: d.ar || '',
               tr: d.tr || '',
@@ -12843,6 +12970,14 @@ class App extends Component {
               cat: e.target.value
             }),
             placeholder: kind.catHint,
+            style: inp
+          }), /*#__PURE__*/React.createElement("input", {
+            value: d.sub || '',
+            onChange: e => this.setDraft({
+              sub: e.target.value
+            }),
+            // shown under the title in the list, for entries whose titles repeat
+            placeholder: 'Subtitle (optional) — shown under the title',
             style: inp
           }), /*#__PURE__*/React.createElement("textarea", {
             value: d.ar || '',
