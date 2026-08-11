@@ -364,15 +364,17 @@ const isZiyarahTitle = t => /ziyara|ziyarat|ziarat|ziarah/i.test(String(t || '')
 const libText = it => it && typeof it === 'object'
   ? (it.title || '') + ' · ' + (it.cat || '')
   : String(it || '');
-/* Sort orders offered per section. 'order' walks the Amaals the way the day
-   does: the taqeebat from Fajr to Isha, then the weekly ziyārah Monday to
-   Sunday, then the weekly duʿāʾ Monday to Sunday, then whatever is left. */
+/* Sort orders offered per section. 'order' walks the taqeebat the way the day
+   does: from Fajr to Isha, then the weekly ziyārah Monday to Sunday, then the
+   weekly duʿāʾ Monday to Sunday, then whatever is left. The amaal proper are
+   keyed to occasions rather than to the week, so they only sort A–Z. */
 const LIB_SORTS = {
   dua: [['az', 'A–Z'], ['day', 'Monday to Sunday']],
   ziyarah: [['az', 'A–Z'], ['day', 'Monday to Sunday']],
-  aamal: [['order', 'In order · Fajr to Isha, then Mon to Sun'], ['day', 'Monday to Sunday'], ['az', 'A–Z']]
+  aamal: [['order', 'In order · Fajr to Isha, then Mon to Sun'], ['day', 'Monday to Sunday'], ['az', 'A–Z']],
+  amaal: [['az', 'A–Z']]
 };
-const LIB_SORT_DEFAULT = { dua: 'az', ziyarah: 'az', aamal: 'order' };
+const LIB_SORT_DEFAULT = { dua: 'az', ziyarah: 'az', aamal: 'order', amaal: 'az' };
 function libBand(mode, it) {
   const t = libText(it);
   if (mode === 'day') return dayRank(t) >= 0 ? 0 : 1;
@@ -891,11 +893,40 @@ const NAHJ_PARTS = [['sermons', 'Sermons'], ['letters', 'Letters'], ['sayings', 
 const SAHIFA_PARTS = [['sahifa', 'Supplications'], ['munajat', 'Munājāt']];
 const BOOK_PARTS = { nahj: NAHJ_PARTS, sahifa: SAHIFA_PARTS };
 
+/* ── THE READING SECTIONS ──
+   Two of these are spelled almost the same and mean different things, which is
+   a live hazard in a file this size, so nothing below types either key by hand:
+   the tab bar, the pools, the reader accent and the admin editor are all driven
+   off this table.
+
+     aamal — the post-prayer taqeebat and the daily and weekly ziyarat. Its key
+             and its Supabase row are older than its name; the row holds those
+             22 entries and is left exactly where it is, so only the label moved.
+     amaal — the amaal proper: what is done on a given night or occasion. New,
+             and deliberately given a Supabase key that cannot be mistyped for
+             the other one. */
+const LIB_KINDS = [
+  { key: 'dua', tab: 'Duʿāʾ', title: 'Duʿāʾ', icon: '🤲',
+    accent: '#7d6220', tint: '#f3ecd9', sb: 'duas', state: 'liveDuas', seed: DUAS,
+    catHint: 'Category (e.g. Daily, Weekly, Morning)' },
+  { key: 'ziyarah', tab: 'Ziyārah', title: 'Ziyārah', icon: '🕌',
+    accent: '#6e2230', tint: '#f3e6e8', sb: 'ziyarat', state: 'liveZiyarat', seed: ZIYARAT,
+    catHint: 'Category (e.g. Imam Ḥusayn, General)' },
+  { key: 'aamal', tab: 'Taqeebat', title: 'Taqeebat & Ziyarat', icon: '✨',
+    accent: '#8a4b2c', tint: '#f6ebe4', sb: 'aamals', state: 'liveAamals', seed: [],
+    catHint: 'Category (e.g. Daily, Weekly)' },
+  { key: 'amaal', tab: 'Amaal', title: 'Amaal', icon: '🌙',
+    accent: '#7a5c9e', tint: '#efe9f5', sb: 'amaalActs', state: 'liveAmaalActs', seed: [],
+    catHint: 'Category (e.g. Ramaḍān, Muḥarram, Laylatul Qadr)' }
+];
+const LIB_KIND = {};
+LIB_KINDS.forEach(k => { LIB_KIND[k.key] = k; });
+
 /* What the Library holds, and so what Continue reading is allowed to name. The
    reader is also used for Learning chapters, which are not in the Library and
    which findContent cannot look up — offering one on the home screen produced a
    tile that said "no longer in the library" when it was tapped. */
-const LIB_TYPES = ['dua', 'ziyarah', 'aamal', 'nahj'];
+const LIB_TYPES = [...LIB_KINDS.map(k => k.key), 'nahj'];
 
 /* Every part of both books is numbered — Duʿāʾ 1 to 54, Sermon 1, Letter 31 — so
    they read in that order rather than in the order they happened to be typed in,
@@ -922,6 +953,64 @@ const PINNED_CLASSIFIED = {
   ink: '#3a4a78',
   tint: '#e8ebf4'
 };
+
+/* ── THE FOURTEEN INFALLIBLES ──
+   The Prophet, his daughter and the twelve Imams. Seeded here so the section is
+   worth opening the day it ships rather than an empty shell, and held as
+   content so an administrator can correct, lengthen or translate any of it
+   without a release. Dates are the commonly cited ones; sources differ by a
+   year here and there, and by more than that for Sayyida Fāṭima, which is part
+   of why every field is editable. */
+const INFALLIBLES = [
+  { name: 'Prophet Muḥammad', hon: 'ṣ', role: 'The Messenger of Allah',
+    born: '570 CE, Mecca', died: '11 AH / 632 CE, Medina', rest: 'Al-Masjid an-Nabawī, Medina',
+    bio: 'The last of the prophets, to whom the Qurʾān was revealed over twenty-three years. He was known as al-Amīn, the trustworthy, before the revelation began, and the community he left in Medina was built on a covenant rather than on conquest. At Ghadīr Khumm, returning from his farewell pilgrimage, he took ʿAlī by the hand before the assembled pilgrims.' },
+  { name: 'Imam ʿAlī ibn Abī Ṭālib', hon: 'a', role: 'Amīr al-Muʾminīn · The first Imam',
+    born: '600 CE, Mecca', died: '40 AH / 661 CE, Kufa', rest: 'Ḥaram of Imam ʿAlī, Najaf',
+    bio: 'Raised by the Prophet, the first male to accept Islam, and the one who slept in the Prophet\'s bed on the night of the migration. His judgements and letters — many gathered in Nahj al-Balāgha — are read as much for their justice as for their Arabic. He was struck in the mosque of Kufa while praying and died two days later.' },
+  { name: 'Sayyida Fāṭima al-Zahrāʾ', hon: 's', role: 'Sayyidat Nisāʾ al-ʿĀlamīn',
+    born: '615 CE, Mecca', died: '11 AH / 632 CE, Medina', rest: 'Medina — the grave is unmarked at her own request',
+    bio: 'The daughter of the Prophet and of Khadīja, wife of ʿAlī, and mother of Ḥasan, Ḥusayn, Zaynab and Umm Kulthūm. Her sermon in the mosque of Medina after her father\'s death is one of the earliest recorded pieces of Arabic oratory by a woman. She died within months of him, and asked to be buried at night.' },
+  { name: 'Imam Ḥasan al-Mujtabā', hon: 'a', role: 'The second Imam',
+    born: '3 AH / 625 CE, Medina', died: '50 AH / 670 CE, Medina', rest: 'Jannat al-Baqīʿ, Medina',
+    bio: 'The elder grandson of the Prophet. After six months as caliph he made a treaty with Muʿāwiya rather than let the community tear itself apart, on terms meant to protect his followers — terms that were not kept. He was known in Medina for giving away his wealth outright, more than once, and for walking to Mecca on pilgrimage.' },
+  { name: 'Imam Ḥusayn ibn ʿAlī', hon: 'a', role: 'Sayyid al-Shuhadāʾ · The third Imam',
+    born: '4 AH / 626 CE, Medina', died: '10 Muḥarram 61 AH / 680 CE, Karbala', rest: 'Ḥaram of Imam Ḥusayn, Karbala',
+    bio: 'The younger grandson of the Prophet, who refused allegiance to Yazīd and left Medina rather than give it. He was killed with his family and companions at Karbala, thirsty, after his camp was cut off from the Euphrates. What was said and done there — and by his sister Zaynab afterwards in Kufa and Damascus — is why the month of Muḥarram is kept.' },
+  { name: 'Imam ʿAlī Zayn al-ʿĀbidīn', hon: 'a', role: 'Al-Sajjād · The fourth Imam',
+    born: '38 AH / 659 CE, Medina', died: '95 AH / 713 CE, Medina', rest: 'Jannat al-Baqīʿ, Medina',
+    bio: 'He survived Karbala as a young man too ill to fight, and was taken with the captives to Kufa and Damascus, where he spoke publicly about what had happened. He withdrew from politics afterwards and taught through prayer: al-Ṣaḥīfa al-Sajjādiyya, a book of supplications, and the Treatise on Rights are both his.' },
+  { name: 'Imam Muḥammad al-Bāqir', hon: 'a', role: 'The fifth Imam',
+    born: '57 AH / 677 CE, Medina', died: '114 AH / 733 CE, Medina', rest: 'Jannat al-Baqīʿ, Medina',
+    bio: 'Named al-Bāqir, the one who splits open knowledge, for the depth of his teaching. He was a child at Karbala. In a calmer period he began the systematic teaching of jurisprudence and ḥadīth in Medina that his son would carry much further.' },
+  { name: 'Imam Jaʿfar al-Ṣādiq', hon: 'a', role: 'The sixth Imam',
+    born: '83 AH / 702 CE, Medina', died: '148 AH / 765 CE, Medina', rest: 'Jannat al-Baqīʿ, Medina',
+    bio: 'His circle in Medina is said to have numbered thousands of students, among them scholars who founded other schools of law. The Jaʿfarī school of jurisprudence takes his name. He taught through two dynasties changing hands and kept the work of teaching separate from the fight over rule.' },
+  { name: 'Imam Mūsā al-Kāẓim', hon: 'a', role: 'The seventh Imam',
+    born: '128 AH / 745 CE, Abwāʾ', died: '183 AH / 799 CE, Baghdad', rest: 'Al-Kāẓimiyya, Baghdad',
+    bio: 'Called al-Kāẓim, the one who restrains his anger, for his bearing under long imprisonment. He spent much of his later life in the prisons of Baghdad and died in one. He kept his community together through written correspondence and appointed representatives.' },
+  { name: 'Imam ʿAlī al-Riḍā', hon: 'a', role: 'The eighth Imam',
+    born: '148 AH / 765 CE, Medina', died: '203 AH / 818 CE, Ṭūs', rest: 'Ḥaram of Imam Riḍā, Mashhad',
+    bio: 'Summoned from Medina to Khurasan by the caliph al-Maʾmūn and named his heir, an offer he accepted only on the condition that he take no part in the running of the state. He is remembered for his public debates with Christian, Jewish and Zoroastrian scholars. He died at Ṭūs; his shrine is now the city of Mashhad.' },
+  { name: 'Imam Muḥammad al-Jawād', hon: 'a', role: 'Al-Taqī · The ninth Imam',
+    born: '195 AH / 811 CE, Medina', died: '220 AH / 835 CE, Baghdad', rest: 'Al-Kāẓimiyya, Baghdad',
+    bio: 'He became Imam as a child, and the questioning he faced from the scholars of Baghdad because of his age is itself among the better-recorded episodes of his life. He died at about twenty-five.' },
+  { name: 'Imam ʿAlī al-Hādī', hon: 'a', role: 'Al-Naqī · The tenth Imam',
+    born: '212 AH / 828 CE, Medina', died: '254 AH / 868 CE, Sāmarrāʾ', rest: 'Al-ʿAskariyya, Sāmarrāʾ',
+    bio: 'Moved from Medina to the garrison city of Sāmarrāʾ and kept there under watch for the rest of his life. Ziyārat al-Jāmiʿa al-Kabīra, recited at the shrines to this day, is transmitted from him.' },
+  { name: 'Imam Ḥasan al-ʿAskarī', hon: 'a', role: 'The eleventh Imam',
+    born: '232 AH / 846 CE, Medina', died: '260 AH / 874 CE, Sāmarrāʾ', rest: 'Al-ʿAskariyya, Sāmarrāʾ',
+    bio: 'Named for the garrison quarter of Sāmarrāʾ where he, like his father, was held. He reached his community almost entirely through letters and trusted deputies, which is how the network that carried it through the occultation was already in place when he died at twenty-eight.' },
+  { name: 'Imam Muḥammad al-Mahdī', hon: 'aj', role: 'Ṣāḥib al-Zamān · The twelfth Imam',
+    born: '255 AH / 869 CE, Sāmarrāʾ', died: 'In occultation', rest: '—',
+    bio: 'The awaited Imam. Contact with his community ran through four appointed deputies for some seventy years, and after the last of them the greater occultation began. Duʿāʾ al-Faraj and Ziyārat Āl Yāsīn are read in his name, and the Friday ziyārah is addressed to him.' }
+];
+const MOSQUES = [];
+/* Fixed, because this field decides who reads the report. A free-text box gives
+   an administrator a column nothing can be sorted or counted by. */
+const ISSUE_CATS = ['Prayer times', 'Library or reading', 'Calendar or events',
+  'Notifications', 'Mosque or address details', 'Something is broken',
+  'A suggestion', 'Something else'];
 
 const CLASSIFIEDS = [{
   name: 'Al-Noor Halal Grocery',
@@ -1894,12 +1983,8 @@ const passageKey = abiHash;
 function markId(kind, contentId, lineId) {
   return kind + '|' + contentId + '|' + (lineId || 'all');
 }
-const CONTENT_KIND = {
-  dua: 'Du\u02bf\u0101\u02be',
-  ziyarah: 'Ziy\u0101rah',
-  aamal: 'Daily Amaal',
-  nahj: 'Books'
-};
+const CONTENT_KIND = { nahj: 'Books' };
+LIB_KINDS.forEach(k => { CONTENT_KIND[k.key] = k.title; });
 
 /* ── QUIZ DIFFICULTY ──
    Easy / Medium / Hard are the difficulties. Quizzes saved under the older
@@ -1995,7 +2080,7 @@ const SCORING = {
   BASE_PER_CORRECT: 100,
   COMPLETION_BONUS: 25,
   MAX_TIME_BONUS: 50,
-  SECONDS_PER_QUESTION: 10
+  SECONDS_PER_QUESTION: 15
 };
 function computeScore(correct, total, durationMs, completed) {
   const parMs = total * SCORING.SECONDS_PER_QUESTION * 1000;
@@ -2227,6 +2312,9 @@ const EDGE_PUSH = SB_URL + '/functions/v1/send-push';
    key server-side and neither table is readable with the anon key. */
 const EDGE_QUIZ_SUBMIT = SB_URL + '/functions/v1/submit-quiz-score';
 const EDGE_REPORT_TIME = SB_URL + '/functions/v1/report-prayer-time';
+// insert-only: the table has no read policy, so nothing written here can be
+// pulled back out with the key that ships in this bundle
+const EDGE_ISSUE = SB_URL + '/rest/v1/issue_reports';
 const EDGE_UPLOAD_MEDIA = SB_URL + '/functions/v1/upload-media';
 /* Kept in step with upload-media's own table by hand. The server's limit is the
    one that binds; this one only saves the caller a doomed upload. */
@@ -2480,7 +2568,10 @@ const PUSH_MSG = {
   duas: 'Library updated — new duʿāʾ content',
   ziyarat: 'Library updated — new ziyārah content',
   nahj: 'Library updated — Books',
-  aamals: 'Daily Amaals updated'
+  aamals: 'Taqeebat and Ziyarat updated',
+  amaalActs: 'Library updated — new amaal',
+  infallibles: null, // biographies are reference material, not news
+  mosques: 'The mosque list has been updated'
 };
 
 function urlBase64ToUint8Array(b64) {
@@ -2543,7 +2634,8 @@ const SB_KEY_MAP = {
   healthTips: 'liveHealthTips', healthVideos: 'liveHealthVideos',
   duas: 'liveDuas', ziyarat: 'liveZiyarat', nahj: 'liveNahj', aamals: 'liveAamals',
   reminders: 'liveReminders', ads: 'liveAds', learning: 'liveLearning',
-  azans: 'liveAzans', azanOverrides: 'liveAzanOverrides'
+  azans: 'liveAzans', azanOverrides: 'liveAzanOverrides',
+  amaalActs: 'liveAmaalActs', infallibles: 'liveInfallibles', mosques: 'liveMosques'
 };
 
 /* Category ink for classifieds badges. Listings store the colour they were saved
@@ -3099,6 +3191,14 @@ class App extends Component {
       liveHealthVideos: lsGet('healthVideos', HEALTH_VIDEOS),
       liveDuas: lsGet('duas', DUAS),
       liveAamals: lsGet('aamals', []),
+      liveAmaalActs: lsGet('amaalActs', []),
+      liveInfallibles: lsGet('infallibles', INFALLIBLES),
+      liveMosques: lsGet('mosques', MOSQUES),
+      infOpen: null,
+      issueCat: '',
+      issueMsg: '',
+      issueContact: '',
+      issueState: null,
       lastRead: lsGet('lastRead', null),
       liveZiyarat: lsGet('ziyarat', ZIYARAT),
       liveNahj: lsGet('nahj', NAHJ),
@@ -3141,6 +3241,36 @@ class App extends Component {
       healthVidCat: 'All',
       adminLibTab: 'dua'
     });
+    /* Insert-only from here: the table has no read policy, so what someone
+       writes — and any contact detail in it — cannot be pulled back out with
+       the key that ships inside this bundle. Administrators read them in the
+       Supabase dashboard. */
+    _defineProperty(this, "submitIssue", async () => {
+      const st = this.state;
+      const cat = (st.issueCat || '').trim();
+      const msg = (st.issueMsg || '').trim();
+      if (!cat) return this.setState({ issueState: { kind: 'error', message: 'Choose what the report is about.' } });
+      if (msg.length < 5) return this.setState({ issueState: { kind: 'error', message: 'Please describe the issue in a little more detail.' } });
+      if (!navigator.onLine) return this.setState({ issueState: { kind: 'error', message: 'You are offline. Please send this when you are back online.' } });
+      this.setState({ issueState: { kind: 'sending' } });
+      try {
+        const res = await fetch(EDGE_ISSUE, {
+          method: 'POST',
+          headers: { ...SB_HEADS, Prefer: 'return=minimal' },
+          body: JSON.stringify({
+            category: cat.slice(0, 40),
+            message: msg.slice(0, 2000),
+            contact: (st.issueContact || '').trim().slice(0, 120) || null
+          })
+        });
+        if (res.ok) this.setState({ issueState: { kind: 'sent' } });
+        else this.setState({ issueState: { kind: 'error', message: res.status === 429
+          ? 'You have sent a few reports just now — please try again shortly.'
+          : 'That report could not be sent. Please try again.' } });
+      } catch {
+        this.setState({ issueState: { kind: 'error', message: 'That report could not be sent. Please try again.' } });
+      }
+    });
     _defineProperty(this, "go", s => {
       // Refresh every page on navigation: reset transient view state so each
       // screen opens fresh, and scroll the content area back to the top.
@@ -3171,13 +3301,18 @@ class App extends Component {
         calViewY: null,
         calViewM: undefined,
         calDay: null,
-        wallOpen: null
+        wallOpen: null,
+        // the biography being read, and the thank-you card, are both view state:
+        // coming back to either screen should start it fresh
+        infOpen: null,
+        issueState: null,
+        mosqueQuery: ''
       });
       const sc = document.querySelector('.app > .s');
       if (sc) sc.scrollTop = 0;
     });
     /* ── QUIZ GAME ──
-       A run is 10 random questions from the chosen level, 10 seconds each.
+       A run is 10 random questions from the chosen level, 15 seconds each.
        The countdown pauses while the player is off the quiz tab, a timeout
        counts as a wrong answer, and each question auto-advances after reveal. */
     _defineProperty(this, "clearQuizTimers", () => {
@@ -4438,11 +4573,8 @@ class App extends Component {
        bookmark survives an item being edited but not renamed, and vice versa. */
     _defineProperty(this, "findContent", (type, contentId, title) => {
       const st = this.state;
-      const pools = {
-        dua: st.liveDuas || DUAS,
-        ziyarah: st.liveZiyarat || ZIYARAT,
-        aamal: st.liveAamals || []
-      };
+      const pools = {};
+      LIB_KINDS.forEach(k => { pools[k.key] = st[k.state] || k.seed; });
       const nahj = st.liveNahj || NAHJ;
       const all = [];
       Object.keys(pools).forEach(k => (pools[k] || []).forEach(x => all.push([k, x])));
@@ -4722,6 +4854,16 @@ class App extends Component {
         libCat: 'All'
       })
     }, {
+      title: 'Amaal',
+      icon: '🌙',
+      tone: ['#7a5c9e', '#efe9f5'],
+      go: () => this.setState({
+        screen: 'library',
+        libTab: 'amaal',
+        libCat: 'All',
+        libQuery: ''
+      })
+    }, {
       title: 'Books',
       icon: '📖',
       tone: ['#2c5d52', '#e6f0eb'],
@@ -4748,6 +4890,16 @@ class App extends Component {
       go: () => this.go('classifieds')
     }];
     const toolCards = [{
+      title: 'Fourteen Infallibles',
+      icon: '🕋',
+      tone: ['#6e2230', '#f5e7e9'],
+      go: () => this.go('infallibles')
+    }, {
+      title: 'Mosque Finder',
+      icon: '🧕',
+      tone: ['#2f6f7a', '#e5f0f2'],
+      go: () => this.go('mosques')
+    }, {
       title: 'Tasbeeh',
       icon: '📿',
       tone: ['#3a4a78', '#e9ecf5'],
@@ -4775,7 +4927,8 @@ class App extends Component {
     }];
     const amaalCount = (st.liveAamals || []).length;
     const lastRead = st.lastRead;
-    const READ_KIND = { dua: 'Duʿāʾ', ziyarah: 'Ziyārah', aamal: 'Daily Amaal', nahj: 'Books', learning: 'Learning' };
+    const READ_KIND = { nahj: 'Books', learning: 'Learning' };
+    LIB_KINDS.forEach(k => { READ_KIND[k.key] = k.title; });
     /* One grid renderer for both Explore and Tools, so the two sections cannot
        drift apart. */
     const iconGrid = cards => /*#__PURE__*/React.createElement("div", {
@@ -5328,8 +5481,8 @@ class App extends Component {
        something the reader knows and a shuffle does not. */
     amaalCount > 0 && this.renderHomeTile({
       icon: 'book-heart',
-      kicker: 'Daily Amaal',
-      title: 'Amaals',
+      kicker: 'Daily Taqeebat and Zaiyarat',
+      title: 'After every prayer, and through the week',
       sub: `${amaalCount} to read`,
       tone: ['#8a4b2c', '#f7ebe2'],
       onClick: () => this.setState({
@@ -5353,7 +5506,7 @@ class App extends Component {
       icon: 'target',
       kicker: 'Take a quiz',
       title: 'Test what you know',
-      sub: 'Ten questions, ten seconds each',
+      sub: 'Ten questions, fifteen seconds each',
       tone: ['#8a2f52', '#f7e6ed'],
       onClick: () => this.setState({ screen: 'kids', kidsTab: 'quiz', quizRun: null })
     }),
@@ -6576,32 +6729,8 @@ class App extends Component {
 
   renderLibrary(st) {
     const q = st.libQuery.trim().toLowerCase();
-    const duaList = st.liveDuas || DUAS;
-    const ziyList = st.liveZiyarat || ZIYARAT;
     const nahjData = st.liveNahj || NAHJ;
-    const aamalList = st.liveAamals || [];
     const libMeta = {
-      dua: {
-        title: "Duʿāʾ",
-        accent: '#7d6220',
-        tint: '#f3ecd9',
-        list: duaList,
-        cats: ['All', ...new Set(duaList.map(it => it.cat).filter(Boolean))]
-      },
-      ziyarah: {
-        title: 'Ziyārah',
-        accent: '#6e2230',
-        tint: '#f3e6e8',
-        list: ziyList,
-        cats: ['All', ...new Set(ziyList.map(it => it.cat).filter(Boolean))]
-      },
-      aamal: {
-        title: 'Daily Amaals',
-        accent: '#8a4b2c',
-        tint: '#f6ebe4',
-        list: aamalList,
-        cats: ['All', ...new Set(aamalList.map(it => it.cat).filter(Boolean))]
-      },
       nahj: {
         title: 'Books',
         accent: '#2c5d52',
@@ -6617,6 +6746,13 @@ class App extends Component {
         cats: []
       }
     };
+    LIB_KINDS.forEach(k => {
+      const list = st[k.state] || k.seed;
+      libMeta[k.key] = {
+        title: k.title, accent: k.accent, tint: k.tint, list,
+        cats: ['All', ...new Set(list.map(it => it.cat).filter(Boolean))]
+      };
+    });
     const lm = libMeta[st.libTab];
     /* Icon tabs, matching Kids Corner: the chosen section presses into the page
        and its icon lifts out of it, so the selected state reads by depth rather
@@ -6695,7 +6831,7 @@ class App extends Component {
     const sortMode = sortOpts.some(([k]) => k === sortPick) ? sortPick
       : sortOpts.some(([k]) => k === sortDefault) ? sortDefault : 'az';
     let libCards = [];
-    if (st.libTab === 'dua' || st.libTab === 'ziyarah' || st.libTab === 'aamal') {
+    if (LIB_KIND[st.libTab]) {
       // nearly every ziyārah title starts with a variant spelling of the word
       // itself, so ordering only reads properly by what comes after it
       const alpha = t => {
@@ -6799,7 +6935,8 @@ class App extends Component {
         display: 'flex',
         gap: 8
       }
-    }, [['dua', "Duʿāʾ", '🤲'], ['ziyarah', 'Ziyārah', '🕌'], ['aamal', 'Amaals', '✨'], ['nahj', 'Books', '📖'], ['saved', 'Saved', '🔖']].map(libTab))), st.libTab === 'saved' && /*#__PURE__*/React.createElement("div", {
+    }, [...LIB_KINDS.map(k => [k.key, k.tab, k.icon]),
+        ['nahj', 'Books', '📖'], ['saved', 'Saved', '🔖']].map(libTab))), st.libTab === 'saved' && /*#__PURE__*/React.createElement("div", {
       style: {
         marginTop: 16
       }
@@ -7168,14 +7305,16 @@ class App extends Component {
     /* The section's own colour, lifted for the dark reader. It marks the kicker, the
        language pills and the skip buttons — crimson on near-black measured 1.56:1,
        which is the label on the page you are least able to do without. */
-    const readAccent = onSurf(rtype === 'ziyarah' ? '#6e2230' : rtype === 'nahj' ? '#2c5d52' : rtype === 'aamal' ? '#8a4b2c' : rtype === 'learning' ? '#3a4a78' : '#7d6220');
+    const readAccent = onSurf(LIB_KIND[rtype] ? LIB_KIND[rtype].accent
+      : rtype === 'nahj' ? '#2c5d52' : rtype === 'learning' ? '#3a4a78' : '#7d6220');
     // per-language content: items may carry body_ur / body_fa / body_hi alongside the English body
     const TR_CODES = { 'हिन्दी': 'hi', 'فارسی': 'fa', 'Urdu': 'ur' };
     const trCode = TR_CODES[st.lang];
     const KICKERS = {
       dua: { English: 'Supplication', 'العربية': 'دعاء', 'हिन्दी': 'दुआ', 'فارسی': 'دعا', Urdu: 'دعا' },
       ziyarah: { English: 'Salutation', 'العربية': 'زيارة', 'हिन्दी': 'ज़ियारत', 'فارسی': 'زیارت', Urdu: 'زیارت' },
-      aamal: { English: 'Daily Amaal', 'العربية': 'عمل', 'हिन्दी': 'आमाल', 'فارسی': 'اعمال', Urdu: 'اعمال' }
+      aamal: { English: 'Taqeebat & Ziyarat', 'العربية': 'تعقيبات', 'हिन्दी': 'ताक़ीबात', 'فارسی': 'تعقیبات', Urdu: 'تعقیبات' },
+      amaal: { English: 'Amaal', 'العربية': 'أعمال', 'हिन्दी': 'आमाल', 'فارسی': 'اعمال', Urdu: 'اعمال' }
     };
     const kicker = KICKERS[rtype] ? KICKERS[rtype][st.lang] || KICKERS[rtype].English : r.ref || 'Books';
     const cId = contentKey(rtype, r);
@@ -8378,6 +8517,297 @@ class App extends Component {
     }, "Sent with the town, the prayer and the date only. No name, email or phone number is collected."));
   }
 
+  /* ── SCREEN HEAD ──
+     Every one of these secondary screens opens the same way: what section this
+     is, then what it is called, then the administrator's way in. Written once
+     so a new section cannot arrive with its title set two pixels off. Named
+     screenHead, not sectionHead: renderHome already has a local by that name. */
+  screenHead(st, kicker, title, adminSection) {
+    return React.createElement("div", {
+      style: { display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, padding: '8px 0 16px' }
+    }, React.createElement("div", null, React.createElement("div", {
+      style: { fontSize: 13, color: st.dark ? '#8e9490' : NEU.muted, fontWeight: 500 }
+    }, kicker), React.createElement("div", {
+      style: {
+        fontFamily: 'Spectral,serif', fontSize: 26, fontWeight: 600,
+        color: st.dark ? '#ece6d8' : '#27241f', marginTop: 2, lineHeight: 1.15
+      }
+    }, title)), st.adminLoggedIn && adminSection && React.createElement("div", {
+      onClick: () => this.setState({ screen: 'admin', adminSection, adminEditIdx: null, adminEditDraft: {} }),
+      style: {
+        flexShrink: 0, fontSize: 12, fontWeight: 700, color: onSurf('#1f5145'),
+        cursor: 'pointer', background: '#e6efe9', borderRadius: R.chip, padding: '8px 13px'
+      }
+    }, 'Edit'));
+  }
+
+  /* ── THE FOURTEEN INFALLIBLES ──
+     A list that opens into one life at a time. The list carries only what tells
+     them apart at a glance — the ordinal, the name and the two dates — because
+     fourteen cards each showing a paragraph is a wall, not a list. */
+  renderInfallibles(st) {
+    const list = st.liveInfallibles || INFALLIBLES;
+    const open = st.infOpen !== null && st.infOpen !== undefined ? list[st.infOpen] : null;
+    const HON = { 's': 'ṣallā Allāhu ʿalayhi wa-ālih', 'a': 'ʿalayhi al-salām', 'aj': 'ʿajjala Allāhu farajah' };
+    const HON_SHORT = { 's': '(ṣ)', 'a': '(ʿa)', 'aj': '(ʿaj)' };
+    if (open) {
+      return React.createElement("div", { style: { padding: '8px 20px 100px' }, className: "afu" },
+        React.createElement("div", {
+          onClick: () => this.setState({ infOpen: null }),
+          style: {
+            display: 'inline-flex', alignItems: 'center', gap: 7, minHeight: 44,
+            margin: '0 0 6px -6px', padding: '0 6px', cursor: 'pointer',
+            fontSize: 13.5, fontWeight: 600, color: NEU.muted
+          }
+        }, '‹ ', 'All fourteen'),
+        React.createElement("div", { style: { ...neuCard(R.card), padding: '18px 18px 20px' } },
+          React.createElement("div", {
+            style: {
+              fontSize: 10.5, letterSpacing: 1, textTransform: 'uppercase',
+              fontWeight: 800, color: onSurf('#6e2230')
+            }
+          }, open.role || ''),
+          React.createElement("div", {
+            style: {
+              fontFamily: 'Spectral,serif', fontSize: 24, fontWeight: 600,
+              color: NEU.head, marginTop: 4, lineHeight: 1.2
+            }
+          }, open.name, open.hon ? ' ' + (HON_SHORT[open.hon] || '') : ''),
+          open.hon && HON[open.hon] && React.createElement("div", {
+            style: { fontSize: 11.5, color: NEU.faint, marginTop: 3, fontStyle: 'italic' }
+          }, HON[open.hon]),
+          React.createElement("div", {
+            style: { display: 'flex', flexDirection: 'column', gap: 1, margin: '15px 0 4px' }
+          }, [['Born', open.born], ['Passed', open.died], ['Resting place', open.rest]]
+            .filter(([, v]) => v && v !== '—').map(([label, value]) => React.createElement("div", {
+              key: label,
+              style: { display: 'flex', gap: 10, alignItems: 'baseline', padding: '6px 0', borderTop: NEU.rule }
+            }, React.createElement("div", {
+              style: { flexShrink: 0, width: 92, fontSize: 11, fontWeight: 700, color: NEU.muted, textTransform: 'uppercase', letterSpacing: .6 }
+            }, label), React.createElement("div", {
+              style: { fontSize: 13.5, color: NEU.ink, lineHeight: 1.45 }
+            }, value)))),
+          React.createElement("div", {
+            style: { fontSize: 14.5, color: NEU.ink2, lineHeight: 1.72, marginTop: 14, whiteSpace: 'pre-wrap' }
+          }, open.bio || '')),
+        React.createElement("div", {
+          style: { display: 'flex', gap: 8, marginTop: 14 }
+        }, [['‹ Previous', st.infOpen - 1], ['Next ›', st.infOpen + 1]]
+          .filter(([, i]) => i >= 0 && i < list.length).map(([label, i]) => React.createElement("div", {
+            key: label,
+            onClick: () => { this.setState({ infOpen: i }); const m = document.getElementById('abi-main'); if (m) m.scrollTop = 0; },
+            className: "neu-press",
+            style: {
+              ...neuCard(R.pill, .7), flex: 1, minHeight: 44, display: 'flex',
+              alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
+              fontSize: 13, fontWeight: 600, color: NEU.ink
+            }
+          }, label))));
+    }
+    return React.createElement("div", { style: { padding: '8px 20px 100px' }, className: "afu" },
+      this.screenHead(st, 'Community', 'Fourteen Infallibles', 'infallibles'),
+      React.createElement("div", {
+        style: { fontSize: 13, color: NEU.muted, lineHeight: 1.6, marginBottom: 16 }
+      }, 'The Prophet, his daughter, and the twelve Imams — peace be upon them all.'),
+      list.length === 0 ? React.createElement("div", {
+        style: { ...neuWell(R.card), padding: '30px 20px', textAlign: 'center', fontSize: 14, color: NEU.muted }
+      }, 'Nothing here yet.') : React.createElement("div", null, list.map((p, i) => React.createElement("div", {
+        key: i,
+        onClick: () => { this.setState({ infOpen: i }); const m = document.getElementById('abi-main'); if (m) m.scrollTop = 0; },
+        className: "neu-press",
+        style: {
+          ...neuCard(R.tile, .85), display: 'flex', alignItems: 'center', gap: 13,
+          padding: '12px 14px', marginBottom: 9, cursor: 'pointer', minHeight: 44
+        }
+      }, React.createElement("span", {
+        "aria-hidden": "true",
+        style: {
+          flexShrink: 0, width: 34, height: 34, borderRadius: '50%',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontSize: 12.5, fontWeight: 800, color: '#f5e7e9', ...neuDisc('#6e2230')
+        }
+      }, i + 1), React.createElement("div", { style: { flex: 1, minWidth: 0 } },
+        React.createElement("div", {
+          style: {
+            fontFamily: 'Spectral,serif', fontSize: 15, fontWeight: 600, color: NEU.ink,
+            lineHeight: 1.25, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'
+          }
+        }, p.name, p.hon ? ' ' + (HON_SHORT[p.hon] || '') : ''),
+        React.createElement("div", {
+          style: {
+            fontSize: 11.5, color: NEU.muted, marginTop: 2, lineHeight: 1.35,
+            whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'
+          }
+        }, p.role || '')), React.createElement("span", {
+        "aria-hidden": "true",
+        style: { flexShrink: 0, fontSize: 20, color: onSurf('#6e2230'), opacity: .7 }
+      }, '›')))));
+  }
+
+  /* ── MOSQUE FINDER ──
+     Ships empty on purpose. The addresses of real places of worship are not
+     something to guess at, so the list is the administrators' to fill and the
+     empty state says so rather than pretending to be loading. */
+  renderMosques(st) {
+    const list = st.liveMosques || MOSQUES;
+    const q = (st.mosqueQuery || '').trim().toLowerCase();
+    const shown = !q ? list : list.filter(m =>
+      [m.name, m.address, m.city, m.county].filter(Boolean).join(' ').toLowerCase().includes(q));
+    const chip = (label, href) => href && React.createElement("a", {
+      key: label, href, target: '_blank', rel: 'noopener noreferrer',
+      style: {
+        display: 'inline-flex', alignItems: 'center', minHeight: 40, padding: '9px 13px',
+        borderRadius: R.chip, background: '#e6efe9', color: onSurf('#1f5145'),
+        fontSize: 12.5, fontWeight: 700, textDecoration: 'none'
+      }
+    }, label);
+    return React.createElement("div", { style: { padding: '8px 20px 100px' }, className: "afu" },
+      this.screenHead(st, 'Community', 'Mosque Finder', 'mosques'),
+      list.length > 0 && React.createElement("input", {
+        value: st.mosqueQuery || '',
+        onChange: e => this.setState({ mosqueQuery: e.target.value }),
+        placeholder: 'Search by name, town or county',
+        "aria-label": 'Search mosques',
+        style: {
+          ...neuWell(R.pill, .7), width: '100%', padding: '12px 14px', fontSize: 14,
+          color: NEU.ink, outline: 'none', marginBottom: 14, minHeight: 44, boxSizing: 'border-box'
+        }
+      }),
+      shown.length === 0 ? React.createElement("div", {
+        style: { ...neuWell(R.card), padding: '30px 22px', textAlign: 'center' }
+      }, React.createElement("div", {
+        style: { fontSize: 14.5, color: NEU.ink2, lineHeight: 1.6 }
+      }, list.length === 0 ? 'No mosques listed yet.' : 'Nothing matches that search.'),
+        list.length === 0 && React.createElement("div", {
+          style: { fontSize: 12.5, color: NEU.muted, lineHeight: 1.6, marginTop: 7 }
+        }, 'An administrator can add them from the admin panel.')) :
+      shown.map((m, i) => React.createElement("div", {
+        key: i,
+        style: { ...neuCard(R.tile, .85), padding: '14px 15px 13px', marginBottom: 10 }
+      }, React.createElement("div", {
+        style: { fontFamily: 'Spectral,serif', fontSize: 16.5, fontWeight: 600, color: NEU.ink, lineHeight: 1.25 }
+      }, m.name || 'Mosque'),
+        m.denom && React.createElement("div", {
+          style: {
+            display: 'inline-block', marginTop: 6, padding: '3px 9px', borderRadius: 7,
+            background: '#f3e6e8', color: onSurf('#6e2230'),
+            fontSize: 10, fontWeight: 800, letterSpacing: .6, textTransform: 'uppercase'
+          }
+        }, m.denom),
+        React.createElement("div", {
+          style: { fontSize: 13, color: NEU.ink2, lineHeight: 1.55, marginTop: 7, whiteSpace: 'pre-wrap' }
+        }, [m.address, [m.city, m.county].filter(Boolean).join(', ')].filter(Boolean).join('\n')),
+        m.note && React.createElement("div", {
+          style: { fontSize: 12, color: NEU.muted, lineHeight: 1.55, marginTop: 6 }
+        }, m.note),
+        React.createElement("div", {
+          style: { display: 'flex', flexWrap: 'wrap', gap: 7, marginTop: 11 }
+        }, [chip('Directions', m.map || (m.address ? 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent([m.name, m.address, m.city, m.county, 'Ireland'].filter(Boolean).join(', ')) : '')),
+            chip('Call', m.phone ? 'tel:' + String(m.phone).replace(/\s+/g, '') : ''),
+            chip('Website', m.web || '')].filter(Boolean)))));
+  }
+
+  /* ── REPORT AN ISSUE ──
+     The category is a list rather than a free-text box because it is the field
+     that decides who reads the report, and a typed one is a field nobody can
+     sort by. Contact is optional and labelled as optional: most reports do not
+     need a reply, and asking for an address you will not use is collecting
+     personal data for nothing. */
+  renderReportIssue(st) {
+    const rs = st.issueState || {};
+    const busy = rs.kind === 'sending';
+    const sent = rs.kind === 'sent';
+    const label = t => React.createElement("div", {
+      style: { fontSize: 11, letterSpacing: .8, textTransform: 'uppercase', fontWeight: 800, color: NEU.muted, marginBottom: 7 }
+    }, t);
+    return React.createElement("div", { style: { padding: '8px 20px 100px' }, className: "afu" },
+      this.screenHead(st, 'More', 'Report an issue', null),
+      React.createElement("div", {
+        style: { fontSize: 13, color: NEU.muted, lineHeight: 1.6, marginBottom: 18 }
+      }, 'Something wrong, or something you would like to see? This goes straight to the administrators.'),
+      sent ? React.createElement("div", {
+        style: { ...neuCard(R.card), padding: '26px 22px', textAlign: 'center' }
+      }, React.createElement("div", { style: { fontSize: 30, marginBottom: 8 }, "aria-hidden": "true" }, '✓'),
+        React.createElement("div", {
+          style: { fontFamily: 'Spectral,serif', fontSize: 18, fontWeight: 600, color: NEU.head }
+        }, 'Thank you'),
+        React.createElement("div", {
+          style: { fontSize: 13.5, color: NEU.ink2, lineHeight: 1.6, marginTop: 7 }
+        }, 'Your report has been sent to the administrators.'),
+        React.createElement("div", {
+          onClick: () => this.setState({ issueState: null, issueCat: '', issueMsg: '', issueContact: '' }),
+          className: "neu-press",
+          style: {
+            ...neuCard(R.pill, .7), marginTop: 18, minHeight: 44, display: 'flex',
+            alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
+            fontSize: 13.5, fontWeight: 600, color: NEU.ink
+          }
+        }, 'Send another')) :
+      React.createElement("div", { style: { ...neuCard(R.card), padding: '17px 16px 18px' } },
+        label('What is it about?'),
+        React.createElement("div", { style: { position: 'relative', marginBottom: 15 } },
+          React.createElement("select", {
+            value: st.issueCat || '',
+            onChange: e => this.setState({ issueCat: e.target.value, issueState: null }),
+            "aria-label": 'Issue category',
+            style: {
+              ...neuWell(R.pill, .7), width: '100%', minHeight: 46, padding: '12px 38px 12px 14px',
+              fontSize: 14, color: st.issueCat ? NEU.ink : NEU.faint, outline: 'none',
+              appearance: 'none', WebkitAppearance: 'none', MozAppearance: 'none',
+              colorScheme: st.dark ? 'dark' : 'light', cursor: 'pointer', boxSizing: 'border-box'
+            }
+          }, React.createElement("option", { value: '' }, 'Choose a category…'),
+             ISSUE_CATS.map(c => React.createElement("option", { key: c, value: c }, c))),
+          React.createElement("span", {
+            "aria-hidden": "true",
+            style: { position: 'absolute', right: 15, top: '50%', transform: 'translateY(-50%)', color: NEU.muted, fontSize: 12, pointerEvents: 'none' }
+          }, '▾')),
+        label('What happened?'),
+        React.createElement("textarea", {
+          value: st.issueMsg || '',
+          onChange: e => this.setState({ issueMsg: e.target.value.slice(0, 2000), issueState: null }),
+          placeholder: 'Describe the problem, or the suggestion, in your own words.',
+          rows: 6,
+          "aria-label": 'Your report',
+          style: {
+            ...neuWell(R.pill, .7), width: '100%', padding: '12px 14px', fontSize: 14,
+            color: NEU.ink, outline: 'none', resize: 'vertical', lineHeight: 1.55,
+            fontFamily: 'inherit', boxSizing: 'border-box', marginBottom: 4
+          }
+        }),
+        React.createElement("div", {
+          style: { fontSize: 11, color: NEU.faint, textAlign: 'right', marginBottom: 14 }
+        }, (st.issueMsg || '').length + ' / 2000'),
+        label('How to reach you — optional'),
+        React.createElement("input", {
+          value: st.issueContact || '',
+          onChange: e => this.setState({ issueContact: e.target.value.slice(0, 120), issueState: null }),
+          placeholder: 'Email or phone, only if you would like a reply',
+          "aria-label": 'Your contact details, optional',
+          style: {
+            ...neuWell(R.pill, .7), width: '100%', padding: '12px 14px', fontSize: 14,
+            color: NEU.ink, outline: 'none', minHeight: 44, boxSizing: 'border-box', marginBottom: 4
+          }
+        }),
+        React.createElement("div", {
+          style: { fontSize: 11, color: NEU.muted, lineHeight: 1.55, marginBottom: 16 }
+        }, 'Leave this blank and the report is anonymous. Nothing else about you or your phone is sent.'),
+        rs.kind === 'error' && React.createElement("div", {
+          style: { fontSize: 12.5, fontWeight: 600, color: onSurf('#a03a3a'), lineHeight: 1.5, marginBottom: 12 }
+        }, '⚠ ' + rs.message),
+        React.createElement("div", {
+          onClick: busy ? undefined : () => this.submitIssue(),
+          className: busy ? undefined : "neu-press",
+          style: {
+            minHeight: 48, borderRadius: R.pill, display: 'flex', alignItems: 'center',
+            justifyContent: 'center', cursor: busy ? 'default' : 'pointer',
+            background: busy ? NEU.sunk : NEU.accent, color: busy ? NEU.muted : inkOn(NEU.accent),
+            fontSize: 14.5, fontWeight: 700,
+            boxShadow: busy ? 'none' : neuUpOn('31,81,69', .8)
+          }
+        }, busy ? 'Sending…' : 'Send report')));
+  }
+
   renderMore(st) {
     const links = [{
       label: this.t('more.calendar'),
@@ -8389,6 +8819,11 @@ class App extends Component {
       sub: this.t('more.adminSub'),
       glyph: '⚙',
       go: () => this.go('admin')
+    }, {
+      label: 'Report an issue',
+      sub: 'Tell the administrators what is wrong, or suggest something',
+      glyph: '⚑',
+      go: () => this.go('report')
     }, {
       label: this.t('more.about'),
       sub: this.t('more.aboutSub'),
@@ -9276,6 +9711,12 @@ class App extends Component {
     }, {
       id: 'azans',
       label: 'Adhan'
+    }, {
+      id: 'infallibles',
+      label: 'Infallibles'
+    }, {
+      id: 'mosques',
+      label: 'Mosques'
     }, {
       id: 'kids',
       label: 'Kids'
@@ -12289,7 +12730,7 @@ class App extends Component {
           padding: 4,
           marginBottom: 14
         }
-      }, [['dua', 'Duʿāʾ'], ['ziyarah', 'Ziyārah'], ['aamal', 'Amaals'], ['nahj', 'Books']].map(([k, label]) => /*#__PURE__*/React.createElement("div", {
+      }, [...LIB_KINDS.map(k => [k.key, k.tab]), ['nahj', 'Books']].map(([k, label]) => /*#__PURE__*/React.createElement("div", {
         key: k,
         onClick: () => this.setState({
           adminLibTab: k,
@@ -12338,10 +12779,11 @@ class App extends Component {
         padding: '6px 12px',
         fontSize: 12
       }));
-      if (lt === 'dua' || lt === 'ziyarah' || lt === 'aamal') {
-        const key = lt === 'dua' ? 'duas' : lt === 'ziyarah' ? 'ziyarat' : 'aamals';
-        const stateKey = lt === 'dua' ? 'liveDuas' : lt === 'ziyarah' ? 'liveZiyarat' : 'liveAamals';
-        const label = lt === 'dua' ? 'Duʿāʾ' : lt === 'ziyarah' ? 'Ziyārah' : 'Amaal';
+      if (LIB_KIND[lt]) {
+        const kind = LIB_KIND[lt];
+        const key = kind.sb;
+        const stateKey = kind.state;
+        const label = kind.title;
         const list = st[stateKey] || [];
         if (editing) {
           const d = st.adminEditDraft;
@@ -12400,7 +12842,7 @@ class App extends Component {
             onChange: e => this.setDraft({
               cat: e.target.value
             }),
-            placeholder: lt === 'dua' ? 'Category (e.g. Daily, Weekly, Morning)' : lt === 'aamal' ? 'Category (e.g. Daily, Ramaḍān, Muḥarram)' : 'Category (e.g. Imam Ḥusayn, General)',
+            placeholder: kind.catHint,
             style: inp
           }), /*#__PURE__*/React.createElement("textarea", {
             value: d.ar || '',
@@ -12723,6 +13165,193 @@ class App extends Component {
         }, 'Deleted');
       }))))));
     };
+    /* ─ FOURTEEN INFALLIBLES ─
+       Order is meaning here, so the list is reordered by hand rather than
+       sorted: the Prophet first and the twelfth Imam last is not an
+       alphabetical accident. */
+    const renderInfalliblesSection = () => {
+      const list = st.liveInfallibles || INFALLIBLES;
+      const rowStyle = {
+        display: 'flex', alignItems: 'center', gap: 10,
+        background: NEU.surf, boxShadow: neuUp(), border: NEU.edge,
+        borderRadius: 13, padding: '11px 13px', marginBottom: 9
+      };
+      if (editing) {
+        const d = st.adminEditDraft;
+        const isNew = st.adminEditIdx === -1;
+        const saveItem = () => {
+          if (!(d.name || '').trim()) return this.showToast('Name is required');
+          const item = {
+            name: (d.name || '').trim(),
+            hon: (d.hon || '').trim(),
+            role: (d.role || '').trim(),
+            born: (d.born || '').trim(),
+            died: (d.died || '').trim(),
+            rest: (d.rest || '').trim(),
+            bio: d.bio || ''
+          };
+          const a = [...list];
+          if (isNew) a.push(item);else a[st.adminEditIdx] = item;
+          save('infallibles', 'liveInfallibles', a, isNew ? 'Added!' : 'Updated!');
+        };
+        const field = (labelText, key, placeholder, rows) => React.createElement(React.Fragment, { key },
+          React.createElement("div", {
+            style: { fontSize: 11, fontWeight: 700, color: NEU.muted, marginBottom: 5, letterSpacing: .5, textTransform: 'uppercase' }
+          }, labelText),
+          rows ? React.createElement("textarea", {
+            value: d[key] || '',
+            onChange: e => this.setDraft({ [key]: e.target.value }),
+            placeholder, rows,
+            style: { ...inp, resize: 'vertical', lineHeight: 1.6, fontFamily: 'inherit' }
+          }) : React.createElement("input", {
+            value: d[key] || '',
+            onChange: e => this.setDraft({ [key]: e.target.value }),
+            placeholder, style: inp
+          }));
+        return React.createElement("div", { style: { padding: '0 0 20px' } },
+          React.createElement("div", {
+            style: { fontSize: 13, fontWeight: 700, color: NEU.head, marginBottom: 14 }
+          }, isNew ? 'Add an entry' : 'Edit entry'),
+          field('Name', 'name', 'Imam Ja\u02bffar al-\u1e62\u0101diq'),
+          React.createElement("div", {
+            style: { fontSize: 11, fontWeight: 700, color: NEU.muted, marginBottom: 5, letterSpacing: .5, textTransform: 'uppercase' }
+          }, 'Honorific'),
+          React.createElement("select", {
+            value: d.hon || '',
+            onChange: e => this.setDraft({ hon: e.target.value }),
+            "aria-label": 'Honorific',
+            style: { ...inp, colorScheme: st.dark ? 'dark' : 'light', cursor: 'pointer' }
+          }, [['', 'None'], ['s', '(\u1e63) \u2014 the Prophet'], ['a', '(\u02bfa) \u2014 peace be upon him or her'], ['aj', '(\u02bfaj) \u2014 may Allah hasten his return']]
+            .map(([v, t]) => React.createElement("option", { key: v, value: v }, t))),
+          field('Title or role', 'role', 'The sixth Imam'),
+          field('Born', 'born', '83 AH / 702 CE, Medina'),
+          field('Passed', 'died', '148 AH / 765 CE, Medina'),
+          field('Resting place', 'rest', 'Jannat al-Baq\u012b\u02bf, Medina'),
+          field('Biography', 'bio', 'A few sentences.', 9),
+          React.createElement("div", { style: { display: 'flex', gap: 9, marginTop: 4 } },
+            btn('Save', saveItem, { background: NEU.accent, color: inkOn(NEU.accent), boxShadow: neuUpOn('31,81,69', .7) }),
+            btn('Cancel', () => this.cancelEdit())));
+      }
+      return React.createElement("div", { style: { padding: '0 0 20px' } },
+        btn('+ Add an entry', () => this.setState({ adminEditIdx: -1, adminEditDraft: {} }),
+          { background: NEU.accent, color: inkOn(NEU.accent), boxShadow: neuUpOn('31,81,69', .7), marginBottom: 14 }),
+        list.map((p, i) => React.createElement("div", { key: i, style: rowStyle },
+          React.createElement("div", {
+            style: {
+              flexShrink: 0, width: 26, height: 26, borderRadius: '50%', display: 'flex',
+              alignItems: 'center', justifyContent: 'center', background: '#f3e6e8',
+              color: onSurf('#6e2230'), fontSize: 11, fontWeight: 800
+            }
+          }, i + 1),
+          React.createElement("div", { style: { flex: 1, minWidth: 0 } },
+            React.createElement("div", {
+              style: { fontSize: 13.5, fontWeight: 600, color: NEU.ink, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }
+            }, p.name),
+            React.createElement("div", {
+              style: { fontSize: 11.5, color: NEU.muted, marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }
+            }, p.role || '')),
+          React.createElement("div", { style: { display: 'flex', gap: 5, flexShrink: 0 } },
+            i > 0 && btn('\u2191', () => {
+              const a = [...list];
+              a.splice(i - 1, 0, a.splice(i, 1)[0]);
+              save('infallibles', 'liveInfallibles', a, 'Moved up');
+            }, { padding: '6px 10px', fontSize: 12 }),
+            i < list.length - 1 && btn('\u2193', () => {
+              const a = [...list];
+              a.splice(i + 1, 0, a.splice(i, 1)[0]);
+              save('infallibles', 'liveInfallibles', a, 'Moved down');
+            }, { padding: '6px 10px', fontSize: 12 }),
+            btn('Edit', () => this.setState({ adminEditIdx: i, adminEditDraft: { ...p } }),
+              { background: '#e6efe9', color: onSurf('#1f5145'), padding: '6px 12px', fontSize: 12 }),
+            btn('Delete', () => save('infallibles', 'liveInfallibles', list.filter((_, x) => x !== i), 'Deleted'),
+              { background: '#f3e6e8', color: onSurf('#6e2230'), padding: '6px 12px', fontSize: 12 })))));
+    };
+
+    /* ─ MOSQUES ─ */
+    const renderMosquesSection = () => {
+      const list = st.liveMosques || MOSQUES;
+      const rowStyle = {
+        display: 'flex', alignItems: 'center', gap: 10,
+        background: NEU.surf, boxShadow: neuUp(), border: NEU.edge,
+        borderRadius: 13, padding: '11px 13px', marginBottom: 9
+      };
+      if (editing) {
+        const d = st.adminEditDraft;
+        const isNew = st.adminEditIdx === -1;
+        const saveItem = () => {
+          if (!(d.name || '').trim()) return this.showToast('Name is required');
+          if (!(d.address || '').trim()) return this.showToast('Address is required');
+          for (const [k, what] of [['web', 'Website'], ['map', 'Map link']]) {
+            if ((d[k] || '').trim() && !/^https?:\/\//.test(d[k].trim()))
+              return this.showToast(what + ' must start with http(s)://');
+          }
+          const item = {
+            name: (d.name || '').trim(),
+            denom: (d.denom || '').trim(),
+            address: (d.address || '').trim(),
+            city: (d.city || '').trim(),
+            county: (d.county || '').trim(),
+            phone: (d.phone || '').trim(),
+            web: (d.web || '').trim(),
+            map: (d.map || '').trim(),
+            note: (d.note || '').trim()
+          };
+          const a = [...list];
+          if (isNew) a.push(item);else a[st.adminEditIdx] = item;
+          save('mosques', 'liveMosques', a, isNew ? 'Mosque added!' : 'Mosque updated!');
+        };
+        const field = (labelText, key, placeholder, rows) => React.createElement(React.Fragment, { key },
+          React.createElement("div", {
+            style: { fontSize: 11, fontWeight: 700, color: NEU.muted, marginBottom: 5, letterSpacing: .5, textTransform: 'uppercase' }
+          }, labelText),
+          rows ? React.createElement("textarea", {
+            value: d[key] || '',
+            onChange: e => this.setDraft({ [key]: e.target.value }),
+            placeholder, rows,
+            style: { ...inp, resize: 'vertical', lineHeight: 1.6, fontFamily: 'inherit' }
+          }) : React.createElement("input", {
+            value: d[key] || '',
+            onChange: e => this.setDraft({ [key]: e.target.value }),
+            placeholder, style: inp
+          }));
+        return React.createElement("div", { style: { padding: '0 0 20px' } },
+          React.createElement("div", {
+            style: { fontSize: 13, fontWeight: 700, color: NEU.head, marginBottom: 14 }
+          }, isNew ? 'Add a mosque' : 'Edit mosque'),
+          field('Name', 'name', 'Ahlul-Bait Islamic Centre'),
+          field('Community', 'denom', 'Shia \u2014 or leave blank'),
+          field('Address', 'address', 'Street and building', 3),
+          field('Town or city', 'city', 'Dublin'),
+          field('County', 'county', 'Co. Dublin'),
+          field('Phone', 'phone', '+353 1 234 5678'),
+          field('Website', 'web', 'https://\u2026'),
+          field('Map link', 'map', 'https://\u2026 \u2014 leave blank to search the address'),
+          field('Note', 'note', 'Jumuah at 13:30, ladies\u2019 entrance on the side \u2014 anything worth knowing', 3),
+          React.createElement("div", { style: { display: 'flex', gap: 9, marginTop: 4 } },
+            btn('Save', saveItem, { background: NEU.accent, color: inkOn(NEU.accent), boxShadow: neuUpOn('31,81,69', .7) }),
+            btn('Cancel', () => this.cancelEdit())));
+      }
+      return React.createElement("div", { style: { padding: '0 0 20px' } },
+        btn('+ Add a mosque', () => this.setState({ adminEditIdx: -1, adminEditDraft: {} }),
+          { background: NEU.accent, color: inkOn(NEU.accent), boxShadow: neuUpOn('31,81,69', .7), marginBottom: 14 }),
+        list.length === 0 && React.createElement("div", {
+          style: { fontSize: 13, color: NEU.muted, lineHeight: 1.6, padding: '4px 2px 12px' }
+        }, 'Nothing listed yet. Whatever is added here is what everyone sees under Tools \u203a Mosque Finder.'),
+        list.map((m, i) => React.createElement("div", { key: i, style: rowStyle },
+          React.createElement("div", { style: { flex: 1, minWidth: 0 } },
+            React.createElement("div", {
+              style: { fontSize: 13.5, fontWeight: 600, color: NEU.ink, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }
+            }, m.name),
+            React.createElement("div", {
+              style: { fontSize: 11.5, color: NEU.muted, marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }
+            }, [m.city, m.county].filter(Boolean).join(', ') || m.address || '')),
+          React.createElement("div", { style: { display: 'flex', gap: 6, flexShrink: 0 } },
+            btn('Edit', () => this.setState({ adminEditIdx: i, adminEditDraft: { ...m } }),
+              { background: '#e6efe9', color: onSurf('#1f5145'), padding: '6px 12px', fontSize: 12 }),
+            btn('Delete', () => save('mosques', 'liveMosques', list.filter((_, x) => x !== i), 'Deleted'),
+              { background: '#f3e6e8', color: onSurf('#6e2230'), padding: '6px 12px', fontSize: 12 })))));
+    };
+
     const sectionContent = {
       stories: renderStoriesSection,
       library: renderLibrarySection,
@@ -12735,7 +13364,9 @@ class App extends Component {
       askImam: renderAskImamSection,
       ads: renderAdsSection,
       kids: renderKidsSection,
-      health: renderHealthSection
+      health: renderHealthSection,
+      infallibles: renderInfalliblesSection,
+      mosques: renderMosquesSection
     };
     const stats = [{
       label: 'Stories',
@@ -14117,7 +14748,7 @@ class App extends Component {
         style: {
           height: '100%',
           width: '100%',
-          transform: `scaleX(${answered ? 0 : r.timeLeft / 10})`,
+          transform: `scaleX(${answered ? 0 : r.timeLeft / SCORING.SECONDS_PER_QUESTION})`,
           transformOrigin: 'left',
           borderRadius: 3,
           background: urgent ? '#c0392b' : lvlMeta.color,
@@ -16593,7 +17224,7 @@ class App extends Component {
         // over the wallpaper sitting behind it
         background: onHome ? 'transparent' : st.dark ? NEU_D.bg : NEU.bg
       }
-    }, showBrand && this.renderBrandMark(), st.screen === 'home' && this.renderHome(st, next, cd, greg, hijri, salaam), st.screen === 'prayer' && this.renderPrayer(st, next, cd, greg), st.screen === 'library' && this.renderLibrary(st), st.screen === 'reading' && this.renderReading(st), st.screen === 'classifieds' && this.renderClassifieds(st), st.screen === 'more' && this.renderMore(st), st.screen === 'about' && this.renderAbout(), st.screen === 'location' && this.renderLocation(st), st.screen === 'offline' && this.renderOffline(), st.screen === 'admin' && this.renderAdmin(st), st.screen === 'calendar' && this.renderCalendar(st), st.screen === 'kids' && this.renderKids(st), st.screen === 'health' && this.renderHealth(st), st.screen === 'qibla' && this.renderQibla(st), st.screen === 'khums' && this.renderKhums(st), st.screen === 'tasbeeh' && this.renderTasbeeh(st), st.screen === 'wallpaper' && this.renderWallpaper(st), st.screen === 'stories' && this.renderStories(st)), st.adhanPending && /*#__PURE__*/React.createElement("div", {
+    }, showBrand && this.renderBrandMark(), st.screen === 'home' && this.renderHome(st, next, cd, greg, hijri, salaam), st.screen === 'prayer' && this.renderPrayer(st, next, cd, greg), st.screen === 'library' && this.renderLibrary(st), st.screen === 'reading' && this.renderReading(st), st.screen === 'classifieds' && this.renderClassifieds(st), st.screen === 'more' && this.renderMore(st), st.screen === 'about' && this.renderAbout(), st.screen === 'location' && this.renderLocation(st), st.screen === 'offline' && this.renderOffline(), st.screen === 'admin' && this.renderAdmin(st), st.screen === 'calendar' && this.renderCalendar(st), st.screen === 'kids' && this.renderKids(st), st.screen === 'health' && this.renderHealth(st), st.screen === 'qibla' && this.renderQibla(st), st.screen === 'khums' && this.renderKhums(st), st.screen === 'tasbeeh' && this.renderTasbeeh(st), st.screen === 'wallpaper' && this.renderWallpaper(st), st.screen === 'infallibles' && this.renderInfallibles(st), st.screen === 'mosques' && this.renderMosques(st), st.screen === 'report' && this.renderReportIssue(st), st.screen === 'stories' && this.renderStories(st)), st.adhanPending && /*#__PURE__*/React.createElement("div", {
       onClick: this.playAdhan,
       style: {
         position: 'absolute',
