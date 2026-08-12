@@ -1211,43 +1211,6 @@ const RUBIKS_CUBE = React.createElement('svg', {
   }
 });
 
-/* The one mosque in the emoji set is 🕌, and Ziyārah already wears it two rows
-   up the same screen. Drawn instead, so Mosque Finder gets a mosque that is not
-   also something else: dome and drum, two minarets with their galleries and
-   finials, an arched door. The door and windows are holes cut by a mask rather
-   than shapes painted in the badge colour, so the badge's own gradient shows
-   through them and the glyph survives a change of tone. */
-const mqOnion = (cx, base, w, top) => {
-  const h = base - top;
-  return `M${cx - w} ${base}C${cx - w} ${(base - h * .45).toFixed(2)},${(cx - w * .62).toFixed(2)} ${(top + h * .18).toFixed(2)},${cx} ${top}` +
-    `C${(cx + w * .62).toFixed(2)} ${(top + h * .18).toFixed(2)},${cx + w} ${(base - h * .45).toFixed(2)},${cx + w} ${base}Z`;
-};
-const mqBox = (x0, y0, x1, y1) => `M${x0} ${y0}H${x1}V${y1}H${x0}Z`;
-const MOSQUE_GLYPH = React.createElement('svg', {
-  width: 30, height: 30, viewBox: '0 0 32 32', 'aria-hidden': 'true',
-  dangerouslySetInnerHTML: {
-    __html: '<defs><mask id="abi-mq"><rect width="32" height="32" fill="#000"/>' +
-      `<path fill="#fff" d="${
-        [6.3, 25.7].map(cx =>
-          mqBox(cx - 1.45, 13.4, cx + 1.45, 26.6) +
-          mqOnion(cx, 13.4, 2.05, 9.4) +
-          mqBox(cx - .32, 6.9, cx + .32, 9.5) +
-          mqBox(cx - 2.45, 16.4, cx + 2.45, 17.3)
-        ).join('') +
-        mqOnion(16, 19.6, 6.6, 9.6) +
-        mqBox(9.4, 19.4, 22.6, 26.8) +
-        mqBox(15.65, 5.9, 16.35, 9.8) +
-        mqBox(3, 26.4, 29, 29.2)
-      }"/><circle cx="16" cy="4.6" r="1.1" fill="#fff"/>` +
-      `<path fill="#000" d="${
-        mqOnion(16, 29.2, 1.95, 21.6) +
-        mqOnion(11.9, 24.4, 1.15, 20.8) +
-        mqOnion(20.1, 24.4, 1.15, 20.8)
-      }"/></mask></defs>` +
-      '<rect width="32" height="32" fill="#2f6f7a" mask="url(#abi-mq)"/>'
-  }
-});
-
 const NAV_ICONS = {
   home: LUCIDE.house,
   prayer: LUCIDE.moon,
@@ -5021,7 +4984,9 @@ class App extends Component {
       go: () => this.go('infallibles')
     }, {
       title: 'Mosque Finder',
-      icon: MOSQUE_GLYPH,
+      // the app's own pin, the same one the prayer location and the classifieds
+      // use, rather than a drawing made for one tile
+      icon: icon('map-pin', { size: 27, sw: 1.9, stroke: '#2f6f7a' }),
       tone: ['#2f6f7a', '#e5f0f2'],
       go: () => this.go('mosques')
     }, {
