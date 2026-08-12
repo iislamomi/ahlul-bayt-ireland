@@ -115,6 +115,16 @@
     .apo { animation: po .3s ease both; }
     .asu { animation: su .32s cubic-bezier(.2,.8,.2,1) both; }
     input, textarea, select { font-family: 'Hanken Grotesk', system-ui, sans-serif; }
+    /* Native chrome — the option list, the caret, the date picker — is drawn by
+       the platform, and without this it comes up light while the app is dark. */
+    :root { color-scheme: light; }
+    :root[data-theme="dark"] { color-scheme: dark; }
+    /* The placeholder is the only label these fields have, so it is held to the
+       same 4.5:1 as body text. The browser default is #757575 in both themes:
+       3.5:1 on cream, 3.8:1 on the dark well. */
+    .app input::placeholder, .app textarea::placeholder { color: #6b6252; opacity: 1; }
+    :root[data-theme="dark"] .app input::placeholder,
+    :root[data-theme="dark"] .app textarea::placeholder { color: #8e9490; opacity: 1; }
     a { text-decoration: none; color: inherit; display: contents; }
     @keyframes notif-in { from { opacity:0; transform:translateY(-16px); } to { opacity:1; transform:none; } }
     @media (display-mode: standalone), (display-mode: fullscreen), (display-mode: minimal-ui) {

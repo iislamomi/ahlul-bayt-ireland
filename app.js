@@ -186,6 +186,18 @@ const neuWell = (r = 14, d = 1, dark) => ({
   boxShadow: neuIn(d, dark),
   ...(GLASS ? FROST : null)
 });
+/* A field you type into, as opposed to the well drawn behind a search row. In
+   the dark theme the sunk fill lands 1.03:1 from the page behind it and the
+   inset shadow is two shades of the same grey, so an empty box has no boundary
+   at all — the admin panel reads as a page with nothing on it. The fill drops
+   below the page and the edge is drawn explicitly, at 3.7:1. The light theme is
+   left as it was: there the inset genuinely reads. */
+const neuField = (r = 13, d = .7, dark) => ({
+  ...neuWell(r, d, dark),
+  ...((dark === undefined ? THEME_DARK : dark)
+    ? { background: '#0f1213', border: '1px solid rgba(255,255,255,.42)' }
+    : null)
+});
 /* One rung per level of nesting, because the home screen had grown nine
    different corner radii — 9, 10, 11, 12, 13, 15.5, 16, 18 and 20 — and at that
    spread the rounding stops being a decision and starts being noise. A card and
@@ -888,7 +900,9 @@ const NAHJ = {
   sahifa: [],
   munajat: []
 };
-const BOOKS = [['nahj', 'Nahjul Balagha'], ['sahifa', 'Sahifa e Sajjadia']];
+/* Sahifa first, and so the one Books opens on: it carries seventy-six entries to
+   Nahj al-Balagha's two. */
+const BOOKS = [['sahifa', 'Sahifa e Sajjadia'], ['nahj', 'Nahjul Balagha']];
 const NAHJ_PARTS = [['sermons', 'Sermons'], ['letters', 'Letters'], ['sayings', 'Sayings']];
 /* The fifty-four supplications and the fifteen whispered prayers are read as two
    different things, so they are kept as two. */
@@ -3151,8 +3165,8 @@ class App extends Component {
     _defineProperty(this, "state", {
       screen: 'home',
       libTab: 'dua',
-      nahjTab: 'sermons',
-      nahjBook: 'nahj',
+      nahjTab: 'sahifa',
+      nahjBook: 'sahifa',
       // per tab, because each section's natural order is its own: carrying one
       // tab's choice across would quietly override the next tab's default
       libSort: {},
@@ -3365,8 +3379,8 @@ class App extends Component {
         libCat: 'All',
         libQuery: '',
         libSort: {},
-        nahjBook: 'nahj',
-        nahjTab: 'sermons',
+        nahjBook: 'sahifa',
+        nahjTab: 'sahifa',
         prayerTab: 'today',
         kidsTab: 'videos',
         learnBook: null,
@@ -4958,7 +4972,8 @@ class App extends Component {
       go: () => this.setState({
         screen: 'library',
         libTab: 'nahj',
-        nahjBook: 'nahj',
+        nahjBook: 'sahifa',
+        nahjTab: 'sahifa',
         libCat: 'All'
       })
     }, {
@@ -7820,8 +7835,8 @@ class App extends Component {
       : { bg: '#f4ede0', edge: '#e2d3b4', ink: '#7d6220' };
     const inputId = 'abi-up-' + kind;
     const inp2 = {
-      width: '100%', border: NEU.edge, background: NEU.sunk, boxShadow: neuIn(.7),
-      borderRadius: 11, padding: '11px 13px', minHeight: 44, fontSize: 14,
+      width: '100%', ...neuField(11),
+      padding: '11px 13px', minHeight: 44, fontSize: 14,
       color: NEU.ink, outline: 'none', boxSizing: 'border-box'
     };
     return /*#__PURE__*/React.createElement("div", {
@@ -8480,8 +8495,7 @@ class App extends Component {
       style: {
         width: '100%', boxSizing: 'border-box', minHeight: 48,
         appearance: 'none', WebkitAppearance: 'none', MozAppearance: 'none',
-        padding: '13px 36px 13px 14px', borderRadius: 12,
-        border: NEU.edge, background: NEU.sunk, boxShadow: neuIn(.3),
+        padding: '13px 36px 13px 14px', ...neuField(12, .3),
         fontSize: 14.5, fontWeight: 600, fontFamily: 'inherit',
         color: NEU.ink, cursor: 'pointer',
         // the option list is drawn by the OS, and without this it comes up
@@ -9160,8 +9174,7 @@ class App extends Component {
         style: {
           width: '100%', boxSizing: 'border-box', minHeight: 48,
           appearance: 'none', WebkitAppearance: 'none', MozAppearance: 'none',
-          padding: '13px 34px 13px 13px', borderRadius: 12,
-          border: NEU.edge, background: NEU.sunk, boxShadow: neuIn(.3),
+          padding: '13px 34px 13px 13px', ...neuField(12, .3),
           fontSize: 14, fontWeight: 600, fontFamily: 'inherit',
           color: on ? NEU.ink : NEU.muted, cursor: 'pointer',
           // the option list is drawn by the OS, and without this it comes up
@@ -9662,9 +9675,7 @@ class App extends Component {
   renderAdminLogin(st) {
     const inp = {
       width: '100%',
-      border: NEU.edge,
-      background: NEU.sunk, boxShadow: neuIn(.7),
-      borderRadius: 13,
+      ...neuField(13),
       padding: '13px 15px',
       fontSize: 15,
       color: NEU.ink,
@@ -9854,9 +9865,7 @@ class App extends Component {
     }];
     const inp = {
       width: '100%',
-      border: NEU.edge,
-      background: NEU.sunk, boxShadow: neuIn(.7),
-      borderRadius: 11,
+      ...neuField(11),
       padding: '11px 13px',
       fontSize: 14,
       color: NEU.ink,
@@ -10979,9 +10988,7 @@ class App extends Component {
           maxLength: 5,
           style: {
             flex: 1,
-            border: NEU.edge,
-            background: NEU.sunk, boxShadow: neuIn(.7),
-            borderRadius: 10,
+            ...neuField(10),
             padding: '10px 12px',
             fontSize: 14,
             color: NEU.ink,
@@ -15455,9 +15462,7 @@ class App extends Component {
       style: {
         width: '100%',
         padding: '10px 12px',
-        borderRadius: 10,
-        border: NEU.edge,
-        background: NEU.sunk, boxShadow: neuIn(.7),
+        ...neuField(10),
         fontSize: 14,
         outline: 'none',
         fontVariantNumeric: 'tabular-nums'
