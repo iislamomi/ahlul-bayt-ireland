@@ -1193,7 +1193,13 @@ const LUCIDE = {
   'trash-2': '<path d="M10 11v6" /><path d="M14 11v6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" /><path d="M3 6h18" /><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />',
   'compass': '<path d="m16.24 7.76-1.804 5.411a2 2 0 0 1-1.265 1.265L7.76 16.24l1.804-5.411a2 2 0 0 1 1.265-1.265z" /><circle cx="12" cy="12" r="10" />',
   'navigation': '<path d="M3 11l19-9-9 19-2-8-8-2z" />',
-  'shield-check': '<path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z" /><path d="m9 12 2 2 4-4" />'
+  'shield-check': '<path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z" /><path d="m9 12 2 2 4-4" />',
+  'zoom-in': '<circle cx="11" cy="11" r="8" /><line x1="21" x2="16.65" y1="21" y2="16.65" /><line x1="11" x2="11" y1="8" y2="14" /><line x1="8" x2="14" y1="11" y2="11" />',
+  'zoom-out': '<circle cx="11" cy="11" r="8" /><line x1="21" x2="16.65" y1="21" y2="16.65" /><line x1="8" x2="14" y1="11" y2="11" />',
+  'download': '<path d="M12 15V3" /><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><path d="m7 10 5 5 5-5" />',
+  'external-link': '<path d="M15 3h6v6" /><path d="M10 14 21 3" /><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />',
+  'chevron-left': '<path d="m15 18-6-6 6-6" />',
+  'chevron-right': '<path d="m9 18 6-6-6-6" />'
 };
 const icon = (name, o = {}) => React.createElement('svg', {
   width: o.size || 20,
@@ -2187,6 +2193,28 @@ function scoreParts(correct, total, durationMs, completed) {
   };
 }
 
+/* ── CHAPTER QUIZZES ──
+   A quiz belongs to one chapter of one course book and is usually written well
+   before a class reaches that chapter, so saving one must never publish it. It
+   is hidden until an administrator either turns it on or gives it a date and
+   time to turn itself on. `from` has no timezone on purpose: an administrator in
+   Dublin types the hour the class starts and means the hour on that clock.
+
+   Book id and file name together name the chapter — the title repeats across
+   books ("Cover and Contents" is in both) and only one of the two books numbers
+   its chapters at all. */
+const chapterQuizLive = (q, now) => {
+  if (!q || !(q.question || '').trim()) return false;
+  if (q.mode === 'live') return true;
+  if (q.mode === 'scheduled' && q.from) {
+    const t = Date.parse(q.from);
+    return !isNaN(t) && now >= t;
+  }
+  return false;
+};
+const chapterQuizzesFor = (list, book, file, now) =>
+  (list || []).filter(q => q.book === book && q.file === file && chapterQuizLive(q, now));
+
 /* ── DISPLAY NAMES ──
    Mirrors the server rules. Letters, marks and digits of any script pass, so an
    Arabic, Urdu or Hindi name is as welcome as a Latin one; what does not pass is
@@ -2661,7 +2689,10 @@ const PUSH_MSG = {
   amaalActs: 'Library updated — new amaal',
   infallibles: null, // biographies are reference material, not news
   mosques: 'The mosque list has been updated',
-  salat: 'Library updated — new salat content'
+  salat: 'Library updated — new salat content',
+  // a chapter quiz is written ahead of the class and saved hidden; announcing it
+  // at save time would tell everyone about a quiz nobody can open yet
+  chapterQuizzes: null
 };
 
 function urlBase64ToUint8Array(b64) {
@@ -2726,7 +2757,7 @@ const SB_KEY_MAP = {
   reminders: 'liveReminders', ads: 'liveAds', learning: 'liveLearning',
   azans: 'liveAzans', azanOverrides: 'liveAzanOverrides',
   amaalActs: 'liveAmaalActs', infallibles: 'liveInfallibles', mosques: 'liveMosques',
-  salat: 'liveSalat'
+  salat: 'liveSalat', chapterQuizzes: 'liveChapterQuizzes'
 };
 
 /* Category ink for classifieds badges. Listings store the colour they were saved
@@ -3295,6 +3326,8 @@ class App extends Component {
       liveZiyarat: lsGet('ziyarat', ZIYARAT),
       liveNahj: lsGet('nahj', NAHJ),
       liveLearning: lsGet('learning', LEARNING),
+      liveChapterQuizzes: lsGet('chapterQuizzes', []),
+      chapQuiz: null,
       liveAzans: lsGet('azans', []),
       liveAzanOverrides: lsGet('azanOverrides', {}),
       azanRenaming: null,
@@ -3388,6 +3421,7 @@ class App extends Component {
         kidsVidCat: 'All',
         kidsQuizPicks: {},
         quizRun: null,
+        chapQuiz: null,
         healthTab: 'videos',
         healthVidCat: 'All',
         calViewY: null,
@@ -3410,6 +3444,62 @@ class App extends Component {
     _defineProperty(this, "clearQuizTimers", () => {
       clearInterval(this.quizTick);
       clearTimeout(this.quizNext);
+      clearInterval(this.chapTick);
+      clearTimeout(this.chapNext);
+    });
+
+    /* ── CHAPTER QUIZ ──
+       The same fifteen seconds a question gets in the Kids quiz, and the same
+       pause-while-away rule — but no score, no leaderboard and no name: this is
+       a check on the chapter just read, taken in the reader, and a child who
+       gets one wrong should be able to open the page again and try once more. */
+    _defineProperty(this, "startChapterQuiz", (key, qs) => {
+      clearInterval(this.chapTick);
+      clearTimeout(this.chapNext);
+      this.setState({
+        chapQuiz: {
+          key, qs, pos: 0, pick: null, correct: 0,
+          timeLeft: SCORING.SECONDS_PER_QUESTION, done: false
+        }
+      });
+      this.chapTick = setInterval(this.chapTickFn, 1000);
+    });
+    _defineProperty(this, "chapTickFn", () => {
+      this.setState(s => {
+        const r = s.chapQuiz;
+        if (!r || r.done || r.pick !== null) return null;
+        if (s.screen !== 'reading') return null; // pause while away from the page
+        if (r.timeLeft <= 1) {
+          clearInterval(this.chapTick);
+          this.chapNext = setTimeout(this.chapAdvance, 2000);
+          return { chapQuiz: { ...r, pick: -1, timeLeft: 0 } };
+        }
+        return { chapQuiz: { ...r, timeLeft: r.timeLeft - 1 } };
+      });
+    });
+    _defineProperty(this, "answerChapterQuiz", oi => {
+      const r = this.state.chapQuiz;
+      if (!r || r.done || r.pick !== null) return;
+      clearInterval(this.chapTick);
+      const right = oi === (r.qs[r.pos].answer || 0);
+      this.setState({ chapQuiz: { ...r, pick: oi, correct: r.correct + (right ? 1 : 0) } });
+      this.chapNext = setTimeout(this.chapAdvance, 1600);
+    });
+    _defineProperty(this, "chapAdvance", () => {
+      this.setState(s => {
+        const r = s.chapQuiz;
+        if (!r) return null;
+        if (r.pos + 1 >= r.qs.length) return { chapQuiz: { ...r, done: true } };
+        return {
+          chapQuiz: { ...r, pos: r.pos + 1, pick: null, timeLeft: SCORING.SECONDS_PER_QUESTION }
+        };
+      }, () => {
+        const r = this.state.chapQuiz;
+        if (r && !r.done) {
+          clearInterval(this.chapTick);
+          this.chapTick = setInterval(this.chapTickFn, 1000);
+        }
+      });
     });
     _defineProperty(this, "startQuizRun", (lvl, displayName) => {
       this.clearQuizTimers();
@@ -3797,6 +3887,9 @@ class App extends Component {
       // the previous recitation must not keep playing under the next text
       this.audioStop();
       this._audioEl = null;
+      // nor the previous chapter's quiz keep counting down under the next one
+      clearInterval(this.chapTick);
+      clearTimeout(this.chapNext);
       const o = opts || {};
       const prev = this.state.lastRead;
       /* Only the Library is remembered. A Learning chapter is opened in the same
@@ -3814,6 +3907,7 @@ class App extends Component {
         readingLang: o.lang || null,
         lastRead: keep ? mark : prev,
         activeLine: null,
+        chapQuiz: null,
         jumpLine: o.jumpLine || null
       }, () => {
         // React may reuse the scroll node from a previous reading, so the offset
@@ -7652,7 +7746,140 @@ class App extends Component {
       }, this.t('lib.summary')), React.createElement("div", {
         style: { fontSize: 14, lineHeight: 1.6, color: rd.text }
       }, r.sum))),
-    lang === 'pdf' && hasPdf && this.renderPdf(st, r, rd, readAccent, dark)));
+    lang === 'pdf' && hasPdf && this.renderPdf(st, r, rd, readAccent, dark),
+    /* Under the page, not beside it: the quiz is on what was just read, so it
+       belongs after the reading rather than competing with it. */
+    rtype === 'learning' && this.renderChapterQuiz(st, r, rd, readAccent)));
+  }
+
+  /* ── CHAPTER QUIZ, IN THE READER ──
+     Only quizzes an administrator has turned on, or scheduled for a moment that
+     has passed, are here at all — everything else is invisible to a reader, and
+     a chapter with nothing live renders nothing rather than an empty card. */
+  renderChapterQuiz(st, r, rd, accent) {
+    if (!r || !r.book || !r.file) return null;
+    const qs = chapterQuizzesFor(st.liveChapterQuizzes, r.book, r.file, Date.now());
+    if (qs.length === 0) return null;
+    const key = r.book + '/' + r.file;
+    const run = st.chapQuiz && st.chapQuiz.key === key ? st.chapQuiz : null;
+
+    const card = children => React.createElement("div", {
+      style: {
+        background: rd.surf, border: `1px solid ${rd.border}`, borderRadius: 16,
+        padding: '16px 17px', marginTop: 18
+      }
+    }, React.createElement("div", {
+      style: {
+        fontSize: 11, letterSpacing: 1, textTransform: 'uppercase',
+        fontWeight: 700, color: accent, marginBottom: 9
+      }
+    }, 'Chapter quiz'), children);
+
+    if (!run) {
+      return card(React.createElement(React.Fragment, null,
+        React.createElement("div", {
+          style: { fontSize: 14, lineHeight: 1.6, color: rd.text, marginBottom: 13 }
+        }, `${qs.length} question${qs.length > 1 ? 's' : ''} on this chapter — ${SCORING.SECONDS_PER_QUESTION} seconds each.`),
+        React.createElement("div", {
+          onClick: () => this.startChapterQuiz(key, qs),
+          style: {
+            display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 46,
+            borderRadius: 13, background: accent, color: inkOn(accent),
+            fontSize: 14, fontWeight: 700, cursor: 'pointer'
+          }
+        }, 'Start the quiz')));
+    }
+
+    if (run.done) {
+      return card(React.createElement(React.Fragment, null,
+        React.createElement("div", {
+          style: { fontFamily: 'Spectral,serif', fontSize: 19, fontWeight: 600, color: rd.text }
+        }, `${run.correct} of ${run.qs.length} correct`),
+        React.createElement("div", {
+          style: { fontSize: 13.5, lineHeight: 1.6, color: rd.muted, margin: '6px 0 13px' }
+        }, run.correct === run.qs.length
+             ? 'Every one right — the chapter is well read.'
+             : 'Read the page again and see if the rest come out right.'),
+        React.createElement("div", {
+          onClick: () => this.startChapterQuiz(key, qs),
+          style: {
+            display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 46,
+            borderRadius: 13, border: `1.5px solid ${accent}`, color: accent,
+            fontSize: 14, fontWeight: 700, cursor: 'pointer'
+          }
+        }, 'Try again')));
+    }
+
+    const q = run.qs[run.pos];
+    const answered = run.pick !== null;
+    const urgent = !answered && run.timeLeft <= 3;
+    return card(React.createElement(React.Fragment, null,
+      React.createElement("div", {
+        style: { display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }
+      }, React.createElement("div", {
+        style: { flex: 1, fontSize: 12, fontWeight: 700, color: rd.muted }
+      }, `Question ${run.pos + 1} of ${run.qs.length}`),
+         React.createElement("div", {
+           role: "timer",
+           "aria-label": `${run.timeLeft} seconds left`,
+           style: {
+             flexShrink: 0, minWidth: 30, height: 30, borderRadius: 15,
+             display: 'flex', alignItems: 'center', justifyContent: 'center',
+             fontSize: 13, fontWeight: 800,
+             color: urgent ? '#fff' : accent,
+             background: urgent ? '#c0392b' : rd.border,
+             transition: 'background .3s'
+           }
+         }, answered ? '·' : run.timeLeft)),
+      React.createElement("div", {
+        "aria-hidden": "true",
+        style: { height: 4, borderRadius: 3, background: rd.border, overflow: 'hidden', marginBottom: 13 }
+      }, React.createElement("div", {
+        style: {
+          height: '100%', width: '100%', transformOrigin: 'left',
+          transform: `scaleX(${answered ? 0 : run.timeLeft / SCORING.SECONDS_PER_QUESTION})`,
+          background: urgent ? '#c0392b' : accent,
+          transition: 'transform 1s linear'
+        }
+      })),
+      React.createElement("div", {
+        style: { fontFamily: 'Spectral,serif', fontSize: 16.5, lineHeight: 1.45, color: rd.text, marginBottom: 12 }
+      }, q.question),
+      React.createElement("div", {
+        style: { display: 'flex', flexDirection: 'column', gap: 8 }
+      }, (q.options || []).map((opt, oi) => {
+        const right = oi === (q.answer || 0);
+        const chosen = run.pick === oi;
+        /* After the reveal the correct answer is always marked, whether or not
+           it was the one picked — a quiz that only says "wrong" teaches nothing.
+           Both marks go through onSurf: the light theme's green measures 1.85:1
+           on near-black, and its red 3.85:1 on cream — and the line telling you
+           which answer was right is the one you least want to squint at. */
+        const tone = !answered ? null
+          : right ? onSurf('#1f5145') : chosen ? onSurf('#6e2230') : null;
+        return React.createElement("div", {
+          key: oi,
+          onClick: answered ? undefined : () => this.answerChapterQuiz(oi),
+          style: {
+            display: 'flex', alignItems: 'center', gap: 10, minHeight: 46,
+            padding: '11px 14px', borderRadius: 13,
+            border: `1.5px solid ${tone || rd.border}`,
+            background: tone ? tone + '14' : rd.surf,
+            color: tone || rd.text, fontSize: 14, fontWeight: chosen || (answered && right) ? 700 : 500,
+            lineHeight: 1.4, cursor: answered ? 'default' : 'pointer'
+          }
+        }, React.createElement("span", {
+          "aria-hidden": "true",
+          style: { flexShrink: 0, fontSize: 12, fontWeight: 800, opacity: .7 }
+        }, 'ABC'[oi]), opt,
+           answered && right && React.createElement("span", {
+             style: { marginLeft: 'auto', flexShrink: 0 }
+           }, icon('check', { size: 17, stroke: onSurf('#1f5145') })));
+      })),
+      answered && run.pick === -1 && React.createElement("div", {
+        role: "status",
+        style: { fontSize: 12.5, color: rd.muted, marginTop: 10 }
+      }, 'Time ran out on that one.')));
   }
 
   /* \u2500\u2500 PDF \u2500\u2500
@@ -7673,17 +7900,23 @@ class App extends Component {
     const btn = (label, onClick, o = {}) => React.createElement("div", {
       onClick: o.disabled ? undefined : onClick,
       "aria-disabled": o.disabled ? 'true' : undefined,
+      "aria-label": o.label,
+      title: o.label,
+      role: o.label ? 'button' : undefined,
       style: {
         display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7,
-        minHeight: 44, padding: '11px 14px', borderRadius: 13, flex: o.flex,
+        minHeight: 44, padding: o.label ? 0 : '11px 14px', borderRadius: 13,
+        flex: o.flex, width: o.label ? 44 : undefined, flexShrink: 0,
         border: `1.5px solid ${o.disabled ? rd.border : (o.solid ? accent : rd.border)}`,
         background: o.solid && !o.disabled ? accent : rd.surf,
-        color: o.disabled ? rd.muted : (o.solid ? '#fff' : accent),
+        // the dark reader's accent is pale by construction, and white on it put
+        // the download glyph at 1.9:1 — now the only thing that button says
+        color: o.disabled ? rd.muted : (o.solid ? inkOn(accent) : accent),
         fontSize: 13.5, fontWeight: 600,
         cursor: o.disabled ? 'default' : 'pointer',
         opacity: o.disabled ? .55 : 1
       }
-    }, o.icon ? icon(o.icon, { size: 16 }) : null, label);
+    }, o.icon ? icon(o.icon, { size: 17 }) : null, label);
 
     const message = {
       blocked: 'This PDF is stored somewhere that does not allow other sites to read it, so it cannot be shown here. It will still open in your browser.',
@@ -7729,32 +7962,47 @@ class App extends Component {
         size: 26, stroke: status === 'error' ? '#a2564a' : rd.muted
       }), status === 'error' ? (message[st.pdfError] || message.blocked) : 'Opening the document\u2026')),
 
-      status === 'ready' && pages > 1 && React.createElement("div", {
-        style: { display: 'flex', alignItems: 'center', gap: 9, marginTop: 12 }
-      }, btn('\u2039', () => this.goPdfPage(page - 1), { disabled: page <= 1 }),
-         React.createElement("div", {
-           role: "status",
-           "aria-live": "polite",
-           style: {
-             flex: 1, textAlign: 'center', fontSize: 13.5, fontWeight: 600,
-             color: rd.text, minHeight: 44, display: 'flex', alignItems: 'center', justifyContent: 'center'
-           }
-         }, `Page ${page} of ${pages}`),
-         btn('\u203a', () => this.goPdfPage(page + 1), { disabled: page >= pages })),
-
-      status === 'ready' && React.createElement("div", {
-        style: { display: 'flex', gap: 9, marginTop: 9 }
-      }, btn('Zoom out', () => this.zoomPdf(1 / 1.25), { flex: 1, disabled: st.pdfZoom <= 0.75 }),
-         btn('Zoom in', () => this.zoomPdf(1.25), { flex: 1, disabled: st.pdfZoom >= 3 })),
+      /* Pager, zoom and the two ways out, on one line. Three stacked rows of
+         full-width buttons took a third of the screen under the page, which is
+         the space a chapter's quiz needs \u2014 so the labels become icons with the
+         label kept as the accessible name, and the strip scrolls sideways on a
+         narrow phone rather than wrapping back into rows. */
+      React.createElement("div", {
+        className: "s",
+        style: {
+          display: 'flex', alignItems: 'center', gap: 5, marginTop: 12,
+          overflowX: 'auto', paddingBottom: 2
+        }
+      }, status === 'ready' && pages > 1 && React.createElement(React.Fragment, null,
+           btn(null, () => this.goPdfPage(page - 1),
+               { icon: 'chevron-left', label: 'Previous page', disabled: page <= 1 }),
+           React.createElement("div", {
+             role: "status",
+             "aria-live": "polite",
+             style: {
+               flexShrink: 0, padding: '0 2px', textAlign: 'center', fontSize: 13,
+               fontWeight: 600, color: rd.text, minHeight: 44, whiteSpace: 'nowrap',
+               display: 'flex', alignItems: 'center', justifyContent: 'center'
+             }
+           }, `${page} / ${pages}`),
+           btn(null, () => this.goPdfPage(page + 1),
+               { icon: 'chevron-right', label: 'Next page', disabled: page >= pages })),
+         status === 'ready' && React.createElement(React.Fragment, null,
+           btn(null, () => this.zoomPdf(1 / 1.25),
+               { icon: 'zoom-out', label: 'Zoom out', disabled: st.pdfZoom <= 0.75 }),
+           btn(null, () => this.zoomPdf(1.25),
+               { icon: 'zoom-in', label: 'Zoom in', disabled: st.pdfZoom >= 3 })),
+         /* Pushed to the far end: the two that leave the page sit apart from the
+            four that move around inside it. */
+         React.createElement("div", { style: { flex: 1, minWidth: 4 } }),
+         btn(null, () => this.downloadPdf(url, r.title),
+             { icon: 'download', label: st.pdfSaving ? 'Saving\u2026' : 'Download PDF',
+               solid: true, disabled: st.pdfSaving }),
+         btn(null, () => window.open(url, '_blank', 'noopener,noreferrer'),
+             { icon: 'external-link', label: 'Open in browser' })),
 
       React.createElement("div", {
-        style: { display: 'flex', gap: 9, marginTop: 9 }
-      }, btn(st.pdfSaving ? 'Saving\u2026' : 'Download', () => this.downloadPdf(url, r.title),
-             { flex: 1, solid: true, icon: 'book-heart', disabled: st.pdfSaving }),
-         btn('Open in browser', () => window.open(url, '_blank', 'noopener,noreferrer'), { flex: 1 })),
-
-      React.createElement("div", {
-        style: { fontSize: 11.5, color: rd.muted, lineHeight: 1.6, textAlign: 'center', marginTop: 14 }
+        style: { fontSize: 11.5, color: rd.muted, lineHeight: 1.6, textAlign: 'center', marginTop: 10 }
       }, 'Downloaded copies are saved by your browser, not inside the app.'));
   }
 
@@ -8799,7 +9047,7 @@ class App extends Component {
       key: label, href, target: '_blank', rel: 'noopener noreferrer',
       style: {
         display: 'inline-flex', alignItems: 'center', minHeight: 40, padding: '9px 13px',
-        borderRadius: R.chip, background: '#e6efe9', color: onSurf('#1f5145'),
+        borderRadius: R.chip, background: '#e6efe9', color: '#1f5145',
         fontSize: 12.5, fontWeight: 700, textDecoration: 'none'
       }
     }, label);
@@ -8832,7 +9080,7 @@ class App extends Component {
         m.denom && React.createElement("div", {
           style: {
             display: 'inline-block', marginTop: 6, padding: '3px 9px', borderRadius: 7,
-            background: '#f3e6e8', color: onSurf('#6e2230'),
+            background: '#f3e6e8', color: '#6e2230',
             fontSize: 10, fontWeight: 800, letterSpacing: .6, textTransform: 'uppercase'
           }
         }, m.denom),
@@ -9859,6 +10107,9 @@ class App extends Component {
     }, {
       id: 'kids',
       label: 'Kids'
+    }, {
+      id: 'chapterQuiz',
+      label: 'Chapter Quiz'
     }, {
       id: 'health',
       label: 'Health'
@@ -11807,11 +12058,11 @@ class App extends Component {
           this.stopAdhan();
           this.adhanAudio = new Audio(a.file);
           this.adhanAudio.play().catch(() => this.showToast('That file could not be played'));
-        }, { background: '#f3ecd9', color: onSurf('#7d6220'), fontSize: 12, padding: '6px 10px' }),
+        }, { background: '#f3ecd9', color: '#7d6220', fontSize: 12, padding: '6px 10px' }),
         btn(renaming ? 'Close' : 'Rename', () => this.setState({
           azanRenaming: renaming ? null : a.key,
           azanRenameText: o.name || a.label
-        }), { background: '#e6efe9', color: onSurf('#1f5145'), fontSize: 12, padding: '6px 12px' }),
+        }), { background: '#e6efe9', color: '#1f5145', fontSize: 12, padding: '6px 12px' }),
         btn(hidden ? 'Show' : 'Hide', () => setOv(a.key, { hidden: !hidden },
           hidden ? 'Shown again' : 'Hidden from the app'),
           { background: hidden ? '#e6efe9' : '#fdf0f2', color: onSurf(hidden ? '#1f5145' : '#6e2230'),
@@ -11884,9 +12135,9 @@ class App extends Component {
         this.adhanAudio = new Audio(a.url);
         this.adhanAudio.play().catch(() => this.showToast('That file could not be played'));
       }, {
-        background: '#f3ecd9', color: onSurf('#7d6220'), fontSize: 12, padding: '6px 10px'
+        background: '#f3ecd9', color: '#7d6220', fontSize: 12, padding: '6px 10px'
       }), btn('Edit', () => this.startEdit(i, { ...a }), {
-        background: '#e6efe9', color: onSurf('#1f5145'), fontSize: 12, padding: '6px 12px'
+        background: '#e6efe9', color: '#1f5145', fontSize: 12, padding: '6px 12px'
       }), btn('\u2715', () => {
         const arr = [...list];
         arr.splice(i, 1);
@@ -13406,9 +13657,9 @@ class App extends Component {
               save('infallibles', 'liveInfallibles', a, 'Moved down');
             }, { padding: '6px 10px', fontSize: 12 }),
             btn('Edit', () => this.setState({ adminEditIdx: i, adminEditDraft: { ...p } }),
-              { background: '#e6efe9', color: onSurf('#1f5145'), padding: '6px 12px', fontSize: 12 }),
+              { background: '#e6efe9', color: '#1f5145', padding: '6px 12px', fontSize: 12 }),
             btn('Delete', () => save('infallibles', 'liveInfallibles', list.filter((_, x) => x !== i), 'Deleted'),
-              { background: '#f3e6e8', color: onSurf('#6e2230'), padding: '6px 12px', fontSize: 12 })))));
+              { background: '#f3e6e8', color: '#6e2230', padding: '6px 12px', fontSize: 12 })))));
     };
 
     /* ─ MOSQUES ─ */
@@ -13491,9 +13742,189 @@ class App extends Component {
             }, [m.city, m.county].filter(Boolean).join(', ') || m.address || '')),
           React.createElement("div", { style: { display: 'flex', gap: 6, flexShrink: 0 } },
             btn('Edit', () => this.setState({ adminEditIdx: i, adminEditDraft: { ...m } }),
-              { background: '#e6efe9', color: onSurf('#1f5145'), padding: '6px 12px', fontSize: 12 }),
+              { background: '#e6efe9', color: '#1f5145', padding: '6px 12px', fontSize: 12 }),
             btn('Delete', () => save('mosques', 'liveMosques', list.filter((_, x) => x !== i), 'Deleted'),
-              { background: '#f3e6e8', color: onSurf('#6e2230'), padding: '6px 12px', fontSize: 12 })))));
+              { background: '#f3e6e8', color: '#6e2230', padding: '6px 12px', fontSize: 12 })))));
+    };
+
+    /* ─ CHAPTER QUIZZES ─
+       Written against a chapter of a course book, and hidden by default: saving
+       one is not publishing it. Hidden, Live, or Scheduled for a date and time,
+       which is the case this exists for — a quiz set the week before and left to
+       open itself on the evening of the class. */
+    const renderChapterQuizSection = () => {
+      const list = st.liveChapterQuizzes || [];
+      const books = st.liveLearning || LEARNING;
+      const now = Date.now();
+      const bookOf = id => books.find(b => b.id === id) || null;
+      const chapterName = (bookId, file) => {
+        const b = bookOf(bookId);
+        const c = b && (b.chapters || []).find(x => x.file === file);
+        return c ? c.title : file || '—';
+      };
+      const stamp = s => {
+        const t = Date.parse(s);
+        if (isNaN(t)) return s;
+        const d = new Date(t);
+        const p = n => String(n).padStart(2, '0');
+        return `${p(d.getDate())}/${p(d.getMonth() + 1)}/${d.getFullYear()} ${p(d.getHours())}:${p(d.getMinutes())}`;
+      };
+      const rowStyle = {
+        display: 'flex', alignItems: 'center', gap: 10,
+        background: NEU.surf, boxShadow: neuUp(), border: NEU.edge,
+        borderRadius: 13, padding: '11px 13px', marginBottom: 9
+      };
+
+      if (editing) {
+        const d = st.adminEditDraft;
+        const isNew = st.adminEditIdx === -1;
+        const bookId = d.book || books[0].id;
+        const chapters = (bookOf(bookId) || { chapters: [] }).chapters || [];
+        const file = chapters.some(c => c.file === d.file) ? d.file : (chapters[0] || {}).file;
+        const opts = d._opts !== undefined ? d._opts : d.options || ['', '', ''];
+        const ans = d._ans !== undefined ? d._ans : String(d.answer !== undefined ? d.answer : 0);
+        const mode = d.mode || 'hidden';
+        const setOpt = (i, v) => {
+          const o = [...opts];
+          o[i] = v;
+          this.setDraft({ _opts: o });
+        };
+        const saveItem = () => {
+          if (!file) return this.showToast('Pick a chapter');
+          if (!(d.question || '').trim()) return this.showToast('Question is required');
+          if (opts.some(o => !(o || '').trim())) return this.showToast('All three options are required');
+          if (mode === 'scheduled' && !d.from) return this.showToast('Pick the date and time it should open');
+          const item = {
+            book: bookId,
+            file,
+            question: (d.question || '').trim(),
+            options: opts.map(o => o.trim()),
+            answer: parseInt(ans, 10) || 0,
+            mode,
+            from: mode === 'scheduled' ? d.from : ''
+          };
+          const a = [...list];
+          if (isNew) a.push(item);else a[st.adminEditIdx] = item;
+          save('chapterQuizzes', 'liveChapterQuizzes', a, isNew ? 'Quiz added!' : 'Quiz updated!');
+        };
+        const label = text => React.createElement("div", {
+          style: {
+            fontSize: 11, fontWeight: 700, color: NEU.muted, marginBottom: 5,
+            letterSpacing: .5, textTransform: 'uppercase'
+          }
+        }, text);
+        return React.createElement("div", { style: { padding: '0 0 20px' } },
+          React.createElement("div", {
+            style: { fontSize: 13, fontWeight: 700, color: NEU.head, marginBottom: 14 }
+          }, isNew ? 'Add a chapter quiz' : 'Edit chapter quiz'),
+          label('Course'),
+          React.createElement("select", {
+            value: bookId,
+            onChange: e => this.setDraft({ book: e.target.value, file: '' }),
+            style: { ...inp, cursor: 'pointer' }
+          }, books.map(b => React.createElement("option", { key: b.id, value: b.id }, b.title))),
+          label('Chapter'),
+          React.createElement("select", {
+            value: file || '',
+            onChange: e => this.setDraft({ file: e.target.value }),
+            style: { ...inp, cursor: 'pointer' }
+          }, chapters.map(c => React.createElement("option", { key: c.file, value: c.file },
+            (typeof c.no === 'number' ? 'Ch ' + c.no + ' — ' : '') + c.title))),
+          label('Question'),
+          React.createElement("textarea", {
+            value: d.question || '',
+            onChange: e => this.setDraft({ question: e.target.value }),
+            placeholder: 'What does the chapter say?',
+            maxLength: 200,
+            style: { ...inp, minHeight: 64, resize: 'none' }
+          }),
+          ['A', 'B', 'C'].map((L, i) => React.createElement("input", {
+            key: L,
+            value: opts[i] || '',
+            onChange: e => setOpt(i, e.target.value),
+            placeholder: `Option ${L}`,
+            maxLength: 90,
+            style: inp
+          })),
+          label('Correct answer'),
+          React.createElement("select", {
+            value: ans,
+            onChange: e => this.setDraft({ _ans: e.target.value }),
+            style: { ...inp, cursor: 'pointer' }
+          }, ['A', 'B', 'C'].map((L, i) => React.createElement("option", { key: L, value: String(i) },
+            `Option ${L}${(opts[i] || '').trim() ? ' — ' + opts[i] : ''}`))),
+          label('Who can see it'),
+          React.createElement("div", {
+            style: { display: 'flex', gap: 8, marginBottom: 11 }
+          }, [['hidden', 'Hidden'], ['live', 'Live now'], ['scheduled', 'Scheduled']].map(([k, text]) => {
+            const on = mode === k;
+            return React.createElement("div", {
+              key: k,
+              onClick: () => this.setDraft({ mode: k }),
+              style: {
+                flex: 1, textAlign: 'center', padding: '9px 4px', borderRadius: 10,
+                fontSize: 12.5, fontWeight: 700, cursor: 'pointer',
+                background: NEU.surf, border: NEU.edge,
+                color: on ? onSurf('#1f5145') : NEU.muted,
+                boxShadow: on ? neuIn(.55) : neuUp(.55)
+              }
+            }, text);
+          })),
+          mode === 'scheduled' && React.createElement(React.Fragment, null,
+            label('Opens at'),
+            React.createElement("input", {
+              type: "datetime-local",
+              value: d.from || '',
+              onChange: e => this.setDraft({ from: e.target.value }),
+              style: inp
+            }),
+            React.createElement("div", {
+              style: { fontSize: 11.5, color: NEU.faint, margin: '-5px 2px 12px', lineHeight: 1.5 }
+            }, 'Irish time, on the reader’s own clock. Until then the quiz is not in the app at all.')),
+          React.createElement("div", { style: { display: 'flex', gap: 9, marginTop: 4 } },
+            btn('Save', saveItem, { background: NEU.accent, color: inkOn(NEU.accent), boxShadow: neuUpOn('31,81,69', .7) }),
+            btn('Cancel', () => this.cancelEdit())));
+      }
+
+      return React.createElement("div", { style: { padding: '0 0 20px' } },
+        btn('+ Add a chapter quiz', () => this.setState({ adminEditIdx: -1, adminEditDraft: { mode: 'hidden' } }),
+          { background: NEU.accent, color: inkOn(NEU.accent), boxShadow: neuUpOn('31,81,69', .7), marginBottom: 14 }),
+        list.length === 0 && React.createElement("div", {
+          style: { fontSize: 13, color: NEU.muted, lineHeight: 1.6, padding: '4px 2px 12px' }
+        }, 'No chapter quizzes yet. One added here appears under the chapter it belongs to, in Madrasa › Learning — but only once it is Live, or once its scheduled time has passed.'),
+        list.map((q, i) => {
+          const live = chapterQuizLive(q, now);
+          const state = q.mode === 'live' ? ['Live', '#1f5145', '#e6efe9']
+            : q.mode === 'scheduled' ? (live ? ['Open', '#1f5145', '#e6efe9'] : ['Scheduled', '#7d6220', '#f3ecd9'])
+            : ['Hidden', '#6b6252', '#eae4d8'];
+          return React.createElement("div", { key: i, style: rowStyle },
+            React.createElement("div", { style: { flex: 1, minWidth: 0 } },
+              React.createElement("div", {
+                style: { fontSize: 13.5, fontWeight: 600, color: NEU.ink, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }
+              }, q.question || '(no question)'),
+              React.createElement("div", {
+                style: { fontSize: 11.5, color: NEU.muted, marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }
+              }, chapterName(q.book, q.file) + (q.mode === 'scheduled' && q.from ? ' · ' + stamp(q.from) : '')),
+              React.createElement("span", {
+                style: {
+                  display: 'inline-block', marginTop: 6, fontSize: 10, letterSpacing: .7,
+                  textTransform: 'uppercase', fontWeight: 700, padding: '3px 7px', borderRadius: 6,
+                  // not onSurf: the tint under it is a fixed pale one in both
+                  // themes, so lifting the ink for the dark theme would put pale
+                  // on pale — the rule ACCENT_ON_DARK states for exactly this
+                  color: state[1], background: state[2]
+                }
+              }, state[0])),
+            React.createElement("div", { style: { display: 'flex', gap: 6, flexShrink: 0 } },
+              btn(q.mode === 'live' ? 'Hide' : 'Show', () => save('chapterQuizzes', 'liveChapterQuizzes',
+                    list.map((x, n) => n === i ? { ...x, mode: x.mode === 'live' ? 'hidden' : 'live', from: '' } : x),
+                    q.mode === 'live' ? 'Hidden' : 'Live now'),
+                { background: '#e6efe9', color: '#1f5145', padding: '6px 12px', fontSize: 12 }),
+              btn('Edit', () => this.setState({ adminEditIdx: i, adminEditDraft: { ...q } }),
+                { background: '#eae4d8', color: '#4a4336', padding: '6px 12px', fontSize: 12 }),
+              btn('Delete', () => save('chapterQuizzes', 'liveChapterQuizzes', list.filter((_, x) => x !== i), 'Deleted'),
+                { background: '#f3e6e8', color: '#6e2230', padding: '6px 12px', fontSize: 12 })));
+        }));
     };
 
     const sectionContent = {
@@ -13510,7 +13941,8 @@ class App extends Component {
       kids: renderKidsSection,
       health: renderHealthSection,
       infallibles: renderInfalliblesSection,
-      mosques: renderMosquesSection
+      mosques: renderMosquesSection,
+      chapterQuiz: renderChapterQuizSection
     };
     const stats = [{
       label: 'Stories',
@@ -14985,7 +15417,7 @@ class App extends Component {
         "aria-hidden": "true",
         style: {
           flexShrink: 0, width: 48, height: 48, borderRadius: 14,
-          background: '#e6efe9', color: onSurf('#1f5145'),
+          background: '#e6efe9', color: '#1f5145',
           display: 'flex', alignItems: 'center', justifyContent: 'center'
         }
       }, icon('book-open', { size: 22 })), /*#__PURE__*/React.createElement("div", {
@@ -15067,7 +15499,11 @@ class App extends Component {
         onClick: () => this.openReading('learning', {
           title: c.title,
           ref: open.title,
-          pdf: LEARNING_BASE + open.id + '/' + c.file
+          pdf: LEARNING_BASE + open.id + '/' + c.file,
+          // what a chapter quiz is filed under: the two together name one
+          // chapter, and neither the title nor the number is unique on its own
+          book: open.id,
+          file: c.file
         }),
         style: {
           background: NEU.surf, boxShadow: neuUp(), border: NEU.edge,
