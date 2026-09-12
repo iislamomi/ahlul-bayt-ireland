@@ -3336,6 +3336,7 @@ class App extends Component {
       eventNotif: lsGet('eventNotif', true),
       remindBanner: lsGet('remindBanner', true),
       pushUpdates: lsGet('pushUpdates', true),
+      updateReady: false,
       adhanPlaying: false,
       adhanPending: false,
       adhanPreview: null,
@@ -5027,7 +5028,30 @@ class App extends Component {
     this.fetchAutoTimes();
     this.autoTimesTimer = setInterval(() => this.fetchAutoTimes(), 60 * 60 * 1000);
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('./sw.js').catch(() => {});
+      /* Registering once and never asking again is why a new version could sit
+         on the server for days without reaching an installed copy: the worker
+         serves the shell from its cache, and nothing here ever checked whether
+         a newer one existed. Ask on start, and again every time the app comes
+         back to the foreground — which for a phone is what "opened it" means. */
+      navigator.serviceWorker.register('./sw.js').then(reg => {
+        this._swReg = reg;
+        reg.update().catch(() => {});
+      }).catch(() => {});
+      /* A new worker taking control means the files under this page have already
+         changed. Reloading is the only way to stop running the version the page
+         booted with — but not out from under someone mid-quiz or mid-edit, who
+         gets the offer instead. */
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (this._reloadedForUpdate) return;
+        this._reloadedForUpdate = true;
+        const busy = this.state.adminEditIdx !== null || this.state.adminUnsaved || !!this.state.quizRun;
+        if (busy) { this.setState({ updateReady: true }); return; }
+        window.location.reload();
+      });
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState !== 'visible' || !this._swReg) return;
+        this._swReg.update().catch(() => {});
+      });
       // Re-subscribe to push if permission already granted (handles app restarts)
       if (typeof Notification !== 'undefined' && Notification.permission === 'granted'
           && lsGet('pushUpdates', true)) {
@@ -17846,7 +17870,36 @@ class App extends Component {
         // over the wallpaper sitting behind it
         background: onHome ? 'transparent' : st.dark ? NEU_D.bg : NEU.bg
       }
-    }, showBrand && this.renderBrandMark(), st.screen === 'home' && this.renderHome(st, next, cd, greg, hijri, salaam), st.screen === 'prayer' && this.renderPrayer(st, next, cd, greg), st.screen === 'library' && this.renderLibrary(st), st.screen === 'reading' && this.renderReading(st), st.screen === 'classifieds' && this.renderClassifieds(st), st.screen === 'more' && this.renderMore(st), st.screen === 'about' && this.renderAbout(), st.screen === 'location' && this.renderLocation(st), st.screen === 'offline' && this.renderOffline(), st.screen === 'admin' && this.renderAdmin(st), st.screen === 'calendar' && this.renderCalendar(st), st.screen === 'kids' && this.renderKids(st), st.screen === 'health' && this.renderHealth(st), st.screen === 'qibla' && this.renderQibla(st), st.screen === 'khums' && this.renderKhums(st), st.screen === 'tasbeeh' && this.renderTasbeeh(st), st.screen === 'wallpaper' && this.renderWallpaper(st), st.screen === 'infallibles' && this.renderInfallibles(st), st.screen === 'mosques' && this.renderMosques(st), st.screen === 'report' && this.renderReportIssue(st), st.screen === 'stories' && this.renderStories(st)), st.adhanPending && /*#__PURE__*/React.createElement("div", {
+    }, showBrand && this.renderBrandMark(), st.screen === 'home' && this.renderHome(st, next, cd, greg, hijri, salaam), st.screen === 'prayer' && this.renderPrayer(st, next, cd, greg), st.screen === 'library' && this.renderLibrary(st), st.screen === 'reading' && this.renderReading(st), st.screen === 'classifieds' && this.renderClassifieds(st), st.screen === 'more' && this.renderMore(st), st.screen === 'about' && this.renderAbout(), st.screen === 'location' && this.renderLocation(st), st.screen === 'offline' && this.renderOffline(), st.screen === 'admin' && this.renderAdmin(st), st.screen === 'calendar' && this.renderCalendar(st), st.screen === 'kids' && this.renderKids(st), st.screen === 'health' && this.renderHealth(st), st.screen === 'qibla' && this.renderQibla(st), st.screen === 'khums' && this.renderKhums(st), st.screen === 'tasbeeh' && this.renderTasbeeh(st), st.screen === 'wallpaper' && this.renderWallpaper(st), st.screen === 'infallibles' && this.renderInfallibles(st), st.screen === 'mosques' && this.renderMosques(st), st.screen === 'report' && this.renderReportIssue(st), st.screen === 'stories' && this.renderStories(st)), st.updateReady && /*#__PURE__*/React.createElement("div", {
+      onClick: () => window.location.reload(),
+      role: "button",
+      tabIndex: 0,
+      style: {
+        position: 'absolute', bottom: showNav ? 120 : 20, left: 16, right: 16, zIndex: 31,
+        background: 'linear-gradient(135deg,#1f5145,#163b30)', borderRadius: 18,
+        padding: '13px 16px', display: 'flex', alignItems: 'center', gap: 12,
+        cursor: 'pointer', boxShadow: '0 8px 28px -8px rgba(22,70,58,.55)',
+        animation: 'notif-in .35s cubic-bezier(.2,.9,.2,1) both'
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      "aria-hidden": "true",
+      style: {
+        width: 40, height: 40, borderRadius: 12, background: 'rgba(255,255,255,.12)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 20
+      }
+    }, "\u21bb"), /*#__PURE__*/React.createElement("div", {
+      style: { flex: 1 }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 10, letterSpacing: 1.1, textTransform: 'uppercase',
+        fontWeight: 700, color: '#d8b863'
+      }
+    }, 'Update ready'), /*#__PURE__*/React.createElement("div", {
+      style: { fontSize: 13.5, fontWeight: 600, color: '#f3ead4', marginTop: 2 }
+    }, 'Tap to load the new version')), /*#__PURE__*/React.createElement("span", {
+      "aria-hidden": "true",
+      style: { color: '#d8b863', fontSize: 20, flexShrink: 0 }
+    }, "\u203a")), st.adhanPending && /*#__PURE__*/React.createElement("div", {
       onClick: this.playAdhan,
       style: {
         position: 'absolute',
