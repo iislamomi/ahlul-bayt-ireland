@@ -1479,13 +1479,6 @@ const STRINGS = {
     'فارسی': 'منبع اوقات نماز',
     'Urdu': 'نماز کا ذریعہ'
   },
-  'prayer.alerts': {
-    English: 'Prayer Alerts',
-    'العربية': 'تنبيهات الصلاة',
-    'हिन्दी': 'नमाज़ अलर्ट',
-    'فارسی': 'هشدارهای نماز',
-    Urdu: 'نماز کے اطلاعات'
-  },
   'prayer.adhan': {
     English: 'Adhan (Prayer Call)',
     'العربية': 'الأذان',
@@ -1520,6 +1513,83 @@ const STRINGS = {
     'हिन्दी': 'हर नमाज़ पर स्क्रीन अलर्ट',
     'فارسی': 'هشدار روی صفحه برای هر نماز',
     'Urdu': 'ہر نماز پر اسکرین الرٹ'
+  },
+  'prayer.reminders': {
+    English: 'Reminders',
+    'العربية': 'التنبيهات',
+    'हिन्दी': 'रिमाइंडर',
+    'فارسی': 'یادآورها',
+    Urdu: 'یاد دہانیاں'
+  },
+  'prayer.azanNotif': {
+    English: 'Azan Notification',
+    'العربية': 'إشعار الأذان',
+    'हिन्दी': 'अज़ान सूचना',
+    'فارسی': 'اعلان اذان',
+    Urdu: 'اذان کی اطلاع'
+  },
+  'prayer.azanNotifSub': {
+    English: 'A notice on your phone when the azan sounds',
+    'العربية': 'إشعار على هاتفك عند رفع الأذان',
+    'हिन्दी': 'अज़ान होने पर फ़ोन पर सूचना',
+    'فارسی': 'اعلان روی گوشی هنگام پخش اذان',
+    Urdu: 'اذان کے وقت فون پر اطلاع'
+  },
+  'prayer.perPrayer': {
+    English: 'Azan at each prayer',
+    'العربية': 'الأذان لكل صلاة',
+    'हिन्दी': 'हर नमाज़ पर अज़ान',
+    'فارسی': 'اذان برای هر نماز',
+    Urdu: 'ہر نماز پر اذان'
+  },
+  'prayer.eventNotif': {
+    English: 'Today\u2019s Events',
+    'العربية': 'فعاليات اليوم',
+    'हिन्दी': 'आज के कार्यक्रम',
+    'فارسی': 'رویدادهای امروز',
+    Urdu: 'آج کے پروگرام'
+  },
+  'prayer.eventNotifSub': {
+    English: 'One notice when something is on today',
+    'العربية': 'إشعار واحد عند وجود فعالية اليوم',
+    'हिन्दी': 'आज कुछ हो तो एक सूचना',
+    'فارسی': 'یک اعلان وقتی امروز برنامه‌ای هست',
+    Urdu: 'آج کوئی پروگرام ہو تو ایک اطلاع'
+  },
+  'prayer.remindBanner': {
+    English: 'Reminder Banner',
+    'العربية': 'شريط التذكير',
+    'हिन्दी': 'रिमाइंडर बैनर',
+    'فارسی': 'نوار یادآوری',
+    Urdu: 'یاد دہانی بینر'
+  },
+  'prayer.remindBannerSub': {
+    English: 'The card at the top of the home screen',
+    'العربية': 'البطاقة أعلى الشاشة الرئيسية',
+    'हिन्दी': 'होम स्क्रीन के ऊपर कार्ड',
+    'فارسی': 'کارت بالای صفحه اصلی',
+    Urdu: 'ہوم اسکرین کے اوپر کارڈ'
+  },
+  'prayer.pushUpdates': {
+    English: 'Community Updates',
+    'العربية': 'تحديثات المجتمع',
+    'हिन्दी': 'कम्युनिटी अपडेट',
+    'فارسی': 'به‌روزرسانی‌های جامعه',
+    Urdu: 'کمیونٹی اپ ڈیٹس'
+  },
+  'prayer.pushUpdatesSub': {
+    English: 'New notices, listings and library additions',
+    'العربية': 'إشعارات وإعلانات وإضافات المكتبة',
+    'हिन्दी': 'नई सूचनाएं, विज्ञापन और लाइब्रेरी',
+    'فارسی': 'اطلاعیه‌ها، آگهی‌ها و افزوده‌های کتابخانه',
+    Urdu: 'نئی اطلاعات، اشتہارات اور لائبریری'
+  },
+  'prayer.needPerm': {
+    English: 'Allow notifications for these to reach your phone.',
+    'العربية': 'اسمح بالإشعارات لتصل إلى هاتفك.',
+    'हिन्दी': 'फ़ोन पर पाने के लिए सूचनाएं चालू करें।',
+    'فارسی': 'برای دریافت روی گوشی، اعلان‌ها را فعال کنید.',
+    Urdu: 'فون پر موصول ہونے کے لیے اطلاعات کی اجازت دیں۔'
   },
   'prayer.allowNotif': {
     English: 'Allow Notifications',
@@ -2721,6 +2791,25 @@ async function subscribeToPush() {
   } catch (e) { console.error('[ABI] subscribeToPush:', e.message); }
 }
 
+/* Off has to mean off on the server too: a push goes to every stored endpoint,
+   so dropping only the local subscription would leave the row behind and the
+   phone would keep buzzing for a while. The DELETE is best effort — the browser
+   unsubscribe is what actually stops it, and a dead endpoint is pruned by the
+   sender on its next 410. */
+async function unsubscribeFromPush() {
+  if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
+  try {
+    const reg = await navigator.serviceWorker.ready;
+    const sub = await reg.pushManager.getSubscription();
+    if (!sub) return;
+    const endpoint = sub.endpoint;
+    await sub.unsubscribe();
+    await fetch(SB_URL + '/rest/v1/push_subscriptions?endpoint=eq.' + encodeURIComponent(endpoint), {
+      method: 'DELETE', headers: SB_HEADS
+    });
+  } catch (e) { console.error('[ABI] unsubscribeFromPush:', e.message); }
+}
+
 async function sendPush(title, body, url) {
   try {
     await fetch(EDGE_PUSH, {
@@ -3239,6 +3328,14 @@ class App extends Component {
       adhanMuted: lsGet('adhanMuted', {}),
       adhanSound: lsGet('adhanSound', 'default'),
       notifEnabled: lsGet('notifEnabled', false),
+      /* Each reminder the app can raise, remembered separately. They default on
+         because a reminder nobody asked to silence is the point of the app; the
+         three that need the browser's permission stay silent until it is given,
+         whatever this says. */
+      azanNotif: lsGet('azanNotif', true),
+      eventNotif: lsGet('eventNotif', true),
+      remindBanner: lsGet('remindBanner', true),
+      pushUpdates: lsGet('pushUpdates', true),
       adhanPlaying: false,
       adhanPending: false,
       adhanPreview: null,
@@ -4213,6 +4310,21 @@ class App extends Component {
         this.showToast('That adhan could not be played');
       });
     });
+    /* One switch, one remembered flag. Everything in the Reminders card goes
+       through here except the push one, which has a server side to it. */
+    _defineProperty(this, "setPref", (key, on) => {
+      lsSet(key, on);
+      this.setState({ [key]: on });
+    });
+    _defineProperty(this, "setPushUpdates", on => {
+      lsSet('pushUpdates', on);
+      this.setState({ pushUpdates: on });
+      if (on) {
+        if (typeof Notification !== 'undefined' && Notification.permission === 'granted') subscribeToPush();
+      } else {
+        unsubscribeFromPush();
+      }
+    });
     _defineProperty(this, "setAdhanEnabled", on => {
       lsSet('adhanEnabled', on);
       if (!on) this.stopAdhan();
@@ -4264,11 +4376,22 @@ class App extends Component {
         notifEnabled,
         notifPermission
       } = this.state;
-      if (adhanEnabled && !this.state.adhanMuted[match.name]) this.playAdhan();
-      if (notifEnabled && Notification.permission === 'granted') {
-        const title = `${match.name} \xB7 Prayer Time`;
+      const azanSounding = adhanEnabled && !this.state.adhanMuted[match.name];
+      if (azanSounding) this.playAdhan();
+      /* One notification, never two. When the azan is sounding the notice says
+         so — that is what a reader who is away from the phone wants to know — and
+         when it is silenced the prayer time still has to reach them. Either
+         switch alone is enough to send it. */
+      const azanNotice = azanSounding && this.state.azanNotif;
+      const wantNotice = azanNotice || notifEnabled;
+      if (wantNotice && typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+        const title = azanNotice ? `Azan \xB7 ${match.name}` : `${match.name} \xB7 Prayer Time`;
         const opts = {
-          body: `${match.en} prayer — ${match.time} \xB7 ${this.prayerLocation().name}`,
+          body: azanNotice
+            ? `The call to prayer is sounding — ${match.time} \xB7 ${this.prayerLocation().name}`
+            : `${match.en} prayer — ${match.time} \xB7 ${this.prayerLocation().name}`,
+          icon: '/icon-192.png',
+          badge: '/icon-192.png',
           tag: 'prayer-alert',
           renotify: true,
           data: { url: '/' }
@@ -4288,6 +4411,7 @@ class App extends Component {
     _defineProperty(this, "notifyTodayEvents", () => {
       try {
         if (typeof Notification === 'undefined' || Notification.permission !== 'granted') return;
+        if (!this.state.eventNotif) return;
         const now = new Date();
         const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
         if (lsGet('evNotifDate', '') === todayStr) return;
@@ -4324,7 +4448,7 @@ class App extends Component {
         notifPermission: perm,
         notifEnabled: enabled
       });
-      if (perm === 'granted') { subscribeToPush(); this.showToast('Notifications enabled'); } else if (perm === 'denied') this.showToast('Notifications blocked — check browser settings');
+      if (perm === 'granted') { if (this.state.pushUpdates) subscribeToPush(); this.showToast('Notifications enabled'); } else if (perm === 'denied') this.showToast('Notifications blocked — check browser settings');
     });
     _defineProperty(this, "bearingToKaaba", (userLat, userLng) => {
       const kaabaLat = 21.4225;
@@ -4905,7 +5029,8 @@ class App extends Component {
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('./sw.js').catch(() => {});
       // Re-subscribe to push if permission already granted (handles app restarts)
-      if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+      if (typeof Notification !== 'undefined' && Notification.permission === 'granted'
+          && lsGet('pushUpdates', true)) {
         subscribeToPush();
       }
     }
@@ -5201,7 +5326,7 @@ class App extends Component {
     // events marked "Reminder" pop up as the banner; events marked "On this day" get the inline green banner
     const todayRems = (st.liveCalEvents || []).filter(e => e.notice === 'reminder' && e.date && eventOnDate(e, now));
     const todayRem = todayRems[0];
-    const showNotif = !!todayRem && !st.notifDismissed;
+    const showNotif = !!todayRem && !st.notifDismissed && st.remindBanner;
     const onThisDay = (st.liveCalEvents || []).filter(e => (e.notice || 'day') === 'day' && e.date && eventOnDate(e, now));
     const sc = prayerScene(next.name);
     const ploc = this.prayerLocation();
@@ -5998,6 +6123,192 @@ class App extends Component {
     });
     const notifPerm = st.notifPermission;
     const notifSupported = typeof Notification !== 'undefined';
+    const permGranted = notifSupported && notifPerm === 'granted';
+    /* The switch, lifted out of the two copies it used to exist in. The padding
+       is the tap target and the child is the switch: putting both on one element
+       let border-radius round the padded box while background-clip painted only
+       the middle band, which came out square-ended. */
+    const remSwitch = (on, onToggle, label) => /*#__PURE__*/React.createElement("div", {
+      onClick: onToggle,
+      role: "switch",
+      "aria-checked": on ? 'true' : 'false',
+      "aria-label": label,
+      style: { padding: '9px 0', margin: '-9px 0', cursor: 'pointer', flexShrink: 0 }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        width: 48, height: 26, borderRadius: 13,
+        background: on ? NEU.accent : NEU.sunk,
+        boxShadow: on ? 'none' : neuIn(.3),
+        position: 'relative', transition: 'background .2s'
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        position: 'absolute', top: 3, left: 3,
+        transform: on ? 'translateX(21px)' : 'none',
+        width: 20, height: 20, borderRadius: '50%',
+        background: NEU.hi, transition: 'transform .2s ease', boxShadow: neuUp(.35)
+      }
+    })));
+    /* needsPerm marks the three the browser has to agree to. Rather than a dead
+       switch, tapping one of those asks for permission — the setting is already
+       remembered, it just cannot reach the phone yet. */
+    const remRow = (o) => /*#__PURE__*/React.createElement("div", {
+      key: o.title,
+      style: {
+        padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 12,
+        borderBottom: o.last ? 'none' : NEU.rule,
+        opacity: o.needsPerm && !permGranted ? .6 : 1
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      "aria-hidden": "true",
+      style: {
+        width: 38, height: 38, borderRadius: 12, background: '#f0e7d3',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        fontSize: 18, flexShrink: 0
+      }
+    }, o.emoji), /*#__PURE__*/React.createElement("div", {
+      style: { flex: 1, minWidth: 0 }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: { fontSize: 14, fontWeight: 700, color: NEU.ink }
+    }, o.title), /*#__PURE__*/React.createElement("div", {
+      style: { fontSize: 11.5, color: NEU.muted, marginTop: 1, lineHeight: 1.45 }
+    }, o.sub)),
+       remSwitch(o.on, o.needsPerm && !permGranted ? this.requestNotifPermission : o.toggle, o.title));
+
+    const remHeading = text => /*#__PURE__*/React.createElement("div", {
+      key: 'h' + text,
+      style: {
+        fontSize: 11, fontWeight: 700, letterSpacing: .7, textTransform: 'uppercase',
+        color: '#a2967f', margin: '18px 0 10px'
+      }
+    }, text);
+    const remCard = children => /*#__PURE__*/React.createElement("div", {
+      style: {
+        background: NEU.surf, boxShadow: neuUp(), border: NEU.edge,
+        borderRadius: 18, overflow: 'hidden', marginBottom: 16
+      }
+    }, children);
+
+    /* The four the clock actually alerts on. Sunrise and sunset are in the
+       timetable but no azan is called for them, and saying so here is better
+       than a switch that would do nothing. */
+    const azanPrayers = ['Fajr', 'Dhuhr', 'Maghrib', 'Midnight'];
+    const perPrayerRow = /*#__PURE__*/React.createElement("div", {
+      key: 'perPrayer',
+      style: { padding: '12px 16px 14px', borderBottom: NEU.rule }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 10, letterSpacing: 1, textTransform: 'uppercase',
+        fontWeight: 700, color: NEU.muted, marginBottom: 8
+      }
+    }, this.t('prayer.perPrayer')), /*#__PURE__*/React.createElement("div", {
+      style: { display: 'flex', gap: 7 }
+    }, azanPrayers.map(name => {
+      const on = !st.adhanMuted[name];
+      return /*#__PURE__*/React.createElement("div", {
+        key: name,
+        onClick: () => this.toggleAdhanMute(name),
+        role: "switch",
+        "aria-checked": on ? 'true' : 'false',
+        "aria-label": name + ' azan',
+        style: {
+          flex: 1, textAlign: 'center', minHeight: 40, borderRadius: 11,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontSize: 12, fontWeight: 700, cursor: 'pointer',
+          // fixed pale tint, so the ink stays dark in both themes
+          background: on ? '#e6efe9' : NEU.sunk,
+          color: on ? '#1f5145' : NEU.muted,
+          border: NEU.edge,
+          boxShadow: on ? neuUp(.4) : neuIn(.4)
+        }
+      }, name);
+    })));
+
+    const remindersBlock = /*#__PURE__*/React.createElement(React.Fragment, null,
+      remHeading(this.t('prayer.reminders')),
+      remCard([
+        remRow({ emoji: '🔊', title: this.t('prayer.adhan'), sub: this.t('prayer.adhanSub'),
+          on: st.adhanEnabled, toggle: () => this.setAdhanEnabled(!st.adhanEnabled) }),
+        st.adhanEnabled ? perPrayerRow : null,
+        remRow({ emoji: '📣', title: this.t('prayer.azanNotif'), sub: this.t('prayer.azanNotifSub'),
+          on: st.azanNotif, needsPerm: true, toggle: () => this.setPref('azanNotif', !st.azanNotif) }),
+        remRow({ emoji: '⏰', title: this.t('prayer.notif'), sub: this.t('prayer.notifSub'),
+          on: st.notifEnabled, needsPerm: true, toggle: () => this.setPref('notifEnabled', !st.notifEnabled) }),
+        remRow({ emoji: '📅', title: this.t('prayer.eventNotif'), sub: this.t('prayer.eventNotifSub'),
+          on: st.eventNotif, needsPerm: true, toggle: () => this.setPref('eventNotif', !st.eventNotif) }),
+        remRow({ emoji: '🔔', title: this.t('prayer.remindBanner'), sub: this.t('prayer.remindBannerSub'),
+          on: st.remindBanner, toggle: () => this.setPref('remindBanner', !st.remindBanner) }),
+        remRow({ emoji: '📬', title: this.t('prayer.pushUpdates'), sub: this.t('prayer.pushUpdatesSub'),
+          on: st.pushUpdates, needsPerm: true, last: true,
+          toggle: () => this.setPushUpdates(!st.pushUpdates) }),
+        notifSupported && !permGranted ? /*#__PURE__*/React.createElement("div", {
+          key: 'perm',
+          style: { padding: '13px 16px', borderTop: NEU.rule }
+        }, /*#__PURE__*/React.createElement("div", {
+          style: { fontSize: 11.5, color: NEU.muted, lineHeight: 1.5, marginBottom: 9 }
+        }, this.t('prayer.needPerm')), /*#__PURE__*/React.createElement("div", {
+          onClick: this.requestNotifPermission,
+          style: {
+            textAlign: 'center', padding: '10px', minHeight: 44, boxSizing: 'border-box',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            borderRadius: 10, background: '#eef7f4', border: '1px solid #c4ddd7',
+            fontSize: 13, fontWeight: 600, color: '#1f5145', cursor: 'pointer'
+          }
+        }, this.t('prayer.allowNotif'))) : null,
+        !notifSupported ? /*#__PURE__*/React.createElement("div", {
+          key: 'nosupport',
+          style: { padding: '13px 16px', borderTop: NEU.rule, fontSize: 11.5, color: NEU.muted, lineHeight: 1.5 }
+        }, this.t('prayer.noNotif')) : null
+      ]),
+
+      st.adhanEnabled ? remHeading(this.t('prayer.adhanSound')) : null,
+      st.adhanEnabled ? remCard(/*#__PURE__*/React.createElement("div", {
+        style: { padding: 16 }
+      }, (() => {
+        /* The choice itself lives in More, where a setting is looked for. What is
+           left here is the answer to "which one is playing", and a way through to
+           change it — a label with a chevron, not a second copy of the control. */
+        const sounds = adhanSounds(st.liveAzans, st.liveAzanOverrides);
+        const chosen = sounds.find(x => x.key === st.adhanSound) || sounds[0];
+        return /*#__PURE__*/React.createElement("div", {
+          onClick: () => this.go('more'),
+          className: "neu-press",
+          style: {
+            display: 'flex', alignItems: 'center', gap: 10,
+            padding: '11px 13px', minHeight: 48, boxSizing: 'border-box',
+            borderRadius: 13, cursor: 'pointer',
+            background: NEU.sunk, border: NEU.edge, boxShadow: neuIn(.5)
+          }
+        }, /*#__PURE__*/React.createElement("div", {
+          style: {
+            flex: 1, minWidth: 0, fontSize: 13.5, fontWeight: 700, color: NEU.ink,
+            whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'
+          }
+        }, chosen.label), /*#__PURE__*/React.createElement("span", {
+          "aria-hidden": "true",
+          style: { color: NEU.muted, fontSize: 20, flexShrink: 0 }
+        }, "\u203a"));
+      })(), /*#__PURE__*/React.createElement("div", {
+        style: { display: 'flex', gap: 8, marginTop: 10 }
+      }, !st.adhanPlaying ? /*#__PURE__*/React.createElement("div", {
+        onClick: this.playAdhan,
+        style: {
+          flex: 1, textAlign: 'center', padding: '11px', minHeight: 44, boxSizing: 'border-box',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          borderRadius: 10, background: '#eef7f4', border: '1px solid #c4ddd7',
+          fontSize: 13, fontWeight: 600, color: '#1f5145', cursor: 'pointer'
+        }
+      }, this.t('prayer.testAdhan')) : /*#__PURE__*/React.createElement("div", {
+        onClick: this.stopAdhan,
+        style: {
+          flex: 1, textAlign: 'center', padding: '11px', minHeight: 44, boxSizing: 'border-box',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          borderRadius: 10, background: '#fdf0f2', border: '1px solid #dfc4ca',
+          fontSize: 13, fontWeight: 600, color: '#6e2230', cursor: 'pointer'
+        }
+      }, this.t('prayer.stop'))))) : null
+    );
+
     return /*#__PURE__*/React.createElement("div", {
       style: {
         padding: '8px 20px 100px'
@@ -6363,285 +6674,7 @@ class App extends Component {
           fontSize: 18
         }
       }, "✓"));
-    }), /*#__PURE__*/React.createElement("div", {
-      style: {
-        fontSize: 11,
-        fontWeight: 700,
-        letterSpacing: .7,
-        textTransform: 'uppercase',
-        color: '#a2967f',
-        margin: '18px 0 10px'
-      }
-    }, this.t('prayer.alerts')), /*#__PURE__*/React.createElement("div", {
-      style: {
-        background: NEU.surf, boxShadow: neuUp(),
-        border: NEU.edge,
-        borderRadius: 18,
-        overflow: 'hidden',
-        marginBottom: 16
-      }
-    }, /*#__PURE__*/React.createElement("div", {
-      style: {
-        padding: '16px',
-        borderBottom: '1px solid #f0e8d8'
-      }
-    }, /*#__PURE__*/React.createElement("div", {
-      style: {
-        display: 'flex',
-        alignItems: 'center',
-        gap: 12
-      }
-    }, /*#__PURE__*/React.createElement("div", {
-      style: {
-        width: 38,
-        height: 38,
-        borderRadius: 12,
-        background: '#f0e7d3',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        fontSize: 18,
-        flexShrink: 0
-      }
-    }, "🔔"), /*#__PURE__*/React.createElement("div", {
-      style: {
-        flex: 1
-      }
-    }, /*#__PURE__*/React.createElement("div", {
-      style: {
-        fontSize: 14,
-        fontWeight: 700,
-        color: NEU.ink
-      }
-    }, this.t('prayer.adhan')), /*#__PURE__*/React.createElement("div", {
-      style: {
-        fontSize: 11.5,
-        color: NEU.muted,
-        marginTop: 1
-      }
-    }, this.t('prayer.adhanSub'))), /*#__PURE__*/React.createElement("div", {
-      onClick: () => this.setAdhanEnabled(!st.adhanEnabled),
-      role: "switch",
-      "aria-checked": st.adhanEnabled ? 'true' : 'false',
-      "aria-label": 'Adhan sound',
-      /* The padding is the tap target and the child is the switch. Putting both
-         on one element meant border-radius rounded the padded box while
-         background-clip painted only the middle band of it — below where the
-         corners curve, so the pill came out square-ended. */
-      style: {
-        padding: '9px 0',
-        margin: '-9px 0',
-        cursor: 'pointer',
-        flexShrink: 0
-      }
-    }, /*#__PURE__*/React.createElement("div", {
-      style: {
-        width: 48,
-        height: 26,
-        borderRadius: 13,
-        background: st.adhanEnabled ? NEU.accent : NEU.sunk,
-        boxShadow: st.adhanEnabled ? 'none' : neuIn(.3),
-        position: 'relative',
-        transition: 'background .2s'
-      }
-    }, /*#__PURE__*/React.createElement("div", {
-      style: {
-        position: 'absolute',
-        top: 3,
-        left: 3,
-        transform: st.adhanEnabled ? 'translateX(21px)' : 'none',
-        width: 20,
-        height: 20,
-        borderRadius: '50%',
-        background: NEU.hi,
-        transition: 'transform .2s ease',
-        boxShadow: neuUp(.35)
-      }
-    })))), st.adhanEnabled && (() => {
-      /* The choice itself lives in More, where a setting is looked for. What is
-         left here is the answer to "which one is playing", and a way through to
-         change it — a label with a chevron, not a second copy of the control. */
-      const sounds = adhanSounds(st.liveAzans, st.liveAzanOverrides);
-      const chosen = sounds.find(x => x.key === st.adhanSound) || sounds[0];
-      return /*#__PURE__*/React.createElement("div", {
-        onClick: () => this.go('more'),
-        className: "neu-press",
-        style: {
-          display: 'flex', alignItems: 'center', gap: 10, marginTop: 12,
-          padding: '11px 13px', minHeight: 48, boxSizing: 'border-box',
-          borderRadius: 13, cursor: 'pointer',
-          background: NEU.surf, border: NEU.edge, boxShadow: neuUp(.6)
-        }
-      }, /*#__PURE__*/React.createElement("div", {
-        style: { flex: 1, minWidth: 0 }
-      }, /*#__PURE__*/React.createElement("div", {
-        style: {
-          fontSize: 10, letterSpacing: 1, textTransform: 'uppercase',
-          fontWeight: 700, color: NEU.muted
-        }
-      }, this.t('prayer.adhanSound')), /*#__PURE__*/React.createElement("div", {
-        style: {
-          fontSize: 13, fontWeight: 700, color: NEU.ink, marginTop: 2,
-          whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'
-        }
-      }, chosen.label)), /*#__PURE__*/React.createElement("span", {
-        "aria-hidden": "true",
-        style: { color: NEU.muted, fontSize: 20, flexShrink: 0 }
-      }, "›"));
-    })(), st.adhanEnabled && /*#__PURE__*/React.createElement("div", {
-      style: {
-        display: 'flex',
-        gap: 8,
-        marginTop: 10
-      }
-    }, !st.adhanPlaying ? /*#__PURE__*/React.createElement("div", {
-      onClick: this.playAdhan,
-      style: {
-        flex: 1,
-        textAlign: 'center',
-        padding: '9px',
-        borderRadius: 10,
-        background: '#eef7f4',
-        border: '1px solid #c4ddd7',
-        fontSize: 13,
-        fontWeight: 600,
-        color: onSurf('#1f5145'),
-        cursor: 'pointer'
-      }
-    }, this.t('prayer.testAdhan')) : /*#__PURE__*/React.createElement("div", {
-      onClick: this.stopAdhan,
-      style: {
-        flex: 1,
-        textAlign: 'center',
-        padding: '9px',
-        borderRadius: 10,
-        background: '#fdf0f2',
-        border: '1px solid #dfc4ca',
-        fontSize: 13,
-        fontWeight: 600,
-        color: onSurf('#6e2230'),
-        cursor: 'pointer'
-      }
-    }, this.t('prayer.stop')))), /*#__PURE__*/React.createElement("div", {
-      style: {
-        padding: '16px'
-      }
-    }, /*#__PURE__*/React.createElement("div", {
-      style: {
-        display: 'flex',
-        alignItems: 'center',
-        gap: 12
-      }
-    }, /*#__PURE__*/React.createElement("div", {
-      style: {
-        width: 38,
-        height: 38,
-        borderRadius: 12,
-        background: '#f0e7d3',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        fontSize: 18,
-        flexShrink: 0
-      }
-    }, "📲"), /*#__PURE__*/React.createElement("div", {
-      style: {
-        flex: 1
-      }
-    }, /*#__PURE__*/React.createElement("div", {
-      style: {
-        fontSize: 14,
-        fontWeight: 700,
-        color: NEU.ink
-      }
-    }, this.t('prayer.notif')), /*#__PURE__*/React.createElement("div", {
-      style: {
-        fontSize: 11.5,
-        color: NEU.muted,
-        marginTop: 1
-      }
-    }, this.t('prayer.notifSub'))), notifSupported && notifPerm === 'granted' ? /*#__PURE__*/React.createElement("div", {
-      onClick: () => this.setState(s => {
-        const n = !s.notifEnabled;
-        lsSet('notifEnabled', n);
-        return {
-          notifEnabled: n
-        };
-      }),
-      role: "switch",
-      "aria-checked": st.notifEnabled ? 'true' : 'false',
-      "aria-label": 'Prayer notifications',
-      // padding is the tap target, the child is the switch — see the adhan one above
-      style: {
-        padding: '9px 0',
-        margin: '-9px 0',
-        cursor: 'pointer',
-        flexShrink: 0
-      }
-    }, /*#__PURE__*/React.createElement("div", {
-      style: {
-        width: 48,
-        height: 26,
-        borderRadius: 13,
-        background: st.notifEnabled ? NEU.accent : NEU.sunk,
-        boxShadow: st.notifEnabled ? 'none' : neuIn(.3),
-        position: 'relative',
-        transition: 'background .2s'
-      }
-    }, /*#__PURE__*/React.createElement("div", {
-      style: {
-        position: 'absolute',
-        top: 3,
-        left: 3,
-        transform: st.notifEnabled ? 'translateX(21px)' : 'none',
-        width: 20,
-        height: 20,
-        borderRadius: '50%',
-        background: NEU.hi,
-        transition: 'transform .2s ease',
-        boxShadow: neuUp(.35)
-      }
-    }))) : /*#__PURE__*/React.createElement("div", {
-      style: {
-        width: 48,
-        height: 26,
-        borderRadius: 13,
-        background: '#e4ddd1',
-        position: 'relative',
-        flexShrink: 0
-      }
-    }, /*#__PURE__*/React.createElement("div", {
-      style: {
-        position: 'absolute',
-        top: 3,
-        left: 3,
-        width: 20,
-        height: 20,
-        borderRadius: '50%',
-        background: NEU.hi,
-        boxShadow: neuUp(.35)
-      }
-    }))), notifSupported && notifPerm !== 'granted' && /*#__PURE__*/React.createElement("div", {
-      onClick: this.requestNotifPermission,
-      style: {
-        marginTop: 12,
-        textAlign: 'center',
-        padding: '9px',
-        borderRadius: 10,
-        background: '#eef7f4',
-        border: '1px solid #c4ddd7',
-        fontSize: 13,
-        fontWeight: 600,
-        color: onSurf('#1f5145'),
-        cursor: 'pointer'
-      }
-    }, this.t('prayer.allowNotif')), !notifSupported && /*#__PURE__*/React.createElement("div", {
-      style: {
-        marginTop: 8,
-        fontSize: 11.5,
-        color: NEU.muted
-      }
-    }, this.t('prayer.noNotif'))))), tab !== 'settings' && /*#__PURE__*/React.createElement("div", {
+    }), remindersBlock), tab !== 'settings' && /*#__PURE__*/React.createElement("div", {
       style: {
         textAlign: 'center',
         fontSize: 11.5,
