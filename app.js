@@ -1584,6 +1584,20 @@ const STRINGS = {
     'فارسی': 'اطلاعیه‌ها، آگهی‌ها و افزوده‌های کتابخانه',
     Urdu: 'نئی اطلاعات، اشتہارات اور لائبریری'
   },
+  'prayer.quizNotif': {
+    English: 'Quiz Alerts',
+    'العربية': 'تنبيهات الاختبار',
+    'हिन्दी': 'क्विज़ अलर्ट',
+    'فارسی': 'هشدار آزمون',
+    Urdu: 'کوئز الرٹس'
+  },
+  'prayer.quizNotifSub': {
+    English: 'When a Madrasa quiz goes live',
+    'العربية': 'عند بدء اختبار في المدرسة',
+    'हिन्दी': 'जब मदरसा का क्विज़ शुरू हो',
+    'فارسی': 'وقتی آزمون مدرسه باز می‌شود',
+    Urdu: 'جب مدرسہ کا کوئز شروع ہو'
+  },
   'prayer.needPerm': {
     English: 'Allow notifications for these to reach your phone.',
     'العربية': 'اسمح بالإشعارات لتصل إلى هاتفك.',
@@ -2810,12 +2824,12 @@ async function unsubscribeFromPush() {
   } catch (e) { console.error('[ABI] unsubscribeFromPush:', e.message); }
 }
 
-async function sendPush(title, body, url) {
+async function sendPush(title, body, url, type) {
   try {
     await fetch(EDGE_PUSH, {
       method: 'POST',
       headers: SB_HEADS,
-      body: JSON.stringify({ title, body, url: url || '/' })
+      body: JSON.stringify({ title, body, url: url || '/', type: type || 'update' })
     });
   } catch (e) { console.error('[ABI] sendPush:', e.message); }
 }
@@ -2832,6 +2846,27 @@ async function sendAdhanPush(prayerName, timeStr) {
     if (r.status === 201) {
       await sendPush(prayerName + ' \xB7 Prayer Time', prayerName + ' — ' + timeStr + ' \xB7 Dublin, Ireland', '/');
     }
+  } catch (e) { /* ignore */ }
+}
+
+/* Which opening a notice is about. A scheduled quiz is one event per chapter
+   per opening time, however many questions it has; one turned on by hand has
+   no time of its own, so the hour stands in — which also keeps a Hide-then-Show
+   from announcing the same chapter twice. */
+const quizLiveKey = q => 'quizlive_' + q.book + '_' + q.file + '_' +
+  (q.mode === 'scheduled' && q.from ? q.from : new Date().toISOString().slice(0, 13));
+
+/* The azan's lock, reused: the first device to write the row sends the push,
+   and every other device that noticed the same opening gets a conflict and
+   stays quiet. */
+async function sendQuizLivePush(key, title, body, url) {
+  try {
+    const r = await fetch(SB_URL + '/rest/v1/content', {
+      method: 'POST',
+      headers: { ...SB_HEADS, Prefer: 'return=minimal' },
+      body: JSON.stringify({ key, value: { sent: true }, updated_at: new Date().toISOString() })
+    });
+    if (r.status === 201) await sendPush(title, body, url, 'quiz-live');
   } catch (e) { /* ignore */ }
 }
 
@@ -3336,6 +3371,7 @@ class App extends Component {
       eventNotif: lsGet('eventNotif', true),
       remindBanner: lsGet('remindBanner', true),
       pushUpdates: lsGet('pushUpdates', true),
+      quizNotif: lsGet('quizNotif', true),
       updateReady: false,
       adhanPlaying: false,
       adhanPending: false,
@@ -4409,6 +4445,72 @@ class App extends Component {
       }
       this.showToast(`${match.name} — ${match.time}`);
     });
+    _defineProperty(this, "chapterRef", (book, file) => {
+      const b = (this.state.liveLearning || LEARNING).find(x => x.id === book)
+        || LEARNING.find(x => x.id === book);
+      const c = b && (b.chapters || []).find(x => x.file === file);
+      return b && c ? { b, c } : null;
+    });
+    /* Tapping the notice opens the chapter the quiz is under. A notice that
+       leaves the reader hunting for the quiz it announced has done half its
+       job. */
+    _defineProperty(this, "openChapterByKey", key => {
+      const s = String(key || '');
+      const cut = s.indexOf('/');
+      if (cut < 1) return false;
+      const ref = this.chapterRef(s.slice(0, cut), s.slice(cut + 1));
+      if (!ref) return false;
+      this.setState({ screen: 'kids', kidsTab: 'books', learnBook: ref.b.id });
+      this.openReading('learning', {
+        title: ref.c.title, ref: ref.b.title,
+        pdf: LEARNING_BASE + ref.b.id + '/' + ref.c.file,
+        book: ref.b.id, file: ref.c.file
+      });
+      return true;
+    });
+    _defineProperty(this, "announceQuizLive", (q, opts) => {
+      const o = opts || {};
+      const key = quizLiveKey(q);
+      const seen = lsGet('quizLiveSeen', {});
+      if (seen[key]) return;
+      const cutoff = Date.now() - 2 * 86400000;
+      Object.keys(seen).forEach(k => { if (seen[k] < cutoff) delete seen[k]; });
+      seen[key] = Date.now();
+      lsSet('quizLiveSeen', seen);
+      const ref = this.chapterRef(q.book, q.file);
+      const title = 'Quiz live \xB7 ' + (ref ? ref.c.title : 'Madrasa');
+      const body = (ref ? ref.b.title + ' \u2014 ' : '') + 'tap to take it';
+      const url = '/?quiz=' + encodeURIComponent(q.book + '/' + q.file);
+      // the administrator who just pressed Show does not need telling
+      if (!o.fromAdmin && this.state.quizNotif
+          && typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+        const nopts = { body, icon: '/icon-192.png', badge: '/icon-192.png', tag: 'quiz-live', renotify: true, data: { url } };
+        if ('serviceWorker' in navigator) {
+          navigator.serviceWorker.ready.then(reg => reg.showNotification(title, nopts)).catch(() => {
+            try { new Notification(title, nopts); } catch (e) {}
+          });
+        } else {
+          try { new Notification(title, nopts); } catch (e) {}
+        }
+      }
+      sendQuizLivePush(key, title, body, url);
+    });
+    /* A quiz set to open at a time has nobody pressing anything when the time
+       comes, so the clock watches for it. Only openings in the last half hour
+       count: a quiz that opened last week is not news to a phone that has just
+       been switched on. */
+    _defineProperty(this, "checkQuizLive", now => {
+      const minute = now.toISOString().slice(0, 16);
+      if (this._lastQuizCheck === minute) return;
+      this._lastQuizCheck = minute;
+      const t0 = now.getTime();
+      (this.state.liveChapterQuizzes || []).forEach(q => {
+        if (q.mode !== 'scheduled' || !q.from || !chapterQuizLive(q, t0)) return;
+        const at = Date.parse(q.from);
+        if (isNaN(at) || t0 - at > 30 * 60000) return;
+        this.announceQuizLive(q);
+      });
+    });
     _defineProperty(this, "notifyTodayEvents", () => {
       try {
         if (typeof Notification === 'undefined' || Notification.permission !== 'granted') return;
@@ -5019,6 +5121,7 @@ class App extends Component {
         now
       });
       this.checkPrayerAlert(now);
+      this.checkQuizLive(now);
       if (now.getDate() !== this._autoDay) {
         this._autoDay = now.getDate();
         this.fetchAutoTimes();
@@ -5033,6 +5136,10 @@ class App extends Component {
          serves the shell from its cache, and nothing here ever checked whether
          a newer one existed. Ask on start, and again every time the app comes
          back to the foreground — which for a phone is what "opened it" means. */
+      /* Whether a worker was already in charge when this page loaded. Without
+         one, the first controllerchange is the very first install claiming the
+         page, and nothing on disk has changed underneath it. */
+      const hadController = !!navigator.serviceWorker.controller;
       navigator.serviceWorker.register('./sw.js').then(reg => {
         this._swReg = reg;
         reg.update().catch(() => {});
@@ -5042,9 +5149,11 @@ class App extends Component {
          booted with — but not out from under someone mid-quiz or mid-edit, who
          gets the offer instead. */
       navigator.serviceWorker.addEventListener('controllerchange', () => {
-        if (this._reloadedForUpdate) return;
+        if (!hadController || this._reloadedForUpdate) return;
         this._reloadedForUpdate = true;
-        const busy = this.state.adminEditIdx !== null || this.state.adminUnsaved || !!this.state.quizRun;
+        // reading counts as busy too: a reload drops the reader out of the text
+        const busy = this.state.adminEditIdx !== null || this.state.adminUnsaved
+          || !!this.state.quizRun || this.state.screen === 'reading';
         if (busy) { this.setState({ updateReady: true }); return; }
         window.location.reload();
       });
@@ -5052,12 +5161,31 @@ class App extends Component {
         if (document.visibilityState !== 'visible' || !this._swReg) return;
         this._swReg.update().catch(() => {});
       });
+      /* A notice tapped while the app is already open focuses that window, and
+         focusing does not navigate it — so the worker hands over the address. */
+      navigator.serviceWorker.addEventListener('message', ev => {
+        const d = ev.data || {};
+        if (d.type !== 'open-url' || !d.url) return;
+        try {
+          const q = new URL(d.url, location.origin).searchParams.get('quiz');
+          if (q) this.openChapterByKey(q);
+        } catch (e) {}
+      });
       // Re-subscribe to push if permission already granted (handles app restarts)
       if (typeof Notification !== 'undefined' && Notification.permission === 'granted'
           && lsGet('pushUpdates', true)) {
         subscribeToPush();
       }
     }
+    /* Opened from a quiz notice with the app closed: the address says which
+       chapter. Cleared straight away, so a reload does not reopen it. */
+    try {
+      const quizKey = new URLSearchParams(location.search).get('quiz');
+      if (quizKey) {
+        history.replaceState(null, '', location.pathname);
+        setTimeout(() => this.openChapterByKey(quizKey), 0);
+      }
+    } catch (e) {}
     window.addEventListener('beforeinstallprompt', e => {
       e.preventDefault();
       this.deferredPrompt = e;
@@ -6262,6 +6390,8 @@ class App extends Component {
           on: st.eventNotif, needsPerm: true, toggle: () => this.setPref('eventNotif', !st.eventNotif) }),
         remRow({ emoji: '🔔', title: this.t('prayer.remindBanner'), sub: this.t('prayer.remindBannerSub'),
           on: st.remindBanner, toggle: () => this.setPref('remindBanner', !st.remindBanner) }),
+        remRow({ emoji: '🎯', title: this.t('prayer.quizNotif'), sub: this.t('prayer.quizNotifSub'),
+          on: st.quizNotif, needsPerm: true, toggle: () => this.setPref('quizNotif', !st.quizNotif) }),
         remRow({ emoji: '📬', title: this.t('prayer.pushUpdates'), sub: this.t('prayer.pushUpdatesSub'),
           on: st.pushUpdates, needsPerm: true, last: true,
           toggle: () => this.setPushUpdates(!st.pushUpdates) }),
@@ -13868,8 +13998,11 @@ class App extends Component {
             from: mode === 'scheduled' ? d.from : ''
           };
           const a = [...list];
+          const wasLive = !isNew && chapterQuizLive(list[st.adminEditIdx], Date.now());
           if (isNew) a.push(item);else a[st.adminEditIdx] = item;
           save('chapterQuizzes', 'liveChapterQuizzes', a, isNew ? 'Quiz added!' : 'Quiz updated!');
+          // correcting the wording of a quiz that is already open is not news
+          if (!wasLive && chapterQuizLive(item, Date.now())) this.announceQuizLive(item, { fromAdmin: true });
         };
         const label = text => React.createElement("div", {
           style: {
@@ -13980,9 +14113,12 @@ class App extends Component {
                 }
               }, state[0])),
             React.createElement("div", { style: { display: 'flex', gap: 6, flexShrink: 0 } },
-              btn(q.mode === 'live' ? 'Hide' : 'Show', () => save('chapterQuizzes', 'liveChapterQuizzes',
-                    list.map((x, n) => n === i ? { ...x, mode: x.mode === 'live' ? 'hidden' : 'live', from: '' } : x),
-                    q.mode === 'live' ? 'Hidden' : 'Live now'),
+              btn(q.mode === 'live' ? 'Hide' : 'Show', () => {
+                const next = { ...q, mode: q.mode === 'live' ? 'hidden' : 'live', from: '' };
+                save('chapterQuizzes', 'liveChapterQuizzes', list.map((x, n) => n === i ? next : x),
+                  q.mode === 'live' ? 'Hidden' : 'Live now');
+                if (!chapterQuizLive(q, Date.now()) && chapterQuizLive(next, Date.now())) this.announceQuizLive(next, { fromAdmin: true });
+              },
                 { background: '#e6efe9', color: '#1f5145', padding: '6px 12px', fontSize: 12 }),
               btn('Edit', () => this.setState({ adminEditIdx: i, adminEditDraft: { ...q } }),
                 { background: '#eae4d8', color: '#4a4336', padding: '6px 12px', fontSize: 12 }),

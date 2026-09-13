@@ -1,4 +1,4 @@
-const CACHE = 'abi-v117';
+const CACHE = 'abi-v118';
 const SHELL = ['/', '/index.html', '/manifest.json',
   '/vendor/react.min.js', '/vendor/react-dom.min.js', '/app.js',
   '/adhan.mp3', '/app-title-logo.png', '/app-title-logo-dark.png',
@@ -42,7 +42,10 @@ self.addEventListener('notificationclick', e => {
   e.waitUntil(
     clients.matchAll({ type:'window', includeUncontrolled:true }).then(cs => {
       const open = cs.find(c => c.url.includes(self.location.origin) && 'focus' in c);
-      return open ? open.focus() : clients.openWindow(url);
+      if (!open) return clients.openWindow(url);
+      // focusing does not navigate, so the page is told where the notice pointed
+      open.postMessage({ type: 'open-url', url });
+      return open.focus();
     })
   );
 });
