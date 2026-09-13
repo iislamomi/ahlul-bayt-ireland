@@ -6472,7 +6472,8 @@ class App extends Component {
         fontSize: 10.5,
         letterSpacing: .6,
         textTransform: 'uppercase',
-        color: '#a2967f',
+        // fixed ink: the header band is a fixed pale tint in both themes
+        color: '#5d564a',
         fontWeight: 700
       }
     }, /*#__PURE__*/React.createElement("div", {
@@ -6500,9 +6501,10 @@ class App extends Component {
       style: {
         display: 'flex',
         padding: '13px 16px',
-        borderBottom: i === monthRows.length - 1 ? 'none' : '1px solid #f1ebdd',
+        borderBottom: i === monthRows.length - 1 ? 'none' : NEU.rule,
         fontSize: 13.5,
-        color: '#4a443a',
+        // today's row keeps its fixed pale tint, so its ink stays fixed dark too
+        color: m.today ? '#4a443a' : NEU.ink2,
         fontVariantNumeric: 'tabular-nums',
         background: m.today ? '#f3f7f4' : 'transparent'
       }
@@ -6511,7 +6513,7 @@ class App extends Component {
         width: 56,
         flexShrink: 0,
         fontWeight: 600,
-        color: m.today ? '#1f5145' : '#4a443a'
+        color: m.today ? '#1f5145' : NEU.ink2
       }
     }, m.day), /*#__PURE__*/React.createElement("div", {
       style: {
@@ -6533,7 +6535,7 @@ class App extends Component {
         padding: '13px 16px',
         background: '#faf6ec',
         fontSize: 11,
-        color: '#a2967f',
+        color: '#6b6252',
         lineHeight: 1.45
       }
     }, mNow.toLocaleDateString('en-IE', {
