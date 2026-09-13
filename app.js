@@ -1934,20 +1934,6 @@ const STRINGS = {
     'فارسی': 'مدیریت محتوا (کارمندان)',
     'Urdu': 'مواد کا انتظام (عملہ)'
   },
-  'more.about': {
-    English: 'About & Install',
-    'العربية': 'حول وتثبيت',
-    'हिन्दी': 'के बारे में और इंस्टॉल',
-    'فارسی': 'درباره و نصب',
-    Urdu: 'بارے میں اور انسٹال'
-  },
-  'more.aboutSub': {
-    English: 'Add Ahlul Bayt Ireland to home screen',
-    'العربية': 'أضف أهل البيت إيرلندا للشاشة الرئيسية',
-    'हिन्दी': 'होम स्क्रीन पर जोड़ें',
-    'فارسی': 'به صفحه اصلی اضافه کنید',
-    Urdu: 'ہوم اسکرین پر شامل کریں'
-  },
   'more.offline': {
     English: 'Offline Mode',
     'العربية': 'وضع عدم الاتصال',
@@ -1961,6 +1947,13 @@ const STRINGS = {
     'हिन्दी': 'ऑफलाइन मोड का पूर्वावलोकन',
     'فارسی': 'پیش‌نمایش حالت آفلاین',
     'Urdu': 'آف لائن موڈ کا جائزہ'
+  },
+  'more.settingsSub': {
+    English: 'Prayer times, reminders and the adhan',
+    'العربية': 'أوقات الصلاة والتنبيهات والأذان',
+    'हिन्दी': 'नमाज़ का समय, रिमाइंडर और अज़ान',
+    'فارسی': 'اوقات نماز، یادآورها و اذان',
+    Urdu: 'نماز کے اوقات، یاد دہانیاں اور اذان'
   },
   'more.language': {
     English: 'App Language',
@@ -4890,19 +4883,6 @@ class App extends Component {
         toast: null
       }), 2600);
     });
-    _defineProperty(this, "handleInstall", () => {
-      if (this.deferredPrompt) {
-        this.deferredPrompt.prompt();
-        this.deferredPrompt.userChoice.then(() => {
-          this.deferredPrompt = null;
-          this.setState({
-            install: false
-          });
-        });
-      } else {
-        this.go('about');
-      }
-    });
     _defineProperty(this, "handleShare", () => {
       const r = this.state.readingItem || {};
       /* The Arabic is what gets shared. It is the text itself rather than one
@@ -6273,195 +6253,6 @@ class App extends Component {
       color: active ? NEU.accent : NEU.muted,
       boxShadow: active ? neuUp(.5) : 'none'
     });
-    const notifPerm = st.notifPermission;
-    const notifSupported = typeof Notification !== 'undefined';
-    const permGranted = notifSupported && notifPerm === 'granted';
-    /* The switch, lifted out of the two copies it used to exist in. The padding
-       is the tap target and the child is the switch: putting both on one element
-       let border-radius round the padded box while background-clip painted only
-       the middle band, which came out square-ended. */
-    const remSwitch = (on, onToggle, label) => /*#__PURE__*/React.createElement("div", {
-      onClick: onToggle,
-      role: "switch",
-      "aria-checked": on ? 'true' : 'false',
-      "aria-label": label,
-      style: { padding: '9px 0', margin: '-9px 0', cursor: 'pointer', flexShrink: 0 }
-    }, /*#__PURE__*/React.createElement("div", {
-      style: {
-        width: 48, height: 26, borderRadius: 13,
-        background: on ? NEU.accent : NEU.sunk,
-        boxShadow: on ? 'none' : neuIn(.3),
-        position: 'relative', transition: 'background .2s'
-      }
-    }, /*#__PURE__*/React.createElement("div", {
-      style: {
-        position: 'absolute', top: 3, left: 3,
-        transform: on ? 'translateX(21px)' : 'none',
-        width: 20, height: 20, borderRadius: '50%',
-        background: NEU.hi, transition: 'transform .2s ease', boxShadow: neuUp(.35)
-      }
-    })));
-    /* needsPerm marks the three the browser has to agree to. Rather than a dead
-       switch, tapping one of those asks for permission — the setting is already
-       remembered, it just cannot reach the phone yet. */
-    const remRow = (o) => /*#__PURE__*/React.createElement("div", {
-      key: o.title,
-      style: {
-        padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 12,
-        borderBottom: o.last ? 'none' : NEU.rule,
-        opacity: o.needsPerm && !permGranted ? .6 : 1
-      }
-    }, /*#__PURE__*/React.createElement("div", {
-      "aria-hidden": "true",
-      style: {
-        width: 38, height: 38, borderRadius: 12, background: '#f0e7d3',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        fontSize: 18, flexShrink: 0
-      }
-    }, o.emoji), /*#__PURE__*/React.createElement("div", {
-      style: { flex: 1, minWidth: 0 }
-    }, /*#__PURE__*/React.createElement("div", {
-      style: { fontSize: 14, fontWeight: 700, color: NEU.ink }
-    }, o.title), /*#__PURE__*/React.createElement("div", {
-      style: { fontSize: 11.5, color: NEU.muted, marginTop: 1, lineHeight: 1.45 }
-    }, o.sub)),
-       remSwitch(o.on, o.needsPerm && !permGranted ? this.requestNotifPermission : o.toggle, o.title));
-
-    const remHeading = text => /*#__PURE__*/React.createElement("div", {
-      key: 'h' + text,
-      style: {
-        fontSize: 11, fontWeight: 700, letterSpacing: .7, textTransform: 'uppercase',
-        color: '#a2967f', margin: '18px 0 10px'
-      }
-    }, text);
-    const remCard = children => /*#__PURE__*/React.createElement("div", {
-      style: {
-        background: NEU.surf, boxShadow: neuUp(), border: NEU.edge,
-        borderRadius: 18, overflow: 'hidden', marginBottom: 16
-      }
-    }, children);
-
-    /* The four the clock actually alerts on. Sunrise and sunset are in the
-       timetable but no azan is called for them, and saying so here is better
-       than a switch that would do nothing. */
-    const azanPrayers = ['Fajr', 'Dhuhr', 'Maghrib', 'Midnight'];
-    const perPrayerRow = /*#__PURE__*/React.createElement("div", {
-      key: 'perPrayer',
-      style: { padding: '12px 16px 14px', borderBottom: NEU.rule }
-    }, /*#__PURE__*/React.createElement("div", {
-      style: {
-        fontSize: 10, letterSpacing: 1, textTransform: 'uppercase',
-        fontWeight: 700, color: NEU.muted, marginBottom: 8
-      }
-    }, this.t('prayer.perPrayer')), /*#__PURE__*/React.createElement("div", {
-      style: { display: 'flex', gap: 7 }
-    }, azanPrayers.map(name => {
-      const on = !st.adhanMuted[name];
-      return /*#__PURE__*/React.createElement("div", {
-        key: name,
-        onClick: () => this.toggleAdhanMute(name),
-        role: "switch",
-        "aria-checked": on ? 'true' : 'false',
-        "aria-label": name + ' azan',
-        style: {
-          flex: 1, textAlign: 'center', minHeight: 40, borderRadius: 11,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: 12, fontWeight: 700, cursor: 'pointer',
-          // fixed pale tint, so the ink stays dark in both themes
-          background: on ? '#e6efe9' : NEU.sunk,
-          color: on ? '#1f5145' : NEU.muted,
-          border: NEU.edge,
-          boxShadow: on ? neuUp(.4) : neuIn(.4)
-        }
-      }, name);
-    })));
-
-    const remindersBlock = /*#__PURE__*/React.createElement(React.Fragment, null,
-      remHeading(this.t('prayer.reminders')),
-      remCard([
-        remRow({ emoji: '🔊', title: this.t('prayer.adhan'), sub: this.t('prayer.adhanSub'),
-          on: st.adhanEnabled, toggle: () => this.setAdhanEnabled(!st.adhanEnabled) }),
-        st.adhanEnabled ? perPrayerRow : null,
-        remRow({ emoji: '📣', title: this.t('prayer.azanNotif'), sub: this.t('prayer.azanNotifSub'),
-          on: st.azanNotif, needsPerm: true, toggle: () => this.setPref('azanNotif', !st.azanNotif) }),
-        remRow({ emoji: '⏰', title: this.t('prayer.notif'), sub: this.t('prayer.notifSub'),
-          on: st.notifEnabled, needsPerm: true, toggle: () => this.setPref('notifEnabled', !st.notifEnabled) }),
-        remRow({ emoji: '📅', title: this.t('prayer.eventNotif'), sub: this.t('prayer.eventNotifSub'),
-          on: st.eventNotif, needsPerm: true, toggle: () => this.setPref('eventNotif', !st.eventNotif) }),
-        remRow({ emoji: '🔔', title: this.t('prayer.remindBanner'), sub: this.t('prayer.remindBannerSub'),
-          on: st.remindBanner, toggle: () => this.setPref('remindBanner', !st.remindBanner) }),
-        remRow({ emoji: '🎯', title: this.t('prayer.quizNotif'), sub: this.t('prayer.quizNotifSub'),
-          on: st.quizNotif, needsPerm: true, toggle: () => this.setPref('quizNotif', !st.quizNotif) }),
-        remRow({ emoji: '📬', title: this.t('prayer.pushUpdates'), sub: this.t('prayer.pushUpdatesSub'),
-          on: st.pushUpdates, needsPerm: true, last: true,
-          toggle: () => this.setPushUpdates(!st.pushUpdates) }),
-        notifSupported && !permGranted ? /*#__PURE__*/React.createElement("div", {
-          key: 'perm',
-          style: { padding: '13px 16px', borderTop: NEU.rule }
-        }, /*#__PURE__*/React.createElement("div", {
-          style: { fontSize: 11.5, color: NEU.muted, lineHeight: 1.5, marginBottom: 9 }
-        }, this.t('prayer.needPerm')), /*#__PURE__*/React.createElement("div", {
-          onClick: this.requestNotifPermission,
-          style: {
-            textAlign: 'center', padding: '10px', minHeight: 44, boxSizing: 'border-box',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            borderRadius: 10, background: '#eef7f4', border: '1px solid #c4ddd7',
-            fontSize: 13, fontWeight: 600, color: '#1f5145', cursor: 'pointer'
-          }
-        }, this.t('prayer.allowNotif'))) : null,
-        !notifSupported ? /*#__PURE__*/React.createElement("div", {
-          key: 'nosupport',
-          style: { padding: '13px 16px', borderTop: NEU.rule, fontSize: 11.5, color: NEU.muted, lineHeight: 1.5 }
-        }, this.t('prayer.noNotif')) : null
-      ]),
-
-      st.adhanEnabled ? remHeading(this.t('prayer.adhanSound')) : null,
-      st.adhanEnabled ? remCard(/*#__PURE__*/React.createElement("div", {
-        style: { padding: 16 }
-      }, (() => {
-        /* The choice itself lives in More, where a setting is looked for. What is
-           left here is the answer to "which one is playing", and a way through to
-           change it — a label with a chevron, not a second copy of the control. */
-        const sounds = adhanSounds(st.liveAzans, st.liveAzanOverrides);
-        const chosen = sounds.find(x => x.key === st.adhanSound) || sounds[0];
-        return /*#__PURE__*/React.createElement("div", {
-          onClick: () => this.go('more'),
-          className: "neu-press",
-          style: {
-            display: 'flex', alignItems: 'center', gap: 10,
-            padding: '11px 13px', minHeight: 48, boxSizing: 'border-box',
-            borderRadius: 13, cursor: 'pointer',
-            background: NEU.sunk, border: NEU.edge, boxShadow: neuIn(.5)
-          }
-        }, /*#__PURE__*/React.createElement("div", {
-          style: {
-            flex: 1, minWidth: 0, fontSize: 13.5, fontWeight: 700, color: NEU.ink,
-            whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'
-          }
-        }, chosen.label), /*#__PURE__*/React.createElement("span", {
-          "aria-hidden": "true",
-          style: { color: NEU.muted, fontSize: 20, flexShrink: 0 }
-        }, "\u203a"));
-      })(), /*#__PURE__*/React.createElement("div", {
-        style: { display: 'flex', gap: 8, marginTop: 10 }
-      }, !st.adhanPlaying ? /*#__PURE__*/React.createElement("div", {
-        onClick: this.playAdhan,
-        style: {
-          flex: 1, textAlign: 'center', padding: '11px', minHeight: 44, boxSizing: 'border-box',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          borderRadius: 10, background: '#eef7f4', border: '1px solid #c4ddd7',
-          fontSize: 13, fontWeight: 600, color: '#1f5145', cursor: 'pointer'
-        }
-      }, this.t('prayer.testAdhan')) : /*#__PURE__*/React.createElement("div", {
-        onClick: this.stopAdhan,
-        style: {
-          flex: 1, textAlign: 'center', padding: '11px', minHeight: 44, boxSizing: 'border-box',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          borderRadius: 10, background: '#fdf0f2', border: '1px solid #dfc4ca',
-          fontSize: 13, fontWeight: 600, color: '#6e2230', cursor: 'pointer'
-        }
-      }, this.t('prayer.stop'))))) : null
-    );
 
     return /*#__PURE__*/React.createElement("div", {
       style: {
@@ -6505,12 +6296,7 @@ class App extends Component {
         prayerTab: 'month'
       }),
       style: tabStyle(tab === 'month')
-    }, this.t('prayer.monthly')), /*#__PURE__*/React.createElement("div", {
-      onClick: () => this.setState({
-        prayerTab: 'settings'
-      }),
-      style: tabStyle(tab === 'settings')
-    }, this.t('prayer.settings'))), /*#__PURE__*/React.createElement("div", {
+    }, this.t('prayer.monthly'))), /*#__PURE__*/React.createElement("div", {
       onClick: () => this.go('location'),
       className: "neu-press",
       style: {
@@ -6753,82 +6539,7 @@ class App extends Component {
     }, mNow.toLocaleDateString('en-IE', {
       month: 'long',
       year: 'numeric'
-    }), " · Dublin · ", autoLive ? 'live Jaʿfarī times, updated daily' : `anchored to saved ${activePreset.name} times`, " · adjusted by sun position")), tab === 'settings' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
-      style: {
-        fontSize: 11,
-        fontWeight: 700,
-        letterSpacing: .7,
-        textTransform: 'uppercase',
-        color: '#a2967f',
-        marginBottom: 10
-      }
-    }, this.t('prayer.source')), /*#__PURE__*/React.createElement("div", {
-      style: {
-        fontSize: 12,
-        fontWeight: 600,
-        color: autoLive ? '#1f5145' : '#7d6220',
-        marginBottom: 10
-      }
-    }, autoLive ? '● Live — synced today with the Jaʿfarī (Leva, Qum) calculation for Dublin' : '○ Live sync unavailable — showing saved times'), (abiPresets(st.livePrayerPresets)).map(preset => {
-      const active = st.prayerPreset === preset.id;
-      return /*#__PURE__*/React.createElement("div", {
-        key: preset.id,
-        onClick: () => this.setState({
-          prayerPreset: preset.id
-        }),
-        style: {
-          display: 'flex',
-          alignItems: 'center',
-          gap: 14,
-          background: NEU.surf, boxShadow: neuUp(),
-          border: `2px solid ${active ? '#1f5145' : 'rgba(203,195,178,.55)'}`,
-          borderRadius: 16,
-          padding: '14px 16px',
-          cursor: 'pointer',
-          marginBottom: 10,
-          transition: 'border-color .2s'
-        }
-      }, /*#__PURE__*/React.createElement("div", {
-        style: {
-          width: 22,
-          height: 22,
-          borderRadius: '50%',
-          border: `2px solid ${active ? NEU.accent : 'rgba(203,195,178,.9)'}`,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          flexShrink: 0
-        }
-      }, active && /*#__PURE__*/React.createElement("div", {
-        style: {
-          width: 11,
-          height: 11,
-          borderRadius: '50%',
-          background: '#1f5145'
-        }
-      })), /*#__PURE__*/React.createElement("div", {
-        style: {
-          flex: 1
-        }
-      }, /*#__PURE__*/React.createElement("div", {
-        style: {
-          fontSize: 14,
-          fontWeight: 700,
-          color: NEU.ink
-        }
-      }, preset.name), /*#__PURE__*/React.createElement("div", {
-        style: {
-          fontSize: 11.5,
-          color: NEU.muted,
-          marginTop: 2
-        }
-      }, preset.sub)), active && /*#__PURE__*/React.createElement("span", {
-        style: {
-          color: onSurf('#1f5145'),
-          fontSize: 18
-        }
-      }, "✓"));
-    }), remindersBlock), tab !== 'settings' && /*#__PURE__*/React.createElement("div", {
+    }), " · Dublin · ", autoLive ? 'live Jaʿfarī times, updated daily' : `anchored to saved ${activePreset.name} times`, " · adjusted by sun position")), /*#__PURE__*/React.createElement("div", {
       style: {
         textAlign: 'center',
         fontSize: 11.5,
@@ -9385,8 +9096,306 @@ class App extends Component {
         }, busy ? 'Sending…' : 'Send report')));
   }
 
+  /* ── SETTINGS ──
+     Reached from More, where a setting is looked for. It used to be the third
+     tab on the prayer screen, beside the times, which is not where anyone goes
+     to change a reminder. */
+  renderSettings(st) {
+    const sNow = st.now || new Date();
+    const autoLive = !!st.liveAutoTimes && st.liveAutoTimes.date ===
+      `${sNow.getFullYear()}-${String(sNow.getMonth() + 1).padStart(2, '0')}-${String(sNow.getDate()).padStart(2, '0')}`;
+    const notifPerm = st.notifPermission;
+    const notifSupported = typeof Notification !== 'undefined';
+    const permGranted = notifSupported && notifPerm === 'granted';
+    /* The switch, lifted out of the two copies it used to exist in. The padding
+       is the tap target and the child is the switch: putting both on one element
+       let border-radius round the padded box while background-clip painted only
+       the middle band, which came out square-ended. */
+    const remSwitch = (on, onToggle, label) => /*#__PURE__*/React.createElement("div", {
+      onClick: onToggle,
+      role: "switch",
+      "aria-checked": on ? 'true' : 'false',
+      "aria-label": label,
+      style: { padding: '9px 0', margin: '-9px 0', cursor: 'pointer', flexShrink: 0 }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        width: 48, height: 26, borderRadius: 13,
+        background: on ? NEU.accent : NEU.sunk,
+        boxShadow: on ? 'none' : neuIn(.3),
+        position: 'relative', transition: 'background .2s'
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        position: 'absolute', top: 3, left: 3,
+        transform: on ? 'translateX(21px)' : 'none',
+        width: 20, height: 20, borderRadius: '50%',
+        background: NEU.hi, transition: 'transform .2s ease', boxShadow: neuUp(.35)
+      }
+    })));
+    /* needsPerm marks the three the browser has to agree to. Rather than a dead
+       switch, tapping one of those asks for permission — the setting is already
+       remembered, it just cannot reach the phone yet. */
+    const remRow = (o) => /*#__PURE__*/React.createElement("div", {
+      key: o.title,
+      style: {
+        padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 12,
+        borderBottom: o.last ? 'none' : NEU.rule,
+        opacity: o.needsPerm && !permGranted ? .6 : 1
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      "aria-hidden": "true",
+      style: {
+        width: 38, height: 38, borderRadius: 12, background: '#f0e7d3',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        fontSize: 18, flexShrink: 0
+      }
+    }, o.emoji), /*#__PURE__*/React.createElement("div", {
+      style: { flex: 1, minWidth: 0 }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: { fontSize: 14, fontWeight: 700, color: NEU.ink }
+    }, o.title), /*#__PURE__*/React.createElement("div", {
+      style: { fontSize: 11.5, color: NEU.muted, marginTop: 1, lineHeight: 1.45 }
+    }, o.sub)),
+       remSwitch(o.on, o.needsPerm && !permGranted ? this.requestNotifPermission : o.toggle, o.title));
+
+    const remHeading = text => /*#__PURE__*/React.createElement("div", {
+      key: 'h' + text,
+      style: {
+        fontSize: 11, fontWeight: 700, letterSpacing: .7, textTransform: 'uppercase',
+        color: NEU.label, margin: '18px 0 10px'
+      }
+    }, text);
+    const remCard = children => /*#__PURE__*/React.createElement("div", {
+      style: {
+        background: NEU.surf, boxShadow: neuUp(), border: NEU.edge,
+        borderRadius: 18, overflow: 'hidden', marginBottom: 16
+      }
+    }, children);
+
+    /* The four the clock actually alerts on. Sunrise and sunset are in the
+       timetable but no azan is called for them, and saying so here is better
+       than a switch that would do nothing. */
+    const azanPrayers = ['Fajr', 'Dhuhr', 'Maghrib', 'Midnight'];
+    const perPrayerRow = /*#__PURE__*/React.createElement("div", {
+      key: 'perPrayer',
+      style: { padding: '12px 16px 14px', borderBottom: NEU.rule }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 10, letterSpacing: 1, textTransform: 'uppercase',
+        fontWeight: 700, color: NEU.muted, marginBottom: 8
+      }
+    }, this.t('prayer.perPrayer')), /*#__PURE__*/React.createElement("div", {
+      style: { display: 'flex', gap: 7 }
+    }, azanPrayers.map(name => {
+      const on = !st.adhanMuted[name];
+      return /*#__PURE__*/React.createElement("div", {
+        key: name,
+        onClick: () => this.toggleAdhanMute(name),
+        role: "switch",
+        "aria-checked": on ? 'true' : 'false',
+        "aria-label": name + ' azan',
+        style: {
+          flex: 1, textAlign: 'center', minHeight: 40, borderRadius: 11,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontSize: 12, fontWeight: 700, cursor: 'pointer',
+          // fixed pale tint, so the ink stays dark in both themes
+          background: on ? '#e6efe9' : NEU.sunk,
+          color: on ? '#1f5145' : NEU.muted,
+          border: NEU.edge,
+          boxShadow: on ? neuUp(.4) : neuIn(.4)
+        }
+      }, name);
+    })));
+
+    const remindersBlock = /*#__PURE__*/React.createElement(React.Fragment, null,
+      remHeading(this.t('prayer.reminders')),
+      remCard([
+        remRow({ emoji: '🔊', title: this.t('prayer.adhan'), sub: this.t('prayer.adhanSub'),
+          on: st.adhanEnabled, toggle: () => this.setAdhanEnabled(!st.adhanEnabled) }),
+        st.adhanEnabled ? perPrayerRow : null,
+        remRow({ emoji: '📣', title: this.t('prayer.azanNotif'), sub: this.t('prayer.azanNotifSub'),
+          on: st.azanNotif, needsPerm: true, toggle: () => this.setPref('azanNotif', !st.azanNotif) }),
+        remRow({ emoji: '⏰', title: this.t('prayer.notif'), sub: this.t('prayer.notifSub'),
+          on: st.notifEnabled, needsPerm: true, toggle: () => this.setPref('notifEnabled', !st.notifEnabled) }),
+        remRow({ emoji: '📅', title: this.t('prayer.eventNotif'), sub: this.t('prayer.eventNotifSub'),
+          on: st.eventNotif, needsPerm: true, toggle: () => this.setPref('eventNotif', !st.eventNotif) }),
+        remRow({ emoji: '🔔', title: this.t('prayer.remindBanner'), sub: this.t('prayer.remindBannerSub'),
+          on: st.remindBanner, toggle: () => this.setPref('remindBanner', !st.remindBanner) }),
+        remRow({ emoji: '🎯', title: this.t('prayer.quizNotif'), sub: this.t('prayer.quizNotifSub'),
+          on: st.quizNotif, needsPerm: true, toggle: () => this.setPref('quizNotif', !st.quizNotif) }),
+        remRow({ emoji: '📬', title: this.t('prayer.pushUpdates'), sub: this.t('prayer.pushUpdatesSub'),
+          on: st.pushUpdates, needsPerm: true, last: true,
+          toggle: () => this.setPushUpdates(!st.pushUpdates) }),
+        notifSupported && !permGranted ? /*#__PURE__*/React.createElement("div", {
+          key: 'perm',
+          style: { padding: '13px 16px', borderTop: NEU.rule }
+        }, /*#__PURE__*/React.createElement("div", {
+          style: { fontSize: 11.5, color: NEU.muted, lineHeight: 1.5, marginBottom: 9 }
+        }, this.t('prayer.needPerm')), /*#__PURE__*/React.createElement("div", {
+          onClick: this.requestNotifPermission,
+          style: {
+            textAlign: 'center', padding: '10px', minHeight: 44, boxSizing: 'border-box',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            borderRadius: 10, background: '#eef7f4', border: '1px solid #c4ddd7',
+            fontSize: 13, fontWeight: 600, color: '#1f5145', cursor: 'pointer'
+          }
+        }, this.t('prayer.allowNotif'))) : null,
+        !notifSupported ? /*#__PURE__*/React.createElement("div", {
+          key: 'nosupport',
+          style: { padding: '13px 16px', borderTop: NEU.rule, fontSize: 11.5, color: NEU.muted, lineHeight: 1.5 }
+        }, this.t('prayer.noNotif')) : null
+      ]),
+
+      st.adhanEnabled ? remHeading(this.t('prayer.adhanSound')) : null,
+      st.adhanEnabled ? remCard(/*#__PURE__*/React.createElement("div", {
+        style: { padding: 16 }
+      }, (() => {
+        /* The choice itself lives in More, where a setting is looked for. What is
+           left here is the answer to "which one is playing", and a way through to
+           change it — a label with a chevron, not a second copy of the control. */
+        const sounds = adhanSounds(st.liveAzans, st.liveAzanOverrides);
+        const chosen = sounds.find(x => x.key === st.adhanSound) || sounds[0];
+        return /*#__PURE__*/React.createElement("div", {
+          onClick: () => this.go('more'),
+          className: "neu-press",
+          style: {
+            display: 'flex', alignItems: 'center', gap: 10,
+            padding: '11px 13px', minHeight: 48, boxSizing: 'border-box',
+            borderRadius: 13, cursor: 'pointer',
+            background: NEU.sunk, border: NEU.edge, boxShadow: neuIn(.5)
+          }
+        }, /*#__PURE__*/React.createElement("div", {
+          style: {
+            flex: 1, minWidth: 0, fontSize: 13.5, fontWeight: 700, color: NEU.ink,
+            whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'
+          }
+        }, chosen.label), /*#__PURE__*/React.createElement("span", {
+          "aria-hidden": "true",
+          style: { color: NEU.muted, fontSize: 20, flexShrink: 0 }
+        }, "\u203a"));
+      })(), /*#__PURE__*/React.createElement("div", {
+        style: { display: 'flex', gap: 8, marginTop: 10 }
+      }, !st.adhanPlaying ? /*#__PURE__*/React.createElement("div", {
+        onClick: this.playAdhan,
+        style: {
+          flex: 1, textAlign: 'center', padding: '11px', minHeight: 44, boxSizing: 'border-box',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          borderRadius: 10, background: '#eef7f4', border: '1px solid #c4ddd7',
+          fontSize: 13, fontWeight: 600, color: '#1f5145', cursor: 'pointer'
+        }
+      }, this.t('prayer.testAdhan')) : /*#__PURE__*/React.createElement("div", {
+        onClick: this.stopAdhan,
+        style: {
+          flex: 1, textAlign: 'center', padding: '11px', minHeight: 44, boxSizing: 'border-box',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          borderRadius: 10, background: '#fdf0f2', border: '1px solid #dfc4ca',
+          fontSize: 13, fontWeight: 600, color: '#6e2230', cursor: 'pointer'
+        }
+      }, this.t('prayer.stop'))))) : null
+    );
+
+    return /*#__PURE__*/React.createElement("div", {
+      style: { padding: '8px 20px 100px' },
+      className: "afu"
+    }, /*#__PURE__*/React.createElement("div", {
+      onClick: () => this.go('more'),
+      role: "button",
+      style: {
+        display: 'inline-flex', alignItems: 'center', gap: 6, minHeight: 44,
+        color: onSurf('#1f5145'), fontSize: 14, fontWeight: 600, cursor: 'pointer'
+      }
+    }, /*#__PURE__*/React.createElement("span", {
+      "aria-hidden": "true", style: { fontSize: 19, lineHeight: 1 }
+    }, "\u2039"), this.t('more.title')), /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontFamily: 'Spectral,serif', fontSize: 26, fontWeight: 600, lineHeight: 1.15,
+        color: st.dark ? '#ece6d8' : '#27241f', margin: '2px 0 4px'
+      }
+    }, this.t('prayer.settings')), /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 11,
+        fontWeight: 700,
+        letterSpacing: .7,
+        textTransform: 'uppercase',
+        color: NEU.label,
+        marginBottom: 10
+      }
+    }, this.t('prayer.source')), /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 12,
+        fontWeight: 600,
+        color: onSurf(autoLive ? '#1f5145' : '#7d6220'),
+        marginBottom: 10
+      }
+    }, autoLive ? '● Live — synced today with the Jaʿfarī (Leva, Qum) calculation for Dublin' : '○ Live sync unavailable — showing saved times'), (abiPresets(st.livePrayerPresets)).map(preset => {
+      const active = st.prayerPreset === preset.id;
+      return /*#__PURE__*/React.createElement("div", {
+        key: preset.id,
+        onClick: () => this.setState({
+          prayerPreset: preset.id
+        }),
+        style: {
+          display: 'flex',
+          alignItems: 'center',
+          gap: 14,
+          background: NEU.surf, boxShadow: neuUp(),
+          border: `2px solid ${active ? '#1f5145' : 'rgba(203,195,178,.55)'}`,
+          borderRadius: 16,
+          padding: '14px 16px',
+          cursor: 'pointer',
+          marginBottom: 10,
+          transition: 'border-color .2s'
+        }
+      }, /*#__PURE__*/React.createElement("div", {
+        style: {
+          width: 22,
+          height: 22,
+          borderRadius: '50%',
+          border: `2px solid ${active ? NEU.accent : 'rgba(203,195,178,.9)'}`,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          flexShrink: 0
+        }
+      }, active && /*#__PURE__*/React.createElement("div", {
+        style: {
+          width: 11,
+          height: 11,
+          borderRadius: '50%',
+          background: '#1f5145'
+        }
+      })), /*#__PURE__*/React.createElement("div", {
+        style: {
+          flex: 1
+        }
+      }, /*#__PURE__*/React.createElement("div", {
+        style: {
+          fontSize: 14,
+          fontWeight: 700,
+          color: NEU.ink
+        }
+      }, preset.name), /*#__PURE__*/React.createElement("div", {
+        style: {
+          fontSize: 11.5,
+          color: NEU.muted,
+          marginTop: 2
+        }
+      }, preset.sub)), active && /*#__PURE__*/React.createElement("span", {
+        style: {
+          color: onSurf('#1f5145'),
+          fontSize: 18
+        }
+      }, "✓"));
+    }), remindersBlock));
+  }
+
   renderMore(st) {
     const links = [{
+      label: this.t('prayer.settings'),
+      sub: this.t('more.settingsSub'),
+      glyph: '≡',
+      go: () => this.go('settings')
+    }, {
       label: this.t('more.calendar'),
       sub: this.t('more.calSub'),
       glyph: 'ﮬ',
@@ -9401,11 +9410,6 @@ class App extends Component {
       sub: 'Tell the administrators what is wrong, or suggest something',
       glyph: '⚑',
       go: () => this.go('report')
-    }, {
-      label: this.t('more.about'),
-      sub: this.t('more.aboutSub'),
-      glyph: '↧',
-      go: () => this.go('about')
     }, {
       label: this.t('more.offline'),
       sub: this.t('more.offlineSub'),
@@ -9886,148 +9890,6 @@ class App extends Component {
         textDecorationColor: 'rgba(31,81,69,.3)'
       }
     }, "SoftEire Technology Limited")));
-  }
-
-  /* ── ABOUT ── */
-  renderAbout() {
-    return /*#__PURE__*/React.createElement("div", {
-      style: {
-        padding: '8px 20px 100px'
-      },
-      className: "afu"
-    }, /*#__PURE__*/React.createElement("div", {
-      onClick: () => this.go('more'),
-      style: {
-        display: 'inline-flex',
-        alignItems: 'center',
-        gap: 4,
-        color: onSurf('#1f5145'),
-        fontSize: 14,
-        fontWeight: 600,
-        cursor: 'pointer',
-        padding: '12px 10px',
-        margin: '0 -10px',
-        minHeight: 44,
-        boxSizing: 'border-box'
-      }
-    }, /*#__PURE__*/React.createElement("span", {
-      style: {
-        fontSize: 18
-      }
-    }, "‹"), " More"), /*#__PURE__*/React.createElement("div", {
-      style: {
-        textAlign: 'center'
-      }
-    }, /*#__PURE__*/React.createElement("div", {
-      style: {
-        width: 104,
-        height: 104,
-        borderRadius: 28,
-        background: 'linear-gradient(150deg,#23564a,#143b2f)',
-        margin: '24px auto 0',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        boxShadow: '0 22px 40px -16px rgba(20,59,47,.6)',
-        position: 'relative',
-        overflow: 'hidden'
-      }
-    }, /*#__PURE__*/React.createElement("div", {
-      style: {
-        position: 'absolute',
-        inset: 0,
-        boxShadow: 'inset 0 0 0 1px rgba(216,184,99,.25)'
-      }
-    }), /*#__PURE__*/React.createElement("div", {
-      style: {
-        width: 46,
-        height: 46,
-        borderRadius: '50%',
-        boxShadow: 'inset -13px 0 0 0 #d8b863'
-      }
-    })), /*#__PURE__*/React.createElement("div", {
-      style: {
-        fontFamily: 'Spectral,serif',
-        fontSize: 24,
-        fontWeight: 600,
-        color: NEU.head,
-        marginTop: 18
-      }
-    }, "Ahlul Bayt Ireland"), /*#__PURE__*/React.createElement("div", {
-      style: {
-        fontSize: 13.5,
-        color: NEU.muted,
-        marginTop: 5,
-        lineHeight: 1.5,
-        padding: '0 24px'
-      }
-    }, "A calm companion for prayer, supplication and community life."), /*#__PURE__*/React.createElement("div", {
-      style: {
-        background: NEU.surf, boxShadow: neuUp(),
-        border: NEU.edge,
-        borderRadius: 18,
-        padding: 20,
-        marginTop: 24,
-        textAlign: 'left'
-      }
-    }, /*#__PURE__*/React.createElement("div", {
-      style: {
-        fontSize: 11,
-        letterSpacing: 1.2,
-        textTransform: 'uppercase',
-        fontWeight: 700,
-        color: NEU.muted,
-        marginBottom: 12
-      }
-    }, "Install as an app"), /*#__PURE__*/React.createElement("div", {
-      style: {
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 13
-      }
-    }, [['1', 'Tap the <b>Share</b> icon in your browser.'], ['2', 'Choose <b>Add to Home Screen</b>.'], ['3', 'Open it anytime — works offline.']].map(([n, txt]) => /*#__PURE__*/React.createElement("div", {
-      key: n,
-      style: {
-        display: 'flex',
-        gap: 11,
-        alignItems: 'flex-start'
-      }
-    }, /*#__PURE__*/React.createElement("span", {
-      style: {
-        flexShrink: 0,
-        width: 22,
-        height: 22,
-        borderRadius: '50%',
-        background: '#e6efe9',
-        color: '#1f5145',
-        fontSize: 12,
-        fontWeight: 700,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center'
-      }
-    }, n), /*#__PURE__*/React.createElement("span", {
-      style: {
-        fontSize: 13.5,
-        color: '#4a443a',
-        lineHeight: 1.5
-      },
-      dangerouslySetInnerHTML: {
-        __html: txt
-      }
-    }))))), /*#__PURE__*/React.createElement("div", {
-      onClick: this.handleInstall,
-      style: {
-        marginTop: 18,
-        padding: 15,
-        borderRadius: 14,
-        background: '#1c1a17',
-        color: '#d8b863',
-        fontSize: 14,
-        fontWeight: 600,
-        cursor: 'pointer'
-      }
-    }, "Add to Home Screen")));
   }
 
   /* ── OFFLINE ── */
@@ -11635,7 +11497,7 @@ class App extends Component {
           fontSize: 12,
           fontWeight: 700,
           // straight onto the themed card, so both have to come up for dark
-          color: onSurf(live ? '#1f5145' : '#8a3030'),
+          color: onSurf(live ? '#1f5145' : '#6e2230'),
           marginBottom: 12
         }
       }, live ? a.date ? '● Live — expires 11:59 pm on ' + a.date : '● Live — no expiry date set' : '○ Expired — no longer shown to users'), /*#__PURE__*/React.createElement("div", {
@@ -18006,7 +17868,7 @@ class App extends Component {
         // over the wallpaper sitting behind it
         background: onHome ? 'transparent' : st.dark ? NEU_D.bg : NEU.bg
       }
-    }, showBrand && this.renderBrandMark(), st.screen === 'home' && this.renderHome(st, next, cd, greg, hijri, salaam), st.screen === 'prayer' && this.renderPrayer(st, next, cd, greg), st.screen === 'library' && this.renderLibrary(st), st.screen === 'reading' && this.renderReading(st), st.screen === 'classifieds' && this.renderClassifieds(st), st.screen === 'more' && this.renderMore(st), st.screen === 'about' && this.renderAbout(), st.screen === 'location' && this.renderLocation(st), st.screen === 'offline' && this.renderOffline(), st.screen === 'admin' && this.renderAdmin(st), st.screen === 'calendar' && this.renderCalendar(st), st.screen === 'kids' && this.renderKids(st), st.screen === 'health' && this.renderHealth(st), st.screen === 'qibla' && this.renderQibla(st), st.screen === 'khums' && this.renderKhums(st), st.screen === 'tasbeeh' && this.renderTasbeeh(st), st.screen === 'wallpaper' && this.renderWallpaper(st), st.screen === 'infallibles' && this.renderInfallibles(st), st.screen === 'mosques' && this.renderMosques(st), st.screen === 'report' && this.renderReportIssue(st), st.screen === 'stories' && this.renderStories(st)), st.updateReady && /*#__PURE__*/React.createElement("div", {
+    }, showBrand && this.renderBrandMark(), st.screen === 'home' && this.renderHome(st, next, cd, greg, hijri, salaam), st.screen === 'prayer' && this.renderPrayer(st, next, cd, greg), st.screen === 'library' && this.renderLibrary(st), st.screen === 'reading' && this.renderReading(st), st.screen === 'classifieds' && this.renderClassifieds(st), st.screen === 'more' && this.renderMore(st), st.screen === 'settings' && this.renderSettings(st), st.screen === 'location' && this.renderLocation(st), st.screen === 'offline' && this.renderOffline(), st.screen === 'admin' && this.renderAdmin(st), st.screen === 'calendar' && this.renderCalendar(st), st.screen === 'kids' && this.renderKids(st), st.screen === 'health' && this.renderHealth(st), st.screen === 'qibla' && this.renderQibla(st), st.screen === 'khums' && this.renderKhums(st), st.screen === 'tasbeeh' && this.renderTasbeeh(st), st.screen === 'wallpaper' && this.renderWallpaper(st), st.screen === 'infallibles' && this.renderInfallibles(st), st.screen === 'mosques' && this.renderMosques(st), st.screen === 'report' && this.renderReportIssue(st), st.screen === 'stories' && this.renderStories(st)), st.updateReady && /*#__PURE__*/React.createElement("div", {
       onClick: () => window.location.reload(),
       role: "button",
       tabIndex: 0,
