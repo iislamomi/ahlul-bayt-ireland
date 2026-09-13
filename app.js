@@ -8546,13 +8546,13 @@ class App extends Component {
       style: { padding: '8px 20px 100px' },
       className: "afu"
     }, /*#__PURE__*/React.createElement("div", {
-      onClick: () => this.go('more'),
+      onClick: () => this.go('settings'),
       style: {
         display: 'inline-flex', alignItems: 'center', gap: 4, color: onSurf('#1f5145'),
         fontSize: 14, fontWeight: 600, cursor: 'pointer', padding: '12px 10px',
         margin: '0 -10px', minHeight: 44, boxSizing: 'border-box'
       }
-    }, /*#__PURE__*/React.createElement("span", { style: { fontSize: 18 } }, "\u2039"), " More"),
+    }, /*#__PURE__*/React.createElement("span", { style: { fontSize: 18 } }, "\u2039"), " Settings"),
     /*#__PURE__*/React.createElement("div", {
       style: {
         fontFamily: 'Spectral,serif', fontSize: 26, fontWeight: 600,
@@ -9252,29 +9252,36 @@ class App extends Component {
       st.adhanEnabled ? remCard(/*#__PURE__*/React.createElement("div", {
         style: { padding: 16 }
       }, (() => {
-        /* The choice itself lives in More, where a setting is looked for. What is
-           left here is the answer to "which one is playing", and a way through to
-           change it — a label with a chevron, not a second copy of the control. */
         const sounds = adhanSounds(st.liveAzans, st.liveAzanOverrides);
         const chosen = sounds.find(x => x.key === st.adhanSound) || sounds[0];
-        return /*#__PURE__*/React.createElement("div", {
-          onClick: () => this.go('more'),
-          className: "neu-press",
+        return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+          style: { position: 'relative' }
+        }, /*#__PURE__*/React.createElement("select", {
+          value: chosen.key,
+          onChange: e => this.setAdhanSound(e.target.value),
+          "aria-label": this.t('prayer.adhanSound'),
           style: {
-            display: 'flex', alignItems: 'center', gap: 10,
-            padding: '11px 13px', minHeight: 48, boxSizing: 'border-box',
-            borderRadius: 13, cursor: 'pointer',
-            background: NEU.sunk, border: NEU.edge, boxShadow: neuIn(.5)
+            width: '100%', boxSizing: 'border-box', minHeight: 48,
+            appearance: 'none', WebkitAppearance: 'none', MozAppearance: 'none',
+            padding: '13px 34px 13px 13px', ...neuField(12, .3),
+            fontSize: 14, fontWeight: 600, fontFamily: 'inherit',
+            color: NEU.ink, cursor: 'pointer',
+            // the option list is drawn by the OS, and without this it comes up
+            // black-on-white while the app is in dark mode
+            colorScheme: st.dark ? 'dark' : 'light'
           }
-        }, /*#__PURE__*/React.createElement("div", {
-          style: {
-            flex: 1, minWidth: 0, fontSize: 13.5, fontWeight: 700, color: NEU.ink,
-            whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'
-          }
-        }, chosen.label), /*#__PURE__*/React.createElement("span", {
+        }, sounds.map(snd => /*#__PURE__*/React.createElement("option", {
+          key: snd.key,
+          value: snd.key
+        }, snd.label))), /*#__PURE__*/React.createElement("span", {
           "aria-hidden": "true",
-          style: { color: NEU.muted, fontSize: 20, flexShrink: 0 }
-        }, "\u203a"));
+          style: {
+            position: 'absolute', right: 13, top: '50%', marginTop: -6,
+            color: NEU.muted, fontSize: 12, lineHeight: 1, pointerEvents: 'none'
+          }
+        }, "▾")), /*#__PURE__*/React.createElement("div", {
+          style: { fontSize: 11.5, color: NEU.muted, marginTop: 6 }
+        }, chosen.sub));
       })(), /*#__PURE__*/React.createElement("div", {
         style: { display: 'flex', gap: 8, marginTop: 10 }
       }, !st.adhanPlaying ? /*#__PURE__*/React.createElement("div", {
@@ -9313,7 +9320,37 @@ class App extends Component {
         fontFamily: 'Spectral,serif', fontSize: 26, fontWeight: 600, lineHeight: 1.15,
         color: st.dark ? '#ece6d8' : '#27241f', margin: '2px 0 4px'
       }
-    }, this.t('prayer.settings')), /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+    }, this.t('prayer.settings')), /*#__PURE__*/React.createElement(React.Fragment, null, (() => {
+      const ploc = this.prayerLocation();
+      const psrc = this.prayerSource();
+      return /*#__PURE__*/React.createElement("div", {
+        onClick: () => this.go('location'),
+        className: "neu-press",
+        role: "button",
+        style: {
+          display: 'flex', alignItems: 'center', gap: 14,
+          ...neuCard(16, .9),
+          padding: '15px 16px', margin: '14px 0 22px', cursor: 'pointer', minHeight: 44
+        }
+      }, /*#__PURE__*/React.createElement("span", {
+        "aria-hidden": "true",
+        style: {
+          flexShrink: 0, width: 40, height: 40, borderRadius: 12,
+          background: 'linear-gradient(145deg,#1f5145e6,#1f5145)', color: '#e4efe9',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          boxShadow: '0 4px 11px -6px #1f5145'
+        }
+      }, icon('map-pin', { size: 18 })), /*#__PURE__*/React.createElement("div", {
+        style: { flex: 1, minWidth: 0 }
+      }, /*#__PURE__*/React.createElement("div", {
+        style: { fontSize: 15, fontWeight: 600, color: NEU.ink }
+      }, "Prayer Location"), /*#__PURE__*/React.createElement("div", {
+        style: { fontSize: 12, color: psrc.kind === 'fallback' ? onSurf('#6e2230') : NEU.muted, marginTop: 1 }
+      }, `Current location: ${ploc.name}${ploc.outside ? '' : ', Ireland'}` + (psrc.kind === 'fallback' ? ' · no timetable yet' : ''))), /*#__PURE__*/React.createElement("span", {
+        "aria-hidden": "true",
+        style: { color: NEU.muted, fontSize: 20 }
+      }, "›"));
+    })(), /*#__PURE__*/React.createElement("div", {
       style: {
         fontSize: 11,
         fontWeight: 700,
@@ -9412,15 +9449,8 @@ class App extends Component {
       sub: 'Tell the administrators what is wrong, or suggest something',
       glyph: '⚑',
       go: () => this.go('report')
-    }, {
-      label: this.t('more.offline'),
-      sub: this.t('more.offlineSub'),
-      glyph: '⊘',
-      go: () => this.go('offline')
     }];
     const langs = ['English', 'العربية', 'हिन्दी', 'فارسی', 'Urdu'];
-    const ploc = this.prayerLocation();
-    const psrc = this.prayerSource();
     return /*#__PURE__*/React.createElement("div", {
       style: {
         padding: '8px 20px 100px'
@@ -9438,56 +9468,6 @@ class App extends Component {
         color: st.dark ? '#ece6d8' : '#27241f'
       }
     }, this.t('more.title'))), /*#__PURE__*/React.createElement("div", {
-      onClick: () => this.go('location'),
-      className: "neu-press",
-      style: {
-        display: 'flex',
-        alignItems: 'center',
-        gap: 14,
-        ...neuCard(16, .9),
-        padding: '15px 16px',
-        marginBottom: 11,
-        cursor: 'pointer',
-        minHeight: 44
-      }
-    }, /*#__PURE__*/React.createElement("span", {
-      "aria-hidden": "true",
-      style: {
-        flexShrink: 0,
-        width: 40,
-        height: 40,
-        borderRadius: 12,
-        background: 'linear-gradient(145deg,#1f5145e6,#1f5145)',
-        color: '#e4efe9',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        boxShadow: '0 4px 11px -6px #1f5145'
-      }
-    }, icon('map-pin', { size: 18 })), /*#__PURE__*/React.createElement("div", {
-      style: {
-        flex: 1,
-        minWidth: 0
-      }
-    }, /*#__PURE__*/React.createElement("div", {
-      style: {
-        fontSize: 15,
-        fontWeight: 600,
-        color: NEU.ink
-      }
-    }, "Prayer Location"), /*#__PURE__*/React.createElement("div", {
-      style: {
-        fontSize: 12,
-        color: psrc.kind === 'fallback' ? '#6e2230' : NEU.muted,
-        marginTop: 1
-      }
-    }, `Current location: ${ploc.name}${ploc.outside ? '' : ', Ireland'}` + (psrc.kind === 'fallback' ? ' · no timetable yet' : ''))), /*#__PURE__*/React.createElement("span", {
-      "aria-hidden": "true",
-      style: {
-        color: NEU.muted,
-        fontSize: 20
-      }
-    }, "›")), /*#__PURE__*/React.createElement("div", {
       style: {
         display: 'flex',
         flexDirection: 'column',
@@ -9541,110 +9521,7 @@ class App extends Component {
         color: NEU.muted,
         fontSize: 20
       }
-    }, "›")))), (() => {
-      /* The azan a person wants to hear is a setting, and this is where someone
-         comes looking for one — it used to sit under a toggle inside the prayer
-         screen, which is where you go to read times, not to change preferences.
-
-         Thirteen switches meant thirteen rows of scrolling past a screen of
-         near-identical names to answer a question with one answer, so the list
-         is a menu. The menu says which adhan; the switch above it says whether
-         any adhan sounds at all, which is the one thing a menu cannot say.
-
-         Shown even when the shipped adhan is the only one. Hiding it until a
-         second arrives means the first person to look for the setting concludes
-         there isn't one — and nobody asks for an azan to be uploaded to a screen
-         they have no reason to believe exists. */
-      const sounds = adhanSounds(st.liveAzans, st.liveAzanOverrides);
-      const chosen = sounds.find(x => x.key === st.adhanSound) || sounds[0];
-      const on = st.adhanEnabled;
-      const playing = st.adhanPreview === chosen.key;
-      return [/*#__PURE__*/React.createElement("div", {
-        key: 'azan-head',
-        style: {
-          fontSize: 11, letterSpacing: 1.2, textTransform: 'uppercase',
-          fontWeight: 700, color: NEU.muted, marginBottom: 12, paddingLeft: 2
-        }
-      }, this.t('prayer.adhanSound')), /*#__PURE__*/React.createElement("div", {
-        key: 'azan-card',
-        style: {
-          background: NEU.surf, boxShadow: neuUp(), border: NEU.edge,
-          borderRadius: 16, padding: '6px 16px 4px', marginBottom: 24
-        }
-      }, /*#__PURE__*/React.createElement("div", {
-        onClick: () => this.setAdhanEnabled(!on),
-        role: "switch",
-        "aria-checked": on ? 'true' : 'false',
-        "aria-label": "Play the adhan",
-        style: {
-          display: 'flex', alignItems: 'center', gap: 12,
-          padding: '12px 0', minHeight: 48, boxSizing: 'border-box',
-          borderBottom: NEU.rule, cursor: 'pointer'
-        }
-      }, /*#__PURE__*/React.createElement("div", {
-        style: { flex: 1, minWidth: 0 }
-      }, /*#__PURE__*/React.createElement("div", {
-        style: { fontSize: 14.5, color: NEU.ink2, fontWeight: 600 }
-      }, "Play the adhan"), /*#__PURE__*/React.createElement("div", {
-        style: { fontSize: 11.5, color: NEU.muted, marginTop: 1 }
-      }, on ? "Sounds at each prayer time" : "Silent at prayer times")), /*#__PURE__*/React.createElement("div", {
-        "aria-hidden": "true",
-        style: {
-          flexShrink: 0, width: 44, height: 26, borderRadius: 15,
-          /* Same track as the Dark mode switch further down. The sunk token
-             measured 1.06:1 against the card in light mode — an off switch you
-             could only find by its inset shadow. */
-          background: on ? onSurf('#1f5145') : st.dark ? '#3b4247' : '#d8d0bf',
-          position: 'relative', transition: 'background .2s'
-        }
-      }, /*#__PURE__*/React.createElement("div", {
-        style: {
-          position: 'absolute', top: 3, left: 3,
-          transform: on ? 'translateX(18px)' : 'none',
-          width: 20, height: 20, borderRadius: '50%', background: '#fff',
-          boxShadow: '0 1px 3px rgba(0,0,0,.2)', transition: 'transform .2s ease'
-        }
-      }))), /*#__PURE__*/React.createElement("div", {
-        style: { display: 'flex', alignItems: 'center', gap: 10, padding: '12px 0 4px' }
-      }, /*#__PURE__*/React.createElement("div", {
-        style: { flex: 1, minWidth: 0, position: 'relative' }
-      }, /*#__PURE__*/React.createElement("select", {
-        value: chosen.key,
-        onChange: e => this.setAdhanSound(e.target.value),
-        "aria-label": this.t('prayer.adhanSound'),
-        style: {
-          width: '100%', boxSizing: 'border-box', minHeight: 48,
-          appearance: 'none', WebkitAppearance: 'none', MozAppearance: 'none',
-          padding: '13px 34px 13px 13px', ...neuField(12, .3),
-          fontSize: 14, fontWeight: 600, fontFamily: 'inherit',
-          color: on ? NEU.ink : NEU.muted, cursor: 'pointer',
-          // the option list is drawn by the OS, and without this it comes up
-          // black-on-white while the app is in dark mode
-          colorScheme: st.dark ? 'dark' : 'light'
-        }
-      }, sounds.map(snd => /*#__PURE__*/React.createElement("option", {
-        key: snd.key,
-        value: snd.key
-      }, snd.label))), /*#__PURE__*/React.createElement("span", {
-        "aria-hidden": "true",
-        style: {
-          position: 'absolute', right: 13, top: '50%', marginTop: -6,
-          color: NEU.muted, fontSize: 12, lineHeight: 1, pointerEvents: 'none'
-        }
-      }, "▾")), /*#__PURE__*/React.createElement("div", {
-        onClick: () => this.previewAdhan(chosen),
-        role: "button",
-        "aria-label": (playing ? 'Stop ' : 'Preview ') + chosen.label,
-        style: {
-          flexShrink: 0, width: 48, height: 48, borderRadius: '50%',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          border: NEU.edge, background: NEU.sunk, boxShadow: neuUp(.4),
-          color: onSurf('#1f5145'), fontSize: 13, cursor: 'pointer'
-        }
-      }, playing ? '■' : '▶')), /*#__PURE__*/React.createElement("div", {
-        style: { fontSize: 11.5, color: NEU.muted, padding: '0 0 12px' }
-      }, chosen.sub))];
-    })(), /*#__PURE__*/React.createElement("div", {
+    }, "›")))), /*#__PURE__*/React.createElement("div", {
       style: {
         fontSize: 11,
         letterSpacing: 1.2,
