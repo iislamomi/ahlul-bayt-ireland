@@ -2756,6 +2756,7 @@ const PUSH_MSG = {
   classifieds: 'New listing in community classifieds',
   ads: null, // billboard changes are not worth a notification
   azanOverrides: null, // renaming or hiding an adhan is housekeeping, not news
+  madrasaReg: null, // opening or closing sign-ups is shown on the Madrasa screen itself
   calEvents: 'Islamic calendar updated',
   reminders: 'A new reminder has been added',
   prayerPresets: 'Prayer times updated',
@@ -2872,7 +2873,7 @@ const SB_KEY_MAP = {
   healthTips: 'liveHealthTips', healthVideos: 'liveHealthVideos',
   duas: 'liveDuas', ziyarat: 'liveZiyarat', nahj: 'liveNahj', aamals: 'liveAamals',
   reminders: 'liveReminders', ads: 'liveAds', learning: 'liveLearning',
-  azans: 'liveAzans', azanOverrides: 'liveAzanOverrides',
+  azans: 'liveAzans', azanOverrides: 'liveAzanOverrides', madrasaReg: 'liveMadrasaReg',
   amaalActs: 'liveAmaalActs', infallibles: 'liveInfallibles', mosques: 'liveMosques',
   salat: 'liveSalat', chapterQuizzes: 'liveChapterQuizzes'
 };
@@ -3457,6 +3458,9 @@ class App extends Component {
       chapQuiz: null,
       liveAzans: lsGet('azans', []),
       liveAzanOverrides: lsGet('azanOverrides', {}),
+      // shown unless an admin has switched it off, so a device that has never
+      // reached the server still offers sign-up
+      liveMadrasaReg: lsGet('madrasaReg', { show: true }),
       azanRenaming: null,
       azanRenameText: '',
       liveKidsQuizzes: migrateQuizzes(lsGet('kidsQuizzes', KIDS_QUIZZES)),
@@ -12625,7 +12629,43 @@ class App extends Component {
       const ks = d._sub || 'videos';
       const list = ks === 'videos' ? st.liveKidsVideos : ks === 'books' ? st.liveKidsBooks : ks === 'quizzes' ? st.liveKidsQuizzes || [] : st.liveKidsQuotes;
       const getLabel = (it, i) => ks === 'videos' ? it.title : ks === 'books' ? it.title : ks === 'quizzes' ? it.question : it.tr;
+      const regOn = (st.liveMadrasaReg || {}).show !== false;
+      const toggleReg = () => {
+        this.saveContent('madrasaReg', 'liveMadrasaReg', { show: !regOn });
+        this.showToast(regOn ? 'Registration button hidden' : 'Registration button shown');
+      };
       return /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+        onClick: toggleReg,
+        role: "switch",
+        "aria-checked": regOn ? 'true' : 'false',
+        "aria-label": "Show Register your child on the Madrasa screen",
+        style: {
+          display: 'flex', alignItems: 'center', gap: 12,
+          background: NEU.surf, boxShadow: neuUp(), border: NEU.edge,
+          borderRadius: 14, padding: '12px 14px', marginBottom: 14,
+          minHeight: 48, cursor: 'pointer'
+        }
+      }, /*#__PURE__*/React.createElement("div", {
+        style: { flex: 1, minWidth: 0 }
+      }, /*#__PURE__*/React.createElement("div", {
+        style: { fontSize: 13.5, fontWeight: 700, color: NEU.ink }
+      }, "Madrasa registration"), /*#__PURE__*/React.createElement("div", {
+        style: { fontSize: 11.5, color: NEU.muted, marginTop: 2, lineHeight: 1.45 }
+      }, regOn ? '“Register your child” is showing on the Madrasa screen' : 'Hidden — families cannot register from the app')), /*#__PURE__*/React.createElement("div", {
+        "aria-hidden": "true",
+        style: {
+          flexShrink: 0, width: 48, height: 28, borderRadius: 16,
+          background: regOn ? onSurf('#1f5145') : st.dark ? '#3b4247' : '#d8d0bf',
+          position: 'relative', transition: 'background .2s'
+        }
+      }, /*#__PURE__*/React.createElement("div", {
+        style: {
+          position: 'absolute', top: 3, left: 3,
+          transform: regOn ? 'translateX(20px)' : 'none',
+          width: 22, height: 22, borderRadius: '50%', background: '#fff',
+          boxShadow: '0 1px 3px rgba(0,0,0,.2)', transition: 'transform .2s ease'
+        }
+      }))), /*#__PURE__*/React.createElement("div", {
         style: {
           display: 'flex',
           gap: 6,
@@ -14765,7 +14805,7 @@ class App extends Component {
         borderRadius: 20,
         padding: '4px 11px'
       }
-    }, MADRASA_INFO.status + ' · ' + MADRASA_INFO.year), /*#__PURE__*/React.createElement("div", {
+    }, ((st.liveMadrasaReg || {}).show !== false ? MADRASA_INFO.status + ' · ' : '') + MADRASA_INFO.year),/*#__PURE__*/React.createElement("div", {
       style: {
         fontFamily: 'Spectral,serif',
         fontSize: 28,
@@ -14862,7 +14902,7 @@ class App extends Component {
         lineHeight: 1.5,
         color: st.dark ? '#a7a091' : '#6b6252'
       }
-    }, s2.desc))))), /*#__PURE__*/React.createElement("div", {
+    }, s2.desc))))), (st.liveMadrasaReg || {}).show !== false && /*#__PURE__*/React.createElement("div", {
       style: {
         fontSize: 12.5,
         color: onSurf('#7d6220'),
@@ -14872,7 +14912,7 @@ class App extends Component {
         padding: '11px 14px',
         marginBottom: 16
       }
-    }, "★ " + MADRASA_INFO.note), /*#__PURE__*/React.createElement("div", {
+    }, "★ " + MADRASA_INFO.note), (st.liveMadrasaReg || {}).show !== false && /*#__PURE__*/React.createElement("div", {
       onClick: () => window.open(MADRASA_INFO.registerUrl, '_blank'),
       style: {
         textAlign: 'center',
