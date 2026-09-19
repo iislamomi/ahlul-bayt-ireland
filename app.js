@@ -2522,7 +2522,7 @@ const EDGE_QUIZ_SUBMIT = SB_URL + '/functions/v1/submit-quiz-score';
 const EDGE_REPORT_TIME = SB_URL + '/functions/v1/report-prayer-time';
 // insert-only: the table has no read policy, so nothing written here can be
 // pulled back out with the key that ships in this bundle
-const EDGE_ISSUE = SB_URL + '/rest/v1/issue_reports';
+const SUPPORT_EMAIL = 'contact.ahlulbaytireland@gmail.com';
 const EDGE_UPLOAD_MEDIA = SB_URL + '/functions/v1/upload-media';
 /* Kept in step with upload-media's own table by hand. The server's limit is the
    one that binds; this one only saves the caller a doomed upload. */
@@ -3507,35 +3507,20 @@ class App extends Component {
       healthVidCat: 'All',
       adminLibTab: 'dua'
     });
-    /* Insert-only from here: the table has no read policy, so what someone
-       writes — and any contact detail in it — cannot be pulled back out with
-       the key that ships inside this bundle. Administrators read them in the
-       Supabase dashboard. */
-    _defineProperty(this, "submitIssue", async () => {
+    /* Reports go out as an email from the person's own mail app, so the
+       administrators can simply reply. Nothing is sent from here; the mail app
+       queues it if the phone is offline. */
+    _defineProperty(this, "submitIssue", () => {
       const st = this.state;
       const cat = (st.issueCat || '').trim();
       const msg = (st.issueMsg || '').trim();
+      const contact = (st.issueContact || '').trim();
       if (!cat) return this.setState({ issueState: { kind: 'error', message: 'Choose what the report is about.' } });
       if (msg.length < 5) return this.setState({ issueState: { kind: 'error', message: 'Please describe the issue in a little more detail.' } });
-      if (!navigator.onLine) return this.setState({ issueState: { kind: 'error', message: 'You are offline. Please send this when you are back online.' } });
-      this.setState({ issueState: { kind: 'sending' } });
-      try {
-        const res = await fetch(EDGE_ISSUE, {
-          method: 'POST',
-          headers: { ...SB_HEADS, Prefer: 'return=minimal' },
-          body: JSON.stringify({
-            category: cat.slice(0, 40),
-            message: msg.slice(0, 2000),
-            contact: (st.issueContact || '').trim().slice(0, 120) || null
-          })
-        });
-        if (res.ok) this.setState({ issueState: { kind: 'sent' } });
-        else this.setState({ issueState: { kind: 'error', message: res.status === 429
-          ? 'You have sent a few reports just now — please try again shortly.'
-          : 'That report could not be sent. Please try again.' } });
-      } catch {
-        this.setState({ issueState: { kind: 'error', message: 'That report could not be sent. Please try again.' } });
-      }
+      const subject = `Ahlul Bayt Ireland app — ${cat}`;
+      const body = msg + (contact ? `\n\nOther way to reach me: ${contact}` : '') + '\n\n—\nSent from the Ahlul Bayt Ireland app';
+      window.location.href = `mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+      this.setState({ issueState: { kind: 'sent' } });
     });
     _defineProperty(this, "go", s => {
       // Refresh every page on navigation: reset transient view state so each
@@ -9023,7 +9008,7 @@ class App extends Component {
       this.screenHead(st, 'More', 'Report an issue', null),
       React.createElement("div", {
         style: { fontSize: 13, color: NEU.muted, lineHeight: 1.6, marginBottom: 18 }
-      }, 'Something wrong, or something you would like to see? This goes straight to the administrators.'),
+      }, `Something wrong, or something you would like to see? Your email app opens with a message to the administrators at ${SUPPORT_EMAIL}.`),
       sent ? React.createElement("div", {
         style: { ...neuCard(R.card), padding: '26px 22px', textAlign: 'center' }
       }, React.createElement("div", { style: { fontSize: 30, marginBottom: 8 }, "aria-hidden": "true" }, '✓'),
@@ -9032,7 +9017,7 @@ class App extends Component {
         }, 'Thank you'),
         React.createElement("div", {
           style: { fontSize: 13.5, color: NEU.ink2, lineHeight: 1.6, marginTop: 7 }
-        }, 'Your report has been sent to the administrators.'),
+        }, 'Your email app should now be open with the report written. Press send there to deliver it.'),
         React.createElement("div", {
           onClick: () => this.setState({ issueState: null, issueCat: '', issueMsg: '', issueContact: '' }),
           className: "neu-press",
@@ -9077,11 +9062,11 @@ class App extends Component {
         React.createElement("div", {
           style: { fontSize: 11, color: NEU.faint, textAlign: 'right', marginBottom: 14 }
         }, (st.issueMsg || '').length + ' / 2000'),
-        label('How to reach you — optional'),
+        label('Other way to reach you — optional'),
         React.createElement("input", {
           value: st.issueContact || '',
           onChange: e => this.setState({ issueContact: e.target.value.slice(0, 120), issueState: null }),
-          placeholder: 'Email or phone, only if you would like a reply',
+          placeholder: 'A phone number, if you would rather be called',
           "aria-label": 'Your contact details, optional',
           style: {
             ...neuWell(R.pill, .7), width: '100%', padding: '12px 14px', fontSize: 14,
@@ -9090,7 +9075,7 @@ class App extends Component {
         }),
         React.createElement("div", {
           style: { fontSize: 11, color: NEU.muted, lineHeight: 1.55, marginBottom: 16 }
-        }, 'Leave this blank and the report is anonymous. Nothing else about you or your phone is sent.'),
+        }, 'The administrators will reply to the email address you send from.'),
         rs.kind === 'error' && React.createElement("div", {
           style: { fontSize: 12.5, fontWeight: 600, color: onSurf('#a03a3a'), lineHeight: 1.5, marginBottom: 12 }
         }, '⚠ ' + rs.message),
@@ -9104,7 +9089,7 @@ class App extends Component {
             fontSize: 14.5, fontWeight: 700,
             boxShadow: busy ? 'none' : neuUpOn('31,81,69', .8)
           }
-        }, busy ? 'Sending…' : 'Send report')));
+        }, busy ? 'Sending…' : 'Send by email')));
   }
 
   /* ── SETTINGS ──
@@ -9755,14 +9740,14 @@ class App extends Component {
         lineHeight: 1.6
       }
     }, "For support please email us at ", /*#__PURE__*/React.createElement("a", {
-      href: "mailto:info@softeire.com",
+      href: "mailto:" + SUPPORT_EMAIL,
       style: {
         color: onSurf('#1f5145'),
         fontWeight: 600,
         textDecoration: 'underline',
         textDecorationColor: 'rgba(31,81,69,.3)'
       }
-    }, "info@softeire.com"), /*#__PURE__*/React.createElement("br", null), /*#__PURE__*/React.createElement("span", {
+    }, SUPPORT_EMAIL), /*#__PURE__*/React.createElement("br", null), /*#__PURE__*/React.createElement("span", {
       style: {
         display: 'inline-block',
         marginTop: 10
