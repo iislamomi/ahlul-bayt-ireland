@@ -477,6 +477,20 @@ function nextHijriOccurrence(hm, hd, from) {
   return null;
 }
 
+/* A one-off event whose day has gone. Yearly events, and Hijri ones saved without a year,
+   come round again, so they are never past. An undated entry is kept so it can be fixed. */
+function eventIsPast(ev, now) {
+  if (!ev || ev.recurring) return false;
+  let d;
+  if (ev.hd && ev.hm) {
+    if (!ev.hy) return false;
+    d = hijriToGreg(ev.hy, ev.hm, ev.hd);
+  } else d = gregToDate(ev.date);
+  if (!d) return false;
+  const t = now || new Date();
+  return d < new Date(t.getFullYear(), t.getMonth(), t.getDate());
+}
+
 /* Human label for an event's own anchor date, on the calendar it was authored in. */
 function eventDateLabel(ev) {
   if (!ev) return '';
@@ -5360,11 +5374,6 @@ class App extends Component {
       icon: '📿',
       tone: ['#3a4a78', '#e9ecf5'],
       go: () => this.go('tasbeeh')
-    }, {
-      title: 'Wallpapers',
-      icon: '🖼️',
-      tone: ['#2f6f7a', '#e5f0f2'],
-      go: () => this.go('wallpaper')
     }, {
       title: 'Khums & Zakat',
       icon: '🧮',
@@ -10976,7 +10985,9 @@ class App extends Component {
     /* Only offer a tab for a type that actually has entries, so the row stays
        short, and carry the original index through the filter — Edit and Delete
        both address liveCalEvents by position. */
-    const evAll = st.liveCalEvents || [];
+    // Past one-off events leave the admin list but stay saved, so the public
+    // calendar still shows them in earlier months.
+    const evAll = (st.liveCalEvents || []).filter(e => !eventIsPast(e));
     const evCounts = {};
     evAll.forEach(e => {
       const t = e.type || 'Other';
@@ -10984,7 +10995,8 @@ class App extends Component {
     });
     const evTabs = ['All', ...EVENT_TYPES.filter(t => evCounts[t]), ...Object.keys(evCounts).filter(t => !EVENT_TYPES.includes(t)).sort()];
     const evType = evTabs.includes(st.adminEvType) ? st.adminEvType : 'All';
-    const evRows = evAll.map((e, i) => [e, i]).filter(([e]) => evType === 'All' || (e.type || 'Other') === evType);
+    // indexed against the full saved list, which Edit and ✕ write back to
+    const evRows = (st.liveCalEvents || []).map((e, i) => [e, i]).filter(([e]) => !eventIsPast(e) && (evType === 'All' || (e.type || 'Other') === evType));
     const eventListEls = (extraDraft = {}) => [btn('+ Add Event', () => this.startEdit(-1, {
       type: 'Community',
       date: '',
@@ -11051,7 +11063,7 @@ class App extends Component {
         color: NEU.muted,
         fontSize: 13
       }
-    }, evType === 'All' ? 'No events yet.' : `No ${evType} events yet.`), ...evRows.map(([e, i]) => /*#__PURE__*/React.createElement("div", {
+    }, evType === 'All' ? 'No upcoming events.' : `No upcoming ${evType} events.`), ...evRows.map(([e, i]) => /*#__PURE__*/React.createElement("div", {
         key: i,
         style: {
           display: 'flex',
@@ -13897,7 +13909,7 @@ class App extends Component {
       tint: '#f3ecd9'
     }, {
       label: 'Cal Events',
-      val: (st.liveCalEvents || []).length,
+      val: (st.liveCalEvents || []).filter(e => !eventIsPast(e)).length,
       ink: '#6e2230',
       tint: '#f3e6e8'
     }, {
